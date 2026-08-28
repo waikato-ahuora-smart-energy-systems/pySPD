@@ -12,20 +12,22 @@ Gate 1 characterization has started under the Gate 0 research authorization.
 ADR-0008 treats the optimal SCIP-MIP plus fixed-discrete HiGHS-RMIP pathway as
 adequate for current development. This is not permission to claim CPLEX parity;
 corpus breadth, preprocessing checkpoints, finite-difference coverage, and
-independent review remain open.
+comparator calibration remain open. ADR-0009 removes independent review as a
+Gate 1 requirement.
 
 ## Current evidence
 
 | Artifact | Purpose | State |
 |---|---|---|
 | [Pricing characterization](pricing-characterization.md) | Primary-MIP to fixed-LP convention and observed results | Executed candidate |
+| [SPD/AUD characterization](spd-aud-characterization.md) | Fail-closed mode overlays, report inventory, matrix and independent-price evidence | Executed sample |
 | [Runtime evidence](runtime-evidence.json) | Machine-readable identities, hashes, profile, and result summary | Executed candidate |
 | [Gate checklist](gate-checklist.md) | Gate 1 criterion status | In progress |
 | [Closure decision](closure-decision.md) | Formal blocker audit and Stage 2 authorization boundary | Hold recorded |
 | [`tools.oracle`](../../tools/oracle/) | Class-based staged runner, fail-closed overlay, parsers, comparator, and CLI | Implemented and tested |
 | [Objective fixture](../../tests/fixtures/oracle/vspd-v5.0.6-rtd-202502261155-dps-objectives.json) | Committed CPLEX objective values and provenance | Active smoke baseline |
 | Canonical GDX/matrix evidence | Deterministic symbol, UEL, matrix, solution, and dictionary manifests | Two clean runs matched |
-| Independent price validation | Bus-balance marginals mapped to nodes independently of vSPD price parameters | Passed for final-scenario snapshot |
+| Independent price validation | Post-processed bus prices mapped to nodes independently of vSPD node-price parameters | Passed for DPS and 534-node SPD/AUD samples |
 
 ## Qualified use of the current profiles
 
@@ -53,6 +55,8 @@ uv run python -m tools.oracle.cli run \
   --work-directory /new/empty/evidence-directory \
   --gams /path/to/gams \
   --profile scip-highs-pricing \
+  --run-name gate1_spd_rtd_202502261155 \
+  --operation-mode SPD \
   --baseline tests/fixtures/oracle/vspd-v5.0.6-rtd-202502261155-dps-objectives.json
 ```
 

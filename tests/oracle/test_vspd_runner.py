@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 import pytest
 
 from tools.oracle.vspd import (
+    ReportInventory,
     ScipHighsPricingProfile,
     ScipSmokeProfile,
     SourcePatchError,
+    VspdRunConfiguration,
+    VspdRunner,
     VspdSourcePatcher,
 )
 
@@ -17,6 +21,7 @@ def test_scip_profile_applies_fail_closed_source_overlay(tmp_path: Path) -> None
     programs.mkdir()
     settings = programs / "vSPDsettings.inc"
     solve = programs / "vSPDsolve.gms"
+    report = programs / "vSPDreport.gms"
     settings.write_text("$setglobal Solver                          Cplex\n")
     solve.write_text(
         "option lp = %Solver% ;\n"
@@ -25,6 +30,7 @@ def test_scip_profile_applies_fail_closed_source_overlay(tmp_path: Path) -> None
         "vSPD_BranchFlowMIP.Optfile = 1 ;\n"
         "vSPD_NMIR.Optfile = 1 ;\n"
     )
+    report.write_text("loop(b $ o_bus(ca,dt,b), put b.tl);\n")
 
     VspdSourcePatcher().apply(programs, ScipSmokeProfile())
 
@@ -43,6 +49,106 @@ def test_source_overlay_rejects_unexpected_upstream_text(tmp_path: Path) -> None
 
     with pytest.raises(SourcePatchError, match="expected exactly"):
         VspdSourcePatcher().apply(programs, ScipSmokeProfile())
+
+
+def test_explicit_run_configuration_overlay_is_fail_closed_and_hashed(
+    tmp_path: Path,
+) -> None:
+    programs = tmp_path / "Programs"
+    programs.mkdir()
+    settings = programs / "vSPDsettings.inc"
+    solve = programs / "vSPDsolve.gms"
+    settings.write_text(
+        "$setglobal runName                       source_default\n"
+        "$setglobal opMode                          DPS\n"
+        "$setglobal Solver                          Cplex\n"
+    )
+    solve.write_text(
+        "option lp = %Solver% ;\n"
+        "option mip = %Solver% ;\n"
+        "vSPD_NMIR.Optfile = 1 ;\n"
+        "vSPD_BranchFlowMIP.Optfile = 1 ;\n"
+        "vSPD_NMIR.Optfile = 1 ;\n"
+    )
+    configuration = VspdRunConfiguration(
+        run_name="gate1_spd_fixture",
+        operation_mode="SPD",
+    )
+
+    VspdSourcePatcher().apply(programs, ScipSmokeProfile(), configuration)
+
+    patched = settings.read_text()
+    assert "$setglobal runName                       gate1_spd_fixture" in patched
+    assert "$setglobal opMode                          SPD" in patched
+    assert len(configuration.logical_sha256) == 64
+
+
+def test_audit_overlay_repairs_pinned_undeclared_bus_alias(tmp_path: Path) -> None:
+    programs = tmp_path / "Programs"
+    programs.mkdir()
+    settings = programs / "vSPDsettings.inc"
+    solve = programs / "vSPDsolve.gms"
+    report = programs / "vSPDreport.gms"
+    settings.write_text(
+        "$setglobal runName                       source_default\n"
+        "$setglobal opMode                          DPS\n"
+        "$setglobal Solver                          Cplex\n"
+    )
+    solve.write_text(
+        "option lp = %Solver% ;\n"
+        "option mip = %Solver% ;\n"
+        "vSPD_NMIR.Optfile = 1 ;\n"
+        "vSPD_BranchFlowMIP.Optfile = 1 ;\n"
+        "vSPD_NMIR.Optfile = 1 ;\n"
+    )
+    report.write_text("loop(b $ o_bus(ca,dt,b), put b.tl);\n")
+
+    VspdSourcePatcher().apply(
+        programs,
+        ScipSmokeProfile(),
+        VspdRunConfiguration("gate1_aud_fixture", "AUD"),
+    )
+
+    assert "o_bus(ca,dt,b)" not in report.read_text()
+    assert "bus(ca,dt,b)" in report.read_text()
+
+
+@pytest.mark.parametrize(
+    ("run_name", "operation_mode"),
+    (("unsafe/name", "SPD"), ("safe_name", "PVT")),
+)
+def test_run_configuration_rejects_unsafe_or_out_of_scope_values(
+    run_name: str,
+    operation_mode: str,
+) -> None:
+    with pytest.raises(ValueError):
+        VspdRunConfiguration(run_name, operation_mode)
+
+
+def test_report_inventory_is_recursive_deterministic_and_content_addressed(
+    tmp_path: Path,
+) -> None:
+    output = tmp_path / "output"
+    nested = output / "nested"
+    nested.mkdir(parents=True)
+    (output / "summary.csv").write_text("a,b\n1,2\n")
+    (nested / "audit.csv").write_text("x\n3\n")
+
+    inventory = ReportInventory.build(output)
+
+    assert [artifact.path for artifact in inventory.artifacts] == [
+        "nested/audit.csv",
+        "summary.csv",
+    ]
+    assert (
+        inventory.artifacts[1].sha256
+        == hashlib.sha256((output / "summary.csv").read_bytes()).hexdigest()
+    )
+    assert len(inventory.logical_sha256) == 64
+
+
+def test_audit_mode_uses_normal_report_setup() -> None:
+    assert VspdRunner._report_setup("AUD") == "vSPDreportSetup.gms"
 
 
 def test_fixed_lp_profile_injects_pricing_solve_after_each_mip(tmp_path: Path) -> None:
@@ -91,3 +197,5 @@ def test_fixed_lp_profile_injects_pricing_solve_after_each_mip(tmp_path: Path) -
     assert "option rmip = Convert;" in matrix_export
     assert "option rmip = HiGHS;" in matrix_export
     assert "solve vSPD_NMIR using rmip" in matrix_export
+    assert "$else.pyspdDPS" in matrix_export
+    assert "o_nodePrice_TP" in matrix_export

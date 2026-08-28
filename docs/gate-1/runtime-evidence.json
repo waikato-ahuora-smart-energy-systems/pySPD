@@ -36,6 +36,35 @@
     "bounds_restored_after_pricing": true,
     "objective_delta_abort_nzd": 0.01
   },
+  "mode_evidence": {
+    "input_profile": "RTD_202502261155",
+    "SPD": {
+      "configuration_logical_sha256": "b3821fd49c5af80431d16108455a028e3b110b09b3656faa633ba81e15c4047b",
+      "source_patches": [],
+      "primary_optimal_count": 1,
+      "pricing_optimal_count": 1,
+      "report_artifact_count": 13,
+      "report_logical_sha256": "1a2b817eaa2a5e50556b51664c74df7a6fcb022f5bf81f8a78423161f0c682ed",
+      "published_price_count": 534,
+      "published_price_logical_sha256": "8e47d8834659f5e407e5a059869cde432b7d2d8d5748dc6e8d8710345d768633",
+      "matrix_validation_passed": true,
+      "independent_price_validation_passed": true
+    },
+    "AUD": {
+      "configuration_logical_sha256": "7f03e7775425447627774dd06414f5d6bed06e78add45a66a5066f27e3510d12",
+      "source_patches": [
+        "vspd-v5.0.6-audit-o-bus-alias-v1"
+      ],
+      "primary_optimal_count": 1,
+      "pricing_optimal_count": 1,
+      "report_artifact_count": 20,
+      "report_logical_sha256": "d009f7e090966d9387cbf1edb98869a52e6dfe6f5f3f3cbed2a5fd9ca4c6e705",
+      "published_price_count": 534,
+      "published_price_logical_sha256": "8e47d8834659f5e407e5a059869cde432b7d2d8d5748dc6e8d8710345d768633",
+      "matrix_validation_passed": true,
+      "independent_price_validation_passed": true
+    }
+  },
   "results": {
     "clean_run_count": 2,
     "primary_optimal_count": 15,
@@ -78,6 +107,24 @@
     "passed": true,
     "finite_difference_implementation": "implemented as a tested primitive; full-size perturbation corpus pending"
   },
+  "normal_mode_independent_price_validation": {
+    "method": "Sparse post-processed busPrice independently allocated by nodeBusAllocationFactor and compared with native o_nodePrice_TP plus published CSV",
+    "price_count": 534,
+    "postprocessed_bus_adjustment_count": 152,
+    "native_gdx_max_absolute_delta": 0.0,
+    "five_decimal_report_max_absolute_delta": 4.992531216885254e-06,
+    "passed": true
+  },
+  "official_secondary_comparison": {
+    "profile": "Authority-supplied CPLEX RTD_202502261155 output",
+    "published_price_key_count": 534,
+    "exact_price_count": 364,
+    "different_price_count": 170,
+    "maximum_absolute_price_delta_nzd_per_mwh": 184.79089000000002,
+    "worst_node": "BLN0331",
+    "system_objective_absolute_delta_nzd": 0.00001,
+    "classification": "solver-profile pricing divergence; CPLEX parity deferred under ADR-0008"
+  },
   "determinism": {
     "logical_solve_records_equal": true,
     "logical_node_price_records_equal": true,
@@ -94,7 +141,7 @@
     "raw_island_sensitivity_csv_sha256": "54c4a009ad3da1a789f009f43d9239ed23090330c06ea88943e2880bd45e1e28"
   },
   "holds": [
-    "The full Gate 1 corpus, preprocessing checkpoints, finite-difference corpus, and independent review are incomplete.",
+    "The full Gate 1 corpus, preprocessing checkpoints, and finite-difference corpus are incomplete.",
     "Native CPLEX validation and its effective-option reconciliation are deferred cross-validation under ADR-0008."
   ]
 }

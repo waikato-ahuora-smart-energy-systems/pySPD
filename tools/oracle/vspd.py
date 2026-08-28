@@ -19,7 +19,7 @@ import subprocess
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, ClassVar, Final
 
 from tools.oracle.canonical import (
     ConvertMatrixReader,
@@ -29,6 +29,7 @@ from tools.oracle.canonical import (
 )
 from tools.oracle.price_validation import (
     GdxPriceValidator,
+    GdxPublishedPriceValidator,
     IndependentPriceValidation,
 )
 
@@ -177,6 +178,35 @@ if (ord(drs) = card(drs),
   );
   option rmip = HiGHS;
 );
+$else.pyspdDPS
+HVDCSENDING.fx(t,isl) = round(HVDCSENDING.l(t,isl));
+INZONE.fx(t,isl,resC,z) = round(INZONE.l(t,isl,resC,z));
+HVDCSENTINSEGMENT.fx(t,isl,los) = round(HVDCSENTINSEGMENT.l(t,isl,los));
+PURCHASEBLOCKBINARY.fx(t,bd,blk) = round(PURCHASEBLOCKBINARY.l(t,bd,blk));
+HVDCSENDZERO.fx(t,isl) = round(HVDCSENDZERO.l(t,isl));
+ACBRANCHFLOWDIRECTED_INTEGER.fx(t,br,fd) = ACBRANCHFLOWDIRECTED_INTEGER.l(t,br,fd);
+HVDCLINKFLOWDIRECTED_INTEGER.fx(t,fd) = HVDCLINKFLOWDIRECTED_INTEGER.l(t,fd);
+HVDCPOLEFLOW_INTEGER.fx(t,pole,fd) = HVDCPOLEFLOW_INTEGER.l(t,pole,fd);
+LAMBDAINTEGER.fx(t,br,bp) = LAMBDAINTEGER.l(t,br,bp);
+LAMBDAHVDCENERGY.fx(t,isl,bp) = LAMBDAHVDCENERGY.l(t,isl,bp);
+LAMBDAHVDCRESERVE.fx(t,isl,resC,rd,rsbp) = LAMBDAHVDCRESERVE.l(t,isl,resC,rd,rsbp);
+
+execute_unload 'pyspd_pricing_solution.gdx'
+  t, n, b, nodeBus, nodeBusAllocationFactor,
+  ACnodeNetInjectionDefinition2, busPrice, o_nodePrice_TP, NETBENEFIT,
+  HVDCSENDING, INZONE, HVDCSENTINSEGMENT, PURCHASEBLOCKBINARY, HVDCSENDZERO,
+  ACBRANCHFLOWDIRECTED_INTEGER, HVDCLINKFLOWDIRECTED_INTEGER,
+  HVDCPOLEFLOW_INTEGER, LAMBDAINTEGER, LAMBDAHVDCENERGY, LAMBDAHVDCRESERVE;
+
+option rmip = Convert;
+if (sum(t, SOS1_solve(t)),
+  vSPD_BranchFlowMIP.Optfile = 1;
+  solve vSPD_BranchFlowMIP using rmip maximizing NETBENEFIT;
+else
+  vSPD_NMIR.Optfile = 1;
+  solve vSPD_NMIR using rmip maximizing NETBENEFIT;
+);
+option rmip = HiGHS;
 $endif.pyspdDPS
 """
 
@@ -404,6 +434,70 @@ class DpsNodePriceParser:
 
 
 @dataclass(frozen=True)
+class PublishedEnergyPriceRecord:
+    date_time: str
+    trading_period: str
+    node: str
+    price: float
+
+
+@dataclass(frozen=True)
+class PublishedEnergyPriceReport:
+    records: tuple[PublishedEnergyPriceRecord, ...]
+
+
+class PublishedEnergyPriceParser:
+    """Parse normal/AUD published energy prices at native report precision."""
+
+    _header = (
+        "DateTime",
+        "TradingPeriod",
+        "Pnodename",
+        "vSPDDollarsPerMegawattHour",
+    )
+
+    def parse_file(self, path: Path) -> PublishedEnergyPriceReport:
+        return self.parse_text(path.read_text())
+
+    def parse_text(self, text: str) -> PublishedEnergyPriceReport:
+        rows = csv.reader(io.StringIO(text))
+        header = next(rows, None)
+        if header is None or tuple(header) != self._header:
+            raise PriceReportError(
+                f"unexpected published energy-price header: {header!r}"
+            )
+        records: list[PublishedEnergyPriceRecord] = []
+        keys: set[tuple[str, str, str]] = set()
+        for line_number, row in enumerate(rows, start=2):
+            if len(row) != 4:
+                raise PriceReportError(
+                    f"published energy-price row {line_number} has {len(row)} fields"
+                )
+            key = (row[0], row[1], row[2])
+            if key in keys:
+                raise PriceReportError(
+                    f"duplicate published energy-price key at row {line_number}: {key!r}"
+                )
+            keys.add(key)
+            try:
+                price = float(row[3])
+            except ValueError as error:
+                raise PriceReportError(
+                    f"non-finite or invalid published energy price at row "
+                    f"{line_number}: {row[3]!r}"
+                ) from error
+            if not math.isfinite(price):
+                raise PriceReportError(
+                    f"non-finite published energy price at row {line_number}: "
+                    f"{row[3]!r}"
+                )
+            records.append(PublishedEnergyPriceRecord(*key, price))
+        if not records:
+            raise PriceReportError("published energy-price report is empty")
+        return PublishedEnergyPriceReport(tuple(records))
+
+
+@dataclass(frozen=True)
 class BaselineObjective:
     scenario: str
     value: float
@@ -571,12 +665,66 @@ class ScipHighsPricingProfile(NativeGamsProfile):
         )
 
 
+@dataclass(frozen=True)
+class VspdRunConfiguration:
+    """Explicit, hash-addressed selection of the supported reference run mode."""
+
+    run_name: str
+    operation_mode: str
+
+    _safe_name: ClassVar[re.Pattern[str]] = re.compile(r"^[A-Za-z0-9_.-]+$")
+    _supported_modes: ClassVar[set[str]] = {"SPD", "AUD", "DPS"}
+
+    def __post_init__(self) -> None:
+        if not self._safe_name.fullmatch(self.run_name):
+            raise ValueError(f"unsafe vSPD run name: {self.run_name!r}")
+        if self.operation_mode not in self._supported_modes:
+            raise ValueError(
+                f"unsupported vSPD operation mode: {self.operation_mode!r}"
+            )
+
+    @property
+    def logical_sha256(self) -> str:
+        return _logical_sha256(self.to_dict())
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": 1,
+            "run_name": self.run_name,
+            "operation_mode": self.operation_mode,
+            "source_patches": (
+                ["vspd-v5.0.6-audit-o-bus-alias-v1"]
+                if self.operation_mode == "AUD"
+                else []
+            ),
+        }
+
+
 class VspdSourcePatcher:
     """Apply a minimal solver overlay and reject unexpected source revisions."""
 
-    def apply(self, programs: Path, profile: NativeGamsProfile) -> None:
+    def apply(
+        self,
+        programs: Path,
+        profile: NativeGamsProfile,
+        configuration: VspdRunConfiguration | None = None,
+    ) -> None:
         settings = programs / "vSPDsettings.inc"
         solve = programs / "vSPDsolve.gms"
+        if configuration is not None:
+            self._replace_global_setting(settings, "runName", configuration.run_name)
+            self._replace_global_setting(
+                settings,
+                "opMode",
+                configuration.operation_mode,
+            )
+            if configuration.operation_mode == "AUD":
+                self._replace_exact(
+                    programs / "vSPDreport.gms",
+                    "o_bus(ca,dt,b)",
+                    "bus(ca,dt,b)",
+                    expected_count=1,
+                )
         if profile.mip_solver != "Cplex":
             self._replace_exact(
                 settings,
@@ -648,6 +796,23 @@ class VspdSourcePatcher:
         (programs / "convert.opt").write_text(_CONVERT_OPTIONS)
 
     @staticmethod
+    def _replace_global_setting(path: Path, name: str, value: str) -> None:
+        text = path.read_text()
+        pattern = re.compile(
+            rf"^\$setglobal\s+{re.escape(name)}\s+(?P<value>\S+)",
+            re.MULTILINE,
+        )
+        matches = tuple(pattern.finditer(text))
+        if len(matches) != 1:
+            raise SourcePatchError(
+                f"{path} contained {len(matches)} settings named {name!r}; "
+                "expected exactly one"
+            )
+        match = matches[0]
+        start, end = match.span("value")
+        path.write_text(text[:start] + value + text[end:])
+
+    @staticmethod
     def _replace_exact(
         path: Path,
         old: str,
@@ -671,6 +836,7 @@ class VspdCase:
     work_directory: Path
     gams_executable: Path
     profile: NativeGamsProfile
+    configuration: VspdRunConfiguration | None = None
 
     @property
     def case_name(self) -> str:
@@ -685,8 +851,10 @@ class VspdRunResult:
     parsed: ListingResult
     comparison: BaselineComparison | None
     node_prices: DpsNodePriceReport | None
+    published_energy_prices: PublishedEnergyPriceReport | None
     matrix_validation: LinearMatrixValidation | None
     price_validation: IndependentPriceValidation | None
+    report_inventory: ReportInventory
 
     @property
     def qualified(self) -> bool:
@@ -697,6 +865,56 @@ class VspdRunResult:
             self.price_validation is None or self.price_validation.passed,
         ]
         return all(checks)
+
+
+@dataclass(frozen=True)
+class ReportArtifact:
+    path: str
+    size_bytes: int
+    sha256: str
+
+
+@dataclass(frozen=True)
+class ReportInventory:
+    artifacts: tuple[ReportArtifact, ...]
+    logical_sha256: str
+
+    @classmethod
+    def build(cls, output_directory: Path) -> ReportInventory:
+        if not output_directory.is_dir():
+            raise VspdRunError(f"report directory is missing: {output_directory}")
+        artifacts = tuple(
+            ReportArtifact(
+                path=path.relative_to(output_directory).as_posix(),
+                size_bytes=path.stat().st_size,
+                sha256=_sha256(path),
+            )
+            for path in sorted(
+                (
+                    candidate
+                    for candidate in output_directory.rglob("*")
+                    if candidate.is_file()
+                ),
+                key=lambda candidate: candidate.relative_to(
+                    output_directory
+                ).as_posix(),
+            )
+        )
+        if not artifacts:
+            raise VspdRunError(f"no report artifacts found in: {output_directory}")
+        return cls(
+            artifacts=artifacts,
+            logical_sha256=_logical_sha256(
+                [asdict(artifact) for artifact in artifacts]
+            ),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "artifact_count": len(self.artifacts),
+            "logical_sha256": self.logical_sha256,
+            "artifacts": [asdict(artifact) for artifact in self.artifacts],
+        }
 
 
 class VspdRunner:
@@ -713,10 +931,14 @@ class VspdRunner:
         parser: VspdListingParser | None = None,
         patcher: VspdSourcePatcher | None = None,
         price_parser: DpsNodePriceParser | None = None,
+        published_price_parser: PublishedEnergyPriceParser | None = None,
     ) -> None:
         self.parser = parser or VspdListingParser()
         self.patcher = patcher or VspdSourcePatcher()
         self.price_parser = price_parser or DpsNodePriceParser()
+        self.published_price_parser = (
+            published_price_parser or PublishedEnergyPriceParser()
+        )
 
     def run(
         self,
@@ -738,7 +960,7 @@ class VspdRunner:
         staged_input = stage / "Input" / case.input_gdx.name
         staged_input.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(case.input_gdx, staged_input)
-        self.patcher.apply(programs, case.profile)
+        self.patcher.apply(programs, case.profile, case.configuration)
         (programs / "vSPDcase.inc").write_text(
             f"$setglobal  GDXname  {case.case_name}\n"
         )
@@ -781,6 +1003,12 @@ class VspdRunner:
             if operation_mode == "DPS" and case.profile.supports_marginals
             else None
         )
+        published_price_path = output / f"{run_name}_PublishedEnergyPrices_TP.csv"
+        published_energy_prices = (
+            self.published_price_parser.parse_file(published_price_path)
+            if operation_mode in {"SPD", "AUD"} and case.profile.supports_marginals
+            else None
+        )
         comparison = (
             BaselineComparison.compare(
                 actual=parsed.primary,
@@ -791,6 +1019,7 @@ class VspdRunner:
             if baseline is not None
             else None
         )
+        report_inventory = ReportInventory.build(output)
         matrix_validation: LinearMatrixValidation | None = None
         price_validation: IndependentPriceValidation | None = None
         canonical_payload: dict[str, Any] | None = None
@@ -800,6 +1029,7 @@ class VspdRunner:
                     case,
                     programs,
                     node_prices,
+                    published_energy_prices,
                 )
             )
         evidence = case.work_directory / "evidence.json"
@@ -812,9 +1042,14 @@ class VspdRunner:
                     comparison,
                     node_price_path if node_prices is not None else None,
                     node_prices,
+                    published_price_path
+                    if published_energy_prices is not None
+                    else None,
+                    published_energy_prices,
                     canonical_payload,
                     matrix_validation,
                     price_validation,
+                    report_inventory,
                 ),
                 indent=2,
                 sort_keys=True,
@@ -828,8 +1063,10 @@ class VspdRunner:
             parsed=parsed,
             comparison=comparison,
             node_prices=node_prices,
+            published_energy_prices=published_energy_prices,
             matrix_validation=matrix_validation,
             price_validation=price_validation,
+            report_inventory=report_inventory,
         )
 
     @staticmethod
@@ -837,14 +1074,15 @@ class VspdRunner:
         case: VspdCase,
         programs: Path,
         node_prices: DpsNodePriceReport | None,
+        published_energy_prices: PublishedEnergyPriceReport | None,
     ) -> tuple[
         dict[str, Any],
         LinearMatrixValidation,
         IndependentPriceValidation,
     ]:
-        if node_prices is None:
+        if node_prices is None and published_energy_prices is None:
             raise VspdRunError(
-                "canonical pricing evidence requires a node-price report"
+                "canonical pricing evidence requires a supported price report"
             )
         sources = {
             "input": case.input_gdx,
@@ -887,14 +1125,25 @@ class VspdRunner:
             json.dumps(matrix_payload, indent=2, sort_keys=True) + "\n"
         )
 
-        report_prices = {
-            (record.date_time, record.scenario, record.node): record.price
-            for record in node_prices.records
-        }
-        price_validation = GdxPriceValidator(system_directory).validate(
-            sources["pricing_solution"],
-            report_prices,
-        )
+        if node_prices is not None:
+            report_prices = {
+                (record.date_time, record.scenario, record.node): record.price
+                for record in node_prices.records
+            }
+            price_validation = GdxPriceValidator(system_directory).validate(
+                sources["pricing_solution"],
+                report_prices,
+            )
+        else:
+            assert published_energy_prices is not None
+            published_prices = {
+                (record.date_time, record.node): record.price
+                for record in published_energy_prices.records
+            }
+            price_validation = GdxPublishedPriceValidator(system_directory).validate(
+                sources["pricing_solution"],
+                published_prices,
+            )
         price_path = destination / "price_validation.json"
         price_path.write_text(
             json.dumps(price_validation.to_dict(), indent=2, sort_keys=True) + "\n"
@@ -948,7 +1197,7 @@ class VspdRunner:
     def _report_setup(operation_mode: str) -> str:
         if operation_mode == "DPS":
             return "Demand/DPSreportSetup.gms"
-        if operation_mode == "SPD":
+        if operation_mode in {"SPD", "AUD"}:
             return "vSPDreportSetup.gms"
         raise VspdRunError(
             f"operation mode {operation_mode!r} has no qualified report setup"
@@ -983,14 +1232,25 @@ class VspdRunner:
         comparison: BaselineComparison | None,
         node_price_path: Path | None,
         node_prices: DpsNodePriceReport | None,
+        published_price_path: Path | None,
+        published_energy_prices: PublishedEnergyPriceReport | None,
         canonical_payload: dict[str, Any] | None,
         matrix_validation: LinearMatrixValidation | None,
         price_validation: IndependentPriceValidation | None,
+        report_inventory: ReportInventory,
     ) -> dict[str, Any]:
         return {
             "schema_version": 1,
             "case": case.case_name,
             "profile": asdict(case.profile),
+            "configuration_overlay": (
+                {
+                    **case.configuration.to_dict(),
+                    "logical_sha256": case.configuration.logical_sha256,
+                }
+                if case.configuration is not None
+                else None
+            ),
             "input": {
                 "name": case.input_gdx.name,
                 "sha256": _sha256(case.input_gdx),
@@ -1025,6 +1285,19 @@ class VspdRunner:
                 if node_price_path is not None and node_prices is not None
                 else None
             ),
+            "published_energy_prices": (
+                {
+                    "path": published_price_path.name,
+                    "sha256": _sha256(published_price_path),
+                    "record_count": len(published_energy_prices.records),
+                    "logical_records_sha256": _logical_sha256(
+                        [asdict(record) for record in published_energy_prices.records]
+                    ),
+                }
+                if published_price_path is not None
+                and published_energy_prices is not None
+                else None
+            ),
             "canonical": canonical_payload,
             "validation": {
                 "matrix_passed": (
@@ -1034,6 +1307,7 @@ class VspdRunner:
                     price_validation.passed if price_validation is not None else None
                 ),
             },
+            "reports": report_inventory.to_dict(),
         }
 
 

@@ -4,7 +4,7 @@
   "gate_id": "G0",
   "decision": "hold",
   "created_at": "2026-08-29T00:00:00+12:00",
-  "project_commit": "e02f567c48171da5fd5bc492e30ed1aaef2cbca1",
+  "project_commit": "f984add223f103dd8914adb1fe5452499daaab66",
   "governing_plan_sha256": "22bb2f1ee7e727554c12bc0749db1c1d8a8ce45843ca7927359812e9b8a86ac0",
   "baseline": {
     "formulation_id": "vspd-v5.0.6-spd-formulation-v15-context",
@@ -23,8 +23,8 @@
     {
       "id": "g1-scip-highs-pricing-runtime",
       "uri": "docs/gate-1/runtime-evidence.json",
-      "sha256": "fd90d32dd04a2299cf54fd1d8c3f0c8c8856a6b1a68d66aec69423c4d8932eb3",
-      "size_bytes": 4347,
+      "sha256": "ebac911218f5e65388833c497403484a8ede6822ba2c2e7413bf776384c6643c",
+      "size_bytes": 6491,
       "media_type": "application/json"
     }
   ],
@@ -130,8 +130,8 @@
     {
       "id": "adr-index",
       "uri": "docs/adr/README.md",
-      "sha256": "8f6c299110e84c254a9ac1b0fafedf7e9dd33e3c581fbb1ee7df06f6300fd887",
-      "size_bytes": 1706,
+      "sha256": "1efa7c0cc5339dcfb6d8a3ad34804248c97a9e9001e71871c2b981bd89daf879",
+      "size_bytes": 1859,
       "media_type": "text/markdown"
     },
     {
@@ -188,6 +188,13 @@
       "uri": "docs/adr/0008-interim-scip-highs-reference-profile.md",
       "sha256": "3ed3e28ac5f0ec42366e0f45b3aff7658c4392ef254f681816576cbe4b821c32",
       "size_bytes": 2876,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "adr-0009",
+      "uri": "docs/adr/0009-gate-1-review-authority.md",
+      "sha256": "3ccc5db3a1b675d10a0be2b29e715d4a3c3afcfc01e1bf837e40865d2c0ba427",
+      "size_bytes": 1667,
       "media_type": "text/markdown"
     }
   ],

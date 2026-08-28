@@ -11,6 +11,7 @@ from tools.oracle.vspd import (
     ListingParseError,
     ObjectiveBaseline,
     PriceReportError,
+    PublishedEnergyPriceParser,
     ScipHighsPricingProfile,
     VspdListingParser,
 )
@@ -218,4 +219,22 @@ def test_node_price_parser_rejects_duplicate_keys() -> None:
     with pytest.raises(PriceReportError, match="duplicate"):
         DpsNodePriceParser().parse_text(
             '"DateTime","Scenario","Node","Price"\n' + row + row
+        )
+
+
+def test_published_energy_price_parser_requires_unique_finite_prices() -> None:
+    report = PublishedEnergyPriceParser().parse_text(
+        '"DateTime","TradingPeriod","Pnodename","vSPDDollarsPerMegawattHour"\n'
+        '"26-FEB-2025 11:55","TP24","BEN2201",247.94925\n'
+    )
+
+    assert len(report.records) == 1
+    assert report.records[0].node == "BEN2201"
+    assert report.records[0].price == pytest.approx(247.94925)
+
+    with pytest.raises(PriceReportError, match="non-finite"):
+        PublishedEnergyPriceParser().parse_text(
+            '"DateTime","TradingPeriod","Pnodename",'
+            '"vSPDDollarsPerMegawattHour"\n'
+            '"26-FEB-2025 11:55","TP24","BEN2201","NA"\n'
         )

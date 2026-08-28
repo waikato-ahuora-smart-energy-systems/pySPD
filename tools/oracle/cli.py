@@ -15,6 +15,7 @@ from tools.oracle.vspd import (
     ScipSmokeProfile,
     VspdCase,
     VspdListingParser,
+    VspdRunConfiguration,
     VspdRunner,
 )
 
@@ -40,6 +41,8 @@ def _parser() -> argparse.ArgumentParser:
         default="scip-smoke",
     )
     run.add_argument("--baseline", type=Path)
+    run.add_argument("--run-name")
+    run.add_argument("--operation-mode", choices=("SPD", "AUD", "DPS"))
     run.add_argument("--absolute-tolerance", type=float, default=0.01)
     run.add_argument("--relative-tolerance", type=float, default=1e-9)
     return parser
@@ -67,6 +70,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     baseline = (
         ObjectiveBaseline.load(arguments.baseline) if arguments.baseline else None
     )
+    if (arguments.run_name is None) != (arguments.operation_mode is None):
+        raise SystemExit("--run-name and --operation-mode must be supplied together")
+    configuration = (
+        VspdRunConfiguration(arguments.run_name, arguments.operation_mode)
+        if arguments.run_name is not None and arguments.operation_mode is not None
+        else None
+    )
     result = VspdRunner().run(
         VspdCase(
             source_tree=arguments.source.resolve(),
@@ -74,6 +84,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             work_directory=arguments.work_directory.resolve(),
             gams_executable=arguments.gams.resolve(),
             profile=profile,
+            configuration=configuration,
         ),
         baseline=baseline,
         absolute_tolerance=arguments.absolute_tolerance,

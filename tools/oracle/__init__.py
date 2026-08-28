@@ -8,6 +8,7 @@ from tools.oracle.vspd import (
     ScipSmokeProfile,
     VspdCase,
     VspdListingParser,
+    VspdRunConfiguration,
     VspdRunner,
 )
 
@@ -19,5 +20,6 @@ __all__ = [
     "ScipSmokeProfile",
     "VspdCase",
     "VspdListingParser",
+    "VspdRunConfiguration",
     "VspdRunner",
 ]

@@ -81,3 +81,34 @@ def test_independent_validator_maps_equation_marginals_to_native_and_csv_prices(
     assert result.price_count == 1
     assert result.native_comparison.max_absolute_delta == pytest.approx(0.0)
     assert result.report_comparison.max_absolute_delta == pytest.approx(0.0)
+
+
+def test_independent_validator_accepts_explicit_postprocessed_bus_prices() -> None:
+    result = IndependentPriceValidator().validate(
+        bus_marginals={
+            ("case", "period", "B1"): 50.0,
+            ("case", "period", "B_DEAD"): -500_000.0,
+        },
+        mapped_bus_prices={
+            ("case", "period", "B1"): 50.0,
+            ("case", "period", "B_DEAD"): 0.0,
+        },
+        allocations={
+            ("case", "period", "N1", "B1"): 1.0,
+            ("case", "period", "N_DEAD", "B_DEAD"): 1.0,
+        },
+        native_prices={
+            ("case", "period", "normal", "N1"): 50.0,
+            ("case", "period", "normal", "N_DEAD"): 0.0,
+        },
+        active_scenario="normal",
+        report_prices={
+            ("period", "normal", "N1"): 50.0,
+            ("period", "normal", "N_DEAD"): 0.0,
+        },
+        bus_price_adjustment_count=1,
+    )
+
+    assert result.passed
+    assert result.price_count == 2
+    assert result.bus_price_adjustment_count == 1

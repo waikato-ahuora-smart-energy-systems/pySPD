@@ -164,6 +164,7 @@ class IndependentPriceValidation:
     price_count: int
     native_comparison: PriceComparison
     report_comparison: PriceComparison
+    bus_price_adjustment_count: int = 0
 
     @property
     def passed(self) -> bool:
@@ -173,6 +174,7 @@ class IndependentPriceValidation:
         return {
             "active_scenario": self.active_scenario,
             "price_count": self.price_count,
+            "bus_price_adjustment_count": self.bus_price_adjustment_count,
             "passed": self.passed,
             "native_comparison": self.native_comparison.to_dict(),
             "report_comparison": self.report_comparison.to_dict(),
@@ -191,6 +193,8 @@ class IndependentPriceValidator:
         report_prices: Mapping[tuple[str, str, str], float],
         native_absolute_tolerance: float = 1e-9,
         report_absolute_tolerance: float = 0.0005,
+        mapped_bus_prices: Mapping[tuple[str, str, str], float] | None = None,
+        bus_price_adjustment_count: int = 0,
     ) -> IndependentPriceValidation:
         active_native: dict[tuple[str, ...], float] = {
             key: value
@@ -209,9 +213,14 @@ class IndependentPriceValidator:
                 for (alloc_ca, alloc_dt, alloc_node, bus), factor in allocations.items()
                 if (alloc_ca, alloc_dt, alloc_node) == (ca, dt, node)
             )
+            price_source = (
+                mapped_bus_prices
+                if mapped_bus_prices is not None
+                else bus_marginals
+            )
             period_bus_prices = {
                 bus: float(price)
-                for (price_ca, price_dt, bus), price in bus_marginals.items()
+                for (price_ca, price_dt, bus), price in price_source.items()
                 if (price_ca, price_dt) == (ca, dt)
             }
             mapped = NodePriceMapper().map_prices(
@@ -245,6 +254,7 @@ class IndependentPriceValidator:
             price_count=len(calculated),
             native_comparison=native_comparison,
             report_comparison=report_comparison,
+            bus_price_adjustment_count=bus_price_adjustment_count,
         )
 
 
@@ -315,4 +325,108 @@ class GdxPriceValidator:
             },
             active_scenario=active_scenario,
             report_prices=report_prices,
+        )
+
+
+class GdxPublishedPriceValidator:
+    """Validate normal/AUD prices from balance marginals and published CSV data."""
+
+    _required: ClassVar[set[str]] = {
+        "nodeBusAllocationFactor",
+        "ACnodeNetInjectionDefinition2",
+        "busPrice",
+        "o_nodePrice_TP",
+    }
+
+    def __init__(self, system_directory: Path | None = None) -> None:
+        self.system_directory = system_directory
+
+    def validate(
+        self,
+        solution_gdx: Path,
+        report_prices: Mapping[tuple[str, str], float],
+    ) -> IndependentPriceValidation:
+        try:
+            import gams.transfer as gt  # type: ignore[import-untyped]
+        except ImportError as error:
+            raise RuntimeError(
+                "GDX price validation requires the uv oracle dependency group"
+            ) from error
+        container = gt.Container(
+            system_directory=(
+                str(self.system_directory)
+                if self.system_directory is not None
+                else None
+            )
+        )
+        container.read(str(solution_gdx))
+        names = set(container.listSymbols())
+        missing = sorted(self._required - names)
+        if missing:
+            raise ValueError(f"pricing GDX is missing symbols: {missing}")
+        balance = container["ACnodeNetInjectionDefinition2"].records
+        postprocessed_bus = container["busPrice"].records
+        allocations = container["nodeBusAllocationFactor"].records
+        native = container["o_nodePrice_TP"].records
+        bus_marginals = {
+            (str(row.ca), str(row.dt), str(row.b)): float(row.marginal)
+            for row in balance.itertuples(index=False)
+        }
+        sparse_bus_prices = {
+            (str(row.ca), str(row.dt), str(row.b)): float(row.value)
+            for row in postprocessed_bus.itertuples(index=False)
+        }
+        unknown_bus_prices = set(sparse_bus_prices) - set(bus_marginals)
+        if unknown_bus_prices:
+            raise ValueError(
+                "postprocessed bus prices are outside the balance universe: "
+                f"{sorted(unknown_bus_prices)}"
+            )
+        mapped_bus_prices = {
+            key: sparse_bus_prices.get(key, 0.0) for key in bus_marginals
+        }
+        adjustment_count = sum(
+            not math.isclose(
+                mapped_bus_prices[key],
+                marginal,
+                rel_tol=1e-12,
+                abs_tol=1e-9,
+            )
+            for key, marginal in bus_marginals.items()
+        )
+        allocation_values = {
+            (str(row.ca), str(row.dt), str(row.n), str(row.b)): float(row.value)
+            for row in allocations.itertuples(index=False)
+        }
+        sparse_native = {
+            (str(row.ca), str(row.dt), str(row.n)): float(row.value)
+            for row in native.itertuples(index=False)
+        }
+        node_universe = {
+            (ca, date_time, node)
+            for ca, date_time, node, _ in allocation_values
+        }
+        unknown_native = set(sparse_native) - node_universe
+        if unknown_native:
+            raise ValueError(
+                "native node prices are outside the allocation universe: "
+                f"{sorted(unknown_native)}"
+            )
+        return IndependentPriceValidator().validate(
+            bus_marginals=bus_marginals,
+            mapped_bus_prices=mapped_bus_prices,
+            bus_price_adjustment_count=adjustment_count,
+            allocations=allocation_values,
+            native_prices={
+                (ca, date_time, "normal", node): sparse_native.get(
+                    (ca, date_time, node), 0.0
+                )
+                for ca, date_time, node in node_universe
+            },
+            active_scenario="normal",
+            report_prices={
+                (date_time, "normal", node): price
+                for (date_time, node), price in report_prices.items()
+            },
+            report_absolute_tolerance=5e-6,
         )
