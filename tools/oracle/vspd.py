@@ -108,7 +108,7 @@ LAMBDAINTEGER.fx(t,br,bp) = LAMBDAINTEGER.l(t,br,bp);
 LAMBDAHVDCENERGY.fx(t,isl,bp) = LAMBDAHVDCENERGY.l(t,isl,bp);
 LAMBDAHVDCRESERVE.fx(t,isl,resC,rd,rsbp) = LAMBDAHVDCRESERVE.l(t,isl,resC,rd,rsbp);
 
-%pyspdPricingModel%.Optfile = 0;
+%pyspdPricingModel%.Optfile = 1;
 %pyspdPricingModel%.reslim = LPTimeLimit;
 %pyspdPricingModel%.iterlim = LPIterationLimit;
 solve %pyspdPricingModel% using rmip maximizing NETBENEFIT;
@@ -193,7 +193,8 @@ LAMBDAHVDCRESERVE.fx(t,isl,resC,rd,rsbp) = LAMBDAHVDCRESERVE.l(t,isl,resC,rd,rsb
 
 execute_unload 'pyspd_pricing_solution.gdx'
   t, n, b, nodeBus, nodeBusAllocationFactor,
-  ACnodeNetInjectionDefinition2, busPrice, o_nodePrice_TP, NETBENEFIT,
+  ACnodeNetInjectionDefinition2, busPrice, busDisconnected,
+  dtParameter, studyMode, node2node, nodeIsland, o_nodePrice_TP, NETBENEFIT,
   HVDCSENDING, INZONE, HVDCSENTINSEGMENT, PURCHASEBLOCKBINARY, HVDCSENDZERO,
   ACBRANCHFLOWDIRECTED_INTEGER, HVDCLINKFLOWDIRECTED_INTEGER,
   HVDCPOLEFLOW_INTEGER, LAMBDAINTEGER, LAMBDAHVDCENERGY, LAMBDAHVDCRESERVE;
@@ -658,7 +659,7 @@ class ScipHighsPricingProfile(NativeGamsProfile):
             name="gams-scip-highs-pricing",
             mip_solver="SCIP",
             lp_solver="HiGHS",
-            use_option_files=False,
+            use_option_files=True,
             normative=True,
             supports_marginals=True,
             explicit_fixed_lp_pricing=True,
@@ -747,12 +748,18 @@ class VspdSourcePatcher:
                 expected_count=3,
             )
         if profile.explicit_fixed_lp_pricing:
-            self._apply_fixed_lp_pricing(programs, solve, profile.lp_solver)
+            self._apply_fixed_lp_pricing(
+                programs,
+                solve,
+                profile.mip_solver,
+                profile.lp_solver,
+            )
 
     def _apply_fixed_lp_pricing(
         self,
         programs: Path,
         solve: Path,
+        mip_solver: str,
         pricing_solver: str,
     ) -> None:
         self._replace_exact(
@@ -794,6 +801,15 @@ class VspdSourcePatcher:
         (programs / "pyspd_fixed_lp_solve.inc").write_text(_FIXED_LP_SOLVE)
         (programs / "pyspd_matrix_export.inc").write_text(_MATRIX_EXPORT)
         (programs / "convert.opt").write_text(_CONVERT_OPTIONS)
+        if mip_solver == "SCIP":
+            (programs / "scip.opt").write_text("numerics/feastol = 1e-7\n")
+        if pricing_solver == "HiGHS":
+            (programs / "highs.opt").write_text(
+                "dual_feasibility_tolerance = 1e-9\n"
+                "primal_feasibility_tolerance = 1e-9\n"
+                "dual_residual_tolerance = 1e-9\n"
+                "primal_residual_tolerance = 1e-9\n"
+            )
 
     @staticmethod
     def _replace_global_setting(path: Path, name: str, value: str) -> None:
@@ -954,7 +970,7 @@ class VspdRunner:
                 f"refusing to overwrite existing stage directory: {stage}"
             )
         case.work_directory.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(case.source_tree, stage)
+        self._stage_source_tree(case.source_tree, stage)
 
         programs = stage / "Programs"
         staged_input = stage / "Input" / case.input_gdx.name
@@ -1162,6 +1178,7 @@ class VspdRunner:
                     "passed": price_validation.passed,
                     "active_scenario": price_validation.active_scenario,
                     "price_count": price_validation.price_count,
+                    "price_transfer_count": price_validation.price_transfer_count,
                 },
             },
             matrix_validation,
@@ -1192,6 +1209,14 @@ class VspdRunner:
         if missing:
             raise VspdRunError(f"missing vSPD settings: {sorted(missing)}")
         return settings
+
+    @staticmethod
+    def _stage_source_tree(source: Path, destination: Path) -> None:
+        shutil.copytree(
+            source,
+            destination,
+            ignore=shutil.ignore_patterns(".git"),
+        )
 
     @staticmethod
     def _report_setup(operation_mode: str) -> str:

@@ -326,7 +326,13 @@ class LinearMatrixValidation:
     max_row_bound_violation: float
     max_column_bound_violation: float
     max_stationarity_residual: float
+    max_scaled_stationarity_residual: float
+    max_regular_stationarity_residual: float
+    max_free_zero_objective_stationarity_residual: float
     absolute_tolerance: float
+    stationarity_scale_floor: float
+    scaled_stationarity_tolerance: float
+    free_zero_objective_stationarity_tolerance: float
     passed: bool
 
     def to_dict(self) -> dict[str, Any]:
@@ -340,16 +346,44 @@ class LinearMatrixValidator:
     def validate(
         matrix: LinearMatrixEvidence,
         absolute_tolerance: float = 1e-7,
+        stationarity_scale_floor: float = 1.0,
+        scaled_stationarity_tolerance: float = 1e-7,
+        free_zero_objective_stationarity_tolerance: float = 1e-4,
     ) -> LinearMatrixValidation:
         if absolute_tolerance < 0 or not math.isfinite(absolute_tolerance):
             raise ValueError("absolute_tolerance must be finite and non-negative")
+        if (
+            stationarity_scale_floor <= 0
+            or not math.isfinite(stationarity_scale_floor)
+        ):
+            raise ValueError("stationarity_scale_floor must be finite and positive")
+        if (
+            scaled_stationarity_tolerance < 0
+            or not math.isfinite(scaled_stationarity_tolerance)
+        ):
+            raise ValueError(
+                "scaled_stationarity_tolerance must be finite and non-negative"
+            )
+        if (
+            free_zero_objective_stationarity_tolerance < 0
+            or not math.isfinite(free_zero_objective_stationarity_tolerance)
+        ):
+            raise ValueError(
+                "free_zero_objective_stationarity_tolerance must be finite "
+                "and non-negative"
+            )
         columns = {column.name: column for column in matrix.columns}
         activities = {row.name: 0.0 for row in matrix.rows}
         dual_products = {column.name: 0.0 for column in matrix.columns}
+        maximum_coefficients = {column.name: 0.0 for column in matrix.columns}
         row_marginals = {row.name: row.marginal for row in matrix.rows}
         for entry in matrix.entries:
             activities[entry.row] += entry.coefficient * columns[entry.column].level
             dual_products[entry.column] += entry.coefficient * row_marginals[entry.row]
+            maximum_coefficients[entry.column] = max(
+                maximum_coefficients[entry.column],
+                abs(entry.coefficient),
+            )
         activity_delta = max(
             (abs(activities[row.name] - row.level) if row.level is not None else 0.0)
             for row in matrix.rows
@@ -363,22 +397,65 @@ class LinearMatrixValidator:
             for column in matrix.columns
         )
         direction = 1.0 if matrix.sense == "maximize" else -1.0
-        stationarity = max(
-            abs(
+        stationarity_residuals = {
+            column.name: abs(
                 direction * column.objective
                 - dual_products[column.name]
                 - column.reduced_cost
             )
             for column in matrix.columns
+        }
+        stationarity_scales = {
+            column.name: max(
+                stationarity_scale_floor,
+                abs(column.objective),
+                abs(column.reduced_cost),
+                maximum_coefficients[column.name],
+            )
+            for column in matrix.columns
+        }
+        scaled_stationarity = max(
+            (
+                residual / stationarity_scales[name]
+                for name, residual in stationarity_residuals.items()
+            ),
+            default=0.0,
         )
+        free_zero_objective_columns = {
+            column.name
+            for column in matrix.columns
+            if column.lower == -math.inf
+            and column.upper == math.inf
+            and column.objective == 0.0
+        }
+        free_stationarity = max(
+            (
+                residual
+                for name, residual in stationarity_residuals.items()
+                if name in free_zero_objective_columns
+            ),
+            default=0.0,
+        )
+        regular_stationarity = max(
+            (
+                residual
+                for name, residual in stationarity_residuals.items()
+                if name not in free_zero_objective_columns
+            ),
+            default=0.0,
+        )
+        stationarity = max(free_stationarity, regular_stationarity)
         passed = (
             max(
                 activity_delta,
                 row_bound_violation,
                 column_bound_violation,
-                stationarity,
+                regular_stationarity,
             )
             <= absolute_tolerance
+            and scaled_stationarity <= scaled_stationarity_tolerance
+            and free_stationarity
+            <= free_zero_objective_stationarity_tolerance
         )
         return LinearMatrixValidation(
             row_count=len(matrix.rows),
@@ -388,7 +465,15 @@ class LinearMatrixValidator:
             max_row_bound_violation=row_bound_violation,
             max_column_bound_violation=column_bound_violation,
             max_stationarity_residual=stationarity,
+            max_scaled_stationarity_residual=scaled_stationarity,
+            max_regular_stationarity_residual=regular_stationarity,
+            max_free_zero_objective_stationarity_residual=free_stationarity,
             absolute_tolerance=absolute_tolerance,
+            stationarity_scale_floor=stationarity_scale_floor,
+            scaled_stationarity_tolerance=scaled_stationarity_tolerance,
+            free_zero_objective_stationarity_tolerance=(
+                free_zero_objective_stationarity_tolerance
+            ),
             passed=passed,
         )
 

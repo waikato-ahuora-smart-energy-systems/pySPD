@@ -112,3 +112,57 @@ def test_independent_validator_accepts_explicit_postprocessed_bus_prices() -> No
     assert result.passed
     assert result.price_count == 2
     assert result.bus_price_adjustment_count == 1
+
+
+def test_independent_validator_reproduces_multihop_dead_node_price_transfer() -> None:
+    result = IndependentPriceValidator().validate(
+        bus_marginals={
+            ("case", "period", "B_LIVE"): 50.0,
+            ("case", "period", "B_DEAD_1"): -500_000.0,
+            ("case", "period", "B_DEAD_2"): -500_000.0,
+        },
+        mapped_bus_prices={
+            ("case", "period", "B_LIVE"): 50.0,
+            ("case", "period", "B_DEAD_1"): 0.0,
+            ("case", "period", "B_DEAD_2"): 0.0,
+        },
+        allocations={
+            ("case", "period", "N_LIVE", "B_LIVE"): 1.0,
+            ("case", "period", "N_DEAD_1", "B_DEAD_1"): 1.0,
+            ("case", "period", "N_DEAD_2", "B_DEAD_2"): 1.0,
+        },
+        native_prices={
+            ("case", "period", "normal", "N_LIVE"): 50.0,
+            ("case", "period", "normal", "N_DEAD_1"): 50.0,
+            ("case", "period", "normal", "N_DEAD_2"): 50.0,
+        },
+        active_scenario="normal",
+        report_prices={
+            ("period", "normal", "N_LIVE"): 50.0,
+            ("period", "normal", "N_DEAD_1"): 50.0,
+            ("period", "normal", "N_DEAD_2"): 50.0,
+        },
+        price_transfer_periods=frozenset({("case", "period")}),
+        disconnected_buses=frozenset(
+            {
+                ("case", "period", "B_DEAD_1"),
+                ("case", "period", "B_DEAD_2"),
+            }
+        ),
+        node_links=frozenset(
+            {
+                ("case", "period", "N_DEAD_1", "N_LIVE"),
+                ("case", "period", "N_DEAD_2", "N_DEAD_1"),
+            }
+        ),
+        node_islands=frozenset(
+            {
+                ("case", "period", "N_LIVE", "I1"),
+                ("case", "period", "N_DEAD_1", "I1"),
+                ("case", "period", "N_DEAD_2", "I1"),
+            }
+        ),
+    )
+
+    assert result.passed
+    assert result.price_transfer_count == 2

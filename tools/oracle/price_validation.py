@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping, Sequence
+from collections.abc import Set as AbstractSet
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, ClassVar
@@ -165,6 +166,7 @@ class IndependentPriceValidation:
     native_comparison: PriceComparison
     report_comparison: PriceComparison
     bus_price_adjustment_count: int = 0
+    price_transfer_count: int = 0
 
     @property
     def passed(self) -> bool:
@@ -175,6 +177,7 @@ class IndependentPriceValidation:
             "active_scenario": self.active_scenario,
             "price_count": self.price_count,
             "bus_price_adjustment_count": self.bus_price_adjustment_count,
+            "price_transfer_count": self.price_transfer_count,
             "passed": self.passed,
             "native_comparison": self.native_comparison.to_dict(),
             "report_comparison": self.report_comparison.to_dict(),
@@ -195,6 +198,10 @@ class IndependentPriceValidator:
         report_absolute_tolerance: float = 0.0005,
         mapped_bus_prices: Mapping[tuple[str, str, str], float] | None = None,
         bus_price_adjustment_count: int = 0,
+        price_transfer_periods: AbstractSet[tuple[str, str]] = frozenset(),
+        disconnected_buses: AbstractSet[tuple[str, str, str]] = frozenset(),
+        node_links: AbstractSet[tuple[str, str, str, str]] = frozenset(),
+        node_islands: AbstractSet[tuple[str, str, str, str]] = frozenset(),
     ) -> IndependentPriceValidation:
         active_native: dict[tuple[str, ...], float] = {
             key: value
@@ -228,6 +235,15 @@ class IndependentPriceValidator:
                 tuple(node_allocations),
             )
             calculated[(ca, dt, active_scenario, node)] = mapped[node]
+        price_transfer_count = self._apply_dead_node_price_transfer(
+            calculated=calculated,
+            active_scenario=active_scenario,
+            allocations=allocations,
+            price_transfer_periods=price_transfer_periods,
+            disconnected_buses=disconnected_buses,
+            node_links=node_links,
+            node_islands=node_islands,
+        )
         native_comparison = PriceComparator.compare(
             calculated,
             active_native,
@@ -255,7 +271,77 @@ class IndependentPriceValidator:
             native_comparison=native_comparison,
             report_comparison=report_comparison,
             bus_price_adjustment_count=bus_price_adjustment_count,
+            price_transfer_count=price_transfer_count,
         )
+
+    @staticmethod
+    def _apply_dead_node_price_transfer(
+        calculated: dict[tuple[str, ...], float],
+        active_scenario: str,
+        allocations: Mapping[tuple[str, str, str, str], float],
+        price_transfer_periods: AbstractSet[tuple[str, str]],
+        disconnected_buses: AbstractSet[tuple[str, str, str]],
+        node_links: AbstractSet[tuple[str, str, str, str]],
+        node_islands: AbstractSet[tuple[str, str, str, str]],
+    ) -> int:
+        transfer_count = 0
+        for ca, dt in sorted(price_transfer_periods):
+            nodes = {
+                key[3]
+                for key in calculated
+                if key[:3] == (ca, dt, active_scenario)
+            }
+            islands_by_node = {
+                node: {
+                    island
+                    for island_ca, island_dt, island_node, island in node_islands
+                    if (island_ca, island_dt, island_node) == (ca, dt, node)
+                }
+                for node in nodes
+            }
+            dead_nodes = {
+                node
+                for node in nodes
+                if sum(
+                    float(factor)
+                    for (alloc_ca, alloc_dt, alloc_node, bus), factor
+                    in allocations.items()
+                    if (alloc_ca, alloc_dt, alloc_node) == (ca, dt, node)
+                    and (ca, dt, bus) not in disconnected_buses
+                )
+                == 0.0
+            }
+            while dead_nodes:
+                sources_by_node = {
+                    node: {
+                        target
+                        for link_ca, link_dt, source, target in node_links
+                        if (link_ca, link_dt, source) == (ca, dt, node)
+                        and target not in dead_nodes
+                        and islands_by_node.get(node, set())
+                        & islands_by_node.get(target, set())
+                    }
+                    for node in dead_nodes
+                }
+                transferable = {
+                    node: sources
+                    for node, sources in sources_by_node.items()
+                    if sources
+                }
+                if not transferable:
+                    break
+                replacements = {
+                    node: sum(
+                        calculated[(ca, dt, active_scenario, source)]
+                        for source in sources
+                    )
+                    for node, sources in transferable.items()
+                }
+                for node, price in replacements.items():
+                    calculated[(ca, dt, active_scenario, node)] = price
+                dead_nodes -= transferable.keys()
+                transfer_count += len(transferable)
+        return transfer_count
 
 
 class GdxPriceValidator:
@@ -335,7 +421,12 @@ class GdxPublishedPriceValidator:
         "nodeBusAllocationFactor",
         "ACnodeNetInjectionDefinition2",
         "busPrice",
+        "busDisconnected",
+        "dtParameter",
+        "node2node",
+        "nodeIsland",
         "o_nodePrice_TP",
+        "studyMode",
     }
 
     def __init__(self, system_directory: Path | None = None) -> None:
@@ -368,6 +459,24 @@ class GdxPublishedPriceValidator:
         postprocessed_bus = container["busPrice"].records
         allocations = container["nodeBusAllocationFactor"].records
         native = container["o_nodePrice_TP"].records
+        date_time_parameters = {
+            (str(ca), str(date_time), str(parameter)): float(value)
+            for ca, date_time, parameter, value in container[
+                "dtParameter"
+            ].records.itertuples(index=False, name=None)
+        }
+        study_modes = {
+            (str(ca), str(date_time)): round(float(value))
+            for ca, date_time, value in container["studyMode"].records.itertuples(
+                index=False, name=None
+            )
+        }
+        price_transfer_periods = frozenset(
+            period
+            for period, mode in study_modes.items()
+            if mode in {101, 130, 131, 201}
+            and date_time_parameters.get((*period, "priceTransfer"), 0.0) != 0.0
+        )
         bus_marginals = {
             (str(row.ca), str(row.dt), str(row.b)): float(row.marginal)
             for row in balance.itertuples(index=False)
@@ -416,6 +525,26 @@ class GdxPublishedPriceValidator:
             bus_marginals=bus_marginals,
             mapped_bus_prices=mapped_bus_prices,
             bus_price_adjustment_count=adjustment_count,
+            price_transfer_periods=price_transfer_periods,
+            disconnected_buses=frozenset(
+                (str(ca), str(date_time), str(bus))
+                for ca, date_time, bus, value in container[
+                    "busDisconnected"
+                ].records.itertuples(index=False, name=None)
+                if float(value) != 0.0
+            ),
+            node_links=frozenset(
+                (str(ca), str(date_time), str(source), str(target))
+                for ca, date_time, source, target, *_ in container[
+                    "node2node"
+                ].records.itertuples(index=False, name=None)
+            ),
+            node_islands=frozenset(
+                (str(ca), str(date_time), str(node), str(island))
+                for ca, date_time, node, island, *_ in container[
+                    "nodeIsland"
+                ].records.itertuples(index=False, name=None)
+            ),
             allocations=allocation_values,
             native_prices={
                 (ca, date_time, "normal", node): sparse_native.get(

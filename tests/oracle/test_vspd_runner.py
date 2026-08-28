@@ -151,6 +151,21 @@ def test_audit_mode_uses_normal_report_setup() -> None:
     assert VspdRunner._report_setup("AUD") == "vSPDreportSetup.gms"
 
 
+def test_source_staging_excludes_repository_metadata(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "Programs").mkdir()
+    (source / "Programs" / "model.gms").write_text("model data")
+    (source / ".git").mkdir()
+    (source / ".git" / "objects").write_text("large history")
+    destination = tmp_path / "stage"
+
+    VspdRunner._stage_source_tree(source, destination)
+
+    assert (destination / "Programs" / "model.gms").read_text() == "model data"
+    assert not (destination / ".git").exists()
+
+
 def test_fixed_lp_profile_injects_pricing_solve_after_each_mip(tmp_path: Path) -> None:
     programs = tmp_path / "Programs"
     programs.mkdir()
@@ -184,16 +199,24 @@ def test_fixed_lp_profile_injects_pricing_solve_after_each_mip(tmp_path: Path) -
     assert (programs / "pyspd_pricing_declarations.inc").is_file()
     assert (programs / "pyspd_matrix_export.inc").is_file()
     assert (programs / "convert.opt").is_file()
+    assert (programs / "scip.opt").read_text() == "numerics/feastol = 1e-7\n"
+    assert "dual_feasibility_tolerance = 1e-9" in (
+        programs / "highs.opt"
+    ).read_text()
+    assert patched.count(".Optfile = 1 ;") == 3
     pricing = (programs / "pyspd_fixed_lp_solve.inc").read_text()
     assert "HVDCSENDING.fx(t,isl)" in pricing
     assert "LAMBDAHVDCRESERVE.fx(t,isl,resC,rd,rsbp)" in pricing
     assert "solve %pyspdPricingModel% using rmip" in pricing
+    assert "%pyspdPricingModel%.Optfile = 1;" in pricing
     assert "HVDCSENDING.lo(t,isl) = pyspd_HVDCSENDING_lo(t,isl);" in pricing
     assert "$include pyspd_matrix_export.inc" in patched
     matrix_export = (programs / "pyspd_matrix_export.inc").read_text()
     assert "execute_unload 'pyspd_pricing_solution.gdx'" in matrix_export
     assert "ord(drs) = card(drs)" in matrix_export
     assert "pyspd_active_drs_ord" in matrix_export
+    assert "busDisconnected" in matrix_export
+    assert "dtParameter, studyMode, node2node, nodeIsland" in matrix_export
     assert "option rmip = Convert;" in matrix_export
     assert "option rmip = HiGHS;" in matrix_export
     assert "solve vSPD_NMIR using rmip" in matrix_export
