@@ -15,8 +15,8 @@ roles until named people are appointed.
 | `R-001` | Public vSPD v5 lags current SPD v16 | Certain | Critical | Explicit formulation classes, v5/v16 delta register, effective-date compatibility | Sponsor/SME | Controlled by scope; monitor |
 | `R-002` | v15 intent and v5 behavior differ materially | Medium | High | Clause/source reconciliation and model decisions | Market SME | **G0 hold** |
 | `R-003` | Source/data/specification rights prohibit intended distribution | Medium | Critical | Legal review, fetch-by-hash, attribution, no premature redistribution | Legal reviewer | **G0 hold** |
-| `R-004` | Native GAMS/CPLEX oracle cannot be licensed or reproduced | Medium | Critical | GAMS/SCIP/HiGHS characterization is operational; secure CPLEX link and immutable oracle artifacts | Sponsor/technical lead | **G0/G1 hold** |
-| `R-005` | MIP price convention is assumed incorrectly | Medium | Critical | Gate 1 runtime/effective-option characterization, separate snapshots | Optimization lead | G1 hold |
+| `R-004` | Native GAMS/CPLEX oracle cannot be licensed or reproduced | Medium | High | ADR-0008 active SCIP/HiGHS reference; CPLEX claims prohibited until later cross-validation | Sponsor/technical lead | Deferred; not a current gate hold |
+| `R-005` | MIP price convention is assumed incorrectly | Low | Critical | Explicit fixed-discrete RMIP, canonical matrix/solution snapshots, independent price and LP checks | Optimization lead | Controlled for sample; expand corpus |
 | `R-006` | GDX ordering/sparse/special values are lost | Medium | Critical | Explicit logical encoding, cross-reader and round-trip tests | Data lead | G2 |
 | `R-007` | Historical schema/date branches are missed | Medium | High | Versioned schemas, boundary corpus, preprocessing checkpoints | Data lead | G1/G3 |
 | `R-008` | HiGHS is misrepresented as full-model capable | Medium | High | LP-only profile; named SOS reformulations and Gates 6/7 | Technical lead | Controlled by ADR |
@@ -40,7 +40,7 @@ roles until named people are appointed.
 | `D-003` | Independent validation lead | G0 | Unassigned | Appointment and independence declaration | Sponsor |
 | `D-004` | Legal/licensing reviewer | G0 | Unassigned | Signed licence register | Sponsor |
 | `D-005` | GAMS runtime/licence | G0/G1 | GAMS 54.3.1 installed outside `PATH`; full-size SCIP/HiGHS executed | [Gate 1 runtime evidence](../gate-1/runtime-evidence.json) | Technical lead |
-| `D-006` | Native GAMS CPLEX runtime/licence | G0/G1 | Link present but size-limited; GAMSPy entitlement is not transferable | Version/licence/options manifest and full-size price run | Technical lead |
+| `D-006` | Native GAMS CPLEX runtime/licence | Deferred cross-validation | Link present but size-limited; GAMSPy entitlement is not transferable | Version/licence/options manifest and full-size price run before CPLEX-specific claims | Technical lead |
 | `D-007` | v15/v16/licence/audit PDF archive | G0 | URLs known; hashes/storage pending | Immutable URI, size, SHA-256 | Data steward |
 | `D-008` | Daily Pricing GDX access | G1 | Public source identified; corpus not fetched | Per-file manifest and representative fetch | Data steward |
 | `D-009` | 2023/2025 historical packs | G1 | Git commits identified; rights/applicability pending | Hashes, legal decision, profile mapping | Validation lead |

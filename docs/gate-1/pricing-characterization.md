@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Executed candidate; normative CPLEX comparison pending |
+| Status | Active adequate SCIP/HiGHS reference under ADR-0008 |
 | Date | 29 August 2026 |
 | Source | Pinned vSPD v5.0.6 |
 | Primary solver | GAMS/SCIP 54.3.1 profile |
@@ -31,7 +31,12 @@ changing the pinned checkout:
 7. restore the original bounds while retaining the pricing-LP solution and
    equation marginals for vSPD reporting; and
 8. parse and validate the DPS node-price report, rejecting duplicate keys and
-   `NA`, `UNDF`, or infinite prices.
+   `NA`, `UNDF`, or infinite prices;
+9. on the final demand scenario only, export the fixed-LP solution plus a GAMS
+   Convert `DumpGDX` matrix and `DictMap` name dictionary; and
+10. canonicalize the GDX content, recompute matrix activity/bounds/stationarity,
+    and derive node prices independently from balance-equation marginals and
+    node-to-bus allocation factors.
 
 The overlay is fail-closed: every source replacement has an exact expected
 occurrence count. A changed upstream source cannot receive a partial overlay.
@@ -51,44 +56,58 @@ occurrence count. A changed upstream source cannot receive a partial overlay.
 | Duplicate `(datetime, scenario, node)` keys | 0 |
 | Non-finite/special prices | 0 |
 | Observed price range | `0.030` to `326.036 NZD/MWh` |
+| Canonical fixed-LP rows / columns / nonzeros | `33,131 / 58,232 / 111,925` |
+| Maximum independent activity delta | `3.92e-11` |
+| Maximum row / column bound violation | `1.17e-10 / 0` |
+| Maximum stationarity residual | `6.25e-10` |
+| Native independent node-price delta | `0` across 9 final-scenario nodes |
+| Three-decimal CSV price delta | at most `0.000500001 NZD/MWh` |
 
-Two clean staged runs produced identical logical solve-record hashes, identical
-logical node-price hashes, and byte-identical node-price CSVs. Raw listing
-hashes differed because GAMS listings embed run timestamps; logical hashes are
-therefore the deterministic acceptance surface for listing content.
+Two clean staged runs produced identical logical solve-record and node-price
+hashes, byte-identical node-price CSVs, and identical logical hashes for the
+input, fixed-LP solution, Convert matrix, name dictionary, and normalized linear
+matrix. Raw listing hashes differed because GAMS listings embed run timestamps;
+logical hashes are therefore the deterministic acceptance surface.
+
+The independent price validator does not read `busPrice`, `o_nodePrice_TP`, or
+`o_drsnodeprice` to calculate its prices. It reads the marginal of each
+`ACnodeNetInjectionDefinition2` balance equation, applies
+`nodeBusAllocationFactor`, and only then compares the derived values with the
+native GDX output and three-decimal CSV. The final-scenario native comparison
+was exact for all nine pricing nodes.
 
 The earlier SCIP-only run triggered branch-flow cleanup for the 4% and 5%
 demand-decrease scenarios because its MIP solution contained a small
 original-space violation. The explicit fixed LP produced no cleanup solve,
-which matches the committed CPLEX listing. This is control-path evidence, not
-yet proof that HiGHS and CPLEX return identical node-price duals.
+which matches the committed CPLEX listing. This is control-path evidence for
+the active SCIP/HiGHS pathway, not a claim of CPLEX-identical duals.
 
-## Normative comparison still required
+## Deferred CPLEX comparison
 
 The repository does not commit the DPS CSV or `DRSOutput_TP.gdx`, so the
-committed listing alone cannot supply the 135 CPLEX node prices. A full-size
-native GAMS/CPLEX entitlement or Authority-produced hashed output is required.
+committed listing alone cannot supply the 135 CPLEX node prices. A future
+full-size native GAMS/CPLEX entitlement or Authority-produced hashed output is
+needed for a CPLEX-specific parity claim, but it does not block current work.
 
 There is also an effective-option discrepancy that must be resolved: the
 committed CPLEX listing records `epopt=1e-9`, `epint=0`, `eprhs=1e-6`,
 `epgap=0`, and `epagap=1e-9`, while the tagged `cplex.opt` currently contains
-different `epopt`, `epint`, and `epagap` values. Gate 1 must bind the normative
-oracle to the effective listing options or explain and approve the difference.
+different `epopt`, `epint`, and `epagap` values. This discrepancy remains for
+the deferred CPLEX cross-validation profile.
 
 ## Remaining price tests
 
 - Compare raw CPLEX and HiGHS bus marginals before node allocation.
-- Compare all 135 node prices at native precision and exact three-decimal
-  report precision.
+- Extend native marginal validation from the final matrix snapshot to all 15
+  scenarios; all 135 CSV prices are already structurally and numerically valid.
 - Verify the marginal sign and units with central demand perturbations.
-- Calculate primal feasibility, stationarity, reduced costs, and
-  complementarity independently.
+- Add explicit complementarity metrics; activity, bound feasibility, and
+  stationarity are independently checked for the final fixed LP.
 - Characterize basis and degeneracy sensitivity with repeated and perturbed
   solves.
 - Add dead/disconnected node, scarcity, SOS-invalid-price, price-transfer, and
   branch-flow fallback fixtures.
 
-The official GAMS CPLEX documentation describes `solveFinal=1` as solving the
-problem with discrete variables fixed and returning duals. This profile is an
-explicit, independently solved approximation of that convention and remains
-non-normative until compared with the qualified CPLEX oracle.
+The active profile is the normative interim reference under ADR-0008 whenever
+all operational SCIP/HiGHS solves report status `1/1` and every evidence check
+passes. It does not establish CPLEX-identical duals; that claim remains deferred.

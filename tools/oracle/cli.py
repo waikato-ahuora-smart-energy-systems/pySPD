@@ -81,9 +81,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     payload = json.loads(result.evidence.read_text())
     print(json.dumps(payload, indent=2, sort_keys=True))
-    if not result.parsed.all_optimal:
+    if not result.parsed.matches_profile(profile):
         return 1
-    return 0 if result.comparison is None or result.comparison.passed else 1
+    return 0 if result.qualified else 1
 
 
 if __name__ == "__main__":

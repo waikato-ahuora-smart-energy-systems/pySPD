@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "evidence_id": "G1-PRICING-RTD-202502261155-20260829",
   "created_date": "2026-08-29",
-  "status": "executed-candidate-non-normative",
+  "status": "executed-active-reference",
   "source": {
     "repository": "https://github.com/ElectricityAuthority/vSPD",
     "tag": "v5.0.6",
@@ -21,7 +21,8 @@
     "primary_solver": "SCIP",
     "pricing_solver": "HiGHS",
     "profile": "gams-scip-highs-pricing",
-    "normative": false
+    "normative": true,
+    "qualification_basis": "ADR-0008 interim active reference; CPLEX-specific parity deferred"
   },
   "overlay": {
     "strategy": "stage-copy-and-fail-closed-exact-source-overlay",
@@ -50,6 +51,33 @@
     "minimum_node_price_nzd_per_mwh": 0.03,
     "maximum_node_price_nzd_per_mwh": 326.036
   },
+  "canonical_evidence": {
+    "clean_run_count": 2,
+    "matrix_export_count_per_run": 1,
+    "input_gdx_logical_sha256": "c3ed1aab9b91f113030894a11944238acfa56969bd7525b5a6ebf1acacbc7aa4",
+    "pricing_solution_gdx_logical_sha256": "7096dc89574afe00668da5b4489517535a478bf3fe2ea6673fee52937aad349a",
+    "pricing_matrix_gdx_logical_sha256": "f14512fbe4168ea6de56756489b4b8d8650da891630101a51233a0053141283f",
+    "pricing_dictionary_gdx_logical_sha256": "b9ff68ffee3db594fa8c01c61ca31f4f9e56de8b4a5ff98f1d210b5dcaf096ee",
+    "linear_matrix_logical_sha256": "4402cc8c09b9aa605c308176f991a490a97b553e9530fff209f787f8ab2fa02a",
+    "row_count": 33131,
+    "column_count": 58232,
+    "nonzero_count": 111925,
+    "max_activity_delta": 3.914379931302392e-11,
+    "max_row_bound_violation": 1.1641532182693481e-10,
+    "max_column_bound_violation": 0.0,
+    "max_stationarity_residual": 6.243112693482544e-10,
+    "validation_tolerance": 1e-7,
+    "validation_passed": true
+  },
+  "independent_price_validation": {
+    "method": "ACnodeNetInjectionDefinition2 marginals independently allocated by nodeBusAllocationFactor",
+    "active_scenario": "decrease conforming load 5.0%",
+    "price_count": 9,
+    "native_gdx_max_absolute_delta": 0.0,
+    "three_decimal_report_max_absolute_delta": 0.0005000000000000004,
+    "passed": true,
+    "finite_difference_implementation": "implemented as a tested primitive; full-size perturbation corpus pending"
+  },
   "determinism": {
     "logical_solve_records_equal": true,
     "logical_node_price_records_equal": true,
@@ -58,16 +86,15 @@
     "raw_listing_difference_reason": "GAMS listing embeds run timestamps"
   },
   "artifact_hashes": {
-    "raw_listing_run_1_sha256": "0b084991bcb9703171682c790ce8bc9c111818a0731ad3034e0375722f9438b2",
-    "raw_listing_run_2_sha256": "6295dfef132497ca3bc3bf53157e55dafe84f2757d5a4e6beb1f2c76bb73d46a",
-    "logical_solve_records_sha256": "da01fb652fe121b881555b1bde77a55950914afa65f645e83d5686f1fce0dc0f",
+    "raw_listing_run_1_sha256": "f90fee853202b985fb1764093ae40fa25dc5dbda3bff4c0cbf00d65c7528c48d",
+    "raw_listing_run_2_sha256": "ab413be78c758c68a44bb6a3b7fd4eac5eec7edc9e4ac060e9d0eac1b8997c7a",
+    "logical_solve_records_sha256": "2ee0473b8456afd7a1c1f265acb81808ff89f9d11654c4989272617037c2b607",
     "raw_node_price_csv_sha256": "ce833132454d2729120c02b9de352b8503a80bdce867a9d41b0fa7ea29a9ce3d",
     "logical_node_price_records_sha256": "2a558a1883290c1f2699d25cbaeaceaa3888e75e0109522b833427d56e3be8ad",
     "raw_island_sensitivity_csv_sha256": "54c4a009ad3da1a789f009f43d9239ed23090330c06ea88943e2880bd45e1e28"
   },
   "holds": [
-    "Native full-size GAMS/CPLEX pricing oracle is unavailable.",
-    "The committed listing and tagged cplex.opt record different effective tolerances.",
-    "The full Gate 1 corpus, matrix exports, KKT checks, and independent review are incomplete."
+    "The full Gate 1 corpus, preprocessing checkpoints, finite-difference corpus, and independent review are incomplete.",
+    "Native CPLEX validation and its effective-option reconciliation are deferred cross-validation under ADR-0008."
   ]
 }

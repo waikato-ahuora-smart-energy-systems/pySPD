@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Proposed |
+| Status | Proposed; interim reference portion amended by ADR-0008 |
 | Date | 28 August 2026 |
 | Deciders | Technical lead, optimization lead, validation lead |
 
@@ -19,7 +19,8 @@ Define capability-scoped profiles:
 
 | Profile | Decision |
 |---|---|
-| `gams-cplex-oracle` | Normative reference; exact runtime/options qualified at Gate 1 |
+| `gams-scip-highs-pricing` | Active interim reference under ADR-0008 when every operational solve and canonical validator passes |
+| `gams-cplex-oracle` | Deferred CPLEX-specific cross-validation |
 | `pyomo-cplex-parity` | Normative PySPD compatibility profile |
 | `pyomo-highs-lp` | Open LP/submodel and CI profile |
 | `pyomo-highs-reformulated` | Disabled until named SOS reformulations pass Gates 6 and 7 |
@@ -39,7 +40,8 @@ algorithm, threads, seeds, presolve, scaling, tolerances, and licence state.
 
 ## Consequences
 
-- CPLEX access is a Gate 0 dependency for the intended compatibility claim.
+- CPLEX access is required for a CPLEX-specific compatibility claim, but is not
+  a Gate 0 dependency for the ADR-0008 interim compatibility claim.
 - Open CI can begin with LP components before the full discrete model.
 - A portable full-model profile is possible but requires substantial separate
   evidence.

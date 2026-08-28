@@ -3,7 +3,8 @@
 | Field | Value |
 |---|---|
 | Status | Proposed for validation-lead and market-SME approval |
-| Normative compatibility oracle | Pinned vSPD v5.0.6 under qualified GAMS + CPLEX |
+| Normative compatibility oracle | Pinned vSPD v5.0.6 under the ADR-0008 optimal SCIP-MIP → fixed-discrete HiGHS-RMIP profile |
+| Deferred cross-validation | Native GAMS/CPLEX; required only for CPLEX-specific parity claims |
 | Secondary comparator | Raw SPD and official market outputs where applicable |
 | Initial release case types | RTD, PRSS, and RTDP when present |
 

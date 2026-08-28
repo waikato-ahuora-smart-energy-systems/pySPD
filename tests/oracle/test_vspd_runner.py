@@ -64,6 +64,9 @@ def test_fixed_lp_profile_injects_pricing_solve_after_each_mip(tmp_path: Path) -
         "solve vSPD_BranchFlowMIP using mip maximizing NETBENEFIT ;\n"
         "vSPD_NMIR.Optfile = 1 ;\n"
         "solve vSPD_NMIR using mip maximizing NETBENEFIT ;\n"
+        "*=====================================================================================\n"
+        "* 9. Write results to CSV report files and GDX files\n"
+        "*=====================================================================================\n"
     )
 
     VspdSourcePatcher().apply(programs, ScipHighsPricingProfile())
@@ -73,8 +76,18 @@ def test_fixed_lp_profile_injects_pricing_solve_after_each_mip(tmp_path: Path) -
     assert patched.count("$include pyspd_fixed_lp_solve.inc") == 3
     assert "$include pyspd_pricing_declarations.inc\n\nScalars" in patched
     assert (programs / "pyspd_pricing_declarations.inc").is_file()
+    assert (programs / "pyspd_matrix_export.inc").is_file()
+    assert (programs / "convert.opt").is_file()
     pricing = (programs / "pyspd_fixed_lp_solve.inc").read_text()
     assert "HVDCSENDING.fx(t,isl)" in pricing
     assert "LAMBDAHVDCRESERVE.fx(t,isl,resC,rd,rsbp)" in pricing
     assert "solve %pyspdPricingModel% using rmip" in pricing
     assert "HVDCSENDING.lo(t,isl) = pyspd_HVDCSENDING_lo(t,isl);" in pricing
+    assert "$include pyspd_matrix_export.inc" in patched
+    matrix_export = (programs / "pyspd_matrix_export.inc").read_text()
+    assert "execute_unload 'pyspd_pricing_solution.gdx'" in matrix_export
+    assert "ord(drs) = card(drs)" in matrix_export
+    assert "pyspd_active_drs_ord" in matrix_export
+    assert "option rmip = Convert;" in matrix_export
+    assert "option rmip = HiGHS;" in matrix_export
+    assert "solve vSPD_NMIR using rmip" in matrix_export

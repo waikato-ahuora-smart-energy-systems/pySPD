@@ -40,8 +40,8 @@ the named PySPD release and scope.
   prior-solution schedule fallback and bounded re-solve behavior.
 - Establish matrix, objective-component, residual, pricing, and report parity.
 - Support a GAMS-free normal runtime after faithful canonical conversion.
-- Provide portable LP capability with HiGHS while retaining CPLEX as the
-  normative parity backend.
+- Provide portable LP capability with HiGHS, use the qualified SCIP/HiGHS path
+  as the active interim reference, and retain CPLEX for later parity checks.
 - Make failure, degradation, degeneracy, and known differences visible.
 - Deliver reproducibly from `uv.lock` under auditable red-green-refactor TDD.
 

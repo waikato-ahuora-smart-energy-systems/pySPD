@@ -57,8 +57,8 @@ interpretation, implementation target, test obligation, and reviewer decision.
 | Market-node constraints | v15 market-node constraints | `vSPDmodel.gms` | `MarketNodeSecurityComponent` | To verify | LE/GE/EQ and every factor type |
 | Energy/reserve scarcity | v15 scarcity formulation | `vSPDmodel.gms`, preprocessing | `ScarcityComponent` | To verify | Tranche, threshold, price, and penalty tests |
 | Soft violations and penalties | v15 violation variables | `vSPDmodel.gms` | Component-owned slacks + objective terms | To verify | Economic ordering and exact coefficient tests |
-| MIP pricing convention | Runtime behavior, not assumed from v15 | GAMS/CPLEX runtime and options | `Vspd506PricingEngine` | **Gate 1 hold** | Effective options, final-LP matrix, marginals |
-| Node/bus price mapping | v15 post-processing | `vSPDsolve.gms` | `Vspd506PricingEngine` | To verify | Sign, allocation, unit, and finite-difference tests |
+| MIP pricing convention | Runtime behavior, not assumed from v15 | ADR-0008 SCIP/HiGHS runtime; CPLEX deferred | `Vspd506PricingEngine` | Characterized for sample | Status `1/1`, fixed-LP matrix, marginals, corpus expansion |
+| Node/bus price mapping | v15 post-processing | `vSPDsolve.gms` | `Vspd506PricingEngine` | Verified for final-scenario sample | Sign/allocation exact; full finite-difference corpus pending |
 | Dead/disconnected price handling | v5 source; excluded from 2019 audit | `vSPDsolve.gms` | Pricing postprocessor class | New validation | Analytic topology and oracle cases |
 | Invalid/SOS1 price replacement | v15/v5 post-processing | `vSPDsolve.gms` | Pricing postprocessor class | To verify | Bad-price and exact-boundary tests |
 | Publication-duration weighting | v5 source | `vSPDperiod.gms`, `vSPDsolve.gms` | Publication policy class | To verify | Seconds, zero-duration, and rounding tests |
@@ -70,7 +70,7 @@ interpretation, implementation target, test obligation, and reviewer decision.
 | ID | Question | Gate impact | Owner |
 |---|---|---|---|
 | `MDR-OPEN-001` | Which v15 clauses are intentionally approximated or extended by v5 procedural behavior? | G0 hold | Market SME — TBD |
-| `MDR-OPEN-002` | What exact GAMS/CPLEX behavior produces post-MIP price marginals in the qualified runtime? | G1 hold | Optimization lead — TBD |
+| `MDR-OPEN-002` | Does later native CPLEX cross-validation materially differ from the accepted fixed-discrete HiGHS convention? | Deferred CPLEX claim | Optimization lead — TBD |
 | `MDR-OPEN-003` | Which date-compatibility branches are normative for the proposed 2022–2025 window? | G1/G3 | Data lead — TBD |
 | `MDR-OPEN-004` | Which official reports/rounding fields form the first release contract? | G0/G9 | Product owner — TBD |
 

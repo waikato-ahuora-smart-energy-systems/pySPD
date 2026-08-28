@@ -50,10 +50,10 @@ Python setup, dependency changes, test commands, and package execution use
 
 | Profile | Purpose | Required capability | Current workstation | Gate status |
 |---|---|---|---|---|
-| `gams-cplex-oracle` | Normative v5 reference | GAMS, CPLEX, GDX, exact options, source overlay | GAMS 54.3.1 installed; native CPLEX link is size-limited | **G0/G1 hold** |
+| `gams-cplex-oracle` | Deferred historical/commercial cross-validation | GAMS, CPLEX, GDX, exact options, source overlay | GAMS 54.3.1 installed; native CPLEX link is size-limited | Deferred by ADR-0008 |
 | `gams-scip-smoke` | Full-size source/data/objective smoke | Native GAMS, SCIP MIP, HiGHS LP | 15/15 primary MIPs optimal; objectives within `0.0001 NZD` of committed CPLEX | Characterization qualified; no prices |
-| `gams-scip-highs-pricing` | Independent fixed-LP pricing characterization | SCIP MIP, explicit discrete/SOS fixing, HiGHS RMIP | 15 MIPs + 15 RMIPs optimal; 135 finite node prices | Gate 1 candidate; non-normative |
-| `pyomo-cplex-parity` | Strict matrix/solution/price parity | LP/MIP/SOS, duals, quality, IIS | CPLEX not detected | **G0 hold** |
+| `gams-scip-highs-pricing` | Active vSPD execution and pricing reference | SCIP MIP, explicit discrete/SOS fixing, HiGHS RMIP | 15 MIPs + 15 RMIPs optimal; 135 finite node prices; two deterministic runs | Adequate when every required solve is status `1/1`; ADR-0008 |
+| `pyomo-cplex-parity` | Deferred strict CPLEX matrix/solution/price parity | LP/MIP/SOS, duals, quality, IIS | CPLEX not detected | Deferred by ADR-0008 |
 | `pyomo-highs-lp` | Open LP/default CI | LP/MIP without native reference SOS | HiGHS executable not detected; `highspy` not installed | Stage 2 pending |
 | `pyomo-highs-reformulated` | Optional portable full model | Approved binary/incremental SOS replacements | Not implemented | Gates 6/7 deferred |
 | `pyomo-gurobi-crosscheck` | Independent commercial check | LP/MIP/SOS, duals, IIS | `gurobi_cl` not detected | Optional pending |
@@ -61,8 +61,8 @@ Python setup, dependency changes, test commands, and package execution use
 GAMS is installed outside the shell's default `PATH`; the absolute executable
 was used for manifested full-size runs. A GAMSPy solver entitlement does not
 license the native GAMS CPLEX link, and standard GAMSPy cannot execute the
-legacy multi-unit vSPD source unchanged. Gate closure still requires a native
-full-size CPLEX run with effective options and price artifacts.
+legacy multi-unit vSPD source unchanged. Under ADR-0008, CPLEX is deferred and
+does not block current Gate 1 work; no CPLEX-specific parity claim is permitted.
 
 ## SOS capability decision
 

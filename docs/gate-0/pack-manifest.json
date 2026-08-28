@@ -4,7 +4,7 @@
   "gate_id": "G0",
   "decision": "hold",
   "created_at": "2026-08-29T00:00:00+12:00",
-  "project_commit": "5fcbfaea4aff14186a2b99c87583ddd0843589c5",
+  "project_commit": "7df0194cedab8268bfdece1d6c82f80e1587e130",
   "governing_plan_sha256": "22bb2f1ee7e727554c12bc0749db1c1d8a8ce45843ca7927359812e9b8a86ac0",
   "baseline": {
     "formulation_id": "vspd-v5.0.6-spd-formulation-v15-context",
@@ -13,7 +13,7 @@
     "source_archive_sha256": "7bae337103ea0128b7e5b05887d3fac6525be032e5da59c49ee05a08eee0bce4",
     "data_profile": "pricing-gdx-versioned-v1",
     "solver_profiles": [
-      "gams-cplex-compatibility-oracle",
+      "gams-cplex-oracle-deferred",
       "gams-scip-smoke",
       "gams-scip-highs-pricing",
       "highs-lp-only"
@@ -23,8 +23,8 @@
     {
       "id": "g1-scip-highs-pricing-runtime",
       "uri": "docs/gate-1/runtime-evidence.json",
-      "sha256": "771fce7038651e6668c47641136e0f2f74f770ac90e0d3718f0dbb5dc0f5deff",
-      "size_bytes": 2823,
+      "sha256": "fd90d32dd04a2299cf54fd1d8c3f0c8c8856a6b1a68d66aec69423c4d8932eb3",
+      "size_bytes": 4347,
       "media_type": "application/json"
     }
   ],
@@ -39,36 +39,36 @@
     {
       "id": "gate-0-index",
       "uri": "docs/gate-0/README.md",
-      "sha256": "882b8eaf6ecdd631c0c194e8719ff42c8ef1b33d752877c2dcb8e78c0b61cb8c",
-      "size_bytes": 5176,
+      "sha256": "613b61224623aa016d9a3daf63972e5e91c1cd99ac10b06def1cac62db7a249d",
+      "size_bytes": 5106,
       "media_type": "text/markdown"
     },
     {
       "id": "charter",
       "uri": "docs/gate-0/charter.md",
-      "sha256": "224423a8ce3ed85cd553ea2f9a5003e690b83e8a5ae4aca651a9896272bacec3",
-      "size_bytes": 4031,
+      "sha256": "3ed57e3c6853a6ce61c3b6ead1658a91d2be3bd6e8deaaf129e126f3fc1e528f",
+      "size_bytes": 4086,
       "media_type": "text/markdown"
     },
     {
       "id": "compatibility-matrix",
       "uri": "docs/gate-0/compatibility-matrix.md",
-      "sha256": "5fee4bba753e550909314cf52a48e97de47d9a4f632df732c815ebbb988c2b50",
-      "size_bytes": 5359,
+      "sha256": "544825d27def19b1a9812bcc1ed97dafd88c7afcd43d94e1a1c9cd653ad1183c",
+      "size_bytes": 5483,
       "media_type": "text/markdown"
     },
     {
       "id": "formulation-reconciliation",
       "uri": "docs/gate-0/formulation-reconciliation.md",
-      "sha256": "f0fa4c918f676b7ef667bf5b7e9e7273d3dd97e7639b5889cc8a596c98b05459",
-      "size_bytes": 8586,
+      "sha256": "bed521a12a49d2e2637c5821ab6e03d9c7be5b659065ad1cb4685f1bce33eb14",
+      "size_bytes": 8687,
       "media_type": "text/markdown"
     },
     {
       "id": "gate-checklist",
       "uri": "docs/gate-0/gate-checklist.md",
-      "sha256": "2390bb8d4510e0d1d82614674ff1bd2ebec66076b1319a076bc26e99faaef295",
-      "size_bytes": 4962,
+      "sha256": "64f3755bd8dec7175d6b0c0dedd8e61bc21c4e156e924f21488698ad556227f2",
+      "size_bytes": 5028,
       "media_type": "text/markdown"
     },
     {
@@ -81,8 +81,8 @@
     {
       "id": "risk-dependency-register",
       "uri": "docs/gate-0/risk-and-dependency-register.md",
-      "sha256": "d24718b852742000d2e074ca40acc1d05202d4212c5b47b37c9b87733d41cd56",
-      "size_bytes": 5800,
+      "sha256": "a2e4691d82953004b18f5b06afe034fb56ed651369c20b1695958a6851681d0e",
+      "size_bytes": 5913,
       "media_type": "text/markdown"
     },
     {
@@ -109,29 +109,29 @@
     {
       "id": "scope-feature-matrix",
       "uri": "docs/gate-0/scope-and-feature-matrix.md",
-      "sha256": "687b9e80251a0bda119b13783835940a740d0a1cb4a7948619822f48dc1d39b5",
-      "size_bytes": 6432,
+      "sha256": "bb7508513146791b3834156deca21d84a59a5ef27391e06f05837b359252aba7",
+      "size_bytes": 6573,
       "media_type": "text/markdown"
     },
     {
       "id": "source-register",
       "uri": "docs/gate-0/source-register.json",
-      "sha256": "bc7e20b7a425824dda58cfa6507e6ad6fe6bd559a1cc9a46f6ec620b273c587c",
-      "size_bytes": 4947,
+      "sha256": "85f3ed86adb685b27231b0adc8c02a5beaa781bc70daa8449b41e9143210495b",
+      "size_bytes": 5038,
       "media_type": "application/json"
     },
     {
       "id": "validation-baseline",
       "uri": "docs/gate-0/validation-baseline.md",
-      "sha256": "0038f21c8dac53ebc549ed8bbbbd482bebd3688452fdb0ad1cb3de59d8e8a14c",
-      "size_bytes": 5746,
+      "sha256": "f89569b899cf5acf7d2473fb7edce955f39d739fb93dad3596a3fd69bbdd044b",
+      "size_bytes": 5889,
       "media_type": "text/markdown"
     },
     {
       "id": "adr-index",
       "uri": "docs/adr/README.md",
-      "sha256": "d01df4219628bea6850045caac5d529b966d9a0f409fd6dcb2441216f412a730",
-      "size_bytes": 1523,
+      "sha256": "8f6c299110e84c254a9ac1b0fafedf7e9dd33e3c581fbb1ee7df06f6300fd887",
+      "size_bytes": 1706,
       "media_type": "text/markdown"
     },
     {
@@ -158,22 +158,22 @@
     {
       "id": "adr-0004",
       "uri": "docs/adr/0004-solver-profiles-and-sos.md",
-      "sha256": "92b0128bea5ffcec092af202f6008fc07f83efed7aaafec4eb16118afc919fe0",
-      "size_bytes": 2761,
+      "sha256": "66df2c3152d037518bb572b35a0bd3628d922262f6f25ed92865acb1511b1d1b",
+      "size_bytes": 2990,
       "media_type": "text/markdown"
     },
     {
       "id": "adr-0005",
       "uri": "docs/adr/0005-oracle-and-evidence-retention.md",
-      "sha256": "963b0baaef7c3e5d1c956b11427278b214d2b765e9c8473d30a5383063f2941b",
-      "size_bytes": 2907,
+      "sha256": "b986fc9b205c6d0a249f5e3ee66a2fd227ca1419492796ea06eabd002081033f",
+      "size_bytes": 3009,
       "media_type": "text/markdown"
     },
     {
       "id": "adr-0006",
       "uri": "docs/adr/0006-pricing-convention.md",
-      "sha256": "f87d225c0666e59a06bd2fb839a5b3214c8fdf371ab709c1badf0f038a359e77",
-      "size_bytes": 3068,
+      "sha256": "abe31afa2500c7fd5cbdde55833a2fa7df41103d7eeb899d0c415cfeac343495",
+      "size_bytes": 3227,
       "media_type": "text/markdown"
     },
     {
@@ -181,6 +181,13 @@
       "uri": "docs/adr/0007-probity-tdd-evidence.md",
       "sha256": "99a52ab07f581f0a37903f5a2d630d3873531511413334e89fc1e6c458ff98d0",
       "size_bytes": 2780,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "adr-0008",
+      "uri": "docs/adr/0008-interim-scip-highs-reference-profile.md",
+      "sha256": "3ed3e28ac5f0ec42366e0f45b3aff7658c4392ef254f681816576cbe4b821c32",
+      "size_bytes": 2876,
       "media_type": "text/markdown"
     }
   ],
@@ -194,11 +201,6 @@
     },
     {
       "id": "R-003",
-      "state": "g0-hold",
-      "uri": "docs/gate-0/risk-and-dependency-register.md#risks"
-    },
-    {
-      "id": "R-004",
       "state": "g0-hold",
       "uri": "docs/gate-0/risk-and-dependency-register.md#risks"
     },
@@ -218,7 +220,7 @@
     },
     {
       "id": "G0-C02",
-      "description": "Native full-size GAMS/CPLEX pricing evidence remains mandatory for Gate 1.",
+      "description": "Every active SCIP/HiGHS reference run must retain optimal status and pass canonical matrix and independent price validation; CPLEX is deferred cross-validation.",
       "owner": "Technical lead",
       "due_at": "2026-09-30T17:00:00+13:00",
       "material": true

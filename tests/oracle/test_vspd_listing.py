@@ -11,18 +11,21 @@ from tools.oracle.vspd import (
     ListingParseError,
     ObjectiveBaseline,
     PriceReportError,
+    ScipHighsPricingProfile,
     VspdListingParser,
 )
 
 LISTING = """
 Solution Report     SOLVE vSPD_NMIR Using MIP From line 6602
      MODEL   vSPD_NMIR           OBJECTIVE  NETBENEFIT
+     SOLVER  SCIP                FROM LINE  6602
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE         100.0000
 
 Solution Report     SOLVE vSPD_NMIR Using RMIP From line 6603
      MODEL   vSPD_NMIR           OBJECTIVE  NETBENEFIT
+     SOLVER  HIGHS               FROM LINE  6603
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE         99.9999
@@ -30,6 +33,7 @@ Solution Report     SOLVE vSPD_NMIR Using RMIP From line 6603
 LOOPS                                  drs   increase conforming load 0.5%
 Solution Report     SOLVE vSPD_NMIR Using MIP From line 6602
      MODEL   vSPD_NMIR           OBJECTIVE  NETBENEFIT
+     SOLVER  SCIP                FROM LINE  6602
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE         101.2500
@@ -37,12 +41,41 @@ Solution Report     SOLVE vSPD_NMIR Using MIP From line 6602
 LOOPS                                  drs   decrease conforming load 5.0%
 Solution Report     SOLVE vSPD_NMIR Using MIP From line 6602
      MODEL   vSPD_NMIR           OBJECTIVE  NETBENEFIT
+     SOLVER  SCIP                FROM LINE  6602
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE         92.5000
 
 Solution Report     SOLVE vSPD_BranchFlowMIP Using MIP From line 1179
      MODEL   vSPD_BranchFlowMIP  OBJECTIVE  NETBENEFIT
+     SOLVER  SCIP                FROM LINE  1179
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE         92.5000
+"""
+
+CONVERT_REPORT = """
+Solution Report     SOLVE vSPD_NMIR Using RMIP From line 7283
+     MODEL   vSPD_NMIR           OBJECTIVE  NETBENEFIT
+     SOLVER  CONVERT             FROM LINE  7283
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS     14 No Solution Returned
+**** OBJECTIVE VALUE         99.9999
+"""
+
+ADDITIONAL_PRICING_REPORTS = """
+LOOPS                                  drs   increase conforming load 0.5%
+Solution Report     SOLVE vSPD_NMIR Using RMIP From line 6603
+     MODEL   vSPD_NMIR           OBJECTIVE  NETBENEFIT
+     SOLVER  HIGHS               FROM LINE  6603
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE         101.2500
+
+LOOPS                                  drs   decrease conforming load 5.0%
+Solution Report     SOLVE vSPD_NMIR Using RMIP From line 6603
+     MODEL   vSPD_NMIR           OBJECTIVE  NETBENEFIT
+     SOLVER  HIGHS               FROM LINE  6603
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE         92.5000
@@ -61,9 +94,36 @@ def test_parser_keeps_primary_and_cleanup_solves_distinct() -> None:
     assert len(result.cleanup) == 1
     assert result.cleanup[0].model == "vSPD_BranchFlowMIP"
     assert len(result.pricing) == 1
+    assert result.pricing[0].solver == "HIGHS"
     assert result.pricing[0].solve_type == "RMIP"
     assert result.pricing[0].objective == pytest.approx(99.9999)
     assert result.all_optimal
+
+
+def test_parser_classifies_convert_as_export_not_operational_solve() -> None:
+    result = VspdListingParser().parse_text(LISTING + CONVERT_REPORT)
+
+    assert len(result.exports) == 1
+    assert result.exports[0].solver == "CONVERT"
+    assert len(result.pricing) == 1
+    assert result.all_optimal
+
+
+def test_profile_match_rejects_wrong_pricing_solver() -> None:
+    qualified = LISTING + ADDITIONAL_PRICING_REPORTS + CONVERT_REPORT
+    assert (
+        VspdListingParser()
+        .parse_text(qualified)
+        .matches_profile(ScipHighsPricingProfile())
+    )
+
+    wrong = qualified.replace("SOLVER  HIGHS", "SOLVER  CPLEX")
+
+    assert (
+        not VspdListingParser()
+        .parse_text(wrong)
+        .matches_profile(ScipHighsPricingProfile())
+    )
 
 
 def test_parser_rejects_listing_without_solution_reports() -> None:

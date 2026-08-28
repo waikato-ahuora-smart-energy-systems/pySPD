@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Proposed |
+| Status | Proposed; oracle selection amended by ADR-0008 |
 | Date | 28 August 2026 |
 | Deciders | Technical lead, validation lead, data steward, legal reviewer |
 
@@ -16,8 +16,9 @@ licence-restricted.
 
 ## Decision
 
-Use pinned vSPD v5.0.6 under a qualified GAMS + CPLEX runtime as the normative
-compatibility oracle. Retain the source commit/tree/archive hashes and a
+Use pinned vSPD v5.0.6 under the qualified ADR-0008 SCIP/HiGHS runtime as the
+active interim compatibility oracle, with CPLEX retained as deferred
+cross-validation. Retain the source commit/tree/archive hashes and a
 separately hashed run-configuration overlay selecting in-scope `SPD`/`AUD`
 modes, input files, cases, and periods. The overlay must prevent accidental use
 of the pinned settings' `DPS` default.

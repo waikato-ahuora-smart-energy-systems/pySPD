@@ -18,9 +18,9 @@ and characterization. It does not claim the legal, market-SME, independent
 validation, or release approvals that only named reviewers can provide.
 
 The release-governance decision remains **HOLD** because named owners, legal
-approval, archived governing-document hashes, and a qualified native
-GAMS/CPLEX reference environment are not yet available. GAMS 54.3.1 and the
-full-size SCIP/HiGHS characterization path are now executed and evidenced.
+approval, and archived governing-document hashes are not yet available. GAMS
+54.3.1 and the full-size SCIP/HiGHS active reference are executed and evidenced;
+native CPLEX is deferred cross-validation under ADR-0008.
 
 ## Pack contents
 
@@ -50,7 +50,8 @@ The pack proposes that PySPD:
    Secondary Risk behavior;
 3. treats SPD v16 as a separately selected formulation, never a silent patch;
 4. uses class-based composition around a Pyomo `ConcreteModel`;
-5. treats GAMS + CPLEX as the compatibility oracle;
+5. treats optimal GAMS/SCIP plus fixed-discrete GAMS/HiGHS as the active interim
+   compatibility oracle and defers CPLEX-specific validation;
 6. treats HiGHS as LP-only until every required SOS reformulation passes Gate 6
    and Gate 7 evidence;
 7. uses a GAMS-free canonical data layer with explicit GAMS special-value
@@ -66,7 +67,6 @@ The pack proposes that PySPD:
 | Sponsor and accountable roles are unassigned | Completed and signed [roles record](roles-and-signoff.md) |
 | Legal/provenance interpretation is unapproved | Signed legal review against the [licence register](licence-and-provenance-register.md) |
 | Governing PDFs are not archived and hashed | Updated [source register](source-register.json) with immutable hashes and archive locations |
-| Native full-size GAMS/CPLEX is unavailable | CPLEX runtime/options manifest and reproducible pricing run; GAMS/SCIP/HiGHS evidence is recorded at Gate 1 |
 | v15-to-v5 clause reconciliation is not independently reviewed | SME-approved [reconciliation register](formulation-reconciliation.md) |
 | Initial tolerance and corpus policy is not signed | Validation lead and market SME approval of [validation baseline](validation-baseline.md) |
 

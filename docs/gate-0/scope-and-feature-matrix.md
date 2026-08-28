@@ -95,11 +95,12 @@ files.
 
 | Capability | Status | Acceptance boundary |
 |---|---|---|
-| CPLEX parity solve | In | Normative Pyomo/reference comparison profile |
+| SCIP/HiGHS reference solve | In | Active interim Pyomo/reference comparison target under ADR-0008 |
+| CPLEX parity solve | Deferred | Later CPLEX-specific comparison profile |
 | HiGHS LP solve | In | Portable LP and analytic profile |
 | HiGHS full SOS/MIP solve | Deferred until proven | Named reformulations must pass Gates 6 and 7 |
 | Gurobi cross-check | Optional | Qualified when licence/runtime is available |
-| MIP pricing | In, convention unresolved | Gate 1 must prove oracle behavior |
+| MIP pricing | In, interim convention characterized | SCIP MIP → fixed-discrete HiGHS RMIP; expand Gate 1 corpus |
 | Dead/disconnected price handling | In | Explicitly tested; outside 2019 audit scope |
 | Invalid/SOS1 price replacement | In | Branch and date-boundary tests |
 | Publication-duration weighting | In | Pinned-vSPD output parity |

@@ -12,6 +12,7 @@ replaces; accepted history is not rewritten.
 | [ADR-0005](0005-oracle-and-evidence-retention.md) | Treat pinned GAMS vSPD as an instrumented, immutable oracle | Proposed |
 | [ADR-0006](0006-pricing-convention.md) | Characterize MIP pricing at Gate 1 before implementation | Proposed |
 | [ADR-0007](0007-probity-tdd-evidence.md) | Pair Probity with immutable red/green CI evidence | Proposed |
+| [ADR-0008](0008-interim-scip-highs-reference-profile.md) | Treat optimal SCIP MIP + HiGHS fixed RMIP as the active adequate reference; defer CPLEX | Accepted by project direction |
 
 ## Status values
 

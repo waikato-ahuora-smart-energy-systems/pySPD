@@ -1,9 +1,9 @@
 """Fail-closed execution and objective comparison for pinned vSPD sources.
 
 The runner stages a source checkout before changing any settings. The pinned
-checkout and input fixture therefore remain immutable evidence. CPLEX is the
-normative oracle profile; SCIP is explicitly a smoke profile because it does
-not provide the marginals required for vSPD price reporting.
+checkout and input fixture therefore remain immutable evidence. The qualified
+SCIP MIP to fixed-discrete HiGHS RMIP profile is the active interim reference;
+native CPLEX remains deferred cross-validation.
 """
 
 from __future__ import annotations
@@ -20,6 +20,17 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Final
+
+from tools.oracle.canonical import (
+    ConvertMatrixReader,
+    GdxCanonicalizer,
+    LinearMatrixValidation,
+    LinearMatrixValidator,
+)
+from tools.oracle.price_validation import (
+    GdxPriceValidator,
+    IndependentPriceValidation,
+)
 
 PRIMARY_MODEL: Final = "vSPD_NMIR"
 CLEANUP_MODEL: Final = "vSPD_BranchFlowMIP"
@@ -52,6 +63,7 @@ Parameters
 Scalar
   pyspd_primary_objective
   pyspd_pricing_objective_delta
+  pyspd_active_drs_ord
   ;
 """
 
@@ -131,6 +143,50 @@ LAMBDAHVDCRESERVE.lo(t,isl,resC,rd,rsbp) = pyspd_LAMBDAHVDCRESERVE_lo(t,isl,resC
 LAMBDAHVDCRESERVE.up(t,isl,resC,rd,rsbp) = pyspd_LAMBDAHVDCRESERVE_up(t,isl,resC,rd,rsbp);
 """
 
+_MATRIX_EXPORT: Final = """* pySPD Gate 1 canonical solution and matrix export.
+$iftheni.pyspdDPS %opMode%=='DPS'
+if (ord(drs) = card(drs),
+  pyspd_active_drs_ord = ord(drs);
+  HVDCSENDING.fx(t,isl) = round(HVDCSENDING.l(t,isl));
+  INZONE.fx(t,isl,resC,z) = round(INZONE.l(t,isl,resC,z));
+  HVDCSENTINSEGMENT.fx(t,isl,los) = round(HVDCSENTINSEGMENT.l(t,isl,los));
+  PURCHASEBLOCKBINARY.fx(t,bd,blk) = round(PURCHASEBLOCKBINARY.l(t,bd,blk));
+  HVDCSENDZERO.fx(t,isl) = round(HVDCSENDZERO.l(t,isl));
+  ACBRANCHFLOWDIRECTED_INTEGER.fx(t,br,fd) = ACBRANCHFLOWDIRECTED_INTEGER.l(t,br,fd);
+  HVDCLINKFLOWDIRECTED_INTEGER.fx(t,fd) = HVDCLINKFLOWDIRECTED_INTEGER.l(t,fd);
+  HVDCPOLEFLOW_INTEGER.fx(t,pole,fd) = HVDCPOLEFLOW_INTEGER.l(t,pole,fd);
+  LAMBDAINTEGER.fx(t,br,bp) = LAMBDAINTEGER.l(t,br,bp);
+  LAMBDAHVDCENERGY.fx(t,isl,bp) = LAMBDAHVDCENERGY.l(t,isl,bp);
+  LAMBDAHVDCRESERVE.fx(t,isl,resC,rd,rsbp) = LAMBDAHVDCRESERVE.l(t,isl,resC,rd,rsbp);
+
+  execute_unload 'pyspd_pricing_solution.gdx'
+    t, n, b, nodeBus, nodeBusAllocationFactor, pricing_nodes,
+    drs, pyspd_active_drs_ord, demandscale, ACnodeNetInjectionDefinition2,
+    busPrice, o_nodePrice_TP, o_drsnodeprice, NETBENEFIT,
+    HVDCSENDING, INZONE, HVDCSENTINSEGMENT, PURCHASEBLOCKBINARY, HVDCSENDZERO,
+    ACBRANCHFLOWDIRECTED_INTEGER, HVDCLINKFLOWDIRECTED_INTEGER,
+    HVDCPOLEFLOW_INTEGER, LAMBDAINTEGER, LAMBDAHVDCENERGY, LAMBDAHVDCRESERVE;
+
+  option rmip = Convert;
+  if (sum(t, SOS1_solve(t)),
+    vSPD_BranchFlowMIP.Optfile = 1;
+    solve vSPD_BranchFlowMIP using rmip maximizing NETBENEFIT;
+  else
+    vSPD_NMIR.Optfile = 1;
+    solve vSPD_NMIR using rmip maximizing NETBENEFIT;
+  );
+  option rmip = HiGHS;
+);
+$endif.pyspdDPS
+"""
+
+_CONVERT_OPTIONS: Final = """dumpgdx pyspd_pricing_matrix.gdx
+dictmap pyspd_pricing_dict.gdx
+gdxnames 1
+gdxuels 1
+headerTimeStamp none
+"""
+
 
 class ListingParseError(ValueError):
     """Raised when a GAMS listing does not contain the required solve evidence."""
@@ -153,6 +209,7 @@ class SolveRecord:
     scenario: str
     model: str
     solve_type: str
+    solver: str
     solver_status_code: int
     solver_status: str
     model_status_code: int
@@ -169,10 +226,15 @@ class ListingResult:
     records: tuple[SolveRecord, ...]
 
     @property
+    def operational_records(self) -> tuple[SolveRecord, ...]:
+        """Return optimization records, excluding non-solving Convert exports."""
+        return tuple(record for record in self.records if record.solver != "CONVERT")
+
+    @property
     def primary(self) -> tuple[SolveRecord, ...]:
         return tuple(
             record
-            for record in self.records
+            for record in self.operational_records
             if record.model == PRIMARY_MODEL and record.solve_type == "MIP"
         )
 
@@ -180,17 +242,42 @@ class ListingResult:
     def cleanup(self) -> tuple[SolveRecord, ...]:
         return tuple(
             record
-            for record in self.records
+            for record in self.operational_records
             if record.model == CLEANUP_MODEL and record.solve_type == "MIP"
         )
 
     @property
     def pricing(self) -> tuple[SolveRecord, ...]:
-        return tuple(record for record in self.records if record.solve_type == "RMIP")
+        return tuple(
+            record for record in self.operational_records if record.solve_type == "RMIP"
+        )
+
+    @property
+    def exports(self) -> tuple[SolveRecord, ...]:
+        return tuple(record for record in self.records if record.solver == "CONVERT")
 
     @property
     def all_optimal(self) -> bool:
-        return bool(self.records) and all(record.optimal for record in self.records)
+        return bool(self.operational_records) and all(
+            record.optimal for record in self.operational_records
+        )
+
+    def matches_profile(self, profile: NativeGamsProfile) -> bool:
+        if not self.all_optimal or not self.primary:
+            return False
+        if any(record.solver != profile.mip_solver.upper() for record in self.primary):
+            return False
+        if profile.explicit_fixed_lp_pricing:
+            if [record.scenario for record in self.pricing] != [
+                record.scenario for record in self.primary
+            ]:
+                return False
+            if any(
+                record.solver != profile.lp_solver.upper() for record in self.pricing
+            ):
+                return False
+            return len(self.exports) == 1
+        return True
 
 
 class VspdListingParser:
@@ -200,6 +287,7 @@ class VspdListingParser:
     _report = re.compile(
         r"Solution Report\s+SOLVE\s+(?P<model>\S+)\s+Using\s+"
         r"(?P<solve_type>\S+).*?"
+        r"\bSOLVER\s+(?P<solver>\S+).*?"
         r"\*\*\*\* SOLVER STATUS\s+(?P<solver_code>\d+)\s+"
         r"(?P<solver_status>[^\n]+).*?"
         r"\*\*\*\* MODEL STATUS\s+(?P<model_code>\d+)\s+"
@@ -222,6 +310,7 @@ class VspdListingParser:
                     scenario=scenario,
                     model=report.group("model"),
                     solve_type=report.group("solve_type"),
+                    solver=report.group("solver").upper(),
                     solver_status_code=int(report.group("solver_code")),
                     solver_status=report.group("solver_status").strip(),
                     model_status_code=int(report.group("model_code")),
@@ -287,7 +376,9 @@ class DpsNodePriceParser:
                 )
             key = (row[0], row[1], row[2])
             if key in keys:
-                raise PriceReportError(f"duplicate node-price key at row {line_number}: {key!r}")
+                raise PriceReportError(
+                    f"duplicate node-price key at row {line_number}: {key!r}"
+                )
             keys.add(key)
             try:
                 price = float(row[3])
@@ -474,7 +565,7 @@ class ScipHighsPricingProfile(NativeGamsProfile):
             mip_solver="SCIP",
             lp_solver="HiGHS",
             use_option_files=False,
-            normative=False,
+            normative=True,
             supports_marginals=True,
             explicit_fixed_lp_pricing=True,
         )
@@ -544,10 +635,17 @@ class VspdSourcePatcher:
             "$include pyspd_fixed_lp_solve.inc",
             expected_count=1,
         )
-        (programs / "pyspd_pricing_declarations.inc").write_text(
-            _PRICING_DECLARATIONS
+        self._replace_exact(
+            solve,
+            "* 9. Write results to CSV report files and GDX files",
+            "$include pyspd_matrix_export.inc\n\n"
+            "* 9. Write results to CSV report files and GDX files",
+            expected_count=1,
         )
+        (programs / "pyspd_pricing_declarations.inc").write_text(_PRICING_DECLARATIONS)
         (programs / "pyspd_fixed_lp_solve.inc").write_text(_FIXED_LP_SOLVE)
+        (programs / "pyspd_matrix_export.inc").write_text(_MATRIX_EXPORT)
+        (programs / "convert.opt").write_text(_CONVERT_OPTIONS)
 
     @staticmethod
     def _replace_exact(
@@ -587,6 +685,18 @@ class VspdRunResult:
     parsed: ListingResult
     comparison: BaselineComparison | None
     node_prices: DpsNodePriceReport | None
+    matrix_validation: LinearMatrixValidation | None
+    price_validation: IndependentPriceValidation | None
+
+    @property
+    def qualified(self) -> bool:
+        checks = [
+            self.parsed.all_optimal,
+            self.comparison is None or self.comparison.passed,
+            self.matrix_validation is None or self.matrix_validation.passed,
+            self.price_validation is None or self.price_validation.passed,
+        ]
+        return all(checks)
 
 
 class VspdRunner:
@@ -618,7 +728,9 @@ class VspdRunner:
         self._validate(case)
         stage = case.work_directory / "vspd"
         if stage.exists():
-            raise VspdRunError(f"refusing to overwrite existing stage directory: {stage}")
+            raise VspdRunError(
+                f"refusing to overwrite existing stage directory: {stage}"
+            )
         case.work_directory.mkdir(parents=True, exist_ok=True)
         shutil.copytree(case.source_tree, stage)
 
@@ -657,7 +769,9 @@ class VspdRunner:
         logs = case.work_directory / "logs"
         logs.mkdir()
         for name, arguments in commands:
-            self._execute(case.gams_executable, programs, arguments, logs / f"{name}.log")
+            self._execute(
+                case.gams_executable, programs, arguments, logs / f"{name}.log"
+            )
 
         listing = programs / "vSPDsolve.lst"
         parsed = self.parser.parse_file(listing)
@@ -677,6 +791,17 @@ class VspdRunner:
             if baseline is not None
             else None
         )
+        matrix_validation: LinearMatrixValidation | None = None
+        price_validation: IndependentPriceValidation | None = None
+        canonical_payload: dict[str, Any] | None = None
+        if case.profile.explicit_fixed_lp_pricing:
+            canonical_payload, matrix_validation, price_validation = (
+                self._canonical_evidence(
+                    case,
+                    programs,
+                    node_prices,
+                )
+            )
         evidence = case.work_directory / "evidence.json"
         evidence.write_text(
             json.dumps(
@@ -687,6 +812,9 @@ class VspdRunner:
                     comparison,
                     node_price_path if node_prices is not None else None,
                     node_prices,
+                    canonical_payload,
+                    matrix_validation,
+                    price_validation,
                 ),
                 indent=2,
                 sort_keys=True,
@@ -700,6 +828,95 @@ class VspdRunner:
             parsed=parsed,
             comparison=comparison,
             node_prices=node_prices,
+            matrix_validation=matrix_validation,
+            price_validation=price_validation,
+        )
+
+    @staticmethod
+    def _canonical_evidence(
+        case: VspdCase,
+        programs: Path,
+        node_prices: DpsNodePriceReport | None,
+    ) -> tuple[
+        dict[str, Any],
+        LinearMatrixValidation,
+        IndependentPriceValidation,
+    ]:
+        if node_prices is None:
+            raise VspdRunError(
+                "canonical pricing evidence requires a node-price report"
+            )
+        sources = {
+            "input": case.input_gdx,
+            "pricing_solution": programs / "pyspd_pricing_solution.gdx",
+            "pricing_matrix": programs / "pyspd_pricing_matrix.gdx",
+            "pricing_dictionary": programs / "pyspd_pricing_dict.gdx",
+        }
+        missing = [str(path) for path in sources.values() if not path.is_file()]
+        if missing:
+            raise VspdRunError(f"canonical evidence files are missing: {missing}")
+        destination = case.work_directory / "canonical"
+        destination.mkdir()
+        system_directory = case.gams_executable.parent
+        canonicalizer = GdxCanonicalizer(system_directory)
+        manifests: dict[str, Any] = {}
+        for name, source in sources.items():
+            manifest_path = destination / f"{name}.json"
+            manifest = canonicalizer.write_manifest(source, manifest_path)
+            manifests[name] = {
+                "source_sha256": _sha256(source),
+                "manifest": manifest_path.name,
+                "manifest_sha256": _sha256(manifest_path),
+                "logical_sha256": manifest.logical_sha256,
+                "symbol_count": manifest.symbol_count,
+                "uel_count": manifest.uel_count,
+            }
+
+        matrix = ConvertMatrixReader(system_directory).read(sources["pricing_matrix"])
+        matrix_validation = LinearMatrixValidator.validate(matrix)
+        matrix_path = destination / "pricing_matrix_evidence.json"
+        matrix_payload = {
+            "sense": matrix.sense,
+            "row_count": len(matrix.rows),
+            "column_count": len(matrix.columns),
+            "nonzero_count": matrix.nonzero_count,
+            "logical_sha256": matrix.logical_sha256,
+            "validation": matrix_validation.to_dict(),
+        }
+        matrix_path.write_text(
+            json.dumps(matrix_payload, indent=2, sort_keys=True) + "\n"
+        )
+
+        report_prices = {
+            (record.date_time, record.scenario, record.node): record.price
+            for record in node_prices.records
+        }
+        price_validation = GdxPriceValidator(system_directory).validate(
+            sources["pricing_solution"],
+            report_prices,
+        )
+        price_path = destination / "price_validation.json"
+        price_path.write_text(
+            json.dumps(price_validation.to_dict(), indent=2, sort_keys=True) + "\n"
+        )
+        return (
+            {
+                "manifests": manifests,
+                "matrix_evidence": {
+                    "manifest": matrix_path.name,
+                    "manifest_sha256": _sha256(matrix_path),
+                    **matrix_payload,
+                },
+                "price_validation": {
+                    "manifest": price_path.name,
+                    "manifest_sha256": _sha256(price_path),
+                    "passed": price_validation.passed,
+                    "active_scenario": price_validation.active_scenario,
+                    "price_count": price_validation.price_count,
+                },
+            },
+            matrix_validation,
+            price_validation,
         )
 
     def _validate(self, case: VspdCase) -> None:
@@ -718,7 +935,10 @@ class VspdRunner:
 
     @classmethod
     def _read_settings(cls, path: Path) -> dict[str, str]:
-        settings = {match.group("name"): match.group("value") for match in cls._setting.finditer(path.read_text())}
+        settings = {
+            match.group("name"): match.group("value")
+            for match in cls._setting.finditer(path.read_text())
+        }
         missing = {"runName", "opMode"} - settings.keys()
         if missing:
             raise VspdRunError(f"missing vSPD settings: {sorted(missing)}")
@@ -763,6 +983,9 @@ class VspdRunner:
         comparison: BaselineComparison | None,
         node_price_path: Path | None,
         node_prices: DpsNodePriceReport | None,
+        canonical_payload: dict[str, Any] | None,
+        matrix_validation: LinearMatrixValidation | None,
+        price_validation: IndependentPriceValidation | None,
     ) -> dict[str, Any]:
         return {
             "schema_version": 1,
@@ -781,6 +1004,8 @@ class VspdRunner:
                 "primary_solve_count": len(parsed.primary),
                 "cleanup_solve_count": len(parsed.cleanup),
                 "pricing_solve_count": len(parsed.pricing),
+                "matrix_export_count": len(parsed.exports),
+                "profile_matches": parsed.matches_profile(case.profile),
             },
             "records": [asdict(record) for record in parsed.records],
             "comparison": comparison.to_dict() if comparison is not None else None,
@@ -800,6 +1025,15 @@ class VspdRunner:
                 if node_price_path is not None and node_prices is not None
                 else None
             ),
+            "canonical": canonical_payload,
+            "validation": {
+                "matrix_passed": (
+                    matrix_validation.passed if matrix_validation is not None else None
+                ),
+                "independent_prices_passed": (
+                    price_validation.passed if price_validation is not None else None
+                ),
+            },
         }
 
 

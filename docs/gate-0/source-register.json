@@ -80,9 +80,9 @@
     },
     "candidate_working_copy": {
       "governing_plan_sha256": "22bb2f1ee7e727554c12bc0749db1c1d8a8ce45843ca7927359812e9b8a86ac0",
-      "pack_commit": null
+      "pack_commit": "7df0194cedab8268bfdece1d6c82f80e1587e130"
     },
-    "note": "Set candidate_working_copy.pack_commit and regenerate affected hashes when this pack is committed."
+    "note": "The Gate 0/Gate 1 checkpoint was committed at the recorded pack commit; later evidence additions remain separately reviewable working changes."
   },
   "observed_toolchain": {
     "platform": "macOS arm64 development workstation",
@@ -103,7 +103,7 @@
     "Archive and hash every governing document after legal approval.",
     "Move the vSPD source archive to approved immutable storage and record its URI.",
     "Create per-file hashes and manifests for every qualification GDX.",
-    "Qualify a native full-size GAMS/CPLEX runtime and reconcile effective listing options with tagged cplex.opt.",
+    "Later qualify native full-size GAMS/CPLEX and reconcile effective options before any CPLEX-specific claim (ADR-0008).",
     "Regenerate the project commit/tree fields when this pack is approved and committed."
   ]
 }

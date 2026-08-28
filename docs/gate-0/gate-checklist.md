@@ -17,7 +17,7 @@
 | `G0-03` | Legal review permits planned development, evidence retention, and release | [Licence register](licence-and-provenance-register.md) | **Hold** | Qualified reviewer decides all critical rows |
 | `G0-04` | v16 is explicitly separate from v5 compatibility | [ADR-0001](../adr/0001-formulation-baseline-and-versioning.md), [delta register](formulation-reconciliation.md) | Candidate met | Accept ADR and reconciliation boundary |
 | `G0-05` | Every in-scope/deferred capability has a rationale and owner | [Scope matrix](scope-and-feature-matrix.md), [roles](roles-and-signoff.md) | Partial | Assign owners and approve scope |
-| `G0-06` | Required solver licences and oracle runtime are available | [Compatibility matrix](compatibility-matrix.md), [Gate 1 runtime evidence](../gate-1/runtime-evidence.json) | Partial | GAMS + full-size SCIP/HiGHS qualified; qualify native full-size CPLEX |
+| `G0-06` | Required solver licences and oracle runtime are available | [Compatibility matrix](compatibility-matrix.md), [Gate 1 runtime evidence](../gate-1/runtime-evidence.json), [ADR-0008](../adr/0008-interim-scip-highs-reference-profile.md) | Met for active profile | Retain status `1/1` and canonical validation gates; CPLEX is deferred |
 | `G0-07` | HiGHS capability is not overstated | [ADR-0004](../adr/0004-solver-profiles-and-sos.md) | Candidate met | Accept ADR; retain LP-only label |
 | `G0-08` | Gate roles include independent validation and market expertise | [Roles and sign-off](roles-and-signoff.md) | **Hold** | Appoint all required roles |
 | `G0-09` | Initial tolerance, corpus, discrepancy, and claim policies are approved | [Validation baseline](validation-baseline.md) | Candidate | Validation lead and SME review/signature |
@@ -56,7 +56,7 @@ therefore **HOLD**.
 | Field | Entry |
 |---|---|
 | Decision | Engineering baseline complete; governance HOLD; Gate 1 characterization authorized |
-| Material open actions | `G0-01`, `G0-02`, `G0-03`, `G0-05`, `G0-06`, `G0-08`, `G0-09`, `G0-11`, `G0-12` |
+| Material open actions | `G0-01`, `G0-02`, `G0-03`, `G0-05`, `G0-08`, `G0-09`, `G0-11`, `G0-12` |
 | Conditional actions | None; current holds are material |
-| Next review | After named roles, legal review, archived hashes, source reconciliation, and native GAMS/CPLEX qualification |
+| Next review | After named roles, legal review, archived hashes, source reconciliation, and validation-policy approval |
 | Signatures | Pending |

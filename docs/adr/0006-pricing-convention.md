@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Proposed |
+| Status | Proposed; interim execution convention accepted by ADR-0008 |
 | Date | 28 August 2026 |
 | Deciders | Optimization lead, market SME, validation lead |
 
@@ -19,8 +19,10 @@ could reproduce neither the historical runtime nor published vSPD behavior.
 
 ## Decision
 
-Gate 1 is a mandatory pricing-characterization hold. It must pin exact
-GAMS/CPLEX versions and all effective options and demonstrate:
+Gate 1 must pin exact runtime versions and all effective options. Under
+ADR-0008, the active characterization runtime is SCIP MIP followed by an
+explicit fixed-discrete HiGHS RMIP; CPLEX characterization is deferred. Gate 1
+must demonstrate:
 
 - whether a final continuous model is solved after each relevant MIP;
 - the transformation from primary MIP to pricing problem;
