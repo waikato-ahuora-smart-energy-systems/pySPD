@@ -13,6 +13,7 @@ from tools.oracle.vspd import (
     InstrumentationNeutralityComparison,
     ObjectiveBaseline,
     ScipHighsPricingProfile,
+    ScipHighsPrimalBasisProfile,
     ScipSmokeProfile,
     VspdCase,
     VspdListingParser,
@@ -45,12 +46,24 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--gams", type=Path, required=True)
     run.add_argument(
         "--profile",
-        choices=("scip-smoke", "scip-highs-pricing", "cplex-oracle"),
+        choices=(
+            "scip-smoke",
+            "scip-highs-pricing",
+            "scip-highs-primal-basis",
+            "cplex-oracle",
+        ),
         default="scip-smoke",
     )
     run.add_argument("--baseline", type=Path)
     run.add_argument("--run-name")
     run.add_argument("--operation-mode", choices=("SPD", "AUD", "DPS"))
+    run.add_argument("--daily-mode", type=int, choices=(0, 1))
+    run.add_argument(
+        "--case-id",
+        action="append",
+        default=[],
+        help="select an exact GDX case ID; repeat for multiple cases",
+    )
     run.add_argument("--absolute-tolerance", type=float, default=0.01)
     run.add_argument("--relative-tolerance", type=float, default=1e-9)
     run.add_argument(
@@ -84,6 +97,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     profiles = {
         "scip-smoke": ScipSmokeProfile,
         "scip-highs-pricing": ScipHighsPricingProfile,
+        "scip-highs-primal-basis": ScipHighsPrimalBasisProfile,
         "cplex-oracle": CplexOracleProfile,
     }
     profile = (
@@ -98,8 +112,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     if (arguments.run_name is None) != (arguments.operation_mode is None):
         raise SystemExit("--run-name and --operation-mode must be supplied together")
+    if arguments.run_name is None and (
+        arguments.daily_mode is not None or arguments.case_id
+    ):
+        raise SystemExit(
+            "--daily-mode/--case-id require --run-name and --operation-mode"
+        )
     configuration = (
-        VspdRunConfiguration(arguments.run_name, arguments.operation_mode)
+        VspdRunConfiguration(
+            arguments.run_name,
+            arguments.operation_mode,
+            daily_mode=arguments.daily_mode,
+            case_ids=tuple(arguments.case_id),
+        )
         if arguments.run_name is not None and arguments.operation_mode is not None
         else None
     )

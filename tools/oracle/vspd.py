@@ -13,15 +13,20 @@ import hashlib
 import io
 import json
 import math
+import os
+import platform
 import re
+import resource
 import shutil
 import subprocess
+import time
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, ClassVar, Final
 
 from tools.oracle.canonical import (
+    ConvertDictionaryReader,
     ConvertMatrixReader,
     GdxCanonicalizer,
     LinearMatrixValidation,
@@ -72,6 +77,7 @@ Sets
   pyspd_snapshot_type(*)  'solve type selected for the current solve snapshot'
   pyspd_snapshot_phase(*) 'pre or post phase of the current solve snapshot'
   ;
+File pyspd_convert_options / 'convert.opt' /;
 """
 
 _PRE_SOLVE_SNAPSHOT: Final = """* pySPD Gate 1 complete pre-solve state snapshot.
@@ -89,6 +95,17 @@ put_utility 'gdxout' / 'pyspd_solve_' pyspd_solve_ordinal:0:0 '_pre';
 $onImplicitAssign
 execute_unload;
 $offImplicitAssign
+put pyspd_convert_options;
+put 'dumpgdx pyspd_solve_' pyspd_solve_ordinal:0:0 '_matrix.gdx'/
+    'dictmap pyspd_solve_' pyspd_solve_ordinal:0:0 '_dict.gdx'/
+    'gdxnames 1'/
+    'gdxuels 1'/
+    'headerTimeStamp none'/;
+putclose pyspd_convert_options;
+option %pyspdSolveType% = Convert;
+%pyspdSolveModel%.Optfile = 1;
+solve %pyspdSolveModel% using %pyspdSolveType% maximizing NETBENEFIT;
+option %pyspdSolveType% = %pyspdSolveSolver%;
 """
 
 _POST_SOLVE_SNAPSHOT: Final = """* pySPD Gate 1 complete post-solve state snapshot.
@@ -146,6 +163,7 @@ LAMBDAHVDCRESERVE.fx(t,isl,resC,rd,rsbp) = LAMBDAHVDCRESERVE.l(t,isl,resC,rd,rsb
 %pyspdPricingModel%.iterlim = LPIterationLimit;
 $setglobal pyspdSolveModel %pyspdPricingModel%
 $setglobal pyspdSolveType RMIP
+$setglobal pyspdSolveSolver %pyspdPricingSolver%
 $include pyspd_pre_solve_snapshot.inc
 solve %pyspdPricingModel% using rmip maximizing NETBENEFIT;
 $include pyspd_post_solve_snapshot.inc
@@ -182,6 +200,13 @@ LAMBDAHVDCRESERVE.up(t,isl,resC,rd,rsbp) = pyspd_LAMBDAHVDCRESERVE_up(t,isl,resC
 """
 
 _MATRIX_EXPORT: Final = """* pySPD Gate 1 canonical solution and matrix export.
+put pyspd_convert_options;
+put 'dumpgdx pyspd_pricing_matrix.gdx'/
+    'dictmap pyspd_pricing_dict.gdx'/
+    'gdxnames 1'/
+    'gdxuels 1'/
+    'headerTimeStamp none'/;
+putclose pyspd_convert_options;
 $iftheni.pyspdDPS %opMode%=='DPS'
 if (ord(drs) = card(drs),
   pyspd_active_drs_ord = ord(drs);
@@ -283,6 +308,7 @@ class SolveRecord:
     model_status_code: int
     model_status: str
     objective: float
+    resource_usage_seconds: float | None = None
 
     @property
     def optimal(self) -> bool:
@@ -344,7 +370,12 @@ class ListingResult:
                 record.solver != profile.lp_solver.upper() for record in self.pricing
             ):
                 return False
-            return len(self.exports) == 1
+            expected_exports = (
+                len(self.operational_records) + 1
+                if profile.capture_state_evidence
+                else 1
+            )
+            return len(self.exports) == expected_exports
         return True
 
 
@@ -363,16 +394,26 @@ class VspdListingParser:
         r"\*\*\*\* OBJECTIVE VALUE\s+(?P<objective>[-+0-9.Ee]+)",
         re.DOTALL,
     )
+    _resource_usage = re.compile(
+        r"RESOURCE USAGE, LIMIT\s+(?P<seconds>[-+0-9.Ee]+)"
+    )
 
     def parse_file(self, path: Path) -> ListingResult:
         return self.parse_text(path.read_text(errors="replace"))
 
     def parse_text(self, text: str) -> ListingResult:
         loops = tuple(self._loop.finditer(text))
+        reports = tuple(self._report.finditer(text))
         records: list[SolveRecord] = []
-        for report in self._report.finditer(text):
+        for index, report in enumerate(reports):
             preceding = [loop for loop in loops if loop.start() < report.start()]
             scenario = preceding[-1].group("scenario").strip() if preceding else "base"
+            next_report_start = (
+                reports[index + 1].start() if index + 1 < len(reports) else len(text)
+            )
+            resource = self._resource_usage.search(
+                text, report.end(), next_report_start
+            )
             records.append(
                 SolveRecord(
                     scenario=scenario,
@@ -384,6 +425,11 @@ class VspdListingParser:
                     model_status_code=int(report.group("model_code")),
                     model_status=report.group("model_status").strip(),
                     objective=float(report.group("objective")),
+                    resource_usage_seconds=(
+                        float(resource.group("seconds"))
+                        if resource is not None
+                        else None
+                    ),
                 )
             )
         if not records:
@@ -689,6 +735,16 @@ class InstrumentationNeutralityComparison:
                 and left.get("logical_records_sha256") is not None
             )
 
+        def operational_records(payload: dict[str, Any]) -> Any:
+            records = value(payload, "records")
+            if not isinstance(records, list):
+                return object()
+            return [
+                record
+                for record in records
+                if isinstance(record, dict) and record.get("solver") != "CONVERT"
+            ]
+
         instrumented_state = value(instrumented, "state_evidence")
         checks = {
             "same_input": value(instrumented, "input", "sha256")
@@ -697,8 +753,8 @@ class InstrumentationNeutralityComparison:
                 instrumented, "configuration_overlay", "logical_sha256"
             )
             == value(control, "configuration_overlay", "logical_sha256"),
-            "same_solve_records": value(instrumented, "records")
-            == value(control, "records"),
+            "same_solve_records": operational_records(instrumented)
+            == operational_records(control),
             "same_reports": value(instrumented, "reports", "logical_sha256")
             == value(control, "reports", "logical_sha256"),
             "same_published_prices": same_price_report(
@@ -751,13 +807,13 @@ class InstrumentationNeutralityComparison:
                 instrumented,
                 "canonical",
                 "matrix_evidence",
-                "logical_sha256",
+                "semantic_logical_sha256",
             )
             == value(
                 control,
                 "canonical",
                 "matrix_evidence",
-                "logical_sha256",
+                "semantic_logical_sha256",
             ),
             "same_price_validation": value(
                 instrumented, "canonical", "price_validation"
@@ -785,6 +841,7 @@ class NativeGamsProfile:
     supports_marginals: bool
     explicit_fixed_lp_pricing: bool
     capture_state_evidence: bool
+    lp_options: tuple[str, ...]
 
 
 class CplexOracleProfile(NativeGamsProfile):
@@ -798,6 +855,7 @@ class CplexOracleProfile(NativeGamsProfile):
             supports_marginals=True,
             explicit_fixed_lp_pricing=False,
             capture_state_evidence=False,
+            lp_options=(),
         )
 
 
@@ -812,6 +870,7 @@ class ScipSmokeProfile(NativeGamsProfile):
             supports_marginals=False,
             explicit_fixed_lp_pricing=False,
             capture_state_evidence=False,
+            lp_options=(),
         )
 
 
@@ -828,6 +887,37 @@ class ScipHighsPricingProfile(NativeGamsProfile):
             supports_marginals=True,
             explicit_fixed_lp_pricing=True,
             capture_state_evidence=capture_state_evidence,
+            lp_options=(
+                "dual_feasibility_tolerance = 1e-9",
+                "primal_feasibility_tolerance = 1e-9",
+                "dual_residual_tolerance = 1e-9",
+                "primal_residual_tolerance = 1e-9",
+            ),
+        )
+
+
+class ScipHighsPrimalBasisProfile(NativeGamsProfile):
+    """Non-normative primal-simplex/no-presolve basis perturbation profile."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            name="gams-scip-highs-primal-basis-perturbation",
+            mip_solver="SCIP",
+            lp_solver="HiGHS",
+            use_option_files=True,
+            normative=False,
+            supports_marginals=True,
+            explicit_fixed_lp_pricing=True,
+            capture_state_evidence=False,
+            lp_options=(
+                "dual_feasibility_tolerance = 1e-9",
+                "primal_feasibility_tolerance = 1e-9",
+                "dual_residual_tolerance = 1e-9",
+                "primal_residual_tolerance = 1e-9",
+                "solver = simplex",
+                "simplex_strategy = 4",
+                "presolve = off",
+            ),
         )
 
 
@@ -837,6 +927,8 @@ class VspdRunConfiguration:
 
     run_name: str
     operation_mode: str
+    daily_mode: int | None = None
+    case_ids: tuple[str, ...] = ()
 
     _safe_name: ClassVar[re.Pattern[str]] = re.compile(r"^[A-Za-z0-9_.-]+$")
     _supported_modes: ClassVar[set[str]] = {"SPD", "AUD", "DPS"}
@@ -848,6 +940,12 @@ class VspdRunConfiguration:
             raise ValueError(
                 f"unsupported vSPD operation mode: {self.operation_mode!r}"
             )
+        if self.daily_mode not in {None, 0, 1}:
+            raise ValueError("daily_mode must be 0, 1, or None")
+        if len(set(self.case_ids)) != len(self.case_ids):
+            raise ValueError("case_ids must be unique")
+        if any(not self._safe_name.fullmatch(case_id) for case_id in self.case_ids):
+            raise ValueError("case_ids contain an unsafe identifier")
 
     @property
     def logical_sha256(self) -> str:
@@ -858,6 +956,8 @@ class VspdRunConfiguration:
             "schema_version": 1,
             "run_name": self.run_name,
             "operation_mode": self.operation_mode,
+            "daily_mode": self.daily_mode,
+            "case_ids": list(self.case_ids),
             "source_patches": (
                 ["vspd-v5.0.6-audit-o-bus-alias-v1"]
                 if self.operation_mode == "AUD"
@@ -891,6 +991,18 @@ class VspdSourcePatcher:
                     "bus(ca,dt,b)",
                     expected_count=1,
                 )
+            if configuration.daily_mode is not None:
+                self._replace_exact(
+                    settings,
+                    "Scalar dailymode                         / 1 / ;",
+                    "Scalar dailymode                         "
+                    f"/ {configuration.daily_mode} / ;",
+                    expected_count=1,
+                )
+            if configuration.case_ids:
+                (programs / "vSPDtpsToSolve.inc").write_text(
+                    "/ " + ", ".join(configuration.case_ids) + " /\n"
+                )
         if profile.mip_solver != "Cplex":
             self._replace_exact(
                 settings,
@@ -919,6 +1031,7 @@ class VspdSourcePatcher:
                 profile.mip_solver,
                 profile.lp_solver,
                 profile.capture_state_evidence,
+                profile.lp_options,
             )
 
     def _apply_fixed_lp_pricing(
@@ -928,12 +1041,15 @@ class VspdSourcePatcher:
         mip_solver: str,
         pricing_solver: str,
         capture_state_evidence: bool,
+        lp_options: tuple[str, ...],
     ) -> None:
         period = programs / "vSPDperiod.gms"
         self._replace_exact(
             solve,
             "option mip = %Solver% ;",
-            f"option mip = %Solver% ;\noption rmip = {pricing_solver} ;",
+            f"option mip = %Solver% ;\n"
+            f"option rmip = {pricing_solver} ;\n"
+            f"$setglobal pyspdPricingSolver {pricing_solver}",
             expected_count=1,
         )
         self._replace_exact(
@@ -956,6 +1072,7 @@ class VspdSourcePatcher:
             nmir_solve = (
                 "\n$setglobal pyspdSolveModel vSPD_NMIR\n"
                 "$setglobal pyspdSolveType MIP\n"
+                "$setglobal pyspdSolveSolver %Solver%\n"
                 "$include pyspd_pre_solve_snapshot.inc\n"
                 "solve vSPD_NMIR using mip maximizing NETBENEFIT ;\n"
                 "$include pyspd_post_solve_snapshot.inc\n"
@@ -965,6 +1082,7 @@ class VspdSourcePatcher:
             branch_solve = (
                 "\n$setglobal pyspdSolveModel vSPD_BranchFlowMIP\n"
                 "$setglobal pyspdSolveType MIP\n"
+                "$setglobal pyspdSolveSolver %Solver%\n"
                 "$include pyspd_pre_solve_snapshot.inc\n"
                 "solve vSPD_BranchFlowMIP using mip maximizing NETBENEFIT ;\n"
                 "$include pyspd_post_solve_snapshot.inc\n"
@@ -1037,6 +1155,7 @@ class VspdSourcePatcher:
             fixed_lp_solve = fixed_lp_solve.replace(
                 "$setglobal pyspdSolveModel %pyspdPricingModel%\n"
                 "$setglobal pyspdSolveType RMIP\n"
+                "$setglobal pyspdSolveSolver %pyspdPricingSolver%\n"
                 "$include pyspd_pre_solve_snapshot.inc\n",
                 "",
             ).replace("$include pyspd_post_solve_snapshot.inc\n", "")
@@ -1053,12 +1172,7 @@ class VspdSourcePatcher:
         if mip_solver == "SCIP":
             (programs / "scip.opt").write_text("numerics/feastol = 1e-7\n")
         if pricing_solver == "HiGHS":
-            (programs / "highs.opt").write_text(
-                "dual_feasibility_tolerance = 1e-9\n"
-                "primal_feasibility_tolerance = 1e-9\n"
-                "dual_residual_tolerance = 1e-9\n"
-                "primal_residual_tolerance = 1e-9\n"
-            )
+            (programs / "highs.opt").write_text("\n".join(lp_options) + "\n")
 
     @staticmethod
     def _replace_global_setting(path: Path, name: str, value: str) -> None:
@@ -1149,6 +1263,8 @@ class SolveStatePair:
     solver: str
     pre: ReportArtifact
     post: ReportArtifact
+    matrix: ReportArtifact
+    dictionary: ReportArtifact
 
 
 @dataclass(frozen=True)
@@ -1165,7 +1281,8 @@ class StateEvidenceInventory:
         "pyspd_checkpoint_02_preprocessed.gdx",
     )
     _snapshot_name: ClassVar[re.Pattern[str]] = re.compile(
-        r"^pyspd_solve_(?P<ordinal>[1-9][0-9]*)_(?P<phase>pre|post)\.gdx$"
+        r"^pyspd_solve_(?P<ordinal>[1-9][0-9]*)_"
+        r"(?P<phase>pre|post|matrix|dict)\.gdx$"
     )
 
     @classmethod
@@ -1191,7 +1308,7 @@ class StateEvidenceInventory:
         expected_keys = {
             (ordinal, phase)
             for ordinal in range(1, len(records) + 1)
-            for phase in ("pre", "post")
+            for phase in ("pre", "post", "matrix", "dict")
         }
         if set(observed) != expected_keys:
             raise ValueError(
@@ -1208,6 +1325,8 @@ class StateEvidenceInventory:
                 solver=record.solver,
                 pre=observed[(ordinal, "pre")],
                 post=observed[(ordinal, "post")],
+                matrix=observed[(ordinal, "matrix")],
+                dictionary=observed[(ordinal, "dict")],
             )
             for ordinal, record in enumerate(records, start=1)
         )
@@ -1314,6 +1433,7 @@ class VspdRunner:
         absolute_tolerance: float = 0.01,
         relative_tolerance: float = 1e-9,
     ) -> VspdRunResult:
+        run_started = time.perf_counter()
         self._validate(case)
         stage = case.work_directory / "vspd"
         if stage.exists():
@@ -1321,6 +1441,7 @@ class VspdRunner:
                 f"refusing to overwrite existing stage directory: {stage}"
             )
         case.work_directory.mkdir(parents=True, exist_ok=True)
+        staging_started = time.perf_counter()
         self._stage_source_tree(case.source_tree, stage)
 
         programs = stage / "Programs"
@@ -1331,6 +1452,7 @@ class VspdRunner:
         (programs / "vSPDcase.inc").write_text(
             f"$setglobal  GDXname  {case.case_name}\n"
         )
+        staging_seconds = time.perf_counter() - staging_started
 
         settings = self._read_settings(programs / "vSPDsettings.inc")
         run_name = settings["runName"]
@@ -1357,11 +1479,13 @@ class VspdRunner:
         ]
         logs = case.work_directory / "logs"
         logs.mkdir()
+        command_seconds: dict[str, float] = {}
         for name, arguments in commands:
-            self._execute(
+            command_seconds[name] = self._execute(
                 case.gams_executable, programs, arguments, logs / f"{name}.log"
             )
 
+        validation_started = time.perf_counter()
         listing = programs / "vSPDsolve.lst"
         parsed = self.parser.parse_file(listing)
         node_price_path = output / f"{run_name}_NodePriceSensitivity.csv"
@@ -1395,7 +1519,9 @@ class VspdRunner:
         matrix_validation: LinearMatrixValidation | None = None
         price_validation: IndependentPriceValidation | None = None
         canonical_payload: dict[str, Any] | None = None
+        canonical_seconds = 0.0
         if case.profile.explicit_fixed_lp_pricing:
+            canonical_started = time.perf_counter()
             canonical_payload, matrix_validation, price_validation = (
                 self._canonical_evidence(
                     case,
@@ -1405,6 +1531,26 @@ class VspdRunner:
                     state_evidence,
                 )
             )
+            canonical_seconds = time.perf_counter() - canonical_started
+        validation_seconds = time.perf_counter() - validation_started
+        performance = {
+            "clock": "time.perf_counter",
+            "staging_seconds": staging_seconds,
+            "gams_command_seconds": command_seconds,
+            "gams_total_seconds": sum(command_seconds.values()),
+            "validation_and_evidence_seconds": validation_seconds,
+            "canonical_validation_seconds": canonical_seconds,
+            "total_seconds_before_evidence_write": time.perf_counter() - run_started,
+            "peak_child_rss_bytes": _peak_child_rss_bytes(),
+            "hardware": {
+                "system": platform.system(),
+                "release": platform.release(),
+                "machine": platform.machine(),
+                "processor": platform.processor(),
+                "logical_cpu_count": os.cpu_count(),
+                "python": platform.python_version(),
+            },
+        }
         evidence = case.work_directory / "evidence.json"
         evidence.write_text(
             json.dumps(
@@ -1424,6 +1570,7 @@ class VspdRunner:
                     price_validation,
                     report_inventory,
                     state_evidence,
+                    performance,
                 ),
                 indent=2,
                 sort_keys=True,
@@ -1472,6 +1619,12 @@ class VspdRunner:
             for pair in state_evidence.solve_pairs:
                 sources[f"solve_{pair.ordinal:03d}_pre"] = programs / pair.pre.path
                 sources[f"solve_{pair.ordinal:03d}_post"] = programs / pair.post.path
+                sources[f"solve_{pair.ordinal:03d}_matrix"] = (
+                    programs / pair.matrix.path
+                )
+                sources[f"solve_{pair.ordinal:03d}_dictionary"] = (
+                    programs / pair.dictionary.path
+                )
         missing = [str(path) for path in sources.values() if not path.is_file()]
         if missing:
             raise VspdRunError(f"canonical evidence files are missing: {missing}")
@@ -1492,20 +1645,59 @@ class VspdRunner:
                 "uel_count": manifest.uel_count,
             }
 
-        matrix = ConvertMatrixReader(system_directory).read(sources["pricing_matrix"])
-        matrix_validation = LinearMatrixValidator.validate(matrix)
+        matrix_reader = ConvertMatrixReader(system_directory)
+        dictionary_reader = ConvertDictionaryReader(system_directory)
+        matrix = matrix_reader.read(sources["pricing_matrix"])
+        dictionary = dictionary_reader.read(sources["pricing_dictionary"])
+        semantic_matrix = dictionary.apply(matrix)
+        matrix_validation = LinearMatrixValidator.validate(semantic_matrix)
         matrix_path = destination / "pricing_matrix_evidence.json"
         matrix_payload = {
-            "sense": matrix.sense,
-            "row_count": len(matrix.rows),
-            "column_count": len(matrix.columns),
-            "nonzero_count": matrix.nonzero_count,
-            "logical_sha256": matrix.logical_sha256,
+            "sense": semantic_matrix.sense,
+            "row_count": len(semantic_matrix.rows),
+            "column_count": len(semantic_matrix.columns),
+            "nonzero_count": semantic_matrix.nonzero_count,
+            "scalar_logical_sha256": matrix.logical_sha256,
+            "scalar_structural_sha256": matrix.structural_sha256,
+            "semantic_logical_sha256": semantic_matrix.logical_sha256,
+            "semantic_structural_sha256": semantic_matrix.structural_sha256,
+            "dictionary_logical_sha256": dictionary.logical_sha256,
             "validation": matrix_validation.to_dict(),
         }
         matrix_path.write_text(
             json.dumps(matrix_payload, indent=2, sort_keys=True) + "\n"
         )
+
+        solve_matrix_evidence: dict[str, Any] = {}
+        if state_evidence is not None:
+            for pair in state_evidence.solve_pairs:
+                name = f"solve_{pair.ordinal:03d}"
+                scalar = matrix_reader.read(sources[f"{name}_matrix"])
+                names = dictionary_reader.read(sources[f"{name}_dictionary"])
+                semantic = names.apply(scalar)
+                validation = LinearMatrixValidator.validate(semantic)
+                payload = {
+                    "ordinal": pair.ordinal,
+                    "model": pair.model,
+                    "solve_type": pair.solve_type,
+                    "sense": semantic.sense,
+                    "row_count": len(semantic.rows),
+                    "column_count": len(semantic.columns),
+                    "nonzero_count": semantic.nonzero_count,
+                    "scalar_logical_sha256": scalar.logical_sha256,
+                    "scalar_structural_sha256": scalar.structural_sha256,
+                    "semantic_logical_sha256": semantic.logical_sha256,
+                    "semantic_structural_sha256": semantic.structural_sha256,
+                    "dictionary_logical_sha256": names.logical_sha256,
+                    "validation": validation.to_dict(),
+                }
+                path = destination / f"{name}_matrix_evidence.json"
+                path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+                solve_matrix_evidence[name] = {
+                    "manifest": path.name,
+                    "manifest_sha256": _sha256(path),
+                    **payload,
+                }
 
         if node_prices is not None:
             report_prices = {
@@ -1538,6 +1730,7 @@ class VspdRunner:
                     "manifest_sha256": _sha256(matrix_path),
                     **matrix_payload,
                 },
+                "solve_matrix_evidence": solve_matrix_evidence,
                 "price_validation": {
                     "manifest": price_path.name,
                     "manifest_sha256": _sha256(price_path),
@@ -1600,7 +1793,8 @@ class VspdRunner:
         programs: Path,
         arguments: list[str],
         log: Path,
-    ) -> None:
+    ) -> float:
+        started = time.perf_counter()
         completed = subprocess.run(
             [str(executable), *arguments],
             cwd=programs,
@@ -1614,6 +1808,7 @@ class VspdRunner:
             raise VspdRunError(
                 f"GAMS command failed with exit code {completed.returncode}; see {log}"
             )
+        return time.perf_counter() - started
 
     @staticmethod
     def _evidence(
@@ -1630,6 +1825,7 @@ class VspdRunner:
         price_validation: IndependentPriceValidation | None,
         report_inventory: ReportInventory,
         state_evidence: StateEvidenceInventory | None,
+        performance: dict[str, Any],
     ) -> dict[str, Any]:
         return {
             "schema_version": 1,
@@ -1703,6 +1899,7 @@ class VspdRunner:
             "state_evidence": (
                 state_evidence.to_dict() if state_evidence is not None else None
             ),
+            "performance": performance,
         }
 
 
@@ -1722,3 +1919,8 @@ def _logical_sha256(value: Any) -> str:
         sort_keys=True,
     ).encode()
     return hashlib.sha256(encoded).hexdigest()
+
+
+def _peak_child_rss_bytes() -> int:
+    value = int(resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss)
+    return value if platform.system() == "Darwin" else value * 1024

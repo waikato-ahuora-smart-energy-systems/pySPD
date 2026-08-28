@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "generated_date": "2026-08-29",
+  "scope": "single RTD interval reference baseline; not a complete-day budget",
+  "case": "RTD_202211011300_11012022110000479_20221101125901",
+  "profile": "SCIP MIP -> fixed-discrete HiGHS RMIP",
+  "controlled_hardware": {
+    "system": "Darwin",
+    "release": "25.6.0",
+    "machine": "arm64",
+    "processor": "arm",
+    "logical_cpu_count": 14,
+    "python": "3.13.14",
+    "gams": "54.3.1 61154be4",
+    "concurrency": "single runner process"
+  },
+  "control_run": {
+    "external_evidence": "/private/tmp/pyspd-gate1-semantic-v2-control/evidence.json",
+    "evidence_sha256": "ccc4a590960fe6122531e79fdb1fdfb871656f03aa48d9705b71544d426af789",
+    "staging_seconds": 0.02733495901338756,
+    "gams_commands_seconds": {
+      "model_compile": 1.510136374970898,
+      "report_setup_compile": 1.3976618340238929,
+      "period_selection": 1.3727489999728277,
+      "solve_and_report": 7.046226791979279
+    },
+    "gams_total_seconds": 11.326774000946898,
+    "canonical_validation_seconds": 10.988712917023804,
+    "total_seconds_before_evidence_write": 22.368905667040963,
+    "peak_child_rss_bytes": 549421056,
+    "listing_phase_seconds": {
+      "matrix_generation_primary_mip": 0.05,
+      "primary_scip_mip": 4.217,
+      "matrix_generation_fixed_rmip": 0.053,
+      "fixed_discrete_highs_rmip": 0.254,
+      "final_convert_export": 0.103,
+      "solve_program_execution": 5.505
+    }
+  },
+  "instrumented_run": {
+    "external_evidence": "/private/tmp/pyspd-gate1-semantic-v2/evidence.json",
+    "evidence_sha256": "75eab24bccbde2eb5253ae6b375e5c2d4f168fc4c736fcb2b4253772e002774e",
+    "staging_seconds": 0.03673433302901685,
+    "gams_total_seconds": 12.181240000936668,
+    "canonical_validation_seconds": 80.82296420796774,
+    "total_seconds_before_evidence_write": 93.0874161249958,
+    "peak_child_rss_bytes": 549486592
+  },
+  "interpretation": {
+    "economic_control_equivalent": true,
+    "instrumentation_overhead_is_gate_evidence_only": true,
+    "gate_9_relative_budgets_unchanged": true,
+    "complete_day_measurement_due": "Gate 9 implementation comparison"
+  }
+}

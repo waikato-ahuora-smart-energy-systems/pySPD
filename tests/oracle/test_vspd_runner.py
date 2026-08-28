@@ -43,8 +43,12 @@ def test_state_evidence_inventory_requires_a_pair_for_every_operational_solve(
         "pyspd_checkpoint_02_preprocessed.gdx",
         "pyspd_solve_1_pre.gdx",
         "pyspd_solve_1_post.gdx",
+        "pyspd_solve_1_matrix.gdx",
+        "pyspd_solve_1_dict.gdx",
         "pyspd_solve_2_pre.gdx",
         "pyspd_solve_2_post.gdx",
+        "pyspd_solve_2_matrix.gdx",
+        "pyspd_solve_2_dict.gdx",
     ):
         (tmp_path / name).write_bytes(name.encode())
     parsed = ListingResult(
@@ -61,6 +65,8 @@ def test_state_evidence_inventory_requires_a_pair_for_every_operational_solve(
     assert len(inventory.solve_pairs) == 2
     assert inventory.solve_pairs[0].model == "vSPD_NMIR"
     assert inventory.solve_pairs[1].solve_type == "RMIP"
+    assert inventory.solve_pairs[0].matrix.path == "pyspd_solve_1_matrix.gdx"
+    assert inventory.solve_pairs[1].dictionary.path == "pyspd_solve_2_dict.gdx"
     assert inventory.logical_sha256
 
     (tmp_path / "pyspd_solve_2_post.gdx").unlink()
@@ -82,7 +88,7 @@ def test_instrumentation_neutrality_comparison_is_fail_closed() -> None:
                 "pricing_matrix": {"logical_sha256": "matrix-gdx"},
                 "pricing_dictionary": {"logical_sha256": "dictionary"},
             },
-            "matrix_evidence": {"logical_sha256": "matrix"},
+            "matrix_evidence": {"semantic_logical_sha256": "matrix"},
             "price_validation": {"passed": True, "price_count": 1},
         },
         "validation": {
@@ -152,6 +158,7 @@ def test_explicit_run_configuration_overlay_is_fail_closed_and_hashed(
         "$setglobal runName                       source_default\n"
         "$setglobal opMode                          DPS\n"
         "$setglobal Solver                          Cplex\n"
+        "Scalar dailymode                         / 1 / ;\n"
     )
     solve.write_text(
         "option lp = %Solver% ;\n"
@@ -163,6 +170,8 @@ def test_explicit_run_configuration_overlay_is_fail_closed_and_hashed(
     configuration = VspdRunConfiguration(
         run_name="gate1_spd_fixture",
         operation_mode="SPD",
+        daily_mode=0,
+        case_ids=("case_1", "case_2"),
     )
 
     VspdSourcePatcher().apply(programs, ScipSmokeProfile(), configuration)
@@ -170,6 +179,8 @@ def test_explicit_run_configuration_overlay_is_fail_closed_and_hashed(
     patched = settings.read_text()
     assert "$setglobal runName                       gate1_spd_fixture" in patched
     assert "$setglobal opMode                          SPD" in patched
+    assert "Scalar dailymode                         / 0 / ;" in patched
+    assert (programs / "vSPDtpsToSolve.inc").read_text() == "/ case_1, case_2 /\n"
     assert len(configuration.logical_sha256) == 64
 
 
@@ -323,6 +334,10 @@ def test_fixed_lp_profile_injects_pricing_solve_after_each_mip(tmp_path: Path) -
     assert "%pyspdPricingModel%.Optfile = 1;" in pricing
     assert "$include pyspd_pre_solve_snapshot.inc" in pricing
     assert "$include pyspd_post_solve_snapshot.inc" in pricing
+    snapshot = (programs / "pyspd_pre_solve_snapshot.inc").read_text()
+    assert "dumpgdx pyspd_solve_" in snapshot
+    assert "dictmap pyspd_solve_" in snapshot
+    assert "option %pyspdSolveType% = Convert;" in snapshot
     assert "HVDCSENDING.lo(t,isl) = pyspd_HVDCSENDING_lo(t,isl);" in pricing
     assert "$include pyspd_matrix_export.inc" in patched
     matrix_export = (programs / "pyspd_matrix_export.inc").read_text()

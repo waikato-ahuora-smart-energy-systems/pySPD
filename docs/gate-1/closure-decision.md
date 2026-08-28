@@ -15,9 +15,12 @@ prove the active reference profile, fail-closed overlays, standard/audit report
 families, canonical GDX/matrix exports, independent LP checks, dead-node price
 transfer, and independent node-price mapping across all in-scope 2025-pack
 RTD/PRSS inputs. The 2023 pack is hash-bound and validly deferred. The result
-still does not meet the governing plan's separate population, per-invocation
-matrix, and complete incremental-comparator criteria. Governed preprocessing
-checkpoints and their observational-neutrality proof are now complete.
+still does not meet the governing plan's separate population criterion.
+Governed preprocessing checkpoints, complete
+per-invocation state/matrix dictionaries, and their observational-neutrality
+proof are now complete. The incremental comparator, complementarity/sign
+conventions, basis classification, and controlled performance baseline are also
+complete.
 
 Starting Stage 2 production work would therefore bypass an explicit dependency
 in the governing stage-and-gate plan. Gate 2 remains not started. Read-only
@@ -29,9 +32,7 @@ recorded change to the governing plan.
 
 | ID | Blocker | Required closure evidence |
 |---|---|---|
-| `G1-B01` | The required 546 affected RTD intervals, matched controls, daylight-saving cases, and remaining preprocessing/fallback/re-solve feature cells are not populated | Reproducible fixtures and required snapshots for every remaining in-scope path |
-| `G1-B04` | Complete pre/post GDX state now exists for every solve/re-solve, but a semantic matrix/name dictionary is not yet retained per invocation | Per-solve model variant, matrix/name dictionary, bounds/fixings, discrete/SOS state, primal, marginal, status, and post-solve snapshots |
-| `G1-B05` | Current full-matrix activity/bound/stationarity checks are frozen, but incremental feature projection, split-row/dual transforms, and complementarity mappings are incomplete | Versioned mapping/sign/ranged-row/complementarity specification with analytic tests |
+| `G1-B01` | The required 546 affected RTD intervals, matched controls, daylight-saving cases, and remaining preprocessing/fallback/re-solve feature cells are not fully populated | Reproducible fixtures and required snapshots for every remaining in-scope path; all 139 corrected daily GDX inputs are now individually hash-bound |
 
 ## Evidence that is complete for the executed samples
 
@@ -39,14 +40,21 @@ recorded change to the governing plan.
   and dictionary hashes;
 - three governed preprocessing checkpoints and complete pre/post state pairs for
   every operational solve, with raw and canonical hashes;
+- a semantic GAMS Convert matrix and scalar/name dictionary bound to every
+  operational solve ordinal, model variant, solve type, scenario, and solver;
 - a checkpoint-disabled control run with exact logical equality across solve
   records, all reports, published prices, pricing solution, matrix, dictionary,
   independent validation, and configuration;
 - 38 optimal SCIP primary MIPs and 38 optimal HiGHS fixed-discrete RMIPs in the
   frozen RTD/PRSS/AUD corpus;
 - ten deterministic GAMS Convert matrix/name-dictionary exports;
-- independent activity, row/column bound, and raw/scale-normalized stationarity
-  validation; and
+- independent activity, row/column bound, raw/scale-normalized stationarity,
+  dual-side sign, and complementarity validation;
+- exact semantic DictMap coverage plus a versioned cumulative Stage 4--7
+  projection/sign/split/auxiliary contract with analytic tests;
+- a classified primal-simplex/no-presolve basis perturbation with identical
+  structure and objective but alternative optimal primals/duals;
+- controlled phase, per-solve, wall-time, and peak-RSS reference measurements;
 - exact native node-price reconstruction for the nine nodes in the final
   DPS scenario snapshot, with report-precision agreement;
 - hash-bound, fail-closed SPD and AUD configuration overlays;

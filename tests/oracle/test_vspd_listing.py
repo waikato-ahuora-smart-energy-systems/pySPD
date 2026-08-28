@@ -23,6 +23,7 @@ Solution Report     SOLVE vSPD_NMIR Using MIP From line 6602
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE         100.0000
+ RESOURCE USAGE, LIMIT          1.250      3600.000
 
 Solution Report     SOLVE vSPD_NMIR Using RMIP From line 6603
      MODEL   vSPD_NMIR           OBJECTIVE  NETBENEFIT
@@ -98,6 +99,8 @@ def test_parser_keeps_primary_and_cleanup_solves_distinct() -> None:
     assert result.pricing[0].solver == "HIGHS"
     assert result.pricing[0].solve_type == "RMIP"
     assert result.pricing[0].objective == pytest.approx(99.9999)
+    assert result.primary[0].resource_usage_seconds == pytest.approx(1.25)
+    assert result.pricing[0].resource_usage_seconds is None
     assert result.all_optimal
 
 
@@ -111,7 +114,7 @@ def test_parser_classifies_convert_as_export_not_operational_solve() -> None:
 
 
 def test_profile_match_rejects_wrong_pricing_solver() -> None:
-    qualified = LISTING + ADDITIONAL_PRICING_REPORTS + CONVERT_REPORT
+    qualified = LISTING + ADDITIONAL_PRICING_REPORTS + (CONVERT_REPORT * 8)
     assert (
         VspdListingParser()
         .parse_text(qualified)

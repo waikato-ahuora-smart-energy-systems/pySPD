@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "formulation": "vSPD-v5",
+  "semantic_name_format": "Family[json-index,...]",
+  "projection_rule": "cumulative-by-first-stage",
+  "default_transform": "identity",
+  "nonidentity_transforms": [],
+  "transform_contracts": {
+    "row_sign": {
+      "allowed_signs": [-1, 1],
+      "bounds": "sort(sign*lower, sign*upper) into canonical order",
+      "coefficient": "A'=sign*A",
+      "level": "level'=sign*level",
+      "dual": "pi'=sign*pi"
+    },
+    "ranged_row_split": {
+      "equality_rows_may_split": false,
+      "lower_multiplier": "lambda_L=max(-pi,0)",
+      "upper_multiplier": "lambda_U=max(pi,0)",
+      "dual_reconstruction": "pi=lambda_U-lambda_L"
+    },
+    "auxiliary_elimination": {
+      "requires_defining_equality": true,
+      "requires_exact_substitution": true,
+      "defining_equality_is_validated": true
+    }
+  },
+  "stages": {
+    "4": {
+      "equation_families": [
+        "GenerationOfferDefintion",
+        "EnergyScarcityDefinition",
+        "GenerationRampUp",
+        "GenerationRampDown",
+        "GenerationChangeUpDown",
+        "SystemCostDefinition",
+        "SystemBenefitDefinition",
+        "SystemPenaltyCostDefinition",
+        "TotalViolationCostDefinition",
+        "TotalScarcityCostDefinition"
+      ],
+      "variable_families": [
+        "NETBENEFIT",
+        "SYSTEMBENEFIT",
+        "SYSTEMCOST",
+        "SYSTEMPENALTYCOST",
+        "TOTALPENALTYCOST",
+        "SCARCITYCOST",
+        "ENERGYSCARCITYBLK",
+        "ENERGYSCARCITYNODE",
+        "GENERATION",
+        "GENERATIONBLOCK",
+        "GENERATIONUPDELTA",
+        "GENERATIONDNDELTA",
+        "DEFICITRAMPRATE",
+        "SURPLUSRAMPRATE"
+      ]
+    },
+    "5": {
+      "equation_families": [
+        "ACnodeNetInjectionDefinition1",
+        "ACnodeNetInjectionDefinition2",
+        "ACBranchMaximumFlow",
+        "ACBranchFlowDefinition",
+        "LinearLoadFlow",
+        "ACBranchBlockLimit",
+        "ACDirectedBranchFlowDefinition",
+        "ACBranchLossCalculation",
+        "ACDirectedBranchLossDefinition",
+        "BranchSecurityConstraintLE",
+        "BranchSecurityConstraintGE",
+        "MNodeSecurityConstraintLE",
+        "MNodeSecurityConstraintGE"
+      ],
+      "variable_families": [
+        "ACNODENETINJECTION",
+        "ACBRANCHFLOW",
+        "ACNODEANGLE",
+        "ACBRANCHFLOWDIRECTED",
+        "ACBRANCHLOSSESDIRECTED",
+        "ACBRANCHFLOWBLOCKDIRECTED",
+        "ACBRANCHLOSSESBLOCKDIRECTED",
+        "DEFICITBUSGENERATION",
+        "SURPLUSBUSGENERATION",
+        "DEFICITBRANCHSECURITYCONSTRAINT",
+        "SURPLUSBRANCHSECURITYCONSTRAINT",
+        "SURPLUSBRANCHFLOW",
+        "DEFICITMNODECONSTRAINT",
+        "SURPLUSMNODECONSTRAINT"
+      ]
+    },
+    "6": {
+      "equation_families": [
+        "HVDClinkMaximumFlow",
+        "HVDClinkLossDefinition",
+        "HVDClinkFlowDefinition",
+        "LambdaDefinition"
+      ],
+      "variable_families": [
+        "HVDCLINKFLOW",
+        "HVDCLINKLOSSES",
+        "LAMBDA"
+      ]
+    },
+    "7": {
+      "equation_families": [
+        "RiskOffsetCalculation_DCCE",
+        "RiskOffsetCalculation_DCECE",
+        "HVDCIslandRiskCalculation",
+        "HVDCRecCalculation",
+        "ManualIslandRiskCalculation",
+        "GenIslandRiskCalculation",
+        "GenIslandRiskCalculation_1",
+        "GenIslandRiskGroupCalculation",
+        "GenIslandRiskGroupCalculation_1",
+        "HVDCSendMustZeroBinaryDefinition",
+        "PLSRReserveProportionMaximum",
+        "ReserveOfferDefinition",
+        "EnergyAndReserveMaximum",
+        "HVDCRiskReserveShortFallCalculation",
+        "ManualRiskReserveShortFallCalculation",
+        "GenRiskReserveShortFallCalculation",
+        "HVDCsecRiskReserveShortFallCalculation",
+        "HVDCsecManualRiskReserveShortFallCalculation",
+        "RiskGroupReserveShortFallCalculation",
+        "SupplyDemandReserveRequirement",
+        "IslandReserveCalculation",
+        "EffectiveReserveShareCalculation",
+        "SharedReserveLimitByClearedReserve",
+        "BothClearedAndFreeReserveCanBeShared",
+        "ReverseReserveShareLimitByHVDCControlBand",
+        "ReserveShareSentLimitByHVDCControlBand",
+        "FwdReserveShareSentLimitByHVDCCapacity",
+        "ReverseReserveOnlyToEnergySendingIsland",
+        "ForwardReserveOnlyToEnergyReceivingIsland",
+        "ReverseReserveLimitInReserveZone",
+        "ZeroReserveInNoReserveZone",
+        "OnlyOneActiveHVDCZoneForEachReserveClass",
+        "ZeroSentHVDCFlowForNonSendingIsland",
+        "RoundPowerZoneSentHVDCUpperLimit",
+        "HVDCSendingIslandDefinition",
+        "OnlyOneSendingIslandExists",
+        "HVDCSentCalculation",
+        "ExcessReserveSharePenalty",
+        "ReserveShareEffective_CE_Calculation",
+        "ReserveShareEffective_ECE_Calculation",
+        "HVDCFlowAccountedForForwardReserve",
+        "ForwardReserveReceivedAtHVDCReceivingIsland",
+        "HVDCFlowAccountedForReverseReserve",
+        "ReverseReserveReceivedAtHVDCSendingIsland",
+        "HVDCSentEnergyLambdaDefinition",
+        "HVDCSentEnergyFlowDefinition",
+        "HVDCSentEnergyLossesDefinition",
+        "HVDCSentReserveLambdaDefinition",
+        "HVDCSentReserveFlowDefinition",
+        "HVDCSentReserveLossesDefinition"
+      ],
+      "variable_families": [
+        "ISLANDRISK",
+        "GENISLANDRISK",
+        "GENISLANDRISKGROUP",
+        "HVDCREC",
+        "RISKOFFSET",
+        "HVDCRESERVESENT",
+        "HVDCRESERVELOSS",
+        "RESERVESHORTFALLBLK",
+        "RESERVESHORTFALL",
+        "RESERVESHORTFALLUNITBLK",
+        "RESERVESHORTFALLUNIT",
+        "RESERVESHORTFALLGROUPBLK",
+        "RESERVESHORTFALLGROUP",
+        "RESERVE",
+        "RESERVEBLOCK",
+        "ISLANDRESERVE",
+        "SHAREDNFR",
+        "SHAREDRESERVE",
+        "HVDCSENT",
+        "HVDCSENTLOSS",
+        "RESERVESHAREEFFECTIVE",
+        "RESERVESHARERECEIVED",
+        "RESERVESHARESENT",
+        "RESERVESHAREPENALTY",
+        "RESERVESHAREEFFECTIVE_CE",
+        "RESERVESHAREEFFECTIVE_ECE",
+        "DEFICITRESERVE_CE",
+        "DEFICITRESERVE_ECE",
+        "HVDCSENDING",
+        "INZONE",
+        "HVDCSENDZERO",
+        "LAMBDAHVDCENERGY",
+        "LAMBDAHVDCRESERVE"
+      ]
+    }
+  },
+  "excluded_dictionary_families": {
+    "equations": ["ObjectiveFunction"],
+    "reason": "Convert objective marker, not a model constraint"
+  }
+}

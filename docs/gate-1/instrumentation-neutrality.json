@@ -4,25 +4,27 @@
   "case": "RTD_202211011300_11012022110000479_20221101125901",
   "profile": "SCIP MIP -> fixed-discrete HiGHS RMIP",
   "instrumented_evidence": {
-    "external_path": "/private/tmp/pyspd-gate1-instrumented-smoke/evidence.json",
-    "sha256": "7b010068175d14cb84d8e80d48d79ed35bd52b10eb4bb2e6b63db41fab896952",
-    "state_logical_sha256": "db90e51b224409bf3e41cb6342218cfc6bc75cea24c36ae2feb7797a0e68ec0e",
+    "external_path": "/private/tmp/pyspd-gate1-semantic-v2/evidence.json",
+    "sha256": "75eab24bccbde2eb5253ae6b375e5c2d4f168fc4c736fcb2b4253772e002774e",
+    "state_logical_sha256": "98423236c2e629f96572f4fcc3c489f12f4d66085ba54f640e74bc88d9c28574",
     "checkpoint_count": 3,
     "solve_pair_count": 2
   },
   "control_evidence": {
-    "external_path": "/private/tmp/pyspd-gate1-neutrality-control/evidence.json",
-    "sha256": "dd225cf9ea2ec2a828d925151590bb3f80113121e64a93921995f21617c15034"
+    "external_path": "/private/tmp/pyspd-gate1-semantic-v2-control/evidence.json",
+    "sha256": "ccc4a590960fe6122531e79fdb1fdfb871656f03aa48d9705b71544d426af789"
   },
   "equal_logical_hashes": {
     "input": "2e21665f55aaf9d8b7ef566c3ba436f8ae19ab355694caf52c7fc01e3f8f423b",
-    "solve_records": "73ddc83870f8d500d6bc632c04dcccb652ec0098359e367698007a2b5138e9a8",
-    "reports": "dcf42b947f54006565bc52631585c514f60249b17731a6ad37c6290f9533a452",
+    "operational_solve_records": "be1db67f8c3418cffcf7e8011bdd25eb1c5bba838451e4fae6fa1a3cebff7823",
+    "reports": "57a7cf3c7e049519c1d059ecedd2e99971049aaa95324fb57d4b5942e9af6111",
     "published_prices": "5b35e0ad21f5791bd293a7582b2f0f14546a634bcf719163ed79eb6d5a9725b4",
     "pricing_solution": "b2d575c0e5ff65b9d56e573dd89f96f01391d4f4b367c461c921da5c827d3049",
     "pricing_matrix_gdx": "940c9e68ee02a3c3b9ec2103fb72f7fe4674c62f4377c48013bac27489d004fb",
     "pricing_dictionary": "a6b4429cf3867de9b6370e2a241ac02526c683595679a243501b62656462b58e",
-    "matrix_semantics": "65f7cc873e0d1e17e12450da75cb53480c8aca2857e0d10557223f697314e739"
+    "matrix_scalar_semantics": "65f7cc873e0d1e17e12450da75cb53480c8aca2857e0d10557223f697314e739",
+    "matrix_semantics": "ea857813e2d3fd7c4059da124c5182e331671d1dbdeb509b02bcc40f52f997de",
+    "semantic_name_dictionary": "75528d18406c32514fa15f2e0fcbf248c99c99c1aee373d8635cc502bd244620"
   },
   "checks": {
     "control_state_absent": true,

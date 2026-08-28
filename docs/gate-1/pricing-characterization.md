@@ -95,16 +95,24 @@ committed CPLEX listing records `epopt=1e-9`, `epint=0`, `eprhs=1e-6`,
 different `epopt`, `epint`, and `epagap` values. This discrepancy remains for
 the deferred CPLEX cross-validation profile.
 
-## Remaining price tests
+## Basis and degeneracy classification
+
+The governed primal-simplex/no-presolve perturbation preserves the exact
+semantic structural hash and both primary/fixed objectives, while 166 of 523
+published price cells differ by up to `4.8389 NZD/MWh`. Both solutions pass the
+independent KKT/complementarity and node-price validators. This is classified as
+an alternative optimal fixed-RMIP primal/dual basis, not a tolerance candidate.
+The default dual-simplex profile remains normative. Because the overlay retains
+fixed-LP levels for vSPD reporting, physical report primals can also vary; the
+PySPD design in ADR-0006 instead retains immutable primary-MIP primals for
+physical reports.
+
+## Deferred price tests
 
 - Compare raw CPLEX and HiGHS bus marginals before node allocation.
 - Extend native marginal validation from the final matrix snapshot to all 15
   scenarios; all 135 CSV prices are already structurally and numerically valid.
 - Verify the marginal sign and units with central demand perturbations.
-- Add explicit complementarity metrics; activity, bound feasibility, and
-  stationarity are independently checked for the final fixed LP.
-- Characterize basis and degeneracy sensitivity with repeated and perturbed
-  solves.
 - Add dead/disconnected node, scarcity, SOS-invalid-price, price-transfer, and
   branch-flow fallback fixtures.
 

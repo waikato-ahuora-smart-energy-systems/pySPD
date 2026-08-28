@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "generated_date": "2026-08-29",
+  "authority_population": {
+    "declared_interval_count": 546,
+    "declared_trading_date_count": 139,
+    "acquired_input_count": 139,
+    "total_size_bytes": 5595580253,
+    "inventory_sha256": "9e97a8fb9c38411378b8922c73ca65902a85243282b91ea3f4744ed73a998783",
+    "interval_ids_published": false
+  },
+  "optimal_scip_fixture": {
+    "trading_date": "20221106",
+    "case_id": "51012022111800831",
+    "date_time": "06-NOV-2022 07:00",
+    "input_sha256": "282ac2abeaa2f0c7c6e26b967e2ba90289c0ba5a9e696b99069d11350d3037b8",
+    "external_evidence": "/private/tmp/pyspd-gate1-shortfall-confirm-affected/evidence.json",
+    "evidence_sha256": "670bdc123ff625050076f8dfb7cb9f5a56206ebb7d1ea8d2a67fe2ca23945150",
+    "progress_report_sha256": "52958eb3982d5ef513bd74b30fcae3ddebb2ec4d60e89b5372f1246616ee2b93",
+    "primary_scip_solve_count": 10,
+    "branch_flow_cleanup_scip_solve_count": 7,
+    "all_solves_optimal": true,
+    "shortfall_adjustment_records": 21,
+    "material_first_loop_transfers_mw": {
+      "WAI0111_to_EDG1102": 4.5969,
+      "WAI0501_to_EDG1102": 0.5108
+    }
+  },
+  "rejected_relaxed_selector": {
+    "reason": "A HiGHS RMIP screen omitted case 51012022111815836, but the exact SCIP MIP path later produced 14 eligible shortfall adjustments for that case.",
+    "false_negatives_observed": true,
+    "accepted_for_population_enumeration": false,
+    "code_retained": false
+  },
+  "remaining_blocker": {
+    "id": "G1-B01",
+    "condition": "The public release identifies the 546 intervals only by 139 dates. Exact schedule IDs cannot be recovered from static corrected GDX data, and an LP relaxation is not equivalent for this discrete path.",
+    "closure_options": [
+      "obtain the Authority's exact 546 case-ID list or pre-fix evidence",
+      "execute exhaustive discrete enumeration under an accepted profile",
+      "formally revise Gate 1 to require full date-level binding plus representative optimal branch fixtures, leaving all-546 replay at Gate 8"
+    ]
+  }
+}

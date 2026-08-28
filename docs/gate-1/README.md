@@ -14,8 +14,10 @@ adequate for current development. This is not permission to claim CPLEX parity;
 the 2023/2025 pack classification, a ten-run RTD/PRSS/AUD corpus, and calibrated
 matrix/price checks are now complete. Preprocessing checkpoints, complete
 pre/post solve-state pairs, and an observational-neutrality control are also
-complete. The separate 546-interval population, per-invocation semantic matrix
-exports, and complete incremental KKT mapping remain open. ADR-0009 removes independent review as a Gate 1
+complete. Per-invocation semantic matrix/name dictionaries are also retained.
+The versioned Stage 4--7 projection map, ranged/sign transforms, dual-side
+rules, and complementarity thresholds are frozen and analytically tested. The
+separate 546-interval population remains open. ADR-0009 removes independent review as a Gate 1
 requirement.
 
 ## Current evidence
@@ -29,6 +31,12 @@ requirement.
 | [Comparator specification](comparator-specification.md) | Canonical KKT equations, scales, thresholds, and price-transfer mapping | Frozen for current full-matrix checks |
 | [Runtime evidence](runtime-evidence.json) | Machine-readable identities, hashes, profile, and result summary | Executed candidate |
 | [Instrumentation-neutrality evidence](instrumentation-neutrality.json) | Hash-bound checkpoint/control equivalence proof | Passed |
+| [Incremental matrix mappings](incremental-matrix-mappings.json) | Exact Stage 4--7 family ownership and permitted transformations | Frozen v1 |
+| [Basis sensitivity](basis-sensitivity.json) | Alternative optimal fixed-RMIP primal/dual classification | Classified |
+| [Reference performance](reference-performance.json) | Controlled phase/wall/RSS baseline | Recorded |
+| [Shortfall date population](shortfall-transfer-population.json) | Authority-declared 546 intervals across 139 dates | All daily inputs acquired; exact interval IDs not publicly disclosed |
+| [Shortfall input inventory](shortfall-input-inventory.json) | Individual hashes for all 139 official daily GDX files | Acquired and frozen |
+| [Shortfall characterization](shortfall-characterization.json) | Optimal affected-path fixture and rejected relaxed selector | Blocker classified |
 | [Gate checklist](gate-checklist.md) | Gate 1 criterion status | In progress |
 | [Closure decision](closure-decision.md) | Formal blocker audit and Stage 2 authorization boundary | Hold recorded |
 | [`tools.oracle`](../../tools/oracle/) | Class-based staged runner, fail-closed overlay, parsers, comparator, and CLI | Implemented and tested |
@@ -79,3 +87,8 @@ Use `--no-state-evidence` only for a controlled neutrality run. Compare it with
 the ordinary instrumented evidence using `compare-neutrality`; the comparator
 fails closed on any economic, report, solve-record, price, matrix, solution,
 dictionary, configuration, or validation difference.
+
+Use `--daily-mode 0` and repeat `--case-id` for an exact, hash-bound
+recomputed-demand fixture. `tools.oracle.population` acquires the governed
+139-date population with `uv`, atomically retains raw GDX files outside Git,
+and emits the committed date/size/SHA-256 inventory.

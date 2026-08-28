@@ -265,6 +265,7 @@ class LinearMatrixEvidence:
     columns: tuple[MatrixColumn, ...]
     entries: tuple[MatrixEntry, ...]
     nonzero_count: int
+    structural_sha256: str
     logical_sha256: str
 
     @classmethod
@@ -304,17 +305,165 @@ class LinearMatrixEvidence:
             "columns": [_canonical_dataclass(column) for column in sorted_columns],
             "entries": [_canonical_dataclass(entry) for entry in sorted_entries],
         }
+        structural_payload = {
+            "sense": sense,
+            "rows": [
+                {
+                    "name": canonical_value(row.name),
+                    "lower": canonical_value(row.lower),
+                    "upper": canonical_value(row.upper),
+                }
+                for row in sorted_rows
+            ],
+            "columns": [
+                {
+                    "name": canonical_value(column.name),
+                    "lower": canonical_value(column.lower),
+                    "upper": canonical_value(column.upper),
+                    "objective": canonical_value(column.objective),
+                    "discrete_type": canonical_value(column.discrete_type),
+                }
+                for column in sorted_columns
+            ],
+            "entries": [_canonical_dataclass(entry) for entry in sorted_entries],
+        }
         return cls(
             sense=sense,
             rows=sorted_rows,
             columns=sorted_columns,
             entries=sorted_entries,
             nonzero_count=len(sorted_entries),
+            structural_sha256=_sha256(structural_payload),
             logical_sha256=_sha256(payload),
         )
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+@dataclass(frozen=True)
+class SemanticNameDictionary:
+    """Stable equation/variable names recovered from a Convert DictMap GDX."""
+
+    rows: tuple[tuple[str, str], ...]
+    columns: tuple[tuple[str, str], ...]
+    logical_sha256: str
+
+    @classmethod
+    def build(
+        cls,
+        rows: Sequence[tuple[str, str]],
+        columns: Sequence[tuple[str, str]],
+    ) -> SemanticNameDictionary:
+        sorted_rows = tuple(sorted(rows))
+        sorted_columns = tuple(sorted(columns))
+        cls._validate_mapping(sorted_rows, "row")
+        cls._validate_mapping(sorted_columns, "column")
+        payload = {"rows": sorted_rows, "columns": sorted_columns}
+        return cls(sorted_rows, sorted_columns, _sha256(payload))
+
+    @staticmethod
+    def _validate_mapping(
+        mapping: Sequence[tuple[str, str]], kind: str
+    ) -> None:
+        scalar_names = [scalar for scalar, _ in mapping]
+        semantic_names = [semantic for _, semantic in mapping]
+        if len(set(scalar_names)) != len(scalar_names):
+            raise ValueError(f"duplicate scalar {kind} name in Convert dictionary")
+        if len(set(semantic_names)) != len(semantic_names):
+            raise ValueError(f"duplicate semantic {kind} name in Convert dictionary")
+
+    def apply(self, matrix: LinearMatrixEvidence) -> LinearMatrixEvidence:
+        """Replace Convert scalar identifiers, rejecting incomplete dictionaries."""
+
+        row_names = dict(self.rows)
+        column_names = dict(self.columns)
+        missing_rows = sorted({row.name for row in matrix.rows} - row_names.keys())
+        missing_columns = sorted(
+            {column.name for column in matrix.columns} - column_names.keys()
+        )
+        if missing_rows or missing_columns:
+            raise ValueError(
+                "Convert dictionary does not cover matrix names: "
+                f"rows={missing_rows}, columns={missing_columns}"
+            )
+        return LinearMatrixEvidence.build(
+            rows=tuple(
+                MatrixRow(
+                    name=row_names[row.name],
+                    lower=row.lower,
+                    upper=row.upper,
+                    marginal=row.marginal,
+                    level=row.level,
+                )
+                for row in matrix.rows
+            ),
+            columns=tuple(
+                MatrixColumn(
+                    name=column_names[column.name],
+                    lower=column.lower,
+                    upper=column.upper,
+                    objective=column.objective,
+                    level=column.level,
+                    reduced_cost=column.reduced_cost,
+                    discrete_type=column.discrete_type,
+                )
+                for column in matrix.columns
+            ),
+            entries=tuple(
+                MatrixEntry(
+                    row=row_names[entry.row],
+                    column=column_names[entry.column],
+                    coefficient=entry.coefficient,
+                )
+                for entry in matrix.entries
+            ),
+            sense=matrix.sense,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+class IncrementalMatrixTransforms:
+    """Approved algebraic transforms for Stage 4--7 projection comparisons."""
+
+    @staticmethod
+    def signed_row(
+        row: MatrixRow,
+        entries: Sequence[MatrixEntry],
+        sign: int,
+    ) -> tuple[MatrixRow, tuple[MatrixEntry, ...]]:
+        if sign not in {-1, 1}:
+            raise ValueError("row sign must be -1 or 1")
+        if any(entry.row != row.name for entry in entries):
+            raise ValueError("signed-row entries must all belong to the row")
+        transformed_bounds = (sign * row.lower, sign * row.upper)
+        transformed = MatrixRow(
+            name=row.name,
+            lower=min(transformed_bounds),
+            upper=max(transformed_bounds),
+            marginal=sign * row.marginal,
+            level=(sign * row.level if row.level is not None else None),
+        )
+        return transformed, tuple(
+            MatrixEntry(entry.row, entry.column, sign * entry.coefficient)
+            for entry in entries
+        )
+
+    @staticmethod
+    def recombine_ranged_dual(
+        lower_multiplier: float,
+        upper_multiplier: float,
+    ) -> float:
+        if (
+            lower_multiplier < 0
+            or upper_multiplier < 0
+            or not math.isfinite(lower_multiplier)
+            or not math.isfinite(upper_multiplier)
+        ):
+            raise ValueError("split-row multipliers must be finite and non-negative")
+        return upper_multiplier - lower_multiplier
 
 
 @dataclass(frozen=True)
@@ -329,10 +478,15 @@ class LinearMatrixValidation:
     max_scaled_stationarity_residual: float
     max_regular_stationarity_residual: float
     max_free_zero_objective_stationarity_residual: float
+    max_row_complementarity: float
+    max_column_complementarity: float
+    max_scaled_complementarity: float
+    max_dual_sign_violation: float
     absolute_tolerance: float
     stationarity_scale_floor: float
     scaled_stationarity_tolerance: float
     free_zero_objective_stationarity_tolerance: float
+    scaled_complementarity_tolerance: float
     passed: bool
 
     def to_dict(self) -> dict[str, Any]:
@@ -349,6 +503,7 @@ class LinearMatrixValidator:
         stationarity_scale_floor: float = 1.0,
         scaled_stationarity_tolerance: float = 1e-7,
         free_zero_objective_stationarity_tolerance: float = 1e-4,
+        scaled_complementarity_tolerance: float = 1e-6,
     ) -> LinearMatrixValidation:
         if absolute_tolerance < 0 or not math.isfinite(absolute_tolerance):
             raise ValueError("absolute_tolerance must be finite and non-negative")
@@ -372,10 +527,18 @@ class LinearMatrixValidator:
                 "free_zero_objective_stationarity_tolerance must be finite "
                 "and non-negative"
             )
+        if (
+            scaled_complementarity_tolerance < 0
+            or not math.isfinite(scaled_complementarity_tolerance)
+        ):
+            raise ValueError(
+                "scaled_complementarity_tolerance must be finite and non-negative"
+            )
         columns = {column.name: column for column in matrix.columns}
         activities = {row.name: 0.0 for row in matrix.rows}
         dual_products = {column.name: 0.0 for column in matrix.columns}
         maximum_coefficients = {column.name: 0.0 for column in matrix.columns}
+        row_absolute_terms = {row.name: 0.0 for row in matrix.rows}
         row_marginals = {row.name: row.marginal for row in matrix.rows}
         for entry in matrix.entries:
             activities[entry.row] += entry.coefficient * columns[entry.column].level
@@ -384,17 +547,31 @@ class LinearMatrixValidator:
                 maximum_coefficients[entry.column],
                 abs(entry.coefficient),
             )
+            row_absolute_terms[entry.row] += abs(
+                entry.coefficient * columns[entry.column].level
+            )
         activity_delta = max(
-            (abs(activities[row.name] - row.level) if row.level is not None else 0.0)
-            for row in matrix.rows
+            (
+                abs(activities[row.name] - row.level)
+                if row.level is not None
+                else 0.0
+                for row in matrix.rows
+            ),
+            default=0.0,
         )
         row_bound_violation = max(
-            _bound_violation(activities[row.name], row.lower, row.upper)
-            for row in matrix.rows
+            (
+                _bound_violation(activities[row.name], row.lower, row.upper)
+                for row in matrix.rows
+            ),
+            default=0.0,
         )
         column_bound_violation = max(
-            _bound_violation(column.level, column.lower, column.upper)
-            for column in matrix.columns
+            (
+                _bound_violation(column.level, column.lower, column.upper)
+                for column in matrix.columns
+            ),
+            default=0.0,
         )
         direction = 1.0 if matrix.sense == "maximize" else -1.0
         stationarity_residuals = {
@@ -445,17 +622,100 @@ class LinearMatrixValidator:
             default=0.0,
         )
         stationarity = max(free_stationarity, regular_stationarity)
+
+        row_complementarity: list[float] = []
+        column_complementarity: list[float] = []
+        scaled_complementarity: list[float] = []
+        dual_sign_violations: list[float] = []
+
+        for row in matrix.rows:
+            activity = activities[row.name]
+            finite_lower = math.isfinite(row.lower)
+            finite_upper = math.isfinite(row.upper)
+            equality = finite_lower and finite_upper and row.lower == row.upper
+            if not finite_lower and not finite_upper:
+                dual_sign_violations.append(abs(row.marginal))
+            elif finite_lower and not finite_upper:
+                dual_sign_violations.append(max(row.marginal, 0.0))
+            elif finite_upper and not finite_lower:
+                dual_sign_violations.append(max(-row.marginal, 0.0))
+            if equality:
+                continue
+            primal_scale = max(
+                1.0,
+                abs(activity),
+                row_absolute_terms[row.name],
+                abs(row.lower) if finite_lower else 0.0,
+                abs(row.upper) if finite_upper else 0.0,
+            )
+            dual_scale = max(1.0, abs(row.marginal))
+            if finite_lower:
+                product = max(-row.marginal, 0.0) * (activity - row.lower)
+                row_complementarity.append(abs(product))
+                scaled_complementarity.append(
+                    abs(product) / (primal_scale * dual_scale)
+                )
+            if finite_upper:
+                product = max(row.marginal, 0.0) * (row.upper - activity)
+                row_complementarity.append(abs(product))
+                scaled_complementarity.append(
+                    abs(product) / (primal_scale * dual_scale)
+                )
+
+        for column in matrix.columns:
+            finite_lower = math.isfinite(column.lower)
+            finite_upper = math.isfinite(column.upper)
+            fixed = finite_lower and finite_upper and column.lower == column.upper
+            if not finite_lower and not finite_upper:
+                dual_sign_violations.append(abs(column.reduced_cost))
+            elif finite_lower and not finite_upper:
+                dual_sign_violations.append(max(column.reduced_cost, 0.0))
+            elif finite_upper and not finite_lower:
+                dual_sign_violations.append(max(-column.reduced_cost, 0.0))
+            if fixed:
+                continue
+            primal_scale = max(
+                1.0,
+                abs(column.level),
+                abs(column.lower) if finite_lower else 0.0,
+                abs(column.upper) if finite_upper else 0.0,
+            )
+            dual_scale = max(1.0, abs(column.reduced_cost))
+            if finite_lower:
+                product = max(-column.reduced_cost, 0.0) * (
+                    column.level - column.lower
+                )
+                column_complementarity.append(abs(product))
+                scaled_complementarity.append(
+                    abs(product) / (primal_scale * dual_scale)
+                )
+            if finite_upper:
+                product = max(column.reduced_cost, 0.0) * (
+                    column.upper - column.level
+                )
+                column_complementarity.append(abs(product))
+                scaled_complementarity.append(
+                    abs(product) / (primal_scale * dual_scale)
+                )
+
+        max_row_complementarity = max(row_complementarity, default=0.0)
+        max_column_complementarity = max(column_complementarity, default=0.0)
+        max_scaled_complementarity = max(scaled_complementarity, default=0.0)
+        max_dual_sign_violation = max(dual_sign_violations, default=0.0)
         passed = (
             max(
                 activity_delta,
                 row_bound_violation,
                 column_bound_violation,
                 regular_stationarity,
+                max_dual_sign_violation,
             )
             <= absolute_tolerance
             and scaled_stationarity <= scaled_stationarity_tolerance
             and free_stationarity
             <= free_zero_objective_stationarity_tolerance
+            and max_scaled_complementarity
+            <= scaled_complementarity_tolerance
         )
         return LinearMatrixValidation(
             row_count=len(matrix.rows),
@@ -468,12 +728,17 @@ class LinearMatrixValidator:
             max_scaled_stationarity_residual=scaled_stationarity,
             max_regular_stationarity_residual=regular_stationarity,
             max_free_zero_objective_stationarity_residual=free_stationarity,
+            max_row_complementarity=max_row_complementarity,
+            max_column_complementarity=max_column_complementarity,
+            max_scaled_complementarity=max_scaled_complementarity,
+            max_dual_sign_violation=max_dual_sign_violation,
             absolute_tolerance=absolute_tolerance,
             stationarity_scale_floor=stationarity_scale_floor,
             scaled_stationarity_tolerance=scaled_stationarity_tolerance,
             free_zero_objective_stationarity_tolerance=(
                 free_zero_objective_stationarity_tolerance
             ),
+            scaled_complementarity_tolerance=scaled_complementarity_tolerance,
             passed=passed,
         )
 
@@ -579,6 +844,73 @@ class ConvertMatrixReader:
             for record in container[symbol_name].records.itertuples(index=False):
                 result[str(record[0])] = kind
         return result
+
+
+class ConvertDictionaryReader:
+    """Read a Convert DictMap GDX and recover semantic scalar names."""
+
+    def __init__(self, system_directory: Path | None = None) -> None:
+        self.system_directory = system_directory
+
+    def read(self, path: Path) -> SemanticNameDictionary:
+        try:
+            import gams.transfer as gt  # type: ignore[import-untyped]
+        except ImportError as error:
+            raise RuntimeError(
+                "GDX dictionary reading requires the uv oracle dependency group"
+            ) from error
+        container = gt.Container(
+            system_directory=(
+                str(self.system_directory)
+                if self.system_directory is not None
+                else None
+            )
+        )
+        container.read(str(path))
+        rows: list[tuple[str, str]] = []
+        columns: list[tuple[str, str]] = []
+        for symbol_name in container.listSymbols():
+            if not symbol_name.endswith(("_EM", "_VM")):
+                continue
+            records = container[symbol_name].records
+            if records is None:
+                continue
+            mapping = self.mapping_records(
+                symbol_name,
+                tuple(
+                    tuple(str(value) for value in record[:-1])
+                    for record in records.itertuples(index=False, name=None)
+                ),
+            )
+            (rows if symbol_name.endswith("_EM") else columns).extend(mapping)
+        if not rows or not columns:
+            raise ValueError("Convert dictionary has no equation or variable mappings")
+        return SemanticNameDictionary.build(rows, columns)
+
+    @staticmethod
+    def mapping_records(
+        symbol_name: str,
+        records: Sequence[tuple[str, ...]],
+    ) -> tuple[tuple[str, str], ...]:
+        """Translate one DictMap symbol; exposed for dependency-free TDD."""
+
+        if not symbol_name.endswith(("_EM", "_VM")):
+            raise ValueError(f"unsupported Convert mapping symbol: {symbol_name!r}")
+        base_name = symbol_name[:-3]
+        result: list[tuple[str, str]] = []
+        for record in records:
+            if not record or not record[0]:
+                raise ValueError(f"empty scalar name in {symbol_name}")
+            indices = record[1:]
+            semantic_name = base_name
+            if indices:
+                encoded = ",".join(
+                    json.dumps(index, ensure_ascii=False, separators=(",", ":"))
+                    for index in indices
+                )
+                semantic_name = f"{base_name}[{encoded}]"
+            result.append((record[0], semantic_name))
+        return tuple(result)
 
 
 def _canonical_dataclass(value: Any) -> dict[str, Any]:

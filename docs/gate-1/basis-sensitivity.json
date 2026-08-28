@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "generated_date": "2026-08-29",
+  "case": "RTD_202211011300_11012022110000479_20221101125901",
+  "normative_profile": {
+    "name": "gams-scip-highs-pricing",
+    "external_evidence": "/private/tmp/pyspd-gate1-semantic-v2-control/evidence.json",
+    "evidence_sha256": "ccc4a590960fe6122531e79fdb1fdfb871656f03aa48d9705b71544d426af789"
+  },
+  "perturbation_profile": {
+    "name": "gams-scip-highs-primal-basis-perturbation",
+    "external_evidence": "/private/tmp/pyspd-gate1-basis-primal/evidence.json",
+    "evidence_sha256": "fc95c58613eac3663381d97c6d4bff24e240509c0a21b566f09c62cb18fe4ab1",
+    "highs_options": [
+      "solver = simplex",
+      "simplex_strategy = 4",
+      "presolve = off"
+    ]
+  },
+  "invariants": {
+    "input_sha256": "2e21665f55aaf9d8b7ef566c3ba436f8ae19ab355694caf52c7fc01e3f8f423b",
+    "semantic_structural_sha256": "f335a3783811a43c1f9371ab7b63e7f2ffe96f0e0daa433861d4cd59f49c0c31",
+    "primary_mip_objective": 90147619.255,
+    "fixed_rmip_objective": 90147619.255,
+    "row_count": 32126,
+    "column_count": 56511,
+    "nonzero_count": 108487,
+    "both_matrix_validations_passed": true,
+    "both_independent_price_validations_passed": true
+  },
+  "classified_differences": {
+    "classification": "alternative optimal fixed-RMIP primal/dual basis",
+    "semantic_solution_hash_equal": false,
+    "published_price_records": 523,
+    "published_price_cells_different": 166,
+    "maximum_published_price_delta_nzd_per_mwh": 4.8389,
+    "worst_price_key": {
+      "date_time": "01-NOV-2022 13:00",
+      "trading_period": "TP27",
+      "node": "HKK0661",
+      "normative": 10.37693,
+      "perturbed": 5.53803
+    },
+    "physical_report_primals_can_differ": true,
+    "reason": "The vSPD overlay intentionally retains fixed-LP levels and marginals for reporting; a different optimal LP basis can therefore change report primals and duals without changing structure or objective."
+  },
+  "policy": {
+    "normative_prices": "default dual-simplex HiGHS profile only",
+    "basis_differences_do_not_widen_tolerances": true,
+    "pyspd_primary_physical_reports": "must use the immutable accepted primary MIP snapshot under ADR-0006"
+  }
+}
