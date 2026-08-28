@@ -1,0 +1,9 @@
+{
+  "schema_version":"1.0.0","evidence_id":"TDD-G2-TDD","requirement_ids":["REQ-G2-TDD"],
+  "production_paths":["src/pyspd/probity.py"],"parent_commit":"c10c522aa8dd7dbcf1e78f6955b15423d6d3ffa0","implementation_commit":"a395fb4482f7d977ab3e8515fe42d2b5551c9a21",
+  "test_patch_sha256":"ffff5f233952e09db398b443b6d51031b2a9cda0b3042768b9b8c53f41a8e99f","test_files":[{"path":"tests/probity/test_evidence.py","sha256":"dc3df78dfbd001de12070710538c13b4ca63f148a4c150cec7843d7b3b294c8b"}],
+  "command":"uv run pytest tests/probity/test_evidence.py -q -x","package_manager":"uv","environment_manifest_sha256":"34c1c38cdee1b6986088d2e8550e312e59c586a8278248749dc5331ed947279d",
+  "red":{"timestamp":"2026-08-29T10:48:00+12:00","exit_code":1,"output_sha256":"494d522068032758494f8624a5585d72a13b19a356dd0098c1a773ff507eac32","duration_seconds":0.91717175,"expected_failure_fingerprint":"REQ-G2-TDD: evidence validation is not implemented","log_uri":"docs/gate-2/tdd/logs/tdd-red.log"},
+  "green":{"timestamp":"2026-08-29T11:12:00+12:00","exit_code":0,"output_sha256":"16b3b5475bf1ca9682b1a1628f28d4a9cbae84b2a547a4ef4a54a056c10e8a54","duration_seconds":1.128444416,"log_uri":"docs/gate-2/tdd/logs/tdd-green.log"},
+  "author":{"name":"Codex","role":"implementation agent"},"reviewer":{"name":"Codex","role":"project-directed validator"},"exception":null
+}

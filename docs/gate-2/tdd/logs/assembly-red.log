@@ -1,0 +1,3 @@
+FAILED tests/architecture/test_assembly.py::test_assembly_is_dependency_ordered_and_deterministic
+NotImplementedError: REQ-G2-ASSEMBLY: dependency resolution is absent
+1 failed in 1.17s

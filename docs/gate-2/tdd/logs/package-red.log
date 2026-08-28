@@ -1,0 +1,3 @@
+FAILED tests/package/test_import.py::test_pyspd_is_an_installable_src_package
+AssertionError: REQ-G2-PACKAGE: the pyspd src package is not importable
+1 failed in 0.11s

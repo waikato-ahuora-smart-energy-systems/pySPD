@@ -26,7 +26,7 @@ def empty_source(catalog: SymbolCatalog) -> RawSymbols:
     )
 
 
-def test_v5_catalog_documents_and_accepts_all_42_symbols() -> None:
+def test_v5_catalog_documents_and_accepts_all_source_families() -> None:
     catalog = SymbolCatalog.vspd_v5()
 
     assert len(catalog.symbols) == 43

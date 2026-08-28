@@ -1,0 +1,9 @@
+{
+  "schema_version":"1.0.0","evidence_id":"TDD-G2-SOLVER","requirement_ids":["REQ-G2-SOLVER"],
+  "production_paths":["src/pyspd/solver.py"],"parent_commit":"c10c522aa8dd7dbcf1e78f6955b15423d6d3ffa0","implementation_commit":"a395fb4482f7d977ab3e8515fe42d2b5551c9a21",
+  "test_patch_sha256":"48c1835bd7490d346014fa7b45894840151a6598820ec9842716fca171239f70","test_files":[{"path":"tests/solver/test_highs_backend.py","sha256":"db4870dc243131c6b84c7c6e04ad945747cb3ad58cb60b890bbd716c19ba0e5c"}],
+  "command":"uv run --group highs pytest tests/solver/test_highs_backend.py -q -x","package_manager":"uv","environment_manifest_sha256":"34c1c38cdee1b6986088d2e8550e312e59c586a8278248749dc5331ed947279d",
+  "red":{"timestamp":"2026-08-29T10:46:00+12:00","exit_code":1,"output_sha256":"e90ecf3a828e79288ab31f58cac010e0cea25f303e8b118d670531679500c8a3","duration_seconds":0.657133959,"expected_failure_fingerprint":"REQ-G2-SOLVER: safe HiGHS solve is not implemented","log_uri":"docs/gate-2/tdd/logs/solver-red.log"},
+  "green":{"timestamp":"2026-08-29T11:12:00+12:00","exit_code":0,"output_sha256":"bfe2b4eeda4b771affaa7df3f63d650cb327b75895450aae1f170ea21e51aef6","duration_seconds":1.175396458,"log_uri":"docs/gate-2/tdd/logs/solver-green.log"},
+  "author":{"name":"Codex","role":"implementation agent"},"reviewer":{"name":"Codex","role":"project-directed validator"},"exception":null
+}

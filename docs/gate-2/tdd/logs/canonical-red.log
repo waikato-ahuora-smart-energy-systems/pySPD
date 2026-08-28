@@ -1,0 +1,3 @@
+FAILED tests/data/test_canonical_roundtrip.py::test_special_values_sparse_presence_and_order_round_trip
+NotImplementedError: REQ-G2-CANONICAL: archive writing is not implemented
+1 failed in 0.23s

@@ -1,0 +1,3 @@
+FAILED tests/solver/test_highs_backend.py::test_highs_safe_load_and_effective_options
+NotImplementedError: REQ-G2-SOLVER: safe HiGHS solve is not implemented
+1 failed in 0.42s

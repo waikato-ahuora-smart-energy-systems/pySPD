@@ -1,0 +1,9 @@
+{
+  "schema_version":"1.0.0","evidence_id":"TDD-G2-ASSEMBLY","requirement_ids":["REQ-G2-ASSEMBLY"],
+  "production_paths":["src/pyspd/architecture.py"],"parent_commit":"c10c522aa8dd7dbcf1e78f6955b15423d6d3ffa0","implementation_commit":"a395fb4482f7d977ab3e8515fe42d2b5551c9a21",
+  "test_patch_sha256":"66c2f169be638d690d6608e8c411160c5208f1ebff9593000fa3f9a63914835e","test_files":[{"path":"tests/architecture/test_assembly.py","sha256":"c0a255aa16dd29d653f18fd58f90b287d82a33b6158174b1a81a51c7b222d7fc"}],
+  "command":"uv run --group highs pytest tests/architecture/test_assembly.py -q -x","package_manager":"uv","environment_manifest_sha256":"34c1c38cdee1b6986088d2e8550e312e59c586a8278248749dc5331ed947279d",
+  "red":{"timestamp":"2026-08-29T10:43:00+12:00","exit_code":1,"output_sha256":"52c6f8e631bffbc4b0179be1a676dd947319cc60e6ab7d307590c40f2168d913","duration_seconds":1.330170417,"expected_failure_fingerprint":"REQ-G2-ASSEMBLY: dependency resolution is absent","log_uri":"docs/gate-2/tdd/logs/assembly-red.log"},
+  "green":{"timestamp":"2026-08-29T11:12:00+12:00","exit_code":0,"output_sha256":"17feda5895d98a605722f3dd9aae47864274f86f7259833489b540335156f5c3","duration_seconds":0.972675667,"log_uri":"docs/gate-2/tdd/logs/assembly-green.log"},
+  "author":{"name":"Codex","role":"implementation agent"},"reviewer":{"name":"Codex","role":"project-directed validator"},"exception":null
+}
