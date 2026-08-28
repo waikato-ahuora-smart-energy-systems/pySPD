@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "generated_date": "2026-08-29",
+  "status": "checkpoint-passed",
+  "input": {
+    "name": "RTD_202211011300_11012022110000479_20221101125901.gdx",
+    "sha256": "2e21665f55aaf9d8b7ef566c3ba436f8ae19ab355694caf52c7fc01e3f8f423b"
+  },
+  "raw_symbols": {
+    "symbol_count": 43,
+    "record_count": 14676,
+    "logical_sha256": "dfeb13173a37710dccee195f71f99fb1c1aa72cb4678969046bbcc7667a1b3e9",
+    "catalog": "vspd-v5.0.6",
+    "catalog_validation_passed": true
+  },
+  "canonical": {
+    "format": "pyspd-canonical-arrow-long-v1",
+    "writer": {
+      "library": "pyarrow",
+      "version": "22.0.0"
+    },
+    "records_sha256": "e1afb469fa42a5b7e30209680f193ed65e930e95b29cca0bc58ce83a35f4e3a8",
+    "gams_free_read_passed": true,
+    "round_trip_equal": true
+  },
+  "external_archive": "/private/tmp/pyspd-gate2-rtd-canonical-v4"
+}
