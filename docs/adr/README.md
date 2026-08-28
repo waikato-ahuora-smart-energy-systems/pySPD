@@ -1,0 +1,28 @@
+# PySPD architecture decision records
+
+ADRs are immutable after acceptance. A superseding ADR links to the decision it
+replaces; accepted history is not rewritten.
+
+| ADR | Decision | Status |
+|---|---|---|
+| [ADR-0001](0001-formulation-baseline-and-versioning.md) | Pin v5.0.6 and version formulation behavior explicitly | Proposed |
+| [ADR-0002](0002-class-based-pyomo-architecture.md) | Use class-based composition around `ConcreteModel` | Proposed |
+| [ADR-0003](0003-gdx-and-canonical-data-boundary.md) | Separate faithful GDX ingestion from canonical runtime data | Proposed |
+| [ADR-0004](0004-solver-profiles-and-sos.md) | Use CPLEX for parity and restrict HiGHS until SOS evidence passes | Proposed |
+| [ADR-0005](0005-oracle-and-evidence-retention.md) | Treat pinned GAMS vSPD as an instrumented, immutable oracle | Proposed |
+| [ADR-0006](0006-pricing-convention.md) | Characterize MIP pricing at Gate 1 before implementation | Proposed |
+| [ADR-0007](0007-probity-tdd-evidence.md) | Pair Probity with immutable red/green CI evidence | Proposed |
+
+## Status values
+
+- `Proposed`: awaiting the required gate reviewers.
+- `Accepted`: approved and binding.
+- `Rejected`: reviewed and not adopted.
+- `Superseded`: replaced by a linked later ADR.
+- `Deprecated`: retained for history but no longer applicable.
+
+## Required ADR fields
+
+Every ADR states context, decision, consequences, rejected alternatives,
+verification, and revisit triggers. Gate 0 cannot pass while a release-critical
+ADR remains merely proposed.

@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "G1-PRICING-RTD-202502261155-20260829",
+  "created_date": "2026-08-29",
+  "status": "executed-candidate-non-normative",
+  "source": {
+    "repository": "https://github.com/ElectricityAuthority/vSPD",
+    "tag": "v5.0.6",
+    "commit": "21b1cf33f5607399331dcb1c03270348def5ccc8",
+    "tree": "732a70e249f8727d4f2629c5a8f6b0090b78c0d0"
+  },
+  "input": {
+    "name": "RTD_202502261155_251012025022255930_20250226115400.gdx",
+    "sha256": "f010065a800a0c48a1147fd3543d372eaa65acc9e0f0ed6ea64546a474655c65"
+  },
+  "runtime": {
+    "platform": "macOS arm64",
+    "gams": "54.3.1",
+    "gamsapi": "54.3.1",
+    "gamspy": "1.27.0",
+    "primary_solver": "SCIP",
+    "pricing_solver": "HiGHS",
+    "profile": "gams-scip-highs-pricing",
+    "normative": false
+  },
+  "overlay": {
+    "strategy": "stage-copy-and-fail-closed-exact-source-overlay",
+    "primary_problem": "MIP",
+    "pricing_problem": "RMIP",
+    "discrete_families_fixed": {
+      "binary": 5,
+      "sos1": 3,
+      "sos2": 3
+    },
+    "bounds_restored_after_pricing": true,
+    "objective_delta_abort_nzd": 0.01
+  },
+  "results": {
+    "clean_run_count": 2,
+    "primary_optimal_count": 15,
+    "pricing_optimal_count": 15,
+    "cleanup_mip_count": 0,
+    "max_primary_pricing_objective_delta_nzd": 0.00010000169277191162,
+    "max_primary_committed_cplex_objective_delta_nzd": 0.00010000169277191162,
+    "node_price_record_count": 135,
+    "scenario_count": 15,
+    "node_count": 9,
+    "duplicate_price_keys": 0,
+    "non_finite_prices": 0,
+    "minimum_node_price_nzd_per_mwh": 0.03,
+    "maximum_node_price_nzd_per_mwh": 326.036
+  },
+  "determinism": {
+    "logical_solve_records_equal": true,
+    "logical_node_price_records_equal": true,
+    "raw_node_price_csv_equal": true,
+    "raw_listing_equal": false,
+    "raw_listing_difference_reason": "GAMS listing embeds run timestamps"
+  },
+  "artifact_hashes": {
+    "raw_listing_run_1_sha256": "0b084991bcb9703171682c790ce8bc9c111818a0731ad3034e0375722f9438b2",
+    "raw_listing_run_2_sha256": "6295dfef132497ca3bc3bf53157e55dafe84f2757d5a4e6beb1f2c76bb73d46a",
+    "logical_solve_records_sha256": "da01fb652fe121b881555b1bde77a55950914afa65f645e83d5686f1fce0dc0f",
+    "raw_node_price_csv_sha256": "ce833132454d2729120c02b9de352b8503a80bdce867a9d41b0fa7ea29a9ce3d",
+    "logical_node_price_records_sha256": "2a558a1883290c1f2699d25cbaeaceaa3888e75e0109522b833427d56e3be8ad",
+    "raw_island_sensitivity_csv_sha256": "54c4a009ad3da1a789f009f43d9239ed23090330c06ea88943e2880bd45e1e28"
+  },
+  "holds": [
+    "Native full-size GAMS/CPLEX pricing oracle is unavailable.",
+    "The committed listing and tagged cplex.opt record different effective tolerances.",
+    "The full Gate 1 corpus, matrix exports, KKT checks, and independent review are incomplete."
+  ]
+}

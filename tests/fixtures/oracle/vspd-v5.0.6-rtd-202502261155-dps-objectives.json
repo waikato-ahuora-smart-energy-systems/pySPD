@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "case": "RTD_202502261155_251012025022255930_20250226115400",
+  "source": {
+    "repository": "https://github.com/ElectricityAuthority/vSPD",
+    "tag": "v5.0.6",
+    "commit": "21b1cf33f5607399331dcb1c03270348def5ccc8",
+    "input_sha256": "f010065a800a0c48a1147fd3543d372eaa65acc9e0f0ed6ea64546a474655c65",
+    "listing_sha256": "1756094fa3acbd010a235f041b0c392cac22eb458aee5a0b1f5f2f63b44bef62",
+    "solver": "CPLEX"
+  },
+  "objectives": [
+    {"scenario": "base", "value": 83427992.0229},
+    {"scenario": "increase conforming load 0.5%", "value": 83843225.0960},
+    {"scenario": "increase conforming load 1.0%", "value": 84257312.2021},
+    {"scenario": "increase conforming load 1.5%", "value": 84670697.8608},
+    {"scenario": "increase conforming load 2.0%", "value": 85083279.5399},
+    {"scenario": "increase conforming load 3.0%", "value": 85906494.7262},
+    {"scenario": "increase conforming load 4.0%", "value": 86728081.5698},
+    {"scenario": "increase conforming load 5.0%", "value": 87549594.1777},
+    {"scenario": "decrease conforming load 0.5%", "value": 83012495.5938},
+    {"scenario": "decrease conforming load 1.0%", "value": 82596891.4747},
+    {"scenario": "decrease conforming load 1.5%", "value": 82181163.7458},
+    {"scenario": "decrease conforming load 2.0%", "value": 81764531.5179},
+    {"scenario": "decrease conforming load 3.0%", "value": 80929740.2447},
+    {"scenario": "decrease conforming load 4.0%", "value": 80094981.7852},
+    {"scenario": "decrease conforming load 5.0%", "value": 79260717.1952}
+  ]
+}

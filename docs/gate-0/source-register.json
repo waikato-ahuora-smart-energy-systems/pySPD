@@ -1,0 +1,109 @@
+{
+  "register_version": "0.1.0",
+  "as_of_date": "2026-08-29",
+  "status": "candidate",
+  "compatibility_baseline": {
+    "name": "ElectricityAuthority/vSPD v5.0.6",
+    "repository": "https://github.com/ElectricityAuthority/vSPD",
+    "tag": "v5.0.6",
+    "commit_sha": "21b1cf33f5607399331dcb1c03270348def5ccc8",
+    "tree_sha": "732a70e249f8727d4f2629c5a8f6b0090b78c0d0",
+    "commit_date": "2025-11-21",
+    "archive": {
+      "format": "git archive tar",
+      "file_name": "vspd-v5.0.6-21b1cf33.tar",
+      "size_bytes": 11079680,
+      "sha256": "7bae337103ea0128b7e5b05887d3fac6525be032e5da59c49ee05a08eee0bce4",
+      "generation_command": "git archive --format=tar 21b1cf33f5607399331dcb1c03270348def5ccc8",
+      "retention_status": "candidate hash generated from local clone; immutable approved storage pending"
+    },
+    "normative_source_files": [
+      "Programs/runvSPD.gms",
+      "Programs/vSPDperiod.gms",
+      "Programs/vSPDmodel.gms",
+      "Programs/vSPDsolve.gms",
+      "Programs/vSPDoverrides.gms",
+      "Programs/vSPDreportSetup.gms",
+      "Programs/vSPDreport.gms",
+      "Programs/vSPDsettings.inc",
+      "Programs/cplex.opt"
+    ]
+  },
+  "governing_documents": [
+    {
+      "id": "spd-formulation-v15",
+      "title": "SPD Model Formulation v15.0",
+      "url": "https://static.transpower.co.nz/public/bulk-upload/documents/SPD_Model_Formulation_v15.0.pdf?VersionId=uP8I7FqRHyGEJOK5ypCz5PAGXwchXgjk",
+      "role": "governing intent for v5 Link Risk and AC Secondary Risk",
+      "sha256": null,
+      "archive_status": "pending approved download, hash, and storage"
+    },
+    {
+      "id": "spd-formulation-v16",
+      "title": "SPD Model Formulation v16.0",
+      "url": "https://static.transpower.co.nz/public/bulk-upload/documents/SPD_Model_Formulation_v16.0.pdf?VersionId=EnEG04rp0YdSazhUCjOYXic7BQWcXosF",
+      "role": "future formulation delta boundary",
+      "sha256": null,
+      "archive_status": "pending approved download, hash, and storage"
+    },
+    {
+      "id": "emi-tools-licence",
+      "title": "EMI tools licence",
+      "url": "https://www.emi.ea.govt.nz/Content/Legal-Information/EMI%20tools%20license.pdf",
+      "role": "candidate source-model licence; legal interpretation required",
+      "sha256": null,
+      "archive_status": "pending approved download, hash, storage, and legal review"
+    },
+    {
+      "id": "vspd-3.0.4-certificate",
+      "title": "vSPD v3.0.4 certificate of compliance",
+      "url": "https://www.emi.ea.govt.nz/Content/Tools/vSPD/vSPD%20v3.0.4%20certificate%20of%20compliance.pdf",
+      "role": "historical assurance method and limitations only",
+      "sha256": null,
+      "archive_status": "pending approved download, hash, and storage"
+    },
+    {
+      "id": "daily-pricing-gdx",
+      "title": "Electricity Authority daily pricing GDX dataset",
+      "url": "https://www.ea.govt.nz/data-and-insights/datasets/wholesale/dispatch-and-pricing/gdx/",
+      "role": "primary public input-data source",
+      "sha256": null,
+      "archive_status": "dynamic dataset; per-file hashes required"
+    }
+  ],
+  "project_baseline": {
+    "governing_plan_path": "docs/pyomo-vspd-stage-gate-plan.md",
+    "committed_parent": {
+      "governing_plan_sha256": "48a0fddd3eeefe075ac4dc312bf53d3d3307cd01a06a3befcd6c41ff8cc76df3",
+      "repository_commit": "5fcbfaea4aff14186a2b99c87583ddd0843589c5",
+      "repository_tree": "ceb7d2d34173052e392660687b27ccc98d032050"
+    },
+    "candidate_working_copy": {
+      "governing_plan_sha256": "22bb2f1ee7e727554c12bc0749db1c1d8a8ce45843ca7927359812e9b8a86ac0",
+      "pack_commit": null
+    },
+    "note": "Set candidate_working_copy.pack_commit and regenerate affected hashes when this pack is committed."
+  },
+  "observed_toolchain": {
+    "platform": "macOS arm64 development workstation",
+    "uv": "0.11.29",
+    "uv_managed_python": "3.13.14",
+    "node": "22.23.2",
+    "npm": "10.9.8",
+    "probity": "1.10.0",
+    "gams": "54.3.1 installed outside PATH and executed by absolute path",
+    "gamspy": "1.27.0 with GAMS API 54.3.1",
+    "cplex": "native GAMS link present but size-limited; GAMSPy entitlement full-size only through GAMSPy",
+    "scip": "full-size vSPD MIP execution qualified through native GAMS",
+    "highs": "full-size vSPD fixed-discrete RMIP execution qualified through native GAMS",
+    "gurobi_cl_on_path": false,
+    "observation_scope": "Executed Gate 1 sample evidence is recorded in docs/gate-1/runtime-evidence.json"
+  },
+  "open_actions": [
+    "Archive and hash every governing document after legal approval.",
+    "Move the vSPD source archive to approved immutable storage and record its URI.",
+    "Create per-file hashes and manifests for every qualification GDX.",
+    "Qualify a native full-size GAMS/CPLEX runtime and reconcile effective listing options with tagged cplex.opt.",
+    "Regenerate the project commit/tree fields when this pack is approved and committed."
+  ]
+}

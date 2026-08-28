@@ -37,6 +37,10 @@ A stage is a bounded body of work. A gate is a formal decision based on
 reviewable evidence. Passing a gate permits the next stage; elapsed time or
 feature completion alone does not.
 
+The current Stage 0 implementation artifacts are indexed in the
+[Gate 0 baseline and decision pack](gate-0/README.md). That pack remains a
+candidate until its mandatory holds and signatures are closed.
+
 This plan does **not** assert that the current public vSPD release, or any future
 PySPD implementation, is audited. The last located independent certificate is
 for vSPD v3.0.4 against SPD Formulation 11.2, not the current public v5 source.

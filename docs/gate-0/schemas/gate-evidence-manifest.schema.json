@@ -1,0 +1,251 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pyspd.example/schemas/gate-evidence-manifest-1.0.0.json",
+  "title": "PySPD gate evidence manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "manifest_id",
+    "gate_id",
+    "decision",
+    "created_at",
+    "project_commit",
+    "governing_plan_sha256",
+    "baseline",
+    "environment_manifests",
+    "artifacts",
+    "test_reports",
+    "discrepancies",
+    "risks",
+    "conditions",
+    "signatures"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "manifest_id": {
+      "type": "string",
+      "pattern": "^GATE-[0-9]+-[A-Z0-9][A-Z0-9._-]+$"
+    },
+    "gate_id": {
+      "type": "string",
+      "pattern": "^G(0|[1-9]|1[01])$"
+    },
+    "decision": {
+      "enum": [
+        "candidate",
+        "pass",
+        "conditional_pass",
+        "hold",
+        "reset"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "project_commit": {
+      "$ref": "#/$defs/gitSha"
+    },
+    "governing_plan_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "formulation_id",
+        "source_commit",
+        "source_tree",
+        "source_archive_sha256",
+        "data_profile",
+        "solver_profiles"
+      ],
+      "properties": {
+        "formulation_id": {
+          "type": "string"
+        },
+        "source_commit": {
+          "$ref": "#/$defs/gitSha"
+        },
+        "source_tree": {
+          "$ref": "#/$defs/gitSha"
+        },
+        "source_archive_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "data_profile": {
+          "type": "string"
+        },
+        "solver_profiles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "environment_manifests": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/hashedArtifact"
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/hashedArtifact"
+      }
+    },
+    "test_reports": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/hashedArtifact"
+      }
+    },
+    "discrepancies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/registerEntry"
+      }
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/registerEntry"
+      }
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "description",
+          "owner",
+          "due_at",
+          "material"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "due_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "material": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "signatures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "role",
+          "name",
+          "decision",
+          "signed_at",
+          "signature_or_attestation_sha256"
+        ],
+        "properties": {
+          "role": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "approve",
+              "approve_with_conditions",
+              "reject"
+            ]
+          },
+          "signed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "signature_or_attestation_sha256": {
+            "$ref": "#/$defs/sha256"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "gitSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "hashedArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "uri",
+        "sha256",
+        "size_bytes",
+        "media_type"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "media_type": {
+          "type": "string"
+        }
+      }
+    },
+    "registerEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "state",
+        "uri"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "uri": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

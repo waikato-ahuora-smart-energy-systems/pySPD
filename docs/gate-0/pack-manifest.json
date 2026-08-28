@@ -1,0 +1,228 @@
+{
+  "schema_version": "1.0.0",
+  "manifest_id": "GATE-0-ENGINEERING-BASELINE-20260829",
+  "gate_id": "G0",
+  "decision": "hold",
+  "created_at": "2026-08-29T00:00:00+12:00",
+  "project_commit": "5fcbfaea4aff14186a2b99c87583ddd0843589c5",
+  "governing_plan_sha256": "22bb2f1ee7e727554c12bc0749db1c1d8a8ce45843ca7927359812e9b8a86ac0",
+  "baseline": {
+    "formulation_id": "vspd-v5.0.6-spd-formulation-v15-context",
+    "source_commit": "21b1cf33f5607399331dcb1c03270348def5ccc8",
+    "source_tree": "732a70e249f8727d4f2629c5a8f6b0090b78c0d0",
+    "source_archive_sha256": "7bae337103ea0128b7e5b05887d3fac6525be032e5da59c49ee05a08eee0bce4",
+    "data_profile": "pricing-gdx-versioned-v1",
+    "solver_profiles": [
+      "gams-cplex-compatibility-oracle",
+      "gams-scip-smoke",
+      "gams-scip-highs-pricing",
+      "highs-lp-only"
+    ]
+  },
+  "environment_manifests": [
+    {
+      "id": "g1-scip-highs-pricing-runtime",
+      "uri": "docs/gate-1/runtime-evidence.json",
+      "sha256": "771fce7038651e6668c47641136e0f2f74f770ac90e0d3718f0dbb5dc0f5deff",
+      "size_bytes": 2823,
+      "media_type": "application/json"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "governing-plan",
+      "uri": "docs/pyomo-vspd-stage-gate-plan.md",
+      "sha256": "22bb2f1ee7e727554c12bc0749db1c1d8a8ce45843ca7927359812e9b8a86ac0",
+      "size_bytes": 107522,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "gate-0-index",
+      "uri": "docs/gate-0/README.md",
+      "sha256": "882b8eaf6ecdd631c0c194e8719ff42c8ef1b33d752877c2dcb8e78c0b61cb8c",
+      "size_bytes": 5176,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "charter",
+      "uri": "docs/gate-0/charter.md",
+      "sha256": "224423a8ce3ed85cd553ea2f9a5003e690b83e8a5ae4aca651a9896272bacec3",
+      "size_bytes": 4031,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "compatibility-matrix",
+      "uri": "docs/gate-0/compatibility-matrix.md",
+      "sha256": "5fee4bba753e550909314cf52a48e97de47d9a4f632df732c815ebbb988c2b50",
+      "size_bytes": 5359,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "formulation-reconciliation",
+      "uri": "docs/gate-0/formulation-reconciliation.md",
+      "sha256": "f0fa4c918f676b7ef667bf5b7e9e7273d3dd97e7639b5889cc8a596c98b05459",
+      "size_bytes": 8586,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "gate-checklist",
+      "uri": "docs/gate-0/gate-checklist.md",
+      "sha256": "2390bb8d4510e0d1d82614674ff1bd2ebec66076b1319a076bc26e99faaef295",
+      "size_bytes": 4962,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "licence-provenance-register",
+      "uri": "docs/gate-0/licence-and-provenance-register.md",
+      "sha256": "4bef2823c479bd19f591f96bd3b924cfc428cf1e6b7c5efa9239f0a425635812",
+      "size_bytes": 5160,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "risk-dependency-register",
+      "uri": "docs/gate-0/risk-and-dependency-register.md",
+      "sha256": "d24718b852742000d2e074ca40acc1d05202d4212c5b47b37c9b87733d41cd56",
+      "size_bytes": 5800,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "roles-signoff",
+      "uri": "docs/gate-0/roles-and-signoff.md",
+      "sha256": "b39c87a636db47d4fbbf86d36883c0af4ec1ac289d1f6e6ae31ce8fff45f8fd4",
+      "size_bytes": 3048,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "gate-evidence-schema",
+      "uri": "docs/gate-0/schemas/gate-evidence-manifest.schema.json",
+      "sha256": "56357775c8a621964559bc80c7678fc152a7c88224f7d1518eed1e3abb842a1b",
+      "size_bytes": 5207,
+      "media_type": "application/json"
+    },
+    {
+      "id": "tdd-evidence-schema",
+      "uri": "docs/gate-0/schemas/tdd-evidence.schema.json",
+      "sha256": "c0c51402855be0e240ae730386b0b2d83c219bce1760e7577c3b5d2873f972a6",
+      "size_bytes": 5234,
+      "media_type": "application/json"
+    },
+    {
+      "id": "scope-feature-matrix",
+      "uri": "docs/gate-0/scope-and-feature-matrix.md",
+      "sha256": "687b9e80251a0bda119b13783835940a740d0a1cb4a7948619822f48dc1d39b5",
+      "size_bytes": 6432,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "source-register",
+      "uri": "docs/gate-0/source-register.json",
+      "sha256": "bc7e20b7a425824dda58cfa6507e6ad6fe6bd559a1cc9a46f6ec620b273c587c",
+      "size_bytes": 4947,
+      "media_type": "application/json"
+    },
+    {
+      "id": "validation-baseline",
+      "uri": "docs/gate-0/validation-baseline.md",
+      "sha256": "0038f21c8dac53ebc549ed8bbbbd482bebd3688452fdb0ad1cb3de59d8e8a14c",
+      "size_bytes": 5746,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "adr-index",
+      "uri": "docs/adr/README.md",
+      "sha256": "d01df4219628bea6850045caac5d529b966d9a0f409fd6dcb2441216f412a730",
+      "size_bytes": 1523,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "adr-0001",
+      "uri": "docs/adr/0001-formulation-baseline-and-versioning.md",
+      "sha256": "17192d2e54822de4238da8791d71a431143b58f631e316957409f6c0338a1721",
+      "size_bytes": 2933,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "adr-0002",
+      "uri": "docs/adr/0002-class-based-pyomo-architecture.md",
+      "sha256": "2fe880f6e1df33b752b9e7907fd6a68f1493b09cb84a97e1943132897dd913d1",
+      "size_bytes": 3386,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "adr-0003",
+      "uri": "docs/adr/0003-gdx-and-canonical-data-boundary.md",
+      "sha256": "4a9d692f248cd8fb3f45f029a7d2972d731a095260a59a6aeb68d39c016c74b8",
+      "size_bytes": 2813,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "adr-0004",
+      "uri": "docs/adr/0004-solver-profiles-and-sos.md",
+      "sha256": "92b0128bea5ffcec092af202f6008fc07f83efed7aaafec4eb16118afc919fe0",
+      "size_bytes": 2761,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "adr-0005",
+      "uri": "docs/adr/0005-oracle-and-evidence-retention.md",
+      "sha256": "963b0baaef7c3e5d1c956b11427278b214d2b765e9c8473d30a5383063f2941b",
+      "size_bytes": 2907,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "adr-0006",
+      "uri": "docs/adr/0006-pricing-convention.md",
+      "sha256": "f87d225c0666e59a06bd2fb839a5b3214c8fdf371ab709c1badf0f038a359e77",
+      "size_bytes": 3068,
+      "media_type": "text/markdown"
+    },
+    {
+      "id": "adr-0007",
+      "uri": "docs/adr/0007-probity-tdd-evidence.md",
+      "sha256": "99a52ab07f581f0a37903f5a2d630d3873531511413334e89fc1e6c458ff98d0",
+      "size_bytes": 2780,
+      "media_type": "text/markdown"
+    }
+  ],
+  "test_reports": [],
+  "discrepancies": [],
+  "risks": [
+    {
+      "id": "R-002",
+      "state": "g0-hold",
+      "uri": "docs/gate-0/risk-and-dependency-register.md#risks"
+    },
+    {
+      "id": "R-003",
+      "state": "g0-hold",
+      "uri": "docs/gate-0/risk-and-dependency-register.md#risks"
+    },
+    {
+      "id": "R-004",
+      "state": "g0-hold",
+      "uri": "docs/gate-0/risk-and-dependency-register.md#risks"
+    },
+    {
+      "id": "R-017",
+      "state": "g0-hold",
+      "uri": "docs/gate-0/risk-and-dependency-register.md#risks"
+    }
+  ],
+  "conditions": [
+    {
+      "id": "G0-C01",
+      "description": "Gate 1 characterization may proceed, but no production formulation or release claim is authorized until named governance approvals close.",
+      "owner": "Sponsor and gate authority",
+      "due_at": "2026-09-30T17:00:00+13:00",
+      "material": true
+    },
+    {
+      "id": "G0-C02",
+      "description": "Native full-size GAMS/CPLEX pricing evidence remains mandatory for Gate 1.",
+      "owner": "Technical lead",
+      "due_at": "2026-09-30T17:00:00+13:00",
+      "material": true
+    }
+  ],
+  "signatures": []
+}
