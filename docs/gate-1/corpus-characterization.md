@@ -62,9 +62,11 @@ timestamps. Comparisons above use the official `NodeResults_TP.csv`, whose
 `CaseID` makes the identity explicit. Dedicated new-case published-price files
 were compared directly.
 
-## Remaining corpus limitation
+## Population qualification boundary
 
 This execution closes recovery and classification of the named 2023 and 2025
-packs. It does not supply the plan's separate 546-interval shortfall-transfer
-population, matched controls, daylight-saving days, or a fixture for every
-material preprocessing and re-solve branch. Those remain Gate 1 scope blockers.
+packs and supplies ordinary controls. The separate Gate 1 evidence binds all
+139 corrected shortfall dates, an exact optimal affected transfer/max-loop/
+cleanup fixture, and selected 46- and 50-period daylight-saving cases. ADR-0010
+accepts that package for Gate 1 while leaving exact identification and replay of
+all 546 intervals mandatory at Gate 8.

@@ -4,35 +4,33 @@
 |---|---|
 | Gate | G1 — Oracle trusted |
 | Decision date | 29 August 2026 |
-| Decision | **HOLD — NOT CLOSED** |
+| Decision | **PASS — CLOSED** |
 | Active reference | Optimal SCIP MIP → fixed-discrete HiGHS RMIP under ADR-0008 |
 | CPLEX | Deferred cross-validation; not a current blocker |
 
 ## Decision
 
-Gate 1 is not closed. The executed DPS plus nine-case SPD corpus and one AUD run
+Gate 1 is closed. The executed DPS plus nine-case SPD corpus and one AUD run
 prove the active reference profile, fail-closed overlays, standard/audit report
 families, canonical GDX/matrix exports, independent LP checks, dead-node price
 transfer, and independent node-price mapping across all in-scope 2025-pack
 RTD/PRSS inputs. The 2023 pack is hash-bound and validly deferred. The result
-still does not meet the governing plan's separate population criterion.
-Governed preprocessing checkpoints, complete
-per-invocation state/matrix dictionaries, and their observational-neutrality
-proof are now complete. The incremental comparator, complementarity/sign
+is supported by governed preprocessing checkpoints, complete per-invocation
+state/matrix dictionaries, and their observational-neutrality proof. The
+incremental comparator, complementarity/sign
 conventions, basis classification, and controlled performance baseline are also
-complete.
-
-Starting Stage 2 production work would therefore bypass an explicit dependency
-in the governing stage-and-gate plan. Gate 2 remains not started. Read-only
-research or Gate 1 evidence work may continue, but production data contracts,
-package APIs, and model foundations must wait for a Gate 1 pass or a formally
-recorded change to the governing plan.
+complete. All 139 corrected daily inputs are individually hash-bound; exact
+optimal evidence exercises shortfall transfer, the maximum-loop branch, and
+cleanup re-solves; and selected 46- and 50-period daylight-saving fixtures pass.
+ADR-0010 therefore satisfies the Gate 1 population criterion at date level and
+retains exact identification/replay of all 546 intervals as a mandatory Gate 8
+criterion. Stage 2 production work is authorized.
 
 ## Material blockers
 
-| ID | Blocker | Required closure evidence |
-|---|---|---|
-| `G1-B01` | The required 546 affected RTD intervals, matched controls, daylight-saving cases, and remaining preprocessing/fallback/re-solve feature cells are not fully populated | Reproducible fixtures and required snapshots for every remaining in-scope path; all 139 corrected daily GDX inputs are now individually hash-bound |
+None. `G1-B01` is closed by the accepted qualification policy in ADR-0010 and
+its linked date-inventory, affected-path, control-corpus, and daylight-saving
+evidence. This closure does not mark the all-546 Gate 8 replay complete.
 
 ## Evidence that is complete for the executed samples
 
@@ -64,12 +62,17 @@ recorded change to the governing plan.
 - exact recovery/classification hashes for the named 2023 and 2025 Authority
   packs; and
 - keyed official comparisons for every in-scope 2025-pack RTD/PRSS case, with
-  CPLEX differences retained as secondary solver-profile divergences.
+  CPLEX differences retained as secondary solver-profile divergences;
+- all 139 corrected daily GDX inputs individually bound by size and SHA-256;
+- an exact optimal affected fixture with 10 primary and 7 cleanup SCIP solves,
+  21 eligible adjustment records, and material first-loop transfers; and
+- exact selected-case runs on 46- and 50-period daylight-saving days, each with
+  10 optimal SCIP primary solves and complete standard reports.
 
 ## Reconsideration rule
 
-Reconsider closure only after every blocker above is linked to immutable
-evidence and the Gate 1 checklist has no mandatory hold or unexplained oracle
-self-inconsistency. ADR-0009 confirms that independent review is not required.
-CPLEX evidence is required only if the proposed claim is expanded to
-CPLEX-specific parity.
+Reopen Gate 1 if immutable evidence cannot be regenerated, a retained input
+changes identity, or Stage 8 replay discovers an oracle/comparator inconsistency
+that invalidates this decision. ADR-0009 confirms that independent review is
+not required. CPLEX evidence is required only if the proposed claim is expanded
+to CPLEX-specific parity.

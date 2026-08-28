@@ -811,6 +811,10 @@ inspectable oracle before porting its behavior.
 - include the 546 RTD intervals across 139 dates identified in vSPD v5.0.4
   release notes as affected by shortfall-transfer behavior, plus matched
   unaffected controls and the associated maximum-solve-loop/SOS1 cases;
+- apply ADR-0010's Gate 1 qualification boundary: bind all 139 corrected daily
+  inputs and execute representative exact optimal affected/control and 46/50-
+  period fixtures here, while retaining exact identification and replay of all
+  546 intervals as a mandatory Gate 8 exit criterion;
 - recover and hash the Authority's archived 2023 parity outputs at commit
   `76408126e9d2fb29a0f28c1949331e4e9022e04e`, including NRSS, PRSS, RTD,
   price-transfer, shortfall-transfer, and co-optimization/discrete permutations;
@@ -880,6 +884,12 @@ Gate 1 passes only when:
   and primal/dual sign convention;
 - the reference performance baseline is recorded on controlled hardware; and
 - there are zero unexplained oracle self-inconsistencies.
+
+For the 546-interval shortfall-transfer history, ADR-0010 defines the Gate 1
+population evidence as all 139 corrected daily inputs individually hash-bound,
+an exact optimal affected transfer/max-loop/cleanup fixture, ordinary corpus
+controls, and successful representative 46/50-period fixtures. This does not
+satisfy or weaken Gate 8's separate requirement that all 546 intervals pass.
 
 **Mandatory hold conditions:** golden files cannot be regenerated from their
 manifest, material source branches lack fixtures, or the same oracle input
@@ -1267,7 +1277,8 @@ Gate 8 passes only when:
 - publication weighting and rounding match the pinned reference, with official
   market-price differences reported separately;
 - all 546 identified shortfall-transfer regression intervals pass their approved
-  assertions; and
+  assertions, with an immutable interval-identity manifest linking every result
+  to one of the 139 Gate 1 input hashes; and
 - representative full-day runs have zero unexplained material mismatch.
 
 ### Stage 9 — Reports, API, full-corpus qualification, and performance

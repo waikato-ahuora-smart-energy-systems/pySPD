@@ -38,3 +38,35 @@ def test_incremental_projection_manifest_is_complete_and_unambiguous() -> None:
         "ranged_row_split",
         "auxiliary_elimination",
     }
+
+
+def test_gate1_shortfall_qualification_retains_gate8_obligation() -> None:
+    root = Path(__file__).parents[2]
+    gate = root / "docs" / "gate-1"
+    inventory: dict[str, Any] = json.loads(
+        (gate / "shortfall-input-inventory.json").read_text()
+    )
+    population: dict[str, Any] = json.loads(
+        (gate / "shortfall-transfer-population.json").read_text()
+    )
+    characterization: dict[str, Any] = json.loads(
+        (gate / "shortfall-characterization.json").read_text()
+    )
+    daylight: dict[str, Any] = json.loads(
+        (gate / "daylight-saving-characterization.json").read_text()
+    )
+
+    assert inventory["declared_affected_interval_count"] == 546
+    assert inventory["artifact_count"] == 139
+    assert len(inventory["artifacts"]) == 139
+    assert len({item["trading_date"] for item in inventory["artifacts"]}) == 139
+    assert population["gate_1_qualification_adr"] == "ADR-0010"
+    assert "all 546" in population["gate_8_obligation"]
+    assert characterization["gate_policy_decision"]["gate_1_status"] == "qualified"
+    assert characterization["gate_policy_decision"]["relaxed_selector_prohibited"]
+    assert daylight["status"] == "qualified"
+    assert {item["local_trading_period_count"] for item in daylight["fixtures"]} == {
+        46,
+        50,
+    }
+    assert all(item["all_solves_optimal"] for item in daylight["fixtures"])

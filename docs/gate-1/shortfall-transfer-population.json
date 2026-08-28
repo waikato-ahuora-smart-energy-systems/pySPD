@@ -29,5 +29,7 @@
   ],
   "input_inventory": "shortfall-input-inventory.json",
   "input_inventory_sha256": "9e97a8fb9c38411378b8922c73ca65902a85243282b91ea3f4744ed73a998783",
-  "status": "all 139 corrected daily GDX inputs acquired and hash-bound; exact 546 interval identifiers are not disclosed by the release"
+  "gate_1_qualification_adr": "ADR-0010",
+  "gate_8_obligation": "identify or otherwise bind and replay all 546 affected intervals",
+  "status": "Gate 1 date-level qualification passed: all 139 corrected daily GDX inputs acquired and hash-bound, with representative exact optimal branch fixtures; exhaustive all-546 replay remains Gate 8"
 }

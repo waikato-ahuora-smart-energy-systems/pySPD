@@ -32,13 +32,12 @@
     "accepted_for_population_enumeration": false,
     "code_retained": false
   },
-  "remaining_blocker": {
-    "id": "G1-B01",
-    "condition": "The public release identifies the 546 intervals only by 139 dates. Exact schedule IDs cannot be recovered from static corrected GDX data, and an LP relaxation is not equivalent for this discrete path.",
-    "closure_options": [
-      "obtain the Authority's exact 546 case-ID list or pre-fix evidence",
-      "execute exhaustive discrete enumeration under an accepted profile",
-      "formally revise Gate 1 to require full date-level binding plus representative optimal branch fixtures, leaving all-546 replay at Gate 8"
-    ]
+  "gate_policy_decision": {
+    "adr": "ADR-0010",
+    "selected_option": "full date-level binding plus representative exact optimal branch and daylight-saving fixtures",
+    "gate_1_status": "qualified",
+    "gate_8_obligation": "identify or otherwise bind and replay all 546 affected intervals",
+    "former_blocker": "G1-B01",
+    "relaxed_selector_prohibited": true
   }
 }

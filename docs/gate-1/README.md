@@ -4,7 +4,8 @@
 |---|---|
 | Gate | G1 — Oracle trusted |
 | Started | 29 August 2026 |
-| Current decision | **HOLD — NOT CLOSED; SCIP/HiGHS ACTIVE REFERENCE** |
+| Current decision | **PASS — CLOSED; SCIP/HiGHS ACTIVE REFERENCE** |
+| Closed | 29 August 2026 |
 | Compatibility source | vSPD v5.0.6, commit `21b1cf33f5607399331dcb1c03270348def5ccc8` |
 | Initial executed case | `RTD_202502261155_251012025022255930_20250226115400` |
 
@@ -16,8 +17,11 @@ matrix/price checks are now complete. Preprocessing checkpoints, complete
 pre/post solve-state pairs, and an observational-neutrality control are also
 complete. Per-invocation semantic matrix/name dictionaries are also retained.
 The versioned Stage 4--7 projection map, ranged/sign transforms, dual-side
-rules, and complementarity thresholds are frozen and analytically tested. The
-separate 546-interval population remains open. ADR-0009 removes independent review as a Gate 1
+rules, and complementarity thresholds are frozen and analytically tested.
+ADR-0010 accepts all 139 corrected, hash-bound daily inputs plus representative
+exact optimal branch and daylight-saving fixtures as Gate 1 date-level
+qualification; exact identification and replay of all 546 intervals remains
+mandatory at Gate 8. ADR-0009 removes independent review as a Gate 1
 requirement.
 
 ## Current evidence
@@ -34,11 +38,12 @@ requirement.
 | [Incremental matrix mappings](incremental-matrix-mappings.json) | Exact Stage 4--7 family ownership and permitted transformations | Frozen v1 |
 | [Basis sensitivity](basis-sensitivity.json) | Alternative optimal fixed-RMIP primal/dual classification | Classified |
 | [Reference performance](reference-performance.json) | Controlled phase/wall/RSS baseline | Recorded |
-| [Shortfall date population](shortfall-transfer-population.json) | Authority-declared 546 intervals across 139 dates | All daily inputs acquired; exact interval IDs not publicly disclosed |
+| [Shortfall date population](shortfall-transfer-population.json) | Authority-declared 546 intervals across 139 dates | Gate 1 date-level qualification passed under ADR-0010 |
 | [Shortfall input inventory](shortfall-input-inventory.json) | Individual hashes for all 139 official daily GDX files | Acquired and frozen |
-| [Shortfall characterization](shortfall-characterization.json) | Optimal affected-path fixture and rejected relaxed selector | Blocker classified |
-| [Gate checklist](gate-checklist.md) | Gate 1 criterion status | In progress |
-| [Closure decision](closure-decision.md) | Formal blocker audit and Stage 2 authorization boundary | Hold recorded |
+| [Shortfall characterization](shortfall-characterization.json) | Optimal affected-path fixture and rejected relaxed selector | Qualified under ADR-0010 |
+| [Daylight-saving characterization](daylight-saving-characterization.json) | Exact selected-case runs for 46- and 50-period days | Passed |
+| [Gate checklist](gate-checklist.md) | Gate 1 criterion status | Complete |
+| [Closure decision](closure-decision.md) | Formal blocker audit and Stage 2 authorization boundary | Pass recorded |
 | [`tools.oracle`](../../tools/oracle/) | Class-based staged runner, fail-closed overlay, parsers, comparator, and CLI | Implemented and tested |
 | [Objective fixture](../../tests/fixtures/oracle/vspd-v5.0.6-rtd-202502261155-dps-objectives.json) | Committed CPLEX objective values and provenance | Active smoke baseline |
 | Canonical GDX/matrix evidence | Deterministic symbol, UEL, matrix, solution, and dictionary manifests | Passed for all ten frozen runs |
@@ -58,8 +63,8 @@ requirement.
 Raw third-party inputs and generated reports remain outside Git. This directory
 records their hashes and logical summaries pending legal/provenance approval.
 
-Gate 2 production work is not authorized while the closure decision remains
-`HOLD`. CPLEX is deferred and is not the cause of this hold.
+Gate 1 is closed and Stage 2 production work is authorized. CPLEX validation is
+deferred and was not required for this decision.
 
 ## Reproduce the characterization profile
 

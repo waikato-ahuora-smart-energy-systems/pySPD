@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "generated_date": "2026-08-29",
+  "status": "qualified",
+  "reference_profile": "gams-scip-smoke",
+  "source_commit": "21b1cf33f5607399331dcb1c03270348def5ccc8",
+  "fixtures": [
+    {
+      "trading_date": "2024-04-07",
+      "local_trading_period_count": 50,
+      "gdx_case_record_count": 289,
+      "selected_case_id": "61012024041100753",
+      "input_sha256": "e428dd4c4e76e3d2ebb13332e55d70afa84e7cee145224ea70ebe951c70be867",
+      "configuration_sha256": "ab0aaf2bc4c417143656e568dd7851c511b149e73f01f12b6437d65a4c6c3aac",
+      "external_evidence": "/private/tmp/pyspd-gate1-dst-50/evidence.json",
+      "evidence_sha256": "7cfa64373cc8ee581360274051d5c36f305a4eba570c3e9421ce2b7f3e400925",
+      "listing_sha256": "5b855bea9d84d7d6134eda7ffa701d9f85a9b80957dfad47d92b854cd8c76e30",
+      "primary_scip_solve_count": 10,
+      "all_solves_optimal": true,
+      "report_logical_sha256": "a60ef4cb110ba19862663f80a71d2a12888c27bc29cdc89a9da97a276143bbea"
+    },
+    {
+      "trading_date": "2024-09-29",
+      "local_trading_period_count": 46,
+      "gdx_case_record_count": 263,
+      "selected_case_id": "281012024091200253",
+      "input_sha256": "e0683a7705ce1bf539bd2ff3976329ad1aa515385599ee592631db79367bff8b",
+      "configuration_sha256": "0b93f834172a2e3f46645c2491966c8e76be6b7103c476f3bae63278b373e4eb",
+      "external_evidence": "/private/tmp/pyspd-gate1-dst-46-retry/evidence.json",
+      "evidence_sha256": "fe3ac8089f0dee748cca6f001b342ee6a3ad3a935bd2addcadfed3752d923374",
+      "listing_sha256": "ed081b48c6c4837fcabf4d1b7bd59c99a8ba7fef23962aa39d400d41165eb49c",
+      "primary_scip_solve_count": 10,
+      "all_solves_optimal": true,
+      "report_logical_sha256": "63daea4480b545fc36f5f3b5d9bf58e911e3ec589ae6d4f029b6439905fd61e8"
+    }
+  ],
+  "qualification": "Both daylight-saving day shapes execute reproducibly under exact case selection; exhaustive shortfall interval replay remains a Gate 8 obligation under ADR-0010."
+}
