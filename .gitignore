@@ -1,0 +1,15 @@
+# Node dependencies
+node_modules/
+
+# Python environments and tooling caches
+.venv/
+__pycache__/
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.coverage
+
+# Build outputs
+/build/
+/dist/

@@ -1,0 +1,19 @@
+{
+  "name": "pyspd",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/waikato-ahuora-smart-energy-systems/pySPD.git"
+  },
+  "bugs": {
+    "url": "https://github.com/waikato-ahuora-smart-energy-systems/pySPD/issues"
+  },
+  "homepage": "https://github.com/waikato-ahuora-smart-energy-systems/pySPD#readme",
+  "private": true,
+  "engines": {
+    "node": "22.x"
+  },
+  "devDependencies": {
+    "@nizos/probity": "1.10.0"
+  }
+}

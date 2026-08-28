@@ -1,0 +1,23 @@
+[project]
+name = "pyspd"
+version = "0.1.0"
+requires-python = ">=3.13,<3.14"
+dependencies = []
+
+[tool.uv]
+package = false
+default-groups = ["dev"]
+
+[dependency-groups]
+dev = [
+  "hypothesis>=6,<7",
+  "mypy>=1,<2",
+  "pytest>=9,<10",
+  "pytest-cov>=7,<8",
+  "pytest-timeout>=2,<3",
+  "ruff>=0.12,<1",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
