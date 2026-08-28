@@ -12,9 +12,10 @@ Gate 1 characterization continues under the Gate 0 research authorization.
 ADR-0008 treats the optimal SCIP-MIP plus fixed-discrete HiGHS-RMIP pathway as
 adequate for current development. This is not permission to claim CPLEX parity;
 the 2023/2025 pack classification, a ten-run RTD/PRSS/AUD corpus, and calibrated
-matrix/price checks are now complete. The separate 546-interval population,
-preprocessing checkpoints, per-solve snapshots, and complete incremental KKT
-mapping remain open. ADR-0009 removes independent review as a Gate 1
+matrix/price checks are now complete. Preprocessing checkpoints, complete
+pre/post solve-state pairs, and an observational-neutrality control are also
+complete. The separate 546-interval population, per-invocation semantic matrix
+exports, and complete incremental KKT mapping remain open. ADR-0009 removes independent review as a Gate 1
 requirement.
 
 ## Current evidence
@@ -27,6 +28,7 @@ requirement.
 | [Corpus manifest](corpus-manifest.json) | Pack Git-tree/input hashes and external evidence hashes | Frozen |
 | [Comparator specification](comparator-specification.md) | Canonical KKT equations, scales, thresholds, and price-transfer mapping | Frozen for current full-matrix checks |
 | [Runtime evidence](runtime-evidence.json) | Machine-readable identities, hashes, profile, and result summary | Executed candidate |
+| [Instrumentation-neutrality evidence](instrumentation-neutrality.json) | Hash-bound checkpoint/control equivalence proof | Passed |
 | [Gate checklist](gate-checklist.md) | Gate 1 criterion status | In progress |
 | [Closure decision](closure-decision.md) | Formal blocker audit and Stage 2 authorization boundary | Hold recorded |
 | [`tools.oracle`](../../tools/oracle/) | Class-based staged runner, fail-closed overlay, parsers, comparator, and CLI | Implemented and tested |
@@ -72,3 +74,8 @@ node-price validation under `WORK_DIRECTORY/canonical/`. The command exits
 non-zero unless operational solves, objective comparison, matrix checks, and
 price checks all pass. Convert's expected `model status 14` export record is
 classified separately and is not mistaken for an optimization failure.
+
+Use `--no-state-evidence` only for a controlled neutrality run. Compare it with
+the ordinary instrumented evidence using `compare-neutrality`; the comparator
+fails closed on any economic, report, solve-record, price, matrix, solution,
+dictionary, configuration, or validation difference.

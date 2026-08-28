@@ -65,7 +65,40 @@ Scalar
   pyspd_primary_objective
   pyspd_pricing_objective_delta
   pyspd_active_drs_ord
+  pyspd_solve_ordinal / 0 /
   ;
+Sets
+  pyspd_snapshot_model(*) 'model selected for the current solve snapshot'
+  pyspd_snapshot_type(*)  'solve type selected for the current solve snapshot'
+  pyspd_snapshot_phase(*) 'pre or post phase of the current solve snapshot'
+  ;
+"""
+
+_PRE_SOLVE_SNAPSHOT: Final = """* pySPD Gate 1 complete pre-solve state snapshot.
+pyspd_solve_ordinal = pyspd_solve_ordinal + 1;
+pyspd_snapshot_model('vSPD_NMIR') = no;
+pyspd_snapshot_model('vSPD_BranchFlowMIP') = no;
+pyspd_snapshot_type('MIP') = no;
+pyspd_snapshot_type('RMIP') = no;
+pyspd_snapshot_phase('pre') = no;
+pyspd_snapshot_phase('post') = no;
+pyspd_snapshot_model('%pyspdSolveModel%') = yes;
+pyspd_snapshot_type('%pyspdSolveType%') = yes;
+pyspd_snapshot_phase('pre') = yes;
+put_utility 'gdxout' / 'pyspd_solve_' pyspd_solve_ordinal:0:0 '_pre';
+$onImplicitAssign
+execute_unload;
+$offImplicitAssign
+"""
+
+_POST_SOLVE_SNAPSHOT: Final = """* pySPD Gate 1 complete post-solve state snapshot.
+pyspd_snapshot_phase('pre') = no;
+pyspd_snapshot_phase('post') = no;
+pyspd_snapshot_phase('post') = yes;
+put_utility 'gdxout' / 'pyspd_solve_' pyspd_solve_ordinal:0:0 '_post';
+$onImplicitAssign
+execute_unload;
+$offImplicitAssign
 """
 
 _FIXED_LP_SOLVE: Final = """* pySPD Gate 1: emulate CPLEX solveFinal explicitly.
@@ -111,7 +144,11 @@ LAMBDAHVDCRESERVE.fx(t,isl,resC,rd,rsbp) = LAMBDAHVDCRESERVE.l(t,isl,resC,rd,rsb
 %pyspdPricingModel%.Optfile = 1;
 %pyspdPricingModel%.reslim = LPTimeLimit;
 %pyspdPricingModel%.iterlim = LPIterationLimit;
+$setglobal pyspdSolveModel %pyspdPricingModel%
+$setglobal pyspdSolveType RMIP
+$include pyspd_pre_solve_snapshot.inc
 solve %pyspdPricingModel% using rmip maximizing NETBENEFIT;
+$include pyspd_post_solve_snapshot.inc
 abort$((%pyspdPricingModel%.solvestat <> 1) or (%pyspdPricingModel%.modelstat <> 1))
   'pySPD fixed-discrete pricing RMIP failed';
 pyspd_pricing_objective_delta = abs(NETBENEFIT.l - pyspd_primary_objective);
@@ -615,6 +652,130 @@ class BaselineComparison:
 
 
 @dataclass(frozen=True)
+class InstrumentationNeutralityComparison:
+    """Fail-closed equivalence proof for instrumented and control runs."""
+
+    checks: dict[str, bool]
+
+    @property
+    def passed(self) -> bool:
+        return bool(self.checks) and all(self.checks.values())
+
+    @classmethod
+    def compare(
+        cls,
+        instrumented: dict[str, Any],
+        control: dict[str, Any],
+    ) -> InstrumentationNeutralityComparison:
+        def value(payload: dict[str, Any], *path: str) -> Any:
+            current: Any = payload
+            try:
+                for key in path:
+                    current = current[key]
+            except (KeyError, TypeError):
+                return object()
+            return current
+
+        def same_price_report(name: str) -> bool:
+            left = value(instrumented, name)
+            right = value(control, name)
+            if left is None and right is None:
+                return True
+            return (
+                isinstance(left, dict)
+                and isinstance(right, dict)
+                and left.get("logical_records_sha256")
+                == right.get("logical_records_sha256")
+                and left.get("logical_records_sha256") is not None
+            )
+
+        instrumented_state = value(instrumented, "state_evidence")
+        checks = {
+            "same_input": value(instrumented, "input", "sha256")
+            == value(control, "input", "sha256"),
+            "same_configuration": value(
+                instrumented, "configuration_overlay", "logical_sha256"
+            )
+            == value(control, "configuration_overlay", "logical_sha256"),
+            "same_solve_records": value(instrumented, "records")
+            == value(control, "records"),
+            "same_reports": value(instrumented, "reports", "logical_sha256")
+            == value(control, "reports", "logical_sha256"),
+            "same_published_prices": same_price_report(
+                "published_energy_prices"
+            ),
+            "same_dps_prices": same_price_report("node_prices"),
+            "same_pricing_solution": value(
+                instrumented,
+                "canonical",
+                "manifests",
+                "pricing_solution",
+                "logical_sha256",
+            )
+            == value(
+                control,
+                "canonical",
+                "manifests",
+                "pricing_solution",
+                "logical_sha256",
+            ),
+            "same_pricing_matrix_gdx": value(
+                instrumented,
+                "canonical",
+                "manifests",
+                "pricing_matrix",
+                "logical_sha256",
+            )
+            == value(
+                control,
+                "canonical",
+                "manifests",
+                "pricing_matrix",
+                "logical_sha256",
+            ),
+            "same_pricing_dictionary": value(
+                instrumented,
+                "canonical",
+                "manifests",
+                "pricing_dictionary",
+                "logical_sha256",
+            )
+            == value(
+                control,
+                "canonical",
+                "manifests",
+                "pricing_dictionary",
+                "logical_sha256",
+            ),
+            "same_matrix_semantics": value(
+                instrumented,
+                "canonical",
+                "matrix_evidence",
+                "logical_sha256",
+            )
+            == value(
+                control,
+                "canonical",
+                "matrix_evidence",
+                "logical_sha256",
+            ),
+            "same_price_validation": value(
+                instrumented, "canonical", "price_validation"
+            )
+            == value(control, "canonical", "price_validation"),
+            "same_validation_outcomes": value(instrumented, "validation")
+            == value(control, "validation"),
+            "instrumented_state_present": isinstance(instrumented_state, dict)
+            and int(instrumented_state.get("solve_pair_count", 0)) > 0,
+            "control_state_absent": value(control, "state_evidence") is None,
+        }
+        return cls(checks)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"passed": self.passed, "checks": self.checks}
+
+
+@dataclass(frozen=True)
 class NativeGamsProfile:
     name: str
     mip_solver: str
@@ -623,6 +784,7 @@ class NativeGamsProfile:
     normative: bool
     supports_marginals: bool
     explicit_fixed_lp_pricing: bool
+    capture_state_evidence: bool
 
 
 class CplexOracleProfile(NativeGamsProfile):
@@ -635,6 +797,7 @@ class CplexOracleProfile(NativeGamsProfile):
             normative=True,
             supports_marginals=True,
             explicit_fixed_lp_pricing=False,
+            capture_state_evidence=False,
         )
 
 
@@ -648,13 +811,14 @@ class ScipSmokeProfile(NativeGamsProfile):
             normative=False,
             supports_marginals=False,
             explicit_fixed_lp_pricing=False,
+            capture_state_evidence=False,
         )
 
 
 class ScipHighsPricingProfile(NativeGamsProfile):
     """SCIP primary MIP followed by an explicit HiGHS fixed-discrete RMIP."""
 
-    def __init__(self) -> None:
+    def __init__(self, capture_state_evidence: bool = True) -> None:
         super().__init__(
             name="gams-scip-highs-pricing",
             mip_solver="SCIP",
@@ -663,6 +827,7 @@ class ScipHighsPricingProfile(NativeGamsProfile):
             normative=True,
             supports_marginals=True,
             explicit_fixed_lp_pricing=True,
+            capture_state_evidence=capture_state_evidence,
         )
 
 
@@ -753,6 +918,7 @@ class VspdSourcePatcher:
                 solve,
                 profile.mip_solver,
                 profile.lp_solver,
+                profile.capture_state_evidence,
             )
 
     def _apply_fixed_lp_pricing(
@@ -761,7 +927,9 @@ class VspdSourcePatcher:
         solve: Path,
         mip_solver: str,
         pricing_solver: str,
+        capture_state_evidence: bool,
     ) -> None:
+        period = programs / "vSPDperiod.gms"
         self._replace_exact(
             solve,
             "option mip = %Solver% ;",
@@ -774,22 +942,88 @@ class VspdSourcePatcher:
             "\n$include pyspd_pricing_declarations.inc\n\nScalars\n  modelSolved",
             expected_count=1,
         )
+        nmir_solve = (
+            "solve vSPD_NMIR using mip maximizing NETBENEFIT ;\n"
+            "$setglobal pyspdPricingModel vSPD_NMIR\n"
+            "$include pyspd_fixed_lp_solve.inc"
+        )
+        branch_solve = (
+            "solve vSPD_BranchFlowMIP using mip maximizing NETBENEFIT ;\n"
+            "$setglobal pyspdPricingModel vSPD_BranchFlowMIP\n"
+            "$include pyspd_fixed_lp_solve.inc"
+        )
+        if capture_state_evidence:
+            nmir_solve = (
+                "\n$setglobal pyspdSolveModel vSPD_NMIR\n"
+                "$setglobal pyspdSolveType MIP\n"
+                "$include pyspd_pre_solve_snapshot.inc\n"
+                "solve vSPD_NMIR using mip maximizing NETBENEFIT ;\n"
+                "$include pyspd_post_solve_snapshot.inc\n"
+                "$setglobal pyspdPricingModel vSPD_NMIR\n"
+                "$include pyspd_fixed_lp_solve.inc"
+            )
+            branch_solve = (
+                "\n$setglobal pyspdSolveModel vSPD_BranchFlowMIP\n"
+                "$setglobal pyspdSolveType MIP\n"
+                "$include pyspd_pre_solve_snapshot.inc\n"
+                "solve vSPD_BranchFlowMIP using mip maximizing NETBENEFIT ;\n"
+                "$include pyspd_post_solve_snapshot.inc\n"
+                "$setglobal pyspdPricingModel vSPD_BranchFlowMIP\n"
+                "$include pyspd_fixed_lp_solve.inc"
+            )
         self._replace_exact(
             solve,
             "solve vSPD_NMIR using mip maximizing NETBENEFIT ;",
-            "solve vSPD_NMIR using mip maximizing NETBENEFIT ;\n"
-            "$setglobal pyspdPricingModel vSPD_NMIR\n"
-            "$include pyspd_fixed_lp_solve.inc",
+            nmir_solve,
             expected_count=2,
         )
         self._replace_exact(
             solve,
             "solve vSPD_BranchFlowMIP using mip maximizing NETBENEFIT ;",
-            "solve vSPD_BranchFlowMIP using mip maximizing NETBENEFIT ;\n"
-            "$setglobal pyspdPricingModel vSPD_BranchFlowMIP\n"
-            "$include pyspd_fixed_lp_solve.inc",
+            branch_solve,
             expected_count=1,
         )
+        period_unload = (
+            "execute_unload '%programPath%/vSPDperiod.gdx'\n"
+            "  sca    = i_caseID\n"
+            "  stp    = i_tradePeriod\n"
+            "  sdt    = i_dateTime\n"
+            "  scase2dt2tp  = i_DateTimeTradePeriod\n"
+            "  ;"
+        )
+        if capture_state_evidence:
+            self._replace_exact(
+                period,
+                period_unload,
+                period_unload
+                + "\nexecute_unload 'pyspd_checkpoint_period_selection.gdx'\n"
+                "  sca    = i_caseID\n"
+                "  stp    = i_tradePeriod\n"
+                "  sdt    = i_dateTime\n"
+                "  scase2dt2tp  = i_DateTimeTradePeriod\n"
+                "  ;",
+                expected_count=1,
+            )
+            section_3 = "* 3. Manage model and data compatability"
+            self._replace_exact(
+                solve,
+                section_3,
+                "$onImplicitAssign\n"
+                "execute_unload 'pyspd_checkpoint_01_loaded.gdx';\n"
+                "$offImplicitAssign\n\n"
+                + section_3,
+                expected_count=1,
+            )
+            section_7 = "* 7. The vSPD solve loop"
+            self._replace_exact(
+                solve,
+                section_7,
+                "$onImplicitAssign\n"
+                "execute_unload 'pyspd_checkpoint_02_preprocessed.gdx';\n"
+                "$offImplicitAssign\n\n"
+                + section_7,
+                expected_count=1,
+            )
         self._replace_exact(
             solve,
             "* 9. Write results to CSV report files and GDX files",
@@ -798,8 +1032,23 @@ class VspdSourcePatcher:
             expected_count=1,
         )
         (programs / "pyspd_pricing_declarations.inc").write_text(_PRICING_DECLARATIONS)
-        (programs / "pyspd_fixed_lp_solve.inc").write_text(_FIXED_LP_SOLVE)
+        fixed_lp_solve = _FIXED_LP_SOLVE
+        if not capture_state_evidence:
+            fixed_lp_solve = fixed_lp_solve.replace(
+                "$setglobal pyspdSolveModel %pyspdPricingModel%\n"
+                "$setglobal pyspdSolveType RMIP\n"
+                "$include pyspd_pre_solve_snapshot.inc\n",
+                "",
+            ).replace("$include pyspd_post_solve_snapshot.inc\n", "")
+        (programs / "pyspd_fixed_lp_solve.inc").write_text(fixed_lp_solve)
         (programs / "pyspd_matrix_export.inc").write_text(_MATRIX_EXPORT)
+        if capture_state_evidence:
+            (programs / "pyspd_pre_solve_snapshot.inc").write_text(
+                _PRE_SOLVE_SNAPSHOT
+            )
+            (programs / "pyspd_post_solve_snapshot.inc").write_text(
+                _POST_SOLVE_SNAPSHOT
+            )
         (programs / "convert.opt").write_text(_CONVERT_OPTIONS)
         if mip_solver == "SCIP":
             (programs / "scip.opt").write_text("numerics/feastol = 1e-7\n")
@@ -871,6 +1120,7 @@ class VspdRunResult:
     matrix_validation: LinearMatrixValidation | None
     price_validation: IndependentPriceValidation | None
     report_inventory: ReportInventory
+    state_evidence: StateEvidenceInventory | None
 
     @property
     def qualified(self) -> bool:
@@ -888,6 +1138,107 @@ class ReportArtifact:
     path: str
     size_bytes: int
     sha256: str
+
+
+@dataclass(frozen=True)
+class SolveStatePair:
+    ordinal: int
+    scenario: str
+    model: str
+    solve_type: str
+    solver: str
+    pre: ReportArtifact
+    post: ReportArtifact
+
+
+@dataclass(frozen=True)
+class StateEvidenceInventory:
+    """Hash-bound preprocessing checkpoints and solve-state pairs."""
+
+    checkpoints: tuple[ReportArtifact, ...]
+    solve_pairs: tuple[SolveStatePair, ...]
+    logical_sha256: str
+
+    _checkpoint_names: ClassVar[tuple[str, ...]] = (
+        "pyspd_checkpoint_period_selection.gdx",
+        "pyspd_checkpoint_01_loaded.gdx",
+        "pyspd_checkpoint_02_preprocessed.gdx",
+    )
+    _snapshot_name: ClassVar[re.Pattern[str]] = re.compile(
+        r"^pyspd_solve_(?P<ordinal>[1-9][0-9]*)_(?P<phase>pre|post)\.gdx$"
+    )
+
+    @classmethod
+    def build(
+        cls,
+        programs: Path,
+        parsed: ListingResult,
+    ) -> StateEvidenceInventory:
+        checkpoints = tuple(
+            cls._artifact(programs / name, programs) for name in cls._checkpoint_names
+        )
+        observed: dict[tuple[int, str], ReportArtifact] = {}
+        for path in programs.glob("pyspd_solve_*.gdx"):
+            match = cls._snapshot_name.fullmatch(path.name)
+            if match is None:
+                raise ValueError(f"unexpected solve-state snapshot name: {path.name}")
+            key = (int(match.group("ordinal")), match.group("phase"))
+            if key in observed:
+                raise ValueError(f"duplicate solve-state snapshot: {path.name}")
+            observed[key] = cls._artifact(path, programs)
+
+        records = parsed.operational_records
+        expected_keys = {
+            (ordinal, phase)
+            for ordinal in range(1, len(records) + 1)
+            for phase in ("pre", "post")
+        }
+        if set(observed) != expected_keys:
+            raise ValueError(
+                "solve-state evidence must contain one complete pre/post pair "
+                f"for every operational solve; expected {sorted(expected_keys)!r}, "
+                f"observed {sorted(observed)!r}"
+            )
+        pairs = tuple(
+            SolveStatePair(
+                ordinal=ordinal,
+                scenario=record.scenario,
+                model=record.model,
+                solve_type=record.solve_type,
+                solver=record.solver,
+                pre=observed[(ordinal, "pre")],
+                post=observed[(ordinal, "post")],
+            )
+            for ordinal, record in enumerate(records, start=1)
+        )
+        payload = {
+            "checkpoints": [asdict(artifact) for artifact in checkpoints],
+            "solve_pairs": [asdict(pair) for pair in pairs],
+        }
+        return cls(
+            checkpoints=checkpoints,
+            solve_pairs=pairs,
+            logical_sha256=_logical_sha256(payload),
+        )
+
+    @staticmethod
+    def _artifact(path: Path, programs: Path) -> ReportArtifact:
+        if not path.is_file():
+            raise ValueError(f"state evidence artifact is missing: {path}")
+        return ReportArtifact(
+            path=path.relative_to(programs).as_posix(),
+            size_bytes=path.stat().st_size,
+            sha256=_sha256(path),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "checkpoint_count": len(self.checkpoints),
+            "solve_pair_count": len(self.solve_pairs),
+            "logical_sha256": self.logical_sha256,
+            "checkpoints": [asdict(artifact) for artifact in self.checkpoints],
+            "solve_pairs": [asdict(pair) for pair in self.solve_pairs],
+        }
 
 
 @dataclass(frozen=True)
@@ -1036,6 +1387,11 @@ class VspdRunner:
             else None
         )
         report_inventory = ReportInventory.build(output)
+        state_evidence = (
+            StateEvidenceInventory.build(programs, parsed)
+            if case.profile.capture_state_evidence
+            else None
+        )
         matrix_validation: LinearMatrixValidation | None = None
         price_validation: IndependentPriceValidation | None = None
         canonical_payload: dict[str, Any] | None = None
@@ -1046,6 +1402,7 @@ class VspdRunner:
                     programs,
                     node_prices,
                     published_energy_prices,
+                    state_evidence,
                 )
             )
         evidence = case.work_directory / "evidence.json"
@@ -1066,6 +1423,7 @@ class VspdRunner:
                     matrix_validation,
                     price_validation,
                     report_inventory,
+                    state_evidence,
                 ),
                 indent=2,
                 sort_keys=True,
@@ -1083,6 +1441,7 @@ class VspdRunner:
             matrix_validation=matrix_validation,
             price_validation=price_validation,
             report_inventory=report_inventory,
+            state_evidence=state_evidence,
         )
 
     @staticmethod
@@ -1091,6 +1450,7 @@ class VspdRunner:
         programs: Path,
         node_prices: DpsNodePriceReport | None,
         published_energy_prices: PublishedEnergyPriceReport | None,
+        state_evidence: StateEvidenceInventory | None,
     ) -> tuple[
         dict[str, Any],
         LinearMatrixValidation,
@@ -1106,6 +1466,12 @@ class VspdRunner:
             "pricing_matrix": programs / "pyspd_pricing_matrix.gdx",
             "pricing_dictionary": programs / "pyspd_pricing_dict.gdx",
         }
+        if state_evidence is not None:
+            for artifact in state_evidence.checkpoints:
+                sources[artifact.path.removesuffix(".gdx")] = programs / artifact.path
+            for pair in state_evidence.solve_pairs:
+                sources[f"solve_{pair.ordinal:03d}_pre"] = programs / pair.pre.path
+                sources[f"solve_{pair.ordinal:03d}_post"] = programs / pair.post.path
         missing = [str(path) for path in sources.values() if not path.is_file()]
         if missing:
             raise VspdRunError(f"canonical evidence files are missing: {missing}")
@@ -1263,6 +1629,7 @@ class VspdRunner:
         matrix_validation: LinearMatrixValidation | None,
         price_validation: IndependentPriceValidation | None,
         report_inventory: ReportInventory,
+        state_evidence: StateEvidenceInventory | None,
     ) -> dict[str, Any]:
         return {
             "schema_version": 1,
@@ -1333,6 +1700,9 @@ class VspdRunner:
                 ),
             },
             "reports": report_inventory.to_dict(),
+            "state_evidence": (
+                state_evidence.to_dict() if state_evidence is not None else None
+            ),
         }
 
 

@@ -14,8 +14,8 @@
 | `G1-04` | Historical packs classified and reproduced | 2023 pack hash-bound and deferred as RTP-v4; all nine in-scope 2025 RTD/PRSS inputs executed; three NRSS/NRSL inputs deferred | Met |
 | `G1-05` | Small repository GDX is smoke-only | Explicitly classified | Met |
 | `G1-06` | Semantic matrix export | GAMS Convert DumpGDX/DictMap export and validation for all ten frozen runs | Met for frozen corpus |
-| `G1-07` | Preprocessing checkpoints | Not implemented | **Hold** |
-| `G1-08` | Per-solve structural/solution snapshots | All solve statuses/objectives plus final-scenario fixed-LP solution, matrix, and name dictionary | Partial: per-scenario matrix snapshots open |
+| `G1-07` | Preprocessing checkpoints | Three raw- and canonical-hash-bound checkpoints; instrumented/control runs have identical solve, report, price, solution, matrix, and dictionary semantics | Met |
+| `G1-08` | Per-solve structural/solution snapshots | Complete ordinal/model/type-bound pre/post GDX pairs for every MIP/RMIP invocation; fail-closed pair inventory | Partial: per-invocation semantic matrix/name dictionaries open |
 | `G1-09` | Approved SPD/AUD overlay | Typed, hash-bound, fail-closed overlay executed for SPD and AUD; named AUD source compatibility patch | Met |
 | `G1-10` | Approved MIP/final-LP price convention | 38 optimal SCIP MIPs followed by 38 optimal fixed-discrete HiGHS RMIPs; 20,344 prices independently reproduced | Met for frozen corpus; finite-difference cases remain part of branch coverage |
 | `G1-11` | Comparator mathematics frozen | Exact hashes plus frozen activity/bound/raw-and-scaled-stationarity and node-price/price-transfer equations | Partial: incremental row/dual transforms and complementarity open |

@@ -6,14 +6,104 @@ from pathlib import Path
 import pytest
 
 from tools.oracle.vspd import (
+    InstrumentationNeutralityComparison,
+    ListingResult,
     ReportInventory,
     ScipHighsPricingProfile,
     ScipSmokeProfile,
+    SolveRecord,
     SourcePatchError,
+    StateEvidenceInventory,
     VspdRunConfiguration,
     VspdRunner,
     VspdSourcePatcher,
 )
+
+
+def _optimal_record(model: str, solve_type: str, solver: str) -> SolveRecord:
+    return SolveRecord(
+        scenario="base",
+        model=model,
+        solve_type=solve_type,
+        solver=solver,
+        solver_status_code=1,
+        solver_status="Normal Completion",
+        model_status_code=1,
+        model_status="Optimal",
+        objective=1.0,
+    )
+
+
+def test_state_evidence_inventory_requires_a_pair_for_every_operational_solve(
+    tmp_path: Path,
+) -> None:
+    for name in (
+        "pyspd_checkpoint_period_selection.gdx",
+        "pyspd_checkpoint_01_loaded.gdx",
+        "pyspd_checkpoint_02_preprocessed.gdx",
+        "pyspd_solve_1_pre.gdx",
+        "pyspd_solve_1_post.gdx",
+        "pyspd_solve_2_pre.gdx",
+        "pyspd_solve_2_post.gdx",
+    ):
+        (tmp_path / name).write_bytes(name.encode())
+    parsed = ListingResult(
+        records=(
+            _optimal_record("vSPD_NMIR", "MIP", "SCIP"),
+            _optimal_record("vSPD_NMIR", "RMIP", "HIGHS"),
+            _optimal_record("vSPD_NMIR", "RMIP", "CONVERT"),
+        )
+    )
+
+    inventory = StateEvidenceInventory.build(tmp_path, parsed)
+
+    assert len(inventory.checkpoints) == 3
+    assert len(inventory.solve_pairs) == 2
+    assert inventory.solve_pairs[0].model == "vSPD_NMIR"
+    assert inventory.solve_pairs[1].solve_type == "RMIP"
+    assert inventory.logical_sha256
+
+    (tmp_path / "pyspd_solve_2_post.gdx").unlink()
+    with pytest.raises(ValueError, match="complete pre/post pair"):
+        StateEvidenceInventory.build(tmp_path, parsed)
+
+
+def test_instrumentation_neutrality_comparison_is_fail_closed() -> None:
+    shared = {
+        "input": {"sha256": "input"},
+        "configuration_overlay": {"logical_sha256": "config"},
+        "records": [{"model": "vSPD_NMIR", "objective": 1.0}],
+        "reports": {"logical_sha256": "reports"},
+        "published_energy_prices": {"logical_records_sha256": "prices"},
+        "node_prices": None,
+        "canonical": {
+            "manifests": {
+                "pricing_solution": {"logical_sha256": "solution"},
+                "pricing_matrix": {"logical_sha256": "matrix-gdx"},
+                "pricing_dictionary": {"logical_sha256": "dictionary"},
+            },
+            "matrix_evidence": {"logical_sha256": "matrix"},
+            "price_validation": {"passed": True, "price_count": 1},
+        },
+        "validation": {
+            "matrix_passed": True,
+            "independent_prices_passed": True,
+        },
+    }
+    instrumented = {**shared, "state_evidence": {"solve_pair_count": 2}}
+    control = {**shared, "state_evidence": None}
+
+    comparison = InstrumentationNeutralityComparison.compare(
+        instrumented, control
+    )
+
+    assert comparison.passed
+    assert all(comparison.checks.values())
+
+    changed = {**control, "reports": {"logical_sha256": "changed"}}
+    assert not InstrumentationNeutralityComparison.compare(
+        instrumented, changed
+    ).passed
 
 
 def test_scip_profile_applies_fail_closed_source_overlay(tmp_path: Path) -> None:
@@ -171,11 +261,21 @@ def test_fixed_lp_profile_injects_pricing_solve_after_each_mip(tmp_path: Path) -
     programs.mkdir()
     settings = programs / "vSPDsettings.inc"
     solve = programs / "vSPDsolve.gms"
+    period = programs / "vSPDperiod.gms"
     settings.write_text("$setglobal Solver                          Cplex\n")
     solve.write_text(
         "option lp = %Solver% ;\n"
         "option mip = %Solver% ;\n"
         "Parameters existing;\n"
+        "*=====================================================================================\n"
+        "* 2. Load data from GDX file\n"
+        "*=====================================================================================\n"
+        "*=====================================================================================\n"
+        "* 3. Manage model and data compatability\n"
+        "*=====================================================================================\n"
+        "*=====================================================================================\n"
+        "* 7. The vSPD solve loop\n"
+        "*=====================================================================================\n"
         "Scalars\n"
         "  modelSolved 'status' / 0 /\n"
         "  ;\n"
@@ -189,6 +289,14 @@ def test_fixed_lp_profile_injects_pricing_solve_after_each_mip(tmp_path: Path) -
         "* 9. Write results to CSV report files and GDX files\n"
         "*=====================================================================================\n"
     )
+    period.write_text(
+        "execute_unload '%programPath%/vSPDperiod.gdx'\n"
+        "  sca    = i_caseID\n"
+        "  stp    = i_tradePeriod\n"
+        "  sdt    = i_dateTime\n"
+        "  scase2dt2tp  = i_DateTimeTradePeriod\n"
+        "  ;\n"
+    )
 
     VspdSourcePatcher().apply(programs, ScipHighsPricingProfile())
 
@@ -198,17 +306,23 @@ def test_fixed_lp_profile_injects_pricing_solve_after_each_mip(tmp_path: Path) -
     assert "$include pyspd_pricing_declarations.inc\n\nScalars" in patched
     assert (programs / "pyspd_pricing_declarations.inc").is_file()
     assert (programs / "pyspd_matrix_export.inc").is_file()
+    assert (programs / "pyspd_pre_solve_snapshot.inc").is_file()
+    assert (programs / "pyspd_post_solve_snapshot.inc").is_file()
     assert (programs / "convert.opt").is_file()
     assert (programs / "scip.opt").read_text() == "numerics/feastol = 1e-7\n"
     assert "dual_feasibility_tolerance = 1e-9" in (
         programs / "highs.opt"
     ).read_text()
     assert patched.count(".Optfile = 1 ;") == 3
+    assert patched.count("$include pyspd_pre_solve_snapshot.inc") == 3
+    assert patched.count("$include pyspd_post_solve_snapshot.inc") == 3
     pricing = (programs / "pyspd_fixed_lp_solve.inc").read_text()
     assert "HVDCSENDING.fx(t,isl)" in pricing
     assert "LAMBDAHVDCRESERVE.fx(t,isl,resC,rd,rsbp)" in pricing
     assert "solve %pyspdPricingModel% using rmip" in pricing
     assert "%pyspdPricingModel%.Optfile = 1;" in pricing
+    assert "$include pyspd_pre_solve_snapshot.inc" in pricing
+    assert "$include pyspd_post_solve_snapshot.inc" in pricing
     assert "HVDCSENDING.lo(t,isl) = pyspd_HVDCSENDING_lo(t,isl);" in pricing
     assert "$include pyspd_matrix_export.inc" in patched
     matrix_export = (programs / "pyspd_matrix_export.inc").read_text()
@@ -217,6 +331,9 @@ def test_fixed_lp_profile_injects_pricing_solve_after_each_mip(tmp_path: Path) -
     assert "pyspd_active_drs_ord" in matrix_export
     assert "busDisconnected" in matrix_export
     assert "dtParameter, studyMode, node2node, nodeIsland" in matrix_export
+    assert "pyspd_checkpoint_01_loaded" in patched
+    assert "pyspd_checkpoint_02_preprocessed" in patched
+    assert "pyspd_checkpoint_period_selection.gdx" in period.read_text()
     assert "option rmip = Convert;" in matrix_export
     assert "option rmip = HiGHS;" in matrix_export
     assert "solve vSPD_NMIR using rmip" in matrix_export

@@ -10,6 +10,7 @@ from pathlib import Path
 from tools.oracle.vspd import (
     BaselineComparison,
     CplexOracleProfile,
+    InstrumentationNeutralityComparison,
     ObjectiveBaseline,
     ScipHighsPricingProfile,
     ScipSmokeProfile,
@@ -30,6 +31,13 @@ def _parser() -> argparse.ArgumentParser:
     compare.add_argument("--absolute-tolerance", type=float, default=0.01)
     compare.add_argument("--relative-tolerance", type=float, default=1e-9)
 
+    neutrality = subparsers.add_parser(
+        "compare-neutrality",
+        help="compare checkpoint-instrumented and checkpoint-disabled evidence",
+    )
+    neutrality.add_argument("--instrumented", type=Path, required=True)
+    neutrality.add_argument("--control", type=Path, required=True)
+
     run = subparsers.add_parser("run", help="stage and run one vSPD case")
     run.add_argument("--source", type=Path, required=True)
     run.add_argument("--input", type=Path, required=True)
@@ -45,6 +53,11 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--operation-mode", choices=("SPD", "AUD", "DPS"))
     run.add_argument("--absolute-tolerance", type=float, default=0.01)
     run.add_argument("--relative-tolerance", type=float, default=1e-9)
+    run.add_argument(
+        "--no-state-evidence",
+        action="store_true",
+        help="disable checkpoint instrumentation for a controlled neutrality run",
+    )
     return parser
 
 
@@ -60,13 +73,26 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         print(json.dumps(comparison.to_dict(), indent=2, sort_keys=True))
         return 0 if comparison.passed else 1
+    if arguments.command == "compare-neutrality":
+        neutrality_comparison = InstrumentationNeutralityComparison.compare(
+            json.loads(arguments.instrumented.read_text()),
+            json.loads(arguments.control.read_text()),
+        )
+        print(json.dumps(neutrality_comparison.to_dict(), indent=2, sort_keys=True))
+        return 0 if neutrality_comparison.passed else 1
 
     profiles = {
         "scip-smoke": ScipSmokeProfile,
         "scip-highs-pricing": ScipHighsPricingProfile,
         "cplex-oracle": CplexOracleProfile,
     }
-    profile = profiles[arguments.profile]()
+    profile = (
+        ScipHighsPricingProfile(
+            capture_state_evidence=not arguments.no_state_evidence
+        )
+        if arguments.profile == "scip-highs-pricing"
+        else profiles[arguments.profile]()
+    )
     baseline = (
         ObjectiveBaseline.load(arguments.baseline) if arguments.baseline else None
     )

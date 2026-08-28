@@ -15,8 +15,9 @@ prove the active reference profile, fail-closed overlays, standard/audit report
 families, canonical GDX/matrix exports, independent LP checks, dead-node price
 transfer, and independent node-price mapping across all in-scope 2025-pack
 RTD/PRSS inputs. The 2023 pack is hash-bound and validly deferred. The result
-still does not meet the governing plan's separate population, checkpoint,
-per-solve-snapshot, and complete incremental-comparator criteria.
+still does not meet the governing plan's separate population, per-invocation
+matrix, and complete incremental-comparator criteria. Governed preprocessing
+checkpoints and their observational-neutrality proof are now complete.
 
 Starting Stage 2 production work would therefore bypass an explicit dependency
 in the governing stage-and-gate plan. Gate 2 remains not started. Read-only
@@ -29,14 +30,18 @@ recorded change to the governing plan.
 | ID | Blocker | Required closure evidence |
 |---|---|---|
 | `G1-B01` | The required 546 affected RTD intervals, matched controls, daylight-saving cases, and remaining preprocessing/fallback/re-solve feature cells are not populated | Reproducible fixtures and required snapshots for every remaining in-scope path |
-| `G1-B03` | Material preprocessing boundaries do not have oracle checkpoints or an observational-neutrality proof | Governed instrumentation, pristine/instrumented comparison, and checkpoint manifests |
-| `G1-B04` | Structural/solution evidence is not retained before and after every solve and re-solve | Per-solve model variant, matrix, bounds/fixings, discrete/SOS state, primal, marginal, status, and post-solve snapshots |
+| `G1-B04` | Complete pre/post GDX state now exists for every solve/re-solve, but a semantic matrix/name dictionary is not yet retained per invocation | Per-solve model variant, matrix/name dictionary, bounds/fixings, discrete/SOS state, primal, marginal, status, and post-solve snapshots |
 | `G1-B05` | Current full-matrix activity/bound/stationarity checks are frozen, but incremental feature projection, split-row/dual transforms, and complementarity mappings are incomplete | Versioned mapping/sign/ranged-row/complementarity specification with analytic tests |
 
 ## Evidence that is complete for the executed samples
 
 - two clean runs with identical logical solve, report, input, solution, matrix,
   and dictionary hashes;
+- three governed preprocessing checkpoints and complete pre/post state pairs for
+  every operational solve, with raw and canonical hashes;
+- a checkpoint-disabled control run with exact logical equality across solve
+  records, all reports, published prices, pricing solution, matrix, dictionary,
+  independent validation, and configuration;
 - 38 optimal SCIP primary MIPs and 38 optimal HiGHS fixed-discrete RMIPs in the
   frozen RTD/PRSS/AUD corpus;
 - ten deterministic GAMS Convert matrix/name-dictionary exports;
