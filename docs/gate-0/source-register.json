@@ -80,9 +80,9 @@
     },
     "candidate_working_copy": {
       "governing_plan_sha256": "22bb2f1ee7e727554c12bc0749db1c1d8a8ce45843ca7927359812e9b8a86ac0",
-      "pack_commit": "7df0194cedab8268bfdece1d6c82f80e1587e130"
+      "pack_commit": "e02f567c48171da5fd5bc492e30ed1aaef2cbca1"
     },
-    "note": "The Gate 0/Gate 1 checkpoint was committed at the recorded pack commit; later evidence additions remain separately reviewable working changes."
+    "note": "The recorded implementation commit contains the canonical oracle evidence and formal Gate 1 hold decision; this register binds the evidence index to that commit."
   },
   "observed_toolchain": {
     "platform": "macOS arm64 development workstation",

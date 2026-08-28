@@ -4,7 +4,7 @@
   "gate_id": "G0",
   "decision": "hold",
   "created_at": "2026-08-29T00:00:00+12:00",
-  "project_commit": "7df0194cedab8268bfdece1d6c82f80e1587e130",
+  "project_commit": "e02f567c48171da5fd5bc492e30ed1aaef2cbca1",
   "governing_plan_sha256": "22bb2f1ee7e727554c12bc0749db1c1d8a8ce45843ca7927359812e9b8a86ac0",
   "baseline": {
     "formulation_id": "vspd-v5.0.6-spd-formulation-v15-context",
@@ -116,8 +116,8 @@
     {
       "id": "source-register",
       "uri": "docs/gate-0/source-register.json",
-      "sha256": "85f3ed86adb685b27231b0adc8c02a5beaa781bc70daa8449b41e9143210495b",
-      "size_bytes": 5038,
+      "sha256": "5a5a5038473d5bf585c3b01132b49c257609623df0f6773f3ae616a9bf8a681b",
+      "size_bytes": 5057,
       "media_type": "application/json"
     },
     {
