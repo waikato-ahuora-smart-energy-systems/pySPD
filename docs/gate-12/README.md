@@ -68,6 +68,46 @@ the population by executing the historical v5.0.2 shortfall-transfer logic
 against all 139 hash-bound daily inputs and will fail unless exactly 546 unique
 case IDs are recovered.
 
+## Historical population execution
+
+The population oracle is pinned to vSPD v5.0.2 commit
+`3360a91ebd48f2e3cbb52a5e6766d893011054be`. It reconstructs RTD load with
+`dailymode = 0`, uses SCIP for the primary MIP, limits discovery to the first
+historical shortfall decision, and records only shortfalls above `1e-6 MW`.
+The source overlay is fail-closed and hash-addressed; unexpected upstream text
+does not get silently patched.
+
+`HistoricalPopulationRunner` verifies every Gate 1 source size and SHA-256,
+selects every case in each daily GDX, and accepts a daily checkpoint only when
+the progress identities are exact, every selected case has one optimal primary
+solve, all cleanup solves are optimal, and the emitted node evidence is a
+subset of the selected cases. Each atomic checkpoint binds the raw listing,
+progress, and evidence hashes as well as the source, patch, and solver profile.
+Resume skips only a fully matching checkpoint. `HistoricalAffectedManifestBuilder`
+then refuses to emit the final manifest unless it contains exactly 546 unique
+identities across all 139 source hashes.
+
+The first full-day rehearsal on `Pricing_20221106.gdx` selected and completed
+278 cases, with 278 optimal primary solves and 11 optimal cleanup solves. It
+recovered four affected intervals—07:00, 07:05, 07:10, and 17:25—and six
+node-level shortfall records. This rehearsal confirms the enumerator behavior;
+the clean hash-governed 139-day run supplies the acceptance evidence.
+
+Run or resume the governed enumeration with `uv`:
+
+```bash
+uv run --group gdx python -m tools.gate12.enumerate_historical \
+  --source-tree /path/to/clean/vspd-v5.0.2 \
+  --work-directory /path/to/gate12-work \
+  --input-root /path/to/hash-bound/inputs \
+  --inventory docs/gate-1/shortfall-input-inventory.json \
+  --gams-executable /path/to/gams \
+  --system-directory /path/to/gams-system-directory
+```
+
+The command produces per-date checkpoints, `population-summary.json`, and—only
+after the exact declared population is proven—`interval-identity-manifest.json`.
+
 ## Required evidence pack
 
 - `interval-identity-manifest.json`: exactly 546 identities, each bound to one
