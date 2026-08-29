@@ -273,24 +273,45 @@ class HistoricalCaseIndexLoader(Protocol):
 
 
 class GamsTransferCaseIndexLoader:
-    """Read only the canonical case-to-date/time/trading-period GDX symbol."""
+    """Read the canonical mappings and select the disclosed RTD modes only."""
 
     def load(self, path: Path, system_directory: Path) -> HistoricalGdxCaseIndex:
         from gams.transfer import Container
 
         container = Container(system_directory=str(system_directory))
-        container.read(str(path), symbols=["i_dateTimeTradePeriodMap"])
+        container.read(
+            str(path), symbols=["i_dateTimeTradePeriodMap", "i_runMode"]
+        )
         records = container["i_dateTimeTradePeriodMap"].records
-        if records is None:
+        run_mode_records = container["i_runMode"].records
+        if records is None or run_mode_records is None:
             raise EvidenceContractError(
-                "REQ-G12-HISTORICAL: missing GDX trading-period mapping"
+                "REQ-G12-HISTORICAL: missing GDX case-selection mapping"
             )
         periods = {
             (str(row.ca), str(row.dt)): str(row.tp)
             for row in records.itertuples(index=False)
         }
+        study_mode = {
+            str(row.ca): int(float(row.value))
+            for row in run_mode_records.itertuples(index=False)
+            if str(row.casePar) == "studyMode"
+        }
+        return self.select_rtd(periods=periods, study_mode=study_mode)
+
+    @staticmethod
+    def select_rtd(
+        *,
+        periods: dict[tuple[str, str], str],
+        study_mode: dict[str, int],
+    ) -> HistoricalGdxCaseIndex:
+        selected = {
+            key: trading_period
+            for key, trading_period in periods.items()
+            if study_mode.get(key[0]) in {101, 201}
+        }
         return HistoricalGdxCaseIndex(
-            cases=tuple(sorted(periods)), trading_periods=periods
+            cases=tuple(sorted(selected)), trading_periods=selected
         )
 
 
