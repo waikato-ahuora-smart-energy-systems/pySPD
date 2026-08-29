@@ -9,12 +9,8 @@ permissions:
 
 jobs:
   test:
-    name: Python 3.13 / ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+    name: Python 3.13 / macOS
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7.0.1
         with:

@@ -1,6 +1,8 @@
 [project]
 name = "pyspd"
 version = "0.1.0"
+description = "Class-based Pyomo implementation of vSPD under staged validation"
+readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "pyarrow>=18,<23",
