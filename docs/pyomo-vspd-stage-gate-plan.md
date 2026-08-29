@@ -1102,6 +1102,14 @@ Gate 5 passes only when:
 - topology edge cases are classified identically to the reference; and
 - the stratified AC/security corpus has no unexplained material mismatch.
 
+**Execution record:** Gate 5 closed on 29 August 2026 for the qualified macOS
+arm64/HiGHS profile. The pinned GAMS and Pyomo Stage 5 projections have
+identical logical and structural hashes across 29,825 rows, 30,084 columns, and
+73,953 nonzeros; the optimal representative solve passes 29,825 independently
+recomputed checks and finite-difference nodal pricing. CPLEX and Linux x86_64
+remain deferred under ADR-0008 and ADR-0011. See
+`docs/gate-5/closure-decision.md`.
+
 ### Stage 6 — HVDC, discrete behavior, solve semantics, and pricing
 
 **Objective:** prove solver-independent handling of HVDC, the discrete/SOS
