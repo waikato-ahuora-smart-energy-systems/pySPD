@@ -110,11 +110,11 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
     patcher = HistoricalVspdSourcePatcher()
     result = patcher.apply(programs)
 
-    assert result.profile == "historical-v5.0.2-scip-first-loop"
+    assert result.profile == "historical-v5.0.2-dailymode1-scip-first-loop"
     assert len(result.logical_sha256) == 64
     settings = (programs / "vSPDsettings.inc").read_text()
     solve = (programs / "vSPDsolve.gms").read_text()
-    assert "Scalar dailymode                         / 0 / ;" in settings
+    assert "Scalar dailymode                         / 1 / ;" in settings
     assert "option lp = HiGHS ;" in solve
     assert "option mip = SCIP ;" in solve
     assert "EnergyShortfallMW(t,n) > 0.000001" in solve
