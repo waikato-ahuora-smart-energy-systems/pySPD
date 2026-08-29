@@ -334,34 +334,33 @@ class GamsTransferFirstLoopCaseLoader:
                 (str(row.n), name)
             ] = float(row.value)
 
-        node_buses: dict[tuple[str, str, str], set[str]] = defaultdict(set)
+        node_buses: dict[
+            tuple[str, str], dict[str, set[str]]
+        ] = defaultdict(lambda: defaultdict(set))
         for row in node_bus.itertuples(index=False):
-            node_buses[(str(row.ca), str(row.dt), str(row.n))].add(str(row.b))
-        bus_islands: dict[tuple[str, str, str], set[str]] = defaultdict(set)
+            node_buses[(str(row.ca), str(row.dt))][str(row.n)].add(str(row.b))
+        bus_islands: dict[
+            tuple[str, str], dict[str, set[str]]
+        ] = defaultdict(lambda: defaultdict(set))
         for row in bus_island.itertuples(index=False):
-            bus_islands[(str(row.ca), str(row.dt), str(row.b))].add(str(row.isl))
-        electrical = {
-            (str(row.ca), str(row.dt), str(row.b)): float(row.value)
-            for row in bus_electrical.itertuples(index=False)
-        }
+            bus_islands[(str(row.ca), str(row.dt))][str(row.b)].add(str(row.isl))
+        electrical: dict[tuple[str, str], dict[str, float]] = defaultdict(dict)
+        for row in bus_electrical.itertuples(index=False):
+            electrical[(str(row.ca), str(row.dt))][str(row.b)] = float(row.value)
 
         cases: list[HistoricalFirstLoopCase] = []
         for key, trading_period in periods.items():
             case_id, date_time = key
             if study_mode.get(case_id) not in {101, 201}:
                 continue
-            mappings = {
-                node: buses
-                for (mapped_case, mapped_time, node), buses in node_buses.items()
-                if (mapped_case, mapped_time) == key
-            }
+            mappings = node_buses[key]
             market_islands = {
                 node: tuple(
                     sorted(
                         {
                             island
                             for bus in buses
-                            for island in bus_islands.get((*key, bus), set())
+                            for island in bus_islands[key].get(bus, set())
                         }
                     )
                 )
@@ -372,7 +371,7 @@ class GamsTransferFirstLoopCaseLoader:
                     "REQ-G12-POPULATION: node lacks a market-island mapping"
                 )
             electrical_sum = {
-                node: sum(electrical.get((*key, bus), 0.0) for bus in buses)
+                node: sum(electrical[key].get(bus, 0.0) for bus in buses)
                 for node, buses in mappings.items()
             }
             cases.append(
