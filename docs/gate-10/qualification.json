@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "gate": 10,
+  "decision": "pass-amended-engineering-boundary",
+  "version": "0.1.0",
+  "formulation_ids": ["vspd-v5.0.6-reserve"],
+  "platform": "macos-arm64",
+  "package_management": "uv-only",
+  "release_manifest_sha256": "a050c09c79c5ad18382bf2859f2809f6509038999ee51de8117cc8bd5372fa09",
+  "distribution_status": "held",
+  "artifacts": {
+    "wheel": {
+      "sha256": "ed02e7a7b3572b7ca9b3507e0d3e4446b29c4971157108368f0bb19575891305",
+      "isolated_install": "passed",
+      "cli_formulations": ["vspd-v5.0.6-reserve"]
+    },
+    "sdist_sha256": "7db6db9f6e3adbb7f9c0e21d6b945342d01d05d50e15bb7feafda5cb33e94bb8",
+    "sbom_sha256": "2971672effa3dd92f37cda349c80cc2fd4adc6141eab59c6d12f1032d3dce2d0"
+  },
+  "controls": {
+    "immutable_canary": "passed",
+    "append_only_quarantine": "passed",
+    "manifest_tamper_detection": "passed",
+    "missing_artifact_fail_closed": "passed",
+    "rollback_rehearsal": "documented",
+    "incident_triage": "documented"
+  },
+  "verification": {
+    "focused_pytest": {"passed": 7, "failed": 0},
+    "full_pytest": {"passed": 246, "skipped": 1, "failed": 0},
+    "ruff": "passed",
+    "mypy": "passed",
+    "uv_sync_frozen": "passed",
+    "uv_sync_frozen_oracle": "passed",
+    "uv_build": "passed"
+  },
+  "deferred": [
+    "public-distribution-pending-legal-decisions",
+    "linux-x86_64-ci-execution",
+    "cplex-strict-compatibility",
+    "complete-t4-replay",
+    "complete-day-performance",
+    "strict-e2e-price-and-report-parity"
+  ],
+  "claim": {
+    "engineering_release_controls_closed": true,
+    "public_distribution_authorized": false,
+    "complete_e2e_parity": false
+  },
+  "passed": true
+}

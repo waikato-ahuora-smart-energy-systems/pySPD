@@ -1,0 +1,85 @@
+{
+  "artifacts": [
+    {
+      "name": "dist/pyspd-0.1.0-py3-none-any.whl",
+      "sha256": "ed02e7a7b3572b7ca9b3507e0d3e4446b29c4971157108368f0bb19575891305",
+      "size": 142357
+    },
+    {
+      "name": "dist/pyspd-0.1.0.tar.gz",
+      "sha256": "7db6db9f6e3adbb7f9c0e21d6b945342d01d05d50e15bb7feafda5cb33e94bb8",
+      "size": 535688
+    }
+  ],
+  "distribution_status": "held",
+  "evidence_sha256": "54ebc21d22eeefdf9736155ed91aec163dbbfb9577701a7e0b3fbd053724e1e4",
+  "formulation_ids": [
+    "vspd-v5.0.6-reserve"
+  ],
+  "legal_decisions": [
+    {
+      "decision_id": "LIC-001",
+      "status": "pending"
+    },
+    {
+      "decision_id": "LIC-002",
+      "status": "pending"
+    },
+    {
+      "decision_id": "LIC-003",
+      "status": "pending"
+    },
+    {
+      "decision_id": "LIC-004",
+      "status": "pending"
+    },
+    {
+      "decision_id": "LIC-005",
+      "status": "pending"
+    },
+    {
+      "decision_id": "LIC-006",
+      "status": "pending"
+    },
+    {
+      "decision_id": "LIC-007",
+      "status": "pending"
+    },
+    {
+      "decision_id": "LIC-008",
+      "status": "pending"
+    },
+    {
+      "decision_id": "LIC-009",
+      "status": "pending"
+    },
+    {
+      "decision_id": "LIC-010",
+      "status": "pending"
+    },
+    {
+      "decision_id": "LIC-011",
+      "status": "pending"
+    },
+    {
+      "decision_id": "LIC-012",
+      "status": "pending"
+    },
+    {
+      "decision_id": "LIC-013",
+      "status": "pending"
+    },
+    {
+      "decision_id": "LIC-014",
+      "status": "pending"
+    }
+  ],
+  "logical_sha256": "a050c09c79c5ad18382bf2859f2809f6509038999ee51de8117cc8bd5372fa09",
+  "sbom": {
+    "name": "sbom.cdx.json",
+    "sha256": "2971672effa3dd92f37cda349c80cc2fd4adc6141eab59c6d12f1032d3dce2d0",
+    "size": 19633
+  },
+  "schema_version": 1,
+  "version": "0.1.0"
+}

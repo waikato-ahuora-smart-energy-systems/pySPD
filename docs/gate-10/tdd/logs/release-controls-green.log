@@ -1,0 +1,9 @@
+Command: uv run pytest tests/release -q
+Exit code: 0
+
+.......                                                                  [100%]
+7 passed in 0.72s
+
+Static checks:
+- uv run ruff check src/pyspd/canary.py src/pyspd/release.py tests/release: passed
+- uv run mypy src/pyspd/canary.py src/pyspd/release.py: passed

@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G10-RELEASE-CONTROLS",
+  "requirement_ids": [
+    "REQ-G10-CANARY",
+    "REQ-G10-QUARANTINE",
+    "REQ-G10-RELEASE-MANIFEST",
+    "REQ-G10-PACKAGING"
+  ],
+  "production_paths": [
+    "src/pyspd/canary.py",
+    "src/pyspd/release.py"
+  ],
+  "parent_commit": "e925001dd5dd59d3bc5bc1070b2f84efbe8f68b0",
+  "implementation_commit": "1e937dc7b5035f5573c4820cd39899f24009cad1",
+  "test_patch_sha256": "d645ae98b21584808e355fa6ee6c6b1635b97ce90e332baac9ff6bb4f259f1a9",
+  "test_files": [
+    {
+      "path": "tests/release/test_canary.py",
+      "sha256": "77bc15fd65e3d88d3a25a6a8b27a0da4beb993d368359482c5b12b79f0925f9b"
+    },
+    {
+      "path": "tests/release/test_release_manifest.py",
+      "sha256": "37ad899488a1c66d066ca852a71e42bbb463855e162ae3da6713d83d4cb50c34"
+    },
+    {
+      "path": "tests/release/test_packaging_contract.py",
+      "sha256": "892eb1337808a17db22c9f7d2a4b9de7909dd2005803ce64261e03dfafd64edc"
+    }
+  ],
+  "command": "uv run pytest tests/release -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "b6a3d9b56b62ecf75e6be635b8cb9578f5fd94a6d0768be553ce0b8c91263ff1",
+  "red": {
+    "timestamp": "2026-08-29T22:29:00+12:00",
+    "exit_code": 2,
+    "output_sha256": "c37ec232acb01ada276c298f8ff10f280be0515f677de5286a42bb3cc1e9d27e",
+    "duration_seconds": 0.17,
+    "expected_failure_fingerprint": "REQ-G10-RELEASE-CONTROLS: canary, quarantine, release-manifest, and packaging controls are absent",
+    "log_uri": "docs/gate-10/tdd/logs/release-controls-red.log"
+  },
+  "green": {
+    "timestamp": "2026-08-29T22:33:00+12:00",
+    "exit_code": 0,
+    "output_sha256": "e44c17bffa1949067657409d0d046a48e82a36287423addebf54de7d6a6c9f84",
+    "duration_seconds": 0.72,
+    "log_uri": "docs/gate-10/tdd/logs/release-controls-green.log"
+  },
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}

@@ -4,8 +4,8 @@
 
 | Document field | Value |
 |---|---|
-| Status | Controlled reference; executed through Gate 9 |
-| Document version | 0.3 |
+| Status | Controlled reference; executed through Gate 10 |
+| Document version | 0.4 |
 | Date | 29 August 2026 |
 | Repository | `pySPD` |
 | Reference compatibility baseline | vSPD `v5.0.6`, commit `21b1cf33f5607399331dcb1c03270348def5ccc8` |
@@ -14,7 +14,7 @@
 | Primary modelling framework | Pyomo |
 | Initial portability solver | HiGHS |
 | Historical parity solver | CPLEX |
-| Next formal review | Gate 10 |
+| Next formal review | Gate 11 |
 
 ## 1. Purpose and authority
 
@@ -1413,17 +1413,18 @@ are exact; detailed physical rows are classified as SCIP alternative-optimum
 surfaces. Complete T4, matched complete-day performance, CPLEX, and strict E2E
 price/report parity remain Gate 12. See `docs/gate-9/`.
 
-### Stage 10 — Independent verification, packaging, and release
+### Stage 10 — Project-directed verification, packaging, and release controls
 
-**Objective:** obtain assurance independent of implementation and release a
-reproducible, supportable package with accurately scoped claims.
+**Objective:** obtain machine-verifiable project assurance and prepare a
+reproducible, supportable package with accurately scoped claims. Under project
+direction, no independent validation reviewer or approval is required. Legal
+and licensing authorization remains a distinct fail-closed condition.
 
 **Work:**
 
-- provide an independent reviewer or auditor with source, requirements,
-  environment, corpus access, runners, and evidence without undocumented manual
-  steps;
-- rerun a reviewer-selected sample and adversarial cases from raw inputs;
+- provide the project-directed validator with source, requirements, environment,
+  corpus access, runners, and evidence without undocumented manual steps;
+- rerun selected samples and adversarial cases from raw inputs;
 - review source traceability, model matrix, solve/pricing semantics, numerical
   policy, discrepancy classifications, and report claims;
 - complete security, dependency, licence, attribution, SBOM, and release-artifact
@@ -1435,22 +1436,35 @@ reproducible, supportable package with accurately scoped claims.
 - rehearse rollback, issue triage, historical rerun, and daily canary
   procedures.
 
-#### Gate 10 — Release authorized
+#### Gate 10 — Engineering release controls authorized
 
-Gate 10 passes only when:
+Gate 10's engineering-control boundary passes only when:
 
-- independent reviewers can reproduce the sampled evidence from raw inputs;
+- the project-directed machine validator can reproduce the sampled evidence
+  from raw inputs;
 - all material findings are closed or reflected as explicit release exclusions;
 - the release claim uses only the maturity label actually earned;
-- licences, notices, dependency provenance, and solver requirements are complete;
+- dependency provenance and solver requirements are complete, and any pending
+  licence or notice decision forces distribution status `held`;
 - security and supply-chain checks pass;
 - support ownership, severity levels, rollback, and disclosure processes are
   operational;
 - the continuous validation canary can quarantine and report a newly introduced
   mismatch without changing a baseline;
 - documentation is consistent with tested behavior; and
-- the sponsor, market SME, technical lead, validation lead, and release owner
-  sign the release decision.
+- the machine-readable gate decision records every exclusion and hold.
+
+Gate 10 engineering closure does not authorize public distribution. Public
+distribution additionally requires every applicable Gate 0 legal/licensing
+decision to permit it; the release manifest fails closed to `held` otherwise.
+
+**Execution record:** Gate 10 closed on 29 August 2026 at the amended macOS
+arm64 engineering-release-control boundary. Immutable canaries, append-only
+quarantine, tamper-detected release manifests, uv wheel/sdist build, isolated
+wheel installation, CycloneDX SBOM, macOS-only CI, and operational documentation
+pass. All `LIC-001`–`LIC-014` decisions remain pending, so public distribution
+is held. Strict parity, CPLEX, complete T4/full-day evidence, and physical report
+determinism remain Gate 12. See `docs/gate-10/`.
 
 ### Stage 11 — Controlled formulation evolution
 
