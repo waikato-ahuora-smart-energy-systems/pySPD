@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G2-LEDGER",
+  "requirement_ids": ["REQ-G2-LEDGER"],
+  "production_paths": ["src/pyspd/probity.py", "tools/probity_audit.py"],
+  "parent_commit": "1c798f68aa7cfa653ca22c08f429ec19e486e5ac",
+  "implementation_commit": "961640799a1dab456fd1125169ab5e5b1edac8ae",
+  "test_patch_sha256": "f4e37df14e323a2e07d9367d78652c4a2e04c231adbd36ad468a6f7744090f5c",
+  "test_files": [
+    {"path": "tests/probity/test_ledger.py", "sha256": "a74082d4ce6eea366a1ff680f75244afbc407ec0100dfda5c12d2b50f6027e29"},
+    {"path": "tests/probity/test_evidence.py", "sha256": "dc3df78dfbd001de12070710538c13b4ca63f148a4c150cec7843d7b3b294c8b"}
+  ],
+  "command": "uv run pytest tests/probity/test_ledger.py tests/probity/test_evidence.py -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "34c1c38cdee1b6986088d2e8550e312e59c586a8278248749dc5331ed947279d",
+  "red": {"timestamp": "2026-08-29T11:42:00+12:00", "exit_code": 1, "output_sha256": "3eac52c3b65e06b34868efb29ab8844d1fdb49b213618914cb9f1b55362ce73b", "duration_seconds": 0.13, "expected_failure_fingerprint": "REQ-G2-LEDGER: repository evidence coverage audit is not implemented", "log_uri": "docs/gate-2/tdd/logs/ledger-red.log"},
+  "green": {"timestamp": "2026-08-29T12:12:00+12:00", "exit_code": 0, "output_sha256": "fe911bbc9d4db538761bb599f864bf9bb7d756eb50840a0db526ff8ba698a46e", "duration_seconds": 0.98, "log_uri": "docs/gate-2/tdd/logs/ledger-green.log"},
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}

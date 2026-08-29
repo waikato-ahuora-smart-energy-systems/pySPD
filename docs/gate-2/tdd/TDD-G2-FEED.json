@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G2-FEED",
+  "requirement_ids": ["REQ-G2-FEED", "REQ-G2-GDX-SCALE"],
+  "production_paths": ["src/pyspd/data/__init__.py", "src/pyspd/data/feed.py", "src/pyspd/data/gdx.py"],
+  "parent_commit": "1c798f68aa7cfa653ca22c08f429ec19e486e5ac",
+  "implementation_commit": "961640799a1dab456fd1125169ab5e5b1edac8ae",
+  "test_patch_sha256": "2488c227ced49e34c358dbbcc5d10df99c933c26452043734c105ffa70c9370b",
+  "test_files": [
+    {"path": "tests/data/test_canonical_feed.py", "sha256": "67f3e25e7854c9d31c1ae0f5a14ffaea762078c4248fe4fbfe7c0cc863b488d1"},
+    {"path": "tests/data/test_gdx_feed_integration.py", "sha256": "2f6fa0629bc1eee84c1814bf044703ff8926ee485fc21b0f235a40cf6afb4bc0"}
+  ],
+  "command": "uv run --group gdx pytest tests/data/test_canonical_feed.py tests/data/test_gdx_feed_integration.py -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "34c1c38cdee1b6986088d2e8550e312e59c586a8278248749dc5331ed947279d",
+  "red": {"timestamp": "2026-08-29T11:52:00+12:00", "exit_code": 1, "output_sha256": "327ea4a7439135fc9805f6c64aca386d2650db84a90d002ecea60290603ae49a", "duration_seconds": 0.62, "expected_failure_fingerprint": "Failed: DID NOT RAISE CanonicalFeedError", "log_uri": "docs/gate-2/tdd/logs/feed-red.log"},
+  "green": {"timestamp": "2026-08-29T12:12:00+12:00", "exit_code": 0, "output_sha256": "d98318e8d5cfccc672614e21084bdc7b9e91a71fe7197535e1e1e04dbcf64650", "duration_seconds": 0.64, "log_uri": "docs/gate-2/tdd/logs/feed-green.log"},
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G2-VALIDATION",
+  "requirement_ids": ["REQ-G2-VALIDATION", "REQ-G2-SCHEMA-VARIANTS"],
+  "production_paths": ["src/pyspd/data/catalog.py", "src/pyspd/data/validation.py"],
+  "parent_commit": "1c798f68aa7cfa653ca22c08f429ec19e486e5ac",
+  "implementation_commit": "961640799a1dab456fd1125169ab5e5b1edac8ae",
+  "test_patch_sha256": "f80860aee358f30cdb649c365043a3bb8460fc073f8637398ff15af09443d67d",
+  "test_files": [
+    {"path": "tests/data/test_input_validation.py", "sha256": "46e753027bfb4ffb49c7095e3e33b9be8c7c2ba4129d4c0730e2458857228732"},
+    {"path": "tests/data/test_symbol_catalog.py", "sha256": "452d57e08305eb03ec513a6bf9bfe2cbb3e474cfb7b69c9657a9af1cd6a33a8b"}
+  ],
+  "command": "uv run pytest tests/data/test_input_validation.py tests/data/test_symbol_catalog.py -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "34c1c38cdee1b6986088d2e8550e312e59c586a8278248749dc5331ed947279d",
+  "red": {"timestamp": "2026-08-29T11:25:00+12:00", "exit_code": 1, "output_sha256": "a87f19fdc99a15dc9107a5b026e9108bd75d288eef2ca2c93c07e215b174f1ad", "duration_seconds": 0.31, "expected_failure_fingerprint": "REQ-G2-VALIDATION allocation_sum", "log_uri": "docs/gate-2/tdd/logs/validation-red.log"},
+  "green": {"timestamp": "2026-08-29T12:12:00+12:00", "exit_code": 0, "output_sha256": "2b097a827890edea87e568af0ca855016c4fd0a75fa0335018aaef97a93007d7", "duration_seconds": 0.34, "log_uri": "docs/gate-2/tdd/logs/validation-green.log"},
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}

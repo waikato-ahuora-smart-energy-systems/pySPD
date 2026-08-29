@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G2-SOLVER-EDGE",
+  "requirement_ids": ["REQ-G2-SOLVER-EDGE"],
+  "production_paths": ["src/pyspd/solver.py"],
+  "parent_commit": "1c798f68aa7cfa653ca22c08f429ec19e486e5ac",
+  "implementation_commit": "961640799a1dab456fd1125169ab5e5b1edac8ae",
+  "test_patch_sha256": "eef24effd74011dc6bfd1cb8b6e58353074ac265436996cb57357dc9a906bf1c",
+  "test_files": [
+    {"path": "tests/solver/test_highs_backend.py", "sha256": "27d0fbe19b37c106807f580c30049465c395332ca658a9ac22d9dd4a21ad1efc"}
+  ],
+  "command": "uv run --group highs pytest tests/solver/test_highs_backend.py -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "34c1c38cdee1b6986088d2e8550e312e59c586a8278248749dc5331ed947279d",
+  "red": {"timestamp": "2026-08-29T11:28:00+12:00", "exit_code": 1, "output_sha256": "24c463ad1b35785b2847d2bc0e4a04dee4909528820437b377b125580694e597", "duration_seconds": 0.38, "expected_failure_fingerprint": "REQ-G2-SOLVER-EDGE HighsBackend() takes no arguments", "log_uri": "docs/gate-2/tdd/logs/solver-edge-red.log"},
+  "green": {"timestamp": "2026-08-29T12:12:00+12:00", "exit_code": 0, "output_sha256": "62a4c6f50ca1b1c8559ad035a3e20dde28e7bb2f3ea910a2352d4ee6d128e06a", "duration_seconds": 0.39, "log_uri": "docs/gate-2/tdd/logs/solver-edge-green.log"},
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}

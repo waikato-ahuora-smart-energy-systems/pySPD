@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G2-CONTRACTS",
+  "requirement_ids": ["REQ-G2-CONTRACTS"],
+  "production_paths": ["src/pyspd/contracts.py"],
+  "parent_commit": "1c798f68aa7cfa653ca22c08f429ec19e486e5ac",
+  "implementation_commit": "961640799a1dab456fd1125169ab5e5b1edac8ae",
+  "test_patch_sha256": "23a5ac514e322d77bc34b850e090abe90215eb8d0203189f4726129dd794c15b",
+  "test_files": [
+    {"path": "tests/contracts/test_runtime_contracts.py", "sha256": "a705eaf02a2b9bf6a46709016056595b930813ca41c7d92f83ce8a07549fd25a"}
+  ],
+  "command": "uv run pytest tests/contracts/test_runtime_contracts.py -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "34c1c38cdee1b6986088d2e8550e312e59c586a8278248749dc5331ed947279d",
+  "red": {"timestamp": "2026-08-29T11:20:00+12:00", "exit_code": 1, "output_sha256": "32028fd2c01f717b8b2e0f4c560c52d37bc9b557e67205f8a71cd0914ecb5d55", "duration_seconds": 0.18, "expected_failure_fingerprint": "REQ-G2-CONTRACTS: configuration options remain externally mutable", "log_uri": "docs/gate-2/tdd/logs/contracts-red.log"},
+  "green": {"timestamp": "2026-08-29T12:12:00+12:00", "exit_code": 0, "output_sha256": "44091516c6f7d278c9900d796163d45f95d1ad1819370ffeeaf887bc704f2e38", "duration_seconds": 0.19, "log_uri": "docs/gate-2/tdd/logs/contracts-green.log"},
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G2-ASSEMBLY-SIGNATURE",
+  "requirement_ids": ["REQ-G2-ASSEMBLY-SIGNATURE"],
+  "production_paths": ["src/pyspd/architecture.py"],
+  "parent_commit": "1c798f68aa7cfa653ca22c08f429ec19e486e5ac",
+  "implementation_commit": "961640799a1dab456fd1125169ab5e5b1edac8ae",
+  "test_patch_sha256": "93215560712652f5dc440cfaaafb40449578df3242369d25fbdca39d2b228fac",
+  "test_files": [
+    {"path": "tests/architecture/test_assembly.py", "sha256": "7416684c0f1217f8562da3a7b934ad598d999982a566125127af21fd8b7ddb0b"}
+  ],
+  "command": "uv run pytest tests/architecture/test_assembly.py -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "34c1c38cdee1b6986088d2e8550e312e59c586a8278248749dc5331ed947279d",
+  "red": {"timestamp": "2026-08-29T11:34:00+12:00", "exit_code": 1, "output_sha256": "df5dd135ca5dd7b8953f3af588970c70718c2ff010067e4a48ffe19a4546cede", "duration_seconds": 0.30, "expected_failure_fingerprint": "BuiltModel has no structural_signature", "log_uri": "docs/gate-2/tdd/logs/assembly-signature-red.log"},
+  "green": {"timestamp": "2026-08-29T12:12:00+12:00", "exit_code": 0, "output_sha256": "d7e4ad4c69bf37e691129daa48aca98483bae4729f72c38e48a1bd111dffb734", "duration_seconds": 0.31, "log_uri": "docs/gate-2/tdd/logs/assembly-signature-green.log"},
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}

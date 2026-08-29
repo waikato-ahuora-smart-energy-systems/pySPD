@@ -1,0 +1,3 @@
+FAILED tests/data/test_input_validation.py::test_allocation_totals_fail_with_actionable_identity
+Failed: DID NOT RAISE InputValidationError: REQ-G2-VALIDATION allocation_sum
+1 failed in 0.31s

@@ -1,0 +1,3 @@
+FAILED tests/probity/test_ledger.py::test_gate2_ledger_covers_every_changed_production_path
+AssertionError: REQ-G2-LEDGER: repository evidence coverage audit is not implemented
+1 failed in 0.13s

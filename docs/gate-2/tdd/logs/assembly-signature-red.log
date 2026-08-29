@@ -1,0 +1,3 @@
+FAILED tests/architecture/test_assembly.py::test_assembly_is_dependency_ordered_and_deterministic
+AttributeError: REQ-G2-ASSEMBLY-SIGNATURE BuiltModel has no structural_signature
+1 failed in 0.30s

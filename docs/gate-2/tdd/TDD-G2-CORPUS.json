@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G2-CORPUS",
+  "requirement_ids": ["REQ-G2-CORPUS"],
+  "production_paths": ["tools/gate2/__init__.py", "tools/gate2/corpus.py"],
+  "parent_commit": "1c798f68aa7cfa653ca22c08f429ec19e486e5ac",
+  "implementation_commit": "961640799a1dab456fd1125169ab5e5b1edac8ae",
+  "test_patch_sha256": "091b63b88b480f6fff8ad7cb298dd7c34bec3def59fe7e6f98ff8b00ec009e7c",
+  "test_files": [
+    {"path": "tests/data/test_corpus_qualification.py", "sha256": "395f7b8d322471303c30f950bd34b2135acde3498bb03034e31d4a04e916fe2e"}
+  ],
+  "command": "uv run pytest tests/data/test_corpus_qualification.py -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "34c1c38cdee1b6986088d2e8550e312e59c586a8278248749dc5331ed947279d",
+  "red": {"timestamp": "2026-08-29T11:31:00+12:00", "exit_code": 1, "output_sha256": "6269c5fdbffa7bff4de98ca36daa54c27c03482da2a54e689f2c669263420e72", "duration_seconds": 0.61, "expected_failure_fingerprint": "REQ-G2-CORPUS: resumable hash-bound qualification is absent", "log_uri": "docs/gate-2/tdd/logs/corpus-red.log"},
+  "green": {"timestamp": "2026-08-29T12:12:00+12:00", "exit_code": 0, "output_sha256": "8061d30d23b5c5346a7b785068c9bedd8da31ad3104c9aeec5cf56815e6451a1", "duration_seconds": 0.62, "log_uri": "docs/gate-2/tdd/logs/corpus-green.log"},
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}

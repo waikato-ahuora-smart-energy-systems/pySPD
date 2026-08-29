@@ -1,0 +1,3 @@
+FAILED tests/data/test_canonical_feed.py::test_feed_rejects_artifact_paths_outside_its_root
+Failed: DID NOT RAISE CanonicalFeedError: REQ-G2-FEED artifact path escapes feed root
+1 failed in 0.62s

@@ -1,0 +1,3 @@
+FAILED tests/data/test_corpus_qualification.py::test_corpus_qualification_is_resumable_and_hash_bound
+AssertionError: REQ-G2-CORPUS: resumable hash-bound qualification is absent
+1 failed in 0.61s
