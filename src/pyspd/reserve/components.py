@@ -578,7 +578,11 @@ class ReserveRiskComponent(ModelComponent):
                         if (p_ca, p_dt, primary) == (ca, dt, offer)
                     )
                 )
-                - effective[ca, dt, island, reserve_class, risk]
+                - (
+                    effective[ca, dt, island, reserve_class, risk]
+                    if self.requirement_adjustments_in_risk
+                    else 0.0
+                )
                 - (
                     _optional(shortfall_unit, key)
                     if self.requirement_adjustments_in_risk
