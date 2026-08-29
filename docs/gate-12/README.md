@@ -125,6 +125,11 @@ uv run --group gdx python -m tools.gate12.enumerate_historical \
 The command produces per-date checkpoints, `population-summary.json`, and—only
 after the exact declared population is proven—`interval-identity-manifest.json`.
 
+`ApplicationConfiguration.case_ids` is the governed PySPD replay selector. The
+ordered identity list is included in the configuration hash; duplicates, blank
+identities, and any requested identity absent from the source selection surface
+fail before a solve. An empty tuple remains the explicit complete-day selection.
+
 For isolated partial inventories, pass `--execution-scope shard`. A complete
 shard then exits successfully and records `shard_complete: true`, while
 `population_passed` remains false and no interval manifest can be emitted.

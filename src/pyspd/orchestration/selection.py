@@ -76,6 +76,13 @@ class DailyCaseSelector:
         discovered.sort(
             key=lambda item: (_date_time_or_max(item.date_time), item.ordinal)
         )
+        discovered_ids = {item.case_id for item in discovered}
+        missing_ids = selected_ids - discovered_ids
+        if missing_ids:
+            raise OrchestrationError(
+                "requested case IDs are absent from the selected source surface: "
+                + ", ".join(sorted(missing_ids))
+            )
         return tuple(
             DailyCase(
                 case_id=item.case_id,

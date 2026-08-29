@@ -5,7 +5,7 @@
 | `G12-01` | Exactly 546 unique affected identities across all 139 Gate 1 hashes | All 139 hashes screened; 434 diagnostic candidates and a 112-count gap recorded without claiming membership; corrected daily-mode benchmark completed 305/305 optimal broad-surface cases and is explicitly excluded; exact RTD-only shard execution is in progress | In progress |
 | `G12-02` | All 546 cases replayed through pinned GAMS and PySPD | Population must complete before replay | Pending |
 | `G12-03` | Complete normal, outage, high/negative-price, scarcity, islanding, 46-period, and 50-period days | Required categories enforced by `Gate12EvidenceIndex`; Gate 1 DST inputs are hash-bound | Pending execution |
-| `G12-04` | Identical selection, order, prior-dispatch initialization, and fallback path | Case-order and state-transition surfaces mandatory in each E2E case/day record | Pending execution |
+| `G12-04` | Identical selection, order, prior-dispatch initialization, and fallback path | Exact hash-bound application `case_ids` selection now fails on missing/duplicate identities; case-order and state-transition comparisons remain pending execution | Partial |
 | `G12-05` | Primary physics, objective, and fixed-discrete pricing state parity | Portable v16 representative objective and independent validation pass | Partial |
 | `G12-06` | Raw/repaired/node/reserve/published price parity or valid case-specific certificate | Portable v16 reserve certificate passes; 389 v16 node prices remain unresolved | Open |
 | `G12-07` | Every in-scope report identity and field compared | Report-field surface and report hashes are mandatory in the closure index | Pending execution |

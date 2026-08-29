@@ -52,6 +52,7 @@ class ApplicationConfiguration:
     output_directory: Path
     source_sha256: str
     gams_system_directory: Path
+    case_ids: tuple[str, ...] = ()
     maximum_solve_loops: int = 5
     price_rounding_decimals: int = 5
 
@@ -62,12 +63,17 @@ class ApplicationConfiguration:
         object.__setattr__(self, "input_path", input_path)
         object.__setattr__(self, "output_directory", output)
         object.__setattr__(self, "gams_system_directory", system)
+        object.__setattr__(self, "case_ids", tuple(self.case_ids))
         if not self.formulation_id.strip():
             raise ConfigurationError("formulation_id must be explicit")
         if not input_path.is_file():
             raise ConfigurationError(f"input file does not exist: {input_path}")
         if not system.is_dir():
             raise ConfigurationError(f"GAMS system directory does not exist: {system}")
+        if len(set(self.case_ids)) != len(self.case_ids) or any(
+            not case_id.strip() for case_id in self.case_ids
+        ):
+            raise ConfigurationError("case_ids must be unique and non-empty")
         if _file_sha256(input_path) != self.source_sha256:
             raise ConfigurationError("input source hash mismatch")
         if self.maximum_solve_loops <= 0:
@@ -80,6 +86,7 @@ class ApplicationConfiguration:
         payload = {
             "formulation_id": self.formulation_id,
             "input_name": self.input_path.name,
+            "case_ids": list(self.case_ids),
             "maximum_solve_loops": self.maximum_solve_loops,
             "price_rounding_decimals": self.price_rounding_decimals,
             "source_sha256": self.source_sha256,
@@ -97,6 +104,8 @@ class ApplicationConfiguration:
             raise ConfigurationError(f"unknown configuration fields: {sorted(unknown)}")
         for field in ("input_path", "output_directory", "gams_system_directory"):
             payload[field] = Path(payload[field])
+        if "case_ids" in payload:
+            payload["case_ids"] = tuple(payload["case_ids"])
         return cls(**payload)
 
 
@@ -149,7 +158,7 @@ class PyspdApplication:
             else "vspd-v5.0.6"
         )
         selector = DailyCaseSelector()
-        selected = selector.select(symbols)
+        selected = selector.select(symbols, case_ids=configuration.case_ids)
         prepared = []
         for specification in selected:
             case_data = selector.case_data(

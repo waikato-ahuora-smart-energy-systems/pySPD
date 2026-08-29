@@ -26,6 +26,17 @@ def test_application_configuration_is_strict_and_hash_bound(tmp_path) -> None:
     assert len(config.logical_sha256) == 64
     assert config.input_path == source.resolve()
 
+    selected = ApplicationConfiguration(
+        formulation_id=FORMULATION,
+        input_path=source,
+        output_directory=tmp_path / "selected-output",
+        source_sha256="0dd67251795fcbceeac3c5728b868d16f2ecffce6e710acc84fc9bff043cfaf8",
+        gams_system_directory=tmp_path,
+        case_ids=("CASE-2", "CASE-1"),
+    )
+    assert selected.case_ids == ("CASE-2", "CASE-1")
+    assert selected.logical_sha256 != config.logical_sha256
+
     try:
         ApplicationConfiguration(
             formulation_id=FORMULATION,
@@ -38,6 +49,28 @@ def test_application_configuration_is_strict_and_hash_bound(tmp_path) -> None:
         assert "hash" in str(error)
     else:  # pragma: no cover - assertion guard
         raise AssertionError("source hash mismatch was accepted")
+
+
+def test_application_configuration_rejects_ambiguous_case_selection(tmp_path) -> None:
+    source = tmp_path / "case.gdx"
+    source.write_bytes(b"synthetic-gdx-placeholder")
+
+    for case_ids in (("CASE-1", "CASE-1"), ("",)):
+        try:
+            ApplicationConfiguration(
+                formulation_id=FORMULATION,
+                input_path=source,
+                output_directory=tmp_path / "output",
+                source_sha256=(
+                    "0dd67251795fcbceeac3c5728b868d16f2ecffce6e710acc84fc9bff043cfaf8"
+                ),
+                gams_system_directory=tmp_path,
+                case_ids=case_ids,
+            )
+        except ConfigurationError as error:
+            assert "case_ids" in str(error)
+        else:  # pragma: no cover - assertion guard
+            raise AssertionError("ambiguous case selection was accepted")
 
 
 def test_application_exposes_only_registered_formulations() -> None:

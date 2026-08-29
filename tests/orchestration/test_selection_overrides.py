@@ -12,6 +12,7 @@ from pyspd.orchestration import (
     OverrideScope,
     ScheduleType,
 )
+from pyspd.orchestration.types import OrchestrationError
 from pyspd.preprocess.input import CaseInput
 from tests.preprocess.conftest import make_case
 
@@ -47,6 +48,17 @@ def test_daily_selector_preserves_source_order_and_filters_zero_duration() -> No
     ] == [("C1", "1", 300.0)]
     zero = _with_publication(make_case(), 0.0)
     assert DailyCaseSelector().select(zero.symbols, publication_only=True) == ()
+
+
+def test_daily_selector_rejects_requested_case_missing_from_source() -> None:
+    case = _with_publication(make_case())
+
+    try:
+        DailyCaseSelector().select(case.symbols, case_ids=("MISSING",))
+    except OrchestrationError as error:
+        assert "requested case IDs" in str(error)
+    else:  # pragma: no cover - assertion guard
+        raise AssertionError("missing requested case was silently ignored")
 
 
 def test_case_selector_isolates_every_case_scoped_symbol() -> None:
