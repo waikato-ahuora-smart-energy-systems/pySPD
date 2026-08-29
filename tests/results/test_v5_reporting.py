@@ -14,7 +14,6 @@ from tests.orchestration.conftest import (
     make_prepared,
 )
 
-
 FORMULATION = "vspd-v5.0.6-reserve"
 
 
@@ -56,7 +55,10 @@ def test_v5_profile_selects_complete_typed_report_surface() -> None:
     assert bundle.provenance.formulation_id == FORMULATION
     assert bundle.tables["node"].rows
     assert bundle.tables["audit"].rows
-    assert all(table.definition.formulation_id == FORMULATION for table in bundle.tables.values())
+    assert all(
+        table.definition.formulation_id == FORMULATION
+        for table in bundle.tables.values()
+    )
 
 
 def test_report_directory_round_trip_is_byte_deterministic(tmp_path) -> None:
@@ -71,7 +73,10 @@ def test_report_directory_round_trip_is_byte_deterministic(tmp_path) -> None:
     assert first_manifest.logical_sha256 == second_manifest.logical_sha256
     for name in first_manifest.files:
         assert (first / name).read_bytes() == (second / name).read_bytes()
-        assert hashlib.sha256((first / name).read_bytes()).hexdigest() == first_manifest.files[name]
+        assert (
+            hashlib.sha256((first / name).read_bytes()).hexdigest()
+            == first_manifest.files[name]
+        )
 
 
 def test_formulation_registry_rejects_unknown_or_duplicate_profiles() -> None:

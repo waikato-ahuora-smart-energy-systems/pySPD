@@ -15,7 +15,7 @@ def test_semantic_signature_changes_with_active_domain() -> None:
         base,
         offers=base.offers | {added_offer},
         offer_blocks=base.offer_blocks | {added_block},
-        offer_region={**base.offer_region, added_offer: ("C1", "T1", "R1")},
+        offer_region={**base.offer_region, added_offer: next(iter(base.regions))},
         offer_limit={**base.offer_limit, added_block: 10.0},
         offer_price={**base.offer_price, added_block: 30.0},
         generation_start={**base.generation_start, added_offer: 0.0},
@@ -32,7 +32,9 @@ def test_semantic_signature_changes_with_active_domain() -> None:
     assert "active model structure changed" in comparison.reason
 
 
-def test_nonstructural_value_change_is_reusable_but_stale_state_is_invalidated() -> None:
+def test_nonstructural_value_change_is_reusable_but_stale_state_is_invalidated() -> (
+    None
+):
     base = make_core_case()
     changed = replace(
         base,

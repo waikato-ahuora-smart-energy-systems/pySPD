@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import json
 
-from pyspd.application import ApplicationConfiguration, ConfigurationError, PyspdApplication
+from pyspd.application import (
+    ApplicationConfiguration,
+    ConfigurationError,
+    PyspdApplication,
+)
 from pyspd.cli import main
-
 
 FORMULATION = "vspd-v5.0.6-reserve"
 

@@ -7,6 +7,7 @@ import json
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
+from enum import StrEnum
 from types import MappingProxyType
 from typing import Any, ClassVar
 
@@ -160,7 +161,9 @@ class ModelAssembler:
                 key=lambda component: component.name,
             )
             if not ready:
-                cycle_names = ", ".join(sorted(component.name for component in remaining))
+                cycle_names = ", ".join(
+                    sorted(component.name for component in remaining)
+                )
                 raise AssemblyError(f"component dependency cycle: {cycle_names}")
             for component in ready:
                 ordered.append(component)
@@ -208,6 +211,7 @@ class ModelAssembler:
                 )
             ],
             "artifact_owners": dict(artifacts.owners),
+            "model_structure": _model_structure(model),
         }
         structural_signature = hashlib.sha256(
             json.dumps(
@@ -257,3 +261,119 @@ class FormulationRegistry:
             return self._formulations[formulation_id]
         except KeyError as error:
             raise AssemblyError(f"unknown formulation: {formulation_id!r}") from error
+
+
+class RebuildDecision(StrEnum):
+    """Safe action for a previously assembled model instance."""
+
+    REUSE = "reuse"
+    REBUILD = "rebuild"
+
+
+@dataclass(frozen=True, slots=True)
+class RebuildComparison:
+    decision: RebuildDecision
+    reason: str
+    invalidate: frozenset[str]
+
+
+class StructuralRebuildPolicy:
+    """Fail closed on structural changes and invalidate all reusable solve state."""
+
+    _STALE_STATE = frozenset(
+        {"primal", "dual", "basis", "fixed_discrete", "solution_loader"}
+    )
+
+    def compare(self, previous: BuiltModel, candidate: BuiltModel) -> RebuildComparison:
+        if previous.structural_signature != candidate.structural_signature:
+            return RebuildComparison(
+                RebuildDecision.REBUILD,
+                "active model structure changed",
+                self._STALE_STATE,
+            )
+        return RebuildComparison(
+            RebuildDecision.REUSE,
+            "semantic structure is unchanged; update values and invalidate solve state",
+            self._STALE_STATE,
+        )
+
+
+def _model_structure(model: pyo.ConcreteModel) -> Mapping[str, object]:
+    """Return a value-independent signature of domains, rows, SOS, and ownership."""
+
+    variables: list[dict[str, object]] = []
+    for component in model.component_objects(pyo.Var, active=True, descend_into=True):
+        variable_entries: list[dict[str, object]] = []
+        for index in component:
+            item = component[index]
+            domain = (
+                "binary"
+                if item.is_binary()
+                else "integer"
+                if item.is_integer()
+                else "continuous"
+            )
+            variable_entries.append(
+                {"index": _index_token(index), "domain": domain}
+            )
+        variables.append(
+            {
+                "name": component.name,
+                "entries": sorted(
+                    variable_entries, key=lambda x: str(x["index"])
+                ),
+            }
+        )
+
+    constraints: list[dict[str, object]] = []
+    for component in model.component_objects(
+        pyo.Constraint, active=True, descend_into=True
+    ):
+        constraint_entries: list[dict[str, object]] = []
+        for index in component:
+            item = component[index]
+            if not item.active:
+                continue
+            constraint_entries.append(
+                {
+                    "index": _index_token(index),
+                    "equality": bool(item.equality),
+                    "has_lower": item.lower is not None,
+                    "has_upper": item.upper is not None,
+                }
+            )
+        constraints.append(
+            {
+                "name": component.name,
+                "entries": sorted(
+                    constraint_entries, key=lambda x: str(x["index"])
+                ),
+            }
+        )
+
+    sos: list[dict[str, object]] = []
+    for component in model.component_objects(
+        pyo.SOSConstraint, active=True, descend_into=True
+    ):
+        sos_entries = [
+            _index_token(index) for index in component if component[index].active
+        ]
+        sos.append({"name": component.name, "entries": sorted(sos_entries, key=str)})
+
+    objectives = [
+        {"name": component.name, "sense": int(component.sense)}
+        for component in model.component_objects(
+            pyo.Objective, active=True, descend_into=True
+        )
+    ]
+    return {
+        "variables": sorted(variables, key=lambda x: str(x["name"])),
+        "constraints": sorted(constraints, key=lambda x: str(x["name"])),
+        "sos": sorted(sos, key=lambda x: str(x["name"])),
+        "objectives": sorted(objectives, key=lambda x: str(x["name"])),
+    }
+
+
+def _index_token(index: object) -> list[str]:
+    values = index if isinstance(index, tuple) else (index,)
+    return [str(value) for value in values]

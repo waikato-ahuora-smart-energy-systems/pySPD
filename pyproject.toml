@@ -7,6 +7,9 @@ dependencies = [
     "pyomo>=6.9,<7",
 ]
 
+[project.scripts]
+pyspd = "pyspd.cli:entrypoint"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
