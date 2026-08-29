@@ -131,6 +131,12 @@ after the exact declared population is proven—`interval-identity-manifest.json
 ordered identity list is included in the configuration hash; duplicates, blank
 identities, and any requested identity absent from the source selection surface
 fail before a solve. An empty tuple remains the explicit complete-day selection.
+An isolated affected case is diagnostic only because it can omit prior accepted
+dispatch. `HistoricalAffectedReplayPlanner` therefore builds a hash-addressed,
+canonical same-day prefix through the final affected case on every date. It
+requires all 546 globally unique affected case IDs, all 139 source hashes, exact
+date-time/trading-period membership, and every predecessor needed to reproduce
+daily initialization.
 
 For isolated partial inventories, pass `--execution-scope shard`. A complete
 shard then exits successfully and records `shard_complete: true`, while
