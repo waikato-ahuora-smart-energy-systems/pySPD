@@ -14,7 +14,11 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-from tools.gate12.evidence import EvidenceContractError
+from tools.gate12.evidence import (
+    AffectedIntervalIdentity,
+    AffectedIntervalManifest,
+    EvidenceContractError,
+)
 from tools.oracle.vspd import ListingResult, VspdListingParser
 
 MATERIAL_SHORTFALL_MW = 1e-6
@@ -887,6 +891,75 @@ class HistoricalDailyCompletionValidator:
             all_solves_optimal=True,
             evidence=evidence,
         )
+
+
+class HistoricalAffectedManifestBuilder:
+    """Promote complete daily evidence into the immutable 546-case manifest."""
+
+    def build(
+        self,
+        *,
+        checkpoints: tuple[HistoricalPopulationCheckpoint, ...],
+        inventory: HistoricalInputInventory,
+        case_indices: dict[str, HistoricalGdxCaseIndex],
+        source_release: str,
+        reference_commit: str,
+    ) -> AffectedIntervalManifest:
+        by_date = {checkpoint.trading_date: checkpoint for checkpoint in checkpoints}
+        source_hashes = {
+            artifact.trading_date: artifact.sha256 for artifact in inventory.artifacts
+        }
+        if (
+            len(by_date) != len(checkpoints)
+            or set(by_date) != set(source_hashes)
+            or set(case_indices) != set(source_hashes)
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-POPULATION: daily evidence does not match the inventory"
+            )
+        identities: list[AffectedIntervalIdentity] = []
+        for artifact in inventory.artifacts:
+            checkpoint = by_date[artifact.trading_date]
+            if checkpoint.source_sha256 != artifact.sha256:
+                raise EvidenceContractError(
+                    "REQ-G12-POPULATION: checkpoint source hash mismatch"
+                )
+            index = case_indices[artifact.trading_date]
+            records_by_case: dict[tuple[str, str], list[HistoricalShortfallRecord]] = {}
+            for record in checkpoint.evidence.records:
+                records_by_case.setdefault(record.case_key, []).append(record)
+            for case_key in sorted(records_by_case):
+                trading_period = index.trading_periods.get(case_key)
+                if trading_period is None:
+                    raise EvidenceContractError(
+                        "REQ-G12-POPULATION: affected case lacks a trading period"
+                    )
+                node_evidence = ",".join(
+                    f"{record.node}={record.energy_shortfall_mw:.12g}MW"
+                    for record in sorted(
+                        records_by_case[case_key], key=lambda value: value.node
+                    )
+                )
+                identities.append(
+                    AffectedIntervalIdentity(
+                        case_id=case_key[0],
+                        date_time=case_key[1],
+                        trading_period=trading_period,
+                        trading_date=artifact.trading_date,
+                        source_sha256=artifact.sha256,
+                        discovery_rationale=(
+                            "pinned-v5.0.2 optimal SCIP first-loop material "
+                            f"shortfall transfer: {node_evidence}"
+                        ),
+                    )
+                )
+        manifest = AffectedIntervalManifest(
+            source_release=source_release,
+            reference_commit=reference_commit,
+            identities=tuple(identities),
+        )
+        manifest.validate(expected_source_hashes=source_hashes)
+        return manifest
 
 
 class HistoricalPopulationRunner:

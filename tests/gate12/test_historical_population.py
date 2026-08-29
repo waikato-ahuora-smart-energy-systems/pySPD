@@ -6,8 +6,8 @@ import pytest
 
 from tools.gate12.evidence import EvidenceContractError
 from tools.gate12.historical_population import (
-    HistoricalDailyCompletionValidator,
     HistoricalAffectedManifestBuilder,
+    HistoricalDailyCompletionValidator,
     HistoricalGdxCaseIndex,
     HistoricalInputArtifact,
     HistoricalInputInventory,
