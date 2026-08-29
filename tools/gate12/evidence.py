@@ -13,6 +13,34 @@ EXPECTED_AFFECTED_INTERVALS = 546
 EXPECTED_TRADING_DATES = 139
 _SHA256 = re.compile(r"[0-9a-f]{64}")
 
+REQUIRED_E2E_SURFACES = frozenset(
+    {
+        "case-selection",
+        "state-transition",
+        "primary-physics",
+        "primary-objective",
+        "fixed-discrete-pricing-state",
+        "raw-bus-price",
+        "repaired-bus-price",
+        "node-price",
+        "reserve-price",
+        "publication-seconds",
+        "rounded-published-output",
+        "report-field",
+    }
+)
+REQUIRED_E2E_DAY_CATEGORIES = frozenset(
+    {
+        "normal",
+        "outage",
+        "high-negative-price",
+        "scarcity",
+        "islanding",
+        "dst-46",
+        "dst-50",
+    }
+)
+
 type ObservableIdentity = tuple[str, str, tuple[str, ...]]
 
 
@@ -25,6 +53,147 @@ class SolverProfile(str, Enum):
 
     STRICT_CPLEX = "strict-cplex"
     PORTABLE_SCIP_HIGHS = "portable-scip-highs"
+
+
+@dataclass(frozen=True)
+class E2ECaseEvidence:
+    """Hash index for every required observable surface of one replayed case."""
+
+    case_id: str
+    trading_date: str
+    source_sha256: str
+    solver_profile: SolverProfile
+    surface_sha256: dict[str, str]
+    unresolved_material_count: int
+    passed: bool
+
+    def validate(self) -> None:
+        if not self.case_id.strip() or not re.fullmatch(r"[0-9]{8}", self.trading_date):
+            raise EvidenceContractError(
+                "REQ-G12-E2E: invalid case or trading-date identity"
+            )
+        if not _SHA256.fullmatch(self.source_sha256):
+            raise EvidenceContractError("REQ-G12-E2E: invalid case source hash")
+        if set(self.surface_sha256) != set(REQUIRED_E2E_SURFACES) or any(
+            not _SHA256.fullmatch(value) for value in self.surface_sha256.values()
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-E2E: incomplete or invalid case surface evidence"
+            )
+        if self.unresolved_material_count != 0 or not self.passed:
+            raise EvidenceContractError(
+                "REQ-G12-E2E: case has an unresolved material discrepancy"
+            )
+
+
+@dataclass(frozen=True)
+class E2EDayEvidence:
+    """Whole-day output evidence including repeat and resume equivalence."""
+
+    trading_date: str
+    category: str
+    source_sha256: str
+    case_order_sha256: str
+    output_sha256: str
+    repeat_output_sha256: str
+    resumed_output_sha256: str
+    report_sha256: str
+    passed: bool
+
+    def validate(self) -> None:
+        hashes = (
+            self.source_sha256,
+            self.case_order_sha256,
+            self.output_sha256,
+            self.repeat_output_sha256,
+            self.resumed_output_sha256,
+            self.report_sha256,
+        )
+        if (
+            not re.fullmatch(r"[0-9]{8}", self.trading_date)
+            or self.category not in REQUIRED_E2E_DAY_CATEGORIES
+            or any(not _SHA256.fullmatch(value) for value in hashes)
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-E2E: invalid representative-day evidence"
+            )
+        if not (
+            self.output_sha256
+            == self.repeat_output_sha256
+            == self.resumed_output_sha256
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-E2E: repeated and resumed day outputs differ"
+            )
+        if not self.passed:
+            raise EvidenceContractError(
+                "REQ-G12-E2E: representative day did not pass"
+            )
+
+
+@dataclass(frozen=True)
+class Gate12EvidenceIndex:
+    """Fail-closed closure index across cases, days, profiles, and discrepancies."""
+
+    affected_manifest_sha256: str
+    cases: tuple[E2ECaseEvidence, ...]
+    representative_days: tuple[E2EDayEvidence, ...]
+    portable_profile_executed: bool
+    strict_profile_executed: bool
+    unresolved_material_count: int
+
+    def validate(
+        self,
+        *,
+        expected_case_ids: set[str],
+        expected_source_hashes: dict[str, str],
+    ) -> None:
+        if not _SHA256.fullmatch(self.affected_manifest_sha256):
+            raise EvidenceContractError(
+                "REQ-G12-E2E: invalid affected-manifest hash"
+            )
+        case_ids = [case.case_id for case in self.cases]
+        if (
+            len(self.cases) != EXPECTED_AFFECTED_INTERVALS
+            or len(set(case_ids)) != len(case_ids)
+            or set(case_ids) != expected_case_ids
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-E2E: case evidence must cover exactly 546 identities"
+            )
+        if len(expected_source_hashes) != EXPECTED_TRADING_DATES:
+            raise EvidenceContractError(
+                "REQ-G12-E2E: expected exactly 139 source hashes"
+            )
+        for case in self.cases:
+            case.validate()
+            if case.solver_profile is not SolverProfile.PORTABLE_SCIP_HIGHS:
+                raise EvidenceContractError(
+                    "REQ-G12-E2E: affected replay must use the portable profile"
+                )
+            if expected_source_hashes.get(case.trading_date) != case.source_sha256:
+                raise EvidenceContractError(
+                    "REQ-G12-E2E: case evidence source hash mismatch"
+                )
+        categories = {day.category for day in self.representative_days}
+        if categories != set(REQUIRED_E2E_DAY_CATEGORIES):
+            raise EvidenceContractError(
+                "REQ-G12-E2E: representative day categories are incomplete"
+            )
+        for day in self.representative_days:
+            day.validate()
+        if not self.portable_profile_executed:
+            raise EvidenceContractError(
+                "REQ-G12-E2E: portable profile was not executed"
+            )
+        if not self.strict_profile_executed:
+            raise EvidenceContractError(
+                "REQ-G12-E2E: strict profile was not executed"
+            )
+        if self.unresolved_material_count != 0:
+            raise EvidenceContractError(
+                "REQ-G12-E2E: discrepancy register is not empty"
+            )
 
 
 @dataclass(frozen=True)
