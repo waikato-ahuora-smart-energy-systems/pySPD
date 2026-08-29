@@ -248,6 +248,42 @@ class HistoricalInputInventory:
         return cls(artifacts)
 
 
+class HistoricalPopulationShardPlanner:
+    """Deterministically balance daily artifacts across isolated GAMS jobs."""
+
+    def plan(
+        self,
+        inventory: HistoricalInputInventory,
+        *,
+        shard_count: int,
+    ) -> tuple[HistoricalInputInventory, ...]:
+        if (
+            isinstance(shard_count, bool)
+            or shard_count < 1
+            or shard_count > len(inventory.artifacts)
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: invalid population shard count"
+            )
+        bins: list[list[HistoricalInputArtifact]] = [
+            [] for _ in range(shard_count)
+        ]
+        totals = [0] * shard_count
+        for artifact in sorted(
+            inventory.artifacts,
+            key=lambda item: (-item.size_bytes, item.trading_date),
+        ):
+            index = min(range(shard_count), key=lambda item: (totals[item], item))
+            bins[index].append(artifact)
+            totals[index] += artifact.size_bytes
+        return tuple(
+            HistoricalInputInventory(
+                tuple(sorted(items, key=lambda item: item.trading_date))
+            )
+            for items in bins
+        )
+
+
 @dataclass(frozen=True)
 class HistoricalGdxCaseIndex:
     """Selected case identities and their source trading-period mapping."""
