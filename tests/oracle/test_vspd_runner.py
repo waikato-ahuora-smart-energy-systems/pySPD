@@ -277,6 +277,7 @@ def test_fixed_lp_profile_injects_pricing_solve_after_each_mip(tmp_path: Path) -
     solve.write_text(
         "option lp = %Solver% ;\n"
         "option mip = %Solver% ;\n"
+        "* SPD v16 BATTERYCHARGINGMODE\n"
         "Parameters existing;\n"
         "*=====================================================================================\n"
         "* 2. Load data from GDX file\n"
@@ -330,6 +331,10 @@ def test_fixed_lp_profile_injects_pricing_solve_after_each_mip(tmp_path: Path) -
     pricing = (programs / "pyspd_fixed_lp_solve.inc").read_text()
     assert "HVDCSENDING.fx(t,isl)" in pricing
     assert "LAMBDAHVDCRESERVE.fx(t,isl,resC,rd,rsbp)" in pricing
+    assert "BATTERYCHARGINGMODE.fx(t,n,n1)" in pricing
+    assert "pyspd_BATTERYCHARGINGMODE_lo(ca,dt,n,n1)" in (
+        programs / "pyspd_pricing_declarations.inc"
+    ).read_text()
     assert "solve %pyspdPricingModel% using rmip" in pricing
     assert "%pyspdPricingModel%.Optfile = 1;" in pricing
     assert "$include pyspd_pre_solve_snapshot.inc" in pricing
@@ -342,6 +347,7 @@ def test_fixed_lp_profile_injects_pricing_solve_after_each_mip(tmp_path: Path) -
     assert "$include pyspd_matrix_export.inc" in patched
     matrix_export = (programs / "pyspd_matrix_export.inc").read_text()
     assert "execute_unload 'pyspd_pricing_solution.gdx'" in matrix_export
+    assert "BATTERYCHARGINGMODE" in matrix_export
     assert "ord(drs) = card(drs)" in matrix_export
     assert "pyspd_active_drs_ord" in matrix_export
     assert "busDisconnected" in matrix_export

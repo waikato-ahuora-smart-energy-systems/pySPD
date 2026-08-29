@@ -1,0 +1,8 @@
+Gate 11 discovered-defect RED phase
+Date: 2026-08-29 Pacific/Auckland
+
+The Authority v16 RTD case reached an optimal SCIP MIP, then the fixed HiGHS
+RMIP changed the objective by NZD 38.29 and the fail-closed oracle aborted.
+Inspection proved the Gate 1 overlay fixed every v5 discrete family but omitted
+the v16 BATTERYCHARGINGMODE binary. A regression test now requires that the
+v16-aware overlay snapshot, fix, restore, and canonical export that family.
