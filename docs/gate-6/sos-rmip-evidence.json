@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "profile": "gate6-three-breakpoint-portable-sos2",
+  "primary_solver": "SCIP through licensed GAMS 54",
+  "pricing_solver": "HiGHS 1.15.1 through Pyomo APPSI",
+  "curve": {
+    "breakpoint_count": 3,
+    "portable_interval_binary_count": 2,
+    "selection_row_count": 1,
+    "adjacency_row_count": 3,
+    "native_sos2_count": 1,
+    "size_rule": "n breakpoints create n-1 interval binaries, one selection row, and n adjacency incidences"
+  },
+  "solve": {
+    "primary_status": "optimal",
+    "primary_objective_nzd": -416.66666666666663,
+    "pricing_status": "optimal",
+    "pricing_objective_nzd": -416.66666666666663,
+    "observed_primary_and_pricing_elapsed_seconds": 4.369282916013617
+  },
+  "pricing_model_audit": {
+    "primary_algebra_sha256": "9a48491389ce6aab9d28b0aaed75bada56955be93916a140b583c270aeab815d",
+    "pricing_algebra_sha256": "9a48491389ce6aab9d28b0aaed75bada56955be93916a140b583c270aeab815d",
+    "primary_state_sha256": "22e55a1e55f26af983854d5bae582c1bd503ce4b4e62500a5fd5d03164e7f067",
+    "pricing_state_sha256": "d6f0a527d02fd13468f9320629679732f96d06c0dfea73679b04ea90732afbab",
+    "primary_discrete_count": 4,
+    "pricing_discrete_count": 0,
+    "primary_sos_count": 0,
+    "pricing_sos_count": 0,
+    "fixed_name_count": 4,
+    "complete_fix_set": true,
+    "approved_algebra_unchanged": true,
+    "passed": true
+  },
+  "fixed_mip_finite_difference": {
+    "node": ["C1", "T1", "N2"],
+    "perturbation_mw": 0.0001,
+    "dual_price_nzd_per_mwh": 10.416666666666668,
+    "finite_difference_price_nzd_per_mwh": 10.416666667651953,
+    "absolute_error": 9.852847426827793e-10,
+    "fixed_decisions_unchanged": true,
+    "tolerance": 0.001,
+    "passed": true
+  },
+  "coverage": {
+    "boundaries": "zero, exact breakpoint, capacity, and outage tests",
+    "adjacency": "nonadjacent lambda detection and portable adjacency rows",
+    "integrality": "all four primary discrete variables integral and fixed",
+    "equivalence": "portable primary and fixed-RMIP objectives identical",
+    "native_representation": "named SOS2 retained structurally; runtime CPLEX validation deferred by ADR-0008",
+    "performance_interpretation": "observational developer-machine timing, not a release budget"
+  },
+  "passed": true
+}

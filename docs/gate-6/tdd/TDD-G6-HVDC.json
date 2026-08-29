@@ -25,11 +25,10 @@
   ],
   "parent_commit": "5815b643d37e7a7f72823ecac3d9baada2a198f2",
   "implementation_commit": "098ecd4ca8a01a37495651275fe70304ac84976d",
-  "test_patch_sha256": "c0e0f7f46750ce49c01b4992b83a05095906290c99df95676a477efec5a52910",
+  "test_patch_sha256": "d4bc3120d8a7123fdd58d717436fbe9331e715eacb3588795c2e30eff20c2be9",
   "test_files": [
     {"path": "tests/hvdc/conftest.py", "sha256": "cd7b6e19fd00d0dee6501e4eda02f4fe4ce2e2b295d7b82d4c5c28c57d9d4d53"},
     {"path": "tests/hvdc/test_gate6_contract.py", "sha256": "0731e3afa21559765339cf9cb4ad3b0b5c99d47bb34fe4b45a6acefdb4666edc"},
-    {"path": "tests/hvdc/test_gate6_evidence.py", "sha256": "a66ec73a9b8181c863eac5e5e0f1d787d8bb9ddea3d5baf7c8452a014b3884be"},
     {"path": "tests/hvdc/test_hvdc_formulation.py", "sha256": "453f4368231f82c0aea82785a72d0baf137b1dd9d763714672a0f4b867d67681"},
     {"path": "tests/hvdc/test_scip_backend.py", "sha256": "422f5336f671f181e20b095c27bc5e720db79c7990f3ca783aff8063a4301ec6"}
   ],
