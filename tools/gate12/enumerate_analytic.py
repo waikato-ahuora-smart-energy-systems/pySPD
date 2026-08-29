@@ -1,4 +1,4 @@
-"""Enumerate the exact Gate 12 population from pinned first-loop RTD algebra."""
+"""Screen Gate 12 population candidates with pinned first-loop RTD algebra."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from tools.gate12.analytic_population import (
     HistoricalAnalyticDayEnumerator,
     HistoricalAnalyticPopulationEvidenceBuilder,
 )
+from tools.gate12.evidence import EvidenceContractError
 from tools.gate12.historical_population import HistoricalInputInventory
 
 
@@ -66,9 +67,54 @@ def main(arguments: list[str] | None = None) -> int:
             flush=True,
         )
 
-    evidence = HistoricalAnalyticPopulationEvidenceBuilder().build(
-        daily_results=tuple(daily_results), inventory=inventory
-    )
+    candidate_count = sum(len(result.affected) for result in daily_results)
+    screen_payload: dict[str, Any] = {
+        "schema_version": 1,
+        "method": "dailymode0 first-loop RTD algebraic dead-node lower bound",
+        "trading_date_count": len(daily_results),
+        "candidate_interval_count": candidate_count,
+        "declared_interval_count": 546,
+        "unresolved_interval_count": 546 - candidate_count,
+        "qualifies_exact_population": False,
+        "per_date": {
+            result.trading_date: {
+                "source_sha256": result.source_sha256,
+                "selected_rtd_case_count": result.selected_rtd_case_count,
+                "candidate_interval_count": len(result.affected),
+            }
+            for result in daily_results
+        },
+        "node_evidence": [
+            {
+                **asdict(record.identity),
+                "affected_shortfall_mw": record.affected_shortfall_mw,
+            }
+            for result in daily_results
+            for record in result.affected
+        ],
+    }
+    screen_payload["logical_sha256"] = _logical_sha256(screen_payload)
+    _write_json(output_directory / "analytic-candidate-screen.json", screen_payload)
+    try:
+        evidence = HistoricalAnalyticPopulationEvidenceBuilder().build(
+            daily_results=tuple(daily_results), inventory=inventory
+        )
+    except EvidenceContractError as error:
+        print(
+            json.dumps(
+                {
+                    "passed": False,
+                    "candidate_interval_count": candidate_count,
+                    "unresolved_interval_count": 546 - candidate_count,
+                    "diagnostic": str(error),
+                    "output": str(
+                        output_directory / "analytic-candidate-screen.json"
+                    ),
+                },
+                sort_keys=True,
+            )
+        )
+        return 1
     manifest_payload = {
         "schema_version": 1,
         "source_release": evidence.manifest.source_release,
