@@ -100,9 +100,10 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
         +
         '$if not exist "%inputPath%\\%GDXname%.gdx" $goto nextInput\n'
         '$gdxin "%inputPath%\\%GDXname%.gdx"\n'
-        "PotentialModellingInconsistency(ca,dt,n)= 1 $ outage(ca,dt,n) ;\n"
-        "EnergyShortFallCheck(t,n) = 1 $ { (EnergyShortfallMW(t,n) > 0) and ok(t,n) } ;\n"
-        "ShortfallAdjustmentMW(t,n) $ EligibleShortfallRemoval(t,n) = EnergyShortfallMW(t,n) ;\n"
+            "PotentialModellingInconsistency(ca,dt,n)= 1 $ outage(ca,dt,n) ;\n"
+            "EnergyShortFallCheck(t,n) = 1 $ { (EnergyShortfallMW(t,n) > 0) and ok(t,n) } ;\n"
+            "loop( (t,n) $ EnergyShortfallMW(t,n),\n"
+            "ShortfallAdjustmentMW(t,n) $ EligibleShortfallRemoval(t,n) = EnergyShortfallMW(t,n) ;\n"
         '$if not exist "%inputPath%\\%GDXname%.gdx" putclose rep "missing";\n'
         '$gdxin "%inputPath%\\%GDXname%.gdx"\n'
     )
@@ -118,6 +119,9 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
     assert "option lp = HiGHS ;" in solve
     assert "option mip = SCIP ;" in solve
     assert "EnergyShortfallMW(t,n) > 0.000001" in solve
+    assert (
+        "loop( (t,n) $ (abs(EnergyShortfallMW(t,n)) > 0.000001)," in solve
+    )
     assert "gate12_%GDXname%_shortfall.txt" in solve
 
     with pytest.raises(EvidenceContractError, match="source drift"):
