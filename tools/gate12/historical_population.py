@@ -145,9 +145,25 @@ class HistoricalPopulationWorkspace:
             logical_sha256=metadata["logical_sha256"],
             file_sha256=file_hashes,
         )
+        programs = root / "vspd" / "Programs"
+        for name, expected_hash in file_hashes.items():
+            if Path(name).name != name:
+                raise EvidenceContractError(
+                    "REQ-G12-HISTORICAL: invalid patched source name"
+                )
+            try:
+                actual_hash = hashlib.sha256((programs / name).read_bytes()).hexdigest()
+            except OSError as error:
+                raise EvidenceContractError(
+                    "REQ-G12-HISTORICAL: patched source hash mismatch"
+                ) from error
+            if actual_hash != expected_hash:
+                raise EvidenceContractError(
+                    "REQ-G12-HISTORICAL: patched source hash mismatch"
+                )
         return cls(
             root=root,
-            programs=root / "vspd" / "Programs",
+            programs=programs,
             patch_evidence=patch_evidence,
         )
 
