@@ -1,0 +1,102 @@
+{
+  "case": {
+    "case_id": "31012026070255374",
+    "date_time": "2026-07-03T14:55:00+12:00",
+    "trading_period": "TP30"
+  },
+  "degeneracy_analyses": [
+    {
+      "certificate": {
+        "candidate_value": 0.01,
+        "case_id": "31012026070255374",
+        "evidence_sha256": "20ee9cc0167570f4a2409d60a47bb0cd3ba2f2d4c9190998e976e985f2360f54",
+        "identity": [
+          "03-JUL-2026 14:55",
+          "TP30",
+          "NI",
+          "FIR"
+        ],
+        "method": "common-optimal-face+kkt+two-sided-finite-difference",
+        "observable_kind": "reserve_price",
+        "passed": true,
+        "reference_value": 0.11
+      },
+      "evidence": {
+        "candidate_kkt_passed": true,
+        "candidate_value": 0.01,
+        "case_id": "31012026070255374",
+        "common_objective_absolute_error": 4.559755325317383e-06,
+        "common_objective_tolerance": 0.0001,
+        "derivative_tolerance": 2e-05,
+        "identity": [
+          "03-JUL-2026 14:55",
+          "TP30",
+          "NI",
+          "FIR"
+        ],
+        "negative_perturbation_derivative": 0.1100003719329834,
+        "observable_kind": "reserve_price",
+        "positive_perturbation_derivative": 0.010013580322265625,
+        "reference_kkt_passed": true,
+        "reference_value": 0.11
+      }
+    }
+  ],
+  "energy_price_comparison": {
+    "actual_count": 567,
+    "certified_alternative_count": 0,
+    "expected_count": 567,
+    "extra_identities": [],
+    "maximum_absolute_error": 0.7438238472477252,
+    "missing_identities": [],
+    "passed": false,
+    "unresolved_material_count": 389
+  },
+  "formulation_id": "spd-v16.0-reserve",
+  "gate": 12,
+  "independent_validation": {
+    "maximum_residual": 1.7881393432617188e-07,
+    "passed": true,
+    "pricing_model_audit_passed": true,
+    "tolerance": 1e-06
+  },
+  "model": {
+    "constraint_count": 33729,
+    "structural_signature": "c9dbb92a2d34b986a7bf9eab1a9e518fe7901cf1a76d2bfdea29334feb6d6be5",
+    "variable_count": 62848
+  },
+  "passed": false,
+  "profile": "portable-scip-highs",
+  "reference": {
+    "kkt_and_matrix_validator_passed": true,
+    "objective": 224118715.52425,
+    "qualification": "docs/gate-11/qualification.json"
+  },
+  "reserve_price_comparison": {
+    "actual_count": 4,
+    "certified_alternative_count": 1,
+    "expected_count": 4,
+    "extra_identities": [],
+    "maximum_absolute_error": 0.1,
+    "missing_identities": [],
+    "passed": true,
+    "unresolved_material_count": 0
+  },
+  "schema_version": 1,
+  "solve": {
+    "fixed_discrete_count": 127,
+    "fixed_sos_member_count": 118,
+    "objective_tolerance": 0.0001,
+    "pricing_backend": "highs",
+    "pricing_objective": 224118715.52425456,
+    "pricing_status": "optimal",
+    "primary_backend": "gams-scip",
+    "primary_objective": 224118715.52425474,
+    "primary_status": "optimal",
+    "reference_objective_absolute_error": 4.559755325317383e-06
+  },
+  "source": {
+    "name": "RTD_202607031455_31012026070255374_20260703145400.gdx",
+    "sha256": "bb4ca6367e8115b9b6d7f20d2050489ac2bd3206a1c6a39fb67deae18cb802cb"
+  }
+}

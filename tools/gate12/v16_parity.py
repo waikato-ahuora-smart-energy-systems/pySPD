@@ -12,19 +12,18 @@ from typing import Any
 
 import pyomo.environ as pyo
 
-from pyspd.architecture import ModelAssembler
-from pyspd.contracts import CaseData, CaseIdentifier
+from pyspd.contracts import CaseIdentifier
 from pyspd.data import GdxAdapter
-from pyspd.preprocess import PreprocessingSettings
-from pyspd.solver import HighsBackend, SolverConfiguration
-from pyspd.v16 import IndependentSpd16Validator
-from pyspd.v16.data import Spd16Case
-from pyspd.v16.formulation import (
-    Spd16PricingEngine,
-    Spd16SolvePolicy,
-    spd16_formulation,
+from pyspd.hvdc import HvdcSolveOutcome
+from pyspd.orchestration import (
+    DailyCasePreparer,
+    DailyCaseSelector,
+    MarketPricePostProcessor,
+    Spd16CaseExecutor,
 )
-from pyspd.v16.preprocess import SPD16_SOURCE_PROFILE_ID, Spd16SourcePreprocessor
+from pyspd.solver import HighsBackend, SolverConfiguration
+from pyspd.v16 import SPD16_FORMULATION_ID, IndependentSpd16Validator
+from pyspd.v16.preprocess import SPD16_SOURCE_PROFILE_ID
 from tools.gate12.evidence import (
     DegeneracyCertificate,
     Observable,
@@ -102,17 +101,33 @@ def qualify(
         and reference["authority_oracle"]["matrix"]["validator"] == "passed"
     )
     raw = GdxAdapter.read(input_gdx, system_directory=system_directory)
-    source = CaseData(SPD16_SOURCE_PROFILE_ID, identifier, raw)
-    preprocessed = Spd16SourcePreprocessor(
-        PreprocessingSettings(apply_rtd_load_reconstruction=True)
-    ).transform(source)
-    case = Spd16Case.from_sources(preprocessed, source)
-    built = ModelAssembler().assemble(spd16_formulation(), case)
-    outcome = Spd16SolvePolicy().solve(built)
+    selector = DailyCaseSelector()
+    selected = selector.select(raw, case_ids=(identifier.case_id,))
+    if len(selected) != 1:
+        raise ValueError("v16 representative input must select exactly one case")
+    if selected[0].trading_period != identifier.trading_period:
+        raise ValueError("v16 selected source identity does not match the request")
+    source = selector.case_data(
+        raw, selected[0], formulation_id=SPD16_SOURCE_PROFILE_ID
+    )
+    prepared = DailyCasePreparer().prepare(
+        source,
+        selected[0],
+        daily_mode=True,
+        formulation_id=SPD16_FORMULATION_ID,
+    )
+    observation = Spd16CaseExecutor().solve(prepared)
+    outcome = observation.solve_payload
+    if not isinstance(outcome, HvdcSolveOutcome):
+        raise TypeError("v16 executor did not retain its solve outcome")
+    built = outcome.primary_model
     if outcome.primary_mip is None:
         raise AssertionError("v16 portable profile must execute the primary SCIP MIP")
-    prices = Spd16PricingEngine().price(built, outcome)
-    validation = IndependentSpd16Validator().validate(outcome, prices.reserve)
+    trace = MarketPricePostProcessor().process(
+        observation,
+        price_transfer_enabled=prepared.price_transfer_enabled,
+    )
+    validation = IndependentSpd16Validator().validate(outcome, trace.reserve)
 
     period_by_datetime = {
         observable.identity[0]: observable.identity[1]
@@ -125,7 +140,7 @@ def qualify(
             (key[1], period_by_datetime[key[1]], key[2]),
             value,
         )
-        for key, value in sorted(prices.energy.node.items())
+        for key, value in sorted(trace.node.items())
     )
     actual_reserve = tuple(
         Observable(
@@ -134,7 +149,7 @@ def qualify(
             (key[1], period_by_datetime[key[1]], key[2], key[3]),
             value,
         )
-        for key, value in sorted(prices.reserve.items())
+        for key, value in sorted(trace.reserve.items())
     )
 
     objective_error = abs(outcome.pricing_snapshot.objective - oracle.objective)
@@ -196,7 +211,7 @@ def qualify(
             "sha256": _sha256(input_gdx),
         },
         "reference": {
-            "qualification": str(reference_qualification),
+            "qualification": _evidence_path(reference_qualification),
             "kkt_and_matrix_validator_passed": reference_kkt_passed,
             "objective": oracle.objective,
         },
@@ -204,6 +219,7 @@ def qualify(
             "structural_signature": built.structural_signature,
             "variable_count": len(variables),
             "constraint_count": len(constraints),
+            "primary_sos_representation": "portable-adjacent-interval-binary",
         },
         "solve": {
             "primary_backend": outcome.primary_mip.solve.backend,
@@ -279,6 +295,15 @@ def _sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _evidence_path(path: Path) -> str:
+    """Prefer a repository-relative evidence reference when one is available."""
+
+    try:
+        return str(path.relative_to(Path.cwd()))
+    except ValueError:
+        return str(path)
 
 
 def main() -> int:

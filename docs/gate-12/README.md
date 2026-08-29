@@ -40,6 +40,34 @@ physics, fixed-discrete pricing, price repair, publication, and reports.
 | CPLEX | Deferred by project direction | Execute the strict profile before a CPLEX-based claim |
 | Formulation/source safeguard | PDF battery ambiguity rule differs from demonstrable feature-source behavior | Record the governing decision and compare its observable effect |
 
+## Current execution evidence
+
+The representative v16 RTD portable-profile run is recorded in
+[`v16-representative-parity.json`](v16-representative-parity.json). Both the
+SCIP primary solve and the fixed-discrete HiGHS pricing solve report optimal,
+the independent validator passes, and the objective differs from the pinned
+GAMS oracle by only `4.56e-06`. Reserve-price comparison passes: three values
+match directly and the NI FIR alternative (`0.01` versus `0.11` NZD/MWh) has a
+two-sided perturbation certificate showing both values on the local optimal
+cost kink.
+
+This evidence does **not** close v16 parity. Of 567 node energy prices, 389
+remain materially different, with a maximum absolute difference of
+`0.743824` NZD/MWh. The pinned GAMS run fixes its native SOS member state for
+pricing, while the portable Pyomo formulation fixes an equivalent
+adjacent-interval binary state. Their common objective is established, but a
+common-optimal-face or per-observable price certificate has not yet been
+produced. Pyomo's GAMS writer also rejects an active `SOSConstraint`, so the
+native-SOS qualification profile cannot currently be exported through that
+backend. These are held as explicit Gate 12 debt rather than being inferred
+away from the objective match.
+
+The v5 affected-population evidence is likewise incomplete: the Gate 8 static
+manifest contains 427 of the required 546 identities. Gate 12 will enumerate
+the population by executing the historical v5.0.2 shortfall-transfer logic
+against all 139 hash-bound daily inputs and will fail unless exactly 546 unique
+case IDs are recovered.
+
 ## Required evidence pack
 
 - `interval-identity-manifest.json`: exactly 546 identities, each bound to one
