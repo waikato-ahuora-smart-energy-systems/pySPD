@@ -11,6 +11,8 @@
 | Portable profile | GAMS-SCIP primary MIP → fix all discrete → HiGHS RMIP |
 | Human approval | No separate independent reviewer required under project direction |
 
+The live criterion register is in [`gate-checklist.md`](gate-checklist.md).
+
 Gate 12 owns the exact end-to-end validation intentionally removed from the
 amended Gate 8 boundary. It does not reopen or duplicate the Stage 8
 implementation. It proves the complete observable chain from immutable raw GDX
