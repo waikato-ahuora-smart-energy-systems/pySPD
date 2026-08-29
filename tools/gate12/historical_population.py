@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from tools.gate12.evidence import EvidenceContractError
+from tools.oracle.vspd import ListingResult
 
 MATERIAL_SHORTFALL_MW = 1e-6
 HISTORICAL_COLUMNS = (
@@ -566,3 +567,66 @@ class HistoricalPopulationCheckpointStore:
                 "REQ-G12-HISTORICAL: invalid YYYYMMDD trading date"
             )
         return self.root / f"{trading_date}.json"
+
+
+class HistoricalDailyCompletionValidator:
+    """Bind exact progress, listing, and node evidence for one complete day."""
+
+    _success = re.compile(
+        r"^The caseID: (?P<case>[A-Za-z0-9_.-]+) "
+        r"\((?P<datetime>[^\n]+)\) is 1st solved successfully\.$",
+        re.MULTILINE,
+    )
+
+    def validate(
+        self,
+        *,
+        trading_date: str,
+        source_sha256: str,
+        patch_sha256: str,
+        solver_profile: str,
+        selected_cases: tuple[tuple[str, str], ...],
+        progress_text: str,
+        listing: ListingResult,
+        evidence_text: str,
+    ) -> HistoricalPopulationCheckpoint:
+        selected = set(selected_cases)
+        successful = tuple(
+            (match.group("case"), match.group("datetime"))
+            for match in self._success.finditer(progress_text)
+        )
+        exact_progress = bool(
+            selected_cases
+            and len(selected) == len(selected_cases)
+            and len(successful) == len(selected_cases)
+            and set(successful) == selected
+        )
+        exact_listing = bool(
+            listing.all_optimal
+            and len(listing.primary) == len(selected_cases)
+            and not listing.pricing
+            and all(
+                record.solver == "SCIP" for record in listing.operational_records
+            )
+        )
+        if not exact_progress or not exact_listing:
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: daily completion is not exact and optimal"
+            )
+        evidence = HistoricalShortfallEvidence.parse(
+            evidence_text, source_name=f"Pricing_{trading_date}"
+        )
+        if not set(evidence.affected_cases).issubset(selected):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: daily completion contains unselected evidence"
+            )
+        return HistoricalPopulationCheckpoint.create(
+            trading_date=trading_date,
+            source_sha256=source_sha256,
+            patch_sha256=patch_sha256,
+            solver_profile=solver_profile,
+            selected_case_count=len(selected_cases),
+            solved_case_count=len(successful),
+            all_solves_optimal=True,
+            evidence=evidence,
+        )
