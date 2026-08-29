@@ -7,7 +7,6 @@ import pytest
 from tools.gate12.evidence import EvidenceContractError
 from tools.gate12.historical_population import HistoricalShortfallEvidence
 
-
 HEADER = (
     "case_id|datetime|node|loop|energy_shortfall_mw|adjustment_mw|"
     "model_status|solver_status\n"
