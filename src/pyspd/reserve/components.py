@@ -9,6 +9,7 @@ import pyomo.environ as pyo
 
 from pyspd.architecture import BuildContext, ModelComponent
 from pyspd.hvdc.components import HVDCEconomicsComponent, HVDCSecurityComponent
+from pyspd.hvdc.data import SosRepresentation
 from pyspd.reserve.data import (
     BLOCKS,
     DIRECTIONS,
@@ -1089,10 +1090,24 @@ class ReserveSharingComponent(ModelComponent):
         reserve_intervals = [
             (*key, left) for key in directed for left in RESERVE_BREAKPOINTS[:-1]
         ]
-        block.LambdaHVDCEnergyInterval = pyo.Var(energy_intervals, domain=pyo.Binary)
-        block.LambdaHVDCReserveInterval = pyo.Var(reserve_intervals, domain=pyo.Binary)
+        portable_sos = data.enforce_nmir_sos2 and (
+            hvdc.sos_representation is SosRepresentation.PORTABLE
+        )
+        native_sos = data.enforce_nmir_sos2 and (
+            hvdc.sos_representation is SosRepresentation.NATIVE
+        )
+        block.LambdaHVDCEnergyInterval = pyo.Var(
+            energy_intervals,
+            domain=pyo.Binary if portable_sos else pyo.NonNegativeReals,
+            bounds=(0.0, 1.0 if portable_sos else 0.0),
+        )
+        block.LambdaHVDCReserveInterval = pyo.Var(
+            reserve_intervals,
+            domain=pyo.Binary if portable_sos else pyo.NonNegativeReals,
+            bounds=(0.0, 1.0 if portable_sos else 0.0),
+        )
         block.PortableSOS2 = pyo.ConstraintList()
-        if data.enforce_nmir_sos2:
+        if portable_sos:
             for island in domains.Island:
                 block.PortableSOS2.add(
                     sum(
@@ -1139,7 +1154,52 @@ class ReserveSharingComponent(ModelComponent):
                     block.PortableSOS2.add(
                         block.LambdaHVDCReserve[*key, breakpoint] <= sum(adjacent)
                     )
-        else:
+        elif native_sos:
+
+            def energy_sos_rule(
+                _b: pyo.Block, ca: str, dt: str, island: str
+            ) -> Any:
+                return (
+                    [
+                        block.LambdaHVDCEnergy[ca, dt, island, breakpoint]
+                        for breakpoint in ENERGY_BREAKPOINTS
+                    ],
+                    list(range(1, len(ENERGY_BREAKPOINTS) + 1)),
+                )
+
+            block.NativeEnergySOS2 = pyo.SOSConstraint(
+                domains.Island, rule=energy_sos_rule, sos=2
+            )
+            block.NativeReserveIndex = pyo.Set(
+                dimen=5, ordered=True, initialize=directed
+            )
+
+            def reserve_sos_rule(
+                _b: pyo.Block,
+                ca: str,
+                dt: str,
+                island: str,
+                reserve_class: str,
+                direction: str,
+            ) -> Any:
+                return (
+                    [
+                        block.LambdaHVDCReserve[
+                            ca,
+                            dt,
+                            island,
+                            reserve_class,
+                            direction,
+                            breakpoint,
+                        ]
+                        for breakpoint in RESERVE_BREAKPOINTS
+                    ],
+                    list(range(1, len(RESERVE_BREAKPOINTS) + 1)),
+                )
+
+            block.NativeReserveSOS2 = pyo.SOSConstraint(
+                block.NativeReserveIndex, rule=reserve_sos_rule, sos=2
+            )
             for variable in block.LambdaHVDCEnergyInterval.values():
                 variable.fix(0.0)
             for variable in block.LambdaHVDCReserveInterval.values():

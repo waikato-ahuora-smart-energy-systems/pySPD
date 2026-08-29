@@ -31,6 +31,8 @@ def test_v16_native_sos_profile_covers_network_and_reserve_curves() -> None:
     built = ModelAssembler().assemble(spd16_formulation(), case)
 
     assert tuple(built.model.component_data_objects(pyo.SOSConstraint, active=True))
+    assert hasattr(built.model.ReserveSharing, "NativeEnergySOS2")
+    assert hasattr(built.model.ReserveSharing, "NativeReserveSOS2")
     assert all(
         variable.fixed and not variable.is_binary()
         for artifact in (
