@@ -1,9 +1,8 @@
 """Probity tests for pinned-v5.0.2 affected-interval evidence."""
 
-from __future__ import annotations
+from pathlib import Path
 
 import pytest
-from pathlib import Path
 
 from tools.gate12.evidence import EvidenceContractError
 from tools.gate12.historical_population import (

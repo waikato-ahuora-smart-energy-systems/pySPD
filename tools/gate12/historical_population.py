@@ -8,8 +8,9 @@ import io
 import json
 import math
 import re
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Any
 
 from tools.gate12.evidence import EvidenceContractError
 
@@ -24,6 +25,8 @@ HISTORICAL_COLUMNS = (
     "model_status",
     "solver_status",
 )
+_SHA256 = re.compile(r"[0-9a-f]{64}")
+_TRADING_DATE = re.compile(r"[0-9]{8}")
 
 
 @dataclass(frozen=True)
@@ -266,3 +269,300 @@ class HistoricalShortfallEvidence:
     @property
     def affected_cases(self) -> tuple[tuple[str, str], ...]:
         return tuple(sorted({record.case_key for record in self.records}))
+
+
+@dataclass(frozen=True)
+class HistoricalPopulationCheckpoint:
+    """One complete, reusable historical daily-enumeration result."""
+
+    trading_date: str
+    source_sha256: str
+    patch_sha256: str
+    solver_profile: str
+    selected_case_count: int
+    solved_case_count: int
+    all_solves_optimal: bool
+    evidence: HistoricalShortfallEvidence
+    logical_sha256: str
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        trading_date: str,
+        source_sha256: str,
+        patch_sha256: str,
+        solver_profile: str,
+        selected_case_count: int,
+        solved_case_count: int,
+        all_solves_optimal: bool,
+        evidence: HistoricalShortfallEvidence,
+    ) -> HistoricalPopulationCheckpoint:
+        cls._validate(
+            trading_date=trading_date,
+            source_sha256=source_sha256,
+            patch_sha256=patch_sha256,
+            solver_profile=solver_profile,
+            selected_case_count=selected_case_count,
+            solved_case_count=solved_case_count,
+            all_solves_optimal=all_solves_optimal,
+            evidence=evidence,
+        )
+        values: dict[str, Any] = {
+            "schema_version": 1,
+            "trading_date": trading_date,
+            "source_sha256": source_sha256,
+            "patch_sha256": patch_sha256,
+            "solver_profile": solver_profile,
+            "selected_case_count": selected_case_count,
+            "solved_case_count": solved_case_count,
+            "all_solves_optimal": all_solves_optimal,
+            "evidence": cls._evidence_dict(evidence),
+        }
+        logical_sha256 = cls._logical_sha256(values)
+        return cls(
+            trading_date=trading_date,
+            source_sha256=source_sha256,
+            patch_sha256=patch_sha256,
+            solver_profile=solver_profile,
+            selected_case_count=selected_case_count,
+            solved_case_count=solved_case_count,
+            all_solves_optimal=all_solves_optimal,
+            evidence=evidence,
+            logical_sha256=logical_sha256,
+        )
+
+    @classmethod
+    def from_dict(cls, values: dict[str, Any]) -> HistoricalPopulationCheckpoint:
+        expected = {
+            "schema_version",
+            "trading_date",
+            "source_sha256",
+            "patch_sha256",
+            "solver_profile",
+            "selected_case_count",
+            "solved_case_count",
+            "all_solves_optimal",
+            "evidence",
+            "logical_sha256",
+        }
+        if set(values) != expected or values.get("schema_version") != 1:
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: unexpected checkpoint schema"
+            )
+        unsigned = {key: value for key, value in values.items() if key != "logical_sha256"}
+        if values["logical_sha256"] != cls._logical_sha256(unsigned):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: checkpoint logical hash mismatch"
+            )
+        evidence_values = values["evidence"]
+        if not isinstance(evidence_values, dict):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: unexpected checkpoint evidence"
+            )
+        evidence = cls._evidence_from_dict(evidence_values)
+        try:
+            checkpoint = cls.create(
+                trading_date=values["trading_date"],
+                source_sha256=values["source_sha256"],
+                patch_sha256=values["patch_sha256"],
+                solver_profile=values["solver_profile"],
+                selected_case_count=values["selected_case_count"],
+                solved_case_count=values["solved_case_count"],
+                all_solves_optimal=values["all_solves_optimal"],
+                evidence=evidence,
+            )
+        except (TypeError, ValueError) as error:
+            if isinstance(error, EvidenceContractError):
+                raise
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: invalid checkpoint values"
+            ) from error
+        if values["logical_sha256"] != checkpoint.logical_sha256:
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: checkpoint logical hash mismatch"
+            )
+        return checkpoint
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "schema_version": 1,
+            "trading_date": self.trading_date,
+            "source_sha256": self.source_sha256,
+            "patch_sha256": self.patch_sha256,
+            "solver_profile": self.solver_profile,
+            "selected_case_count": self.selected_case_count,
+            "solved_case_count": self.solved_case_count,
+            "all_solves_optimal": self.all_solves_optimal,
+            "evidence": self._evidence_dict(self.evidence),
+            "logical_sha256": self.logical_sha256,
+        }
+
+    @property
+    def affected_case_count(self) -> int:
+        return len(self.evidence.affected_cases)
+
+    @staticmethod
+    def _validate(
+        *,
+        trading_date: str,
+        source_sha256: str,
+        patch_sha256: str,
+        solver_profile: str,
+        selected_case_count: int,
+        solved_case_count: int,
+        all_solves_optimal: bool,
+        evidence: HistoricalShortfallEvidence,
+    ) -> None:
+        if not isinstance(trading_date, str) or not _TRADING_DATE.fullmatch(
+            trading_date
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: invalid YYYYMMDD trading date"
+            )
+        if not all(
+            isinstance(value, str) and _SHA256.fullmatch(value)
+            for value in (source_sha256, patch_sha256)
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: source and patch require SHA-256 values"
+            )
+        if not isinstance(solver_profile, str) or not solver_profile.strip():
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: solver profile must not be empty"
+            )
+        if (
+            not isinstance(selected_case_count, int)
+            or isinstance(selected_case_count, bool)
+            or selected_case_count <= 0
+            or solved_case_count != selected_case_count
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: every selected case must have a solve"
+            )
+        if all_solves_optimal is not True:
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: every daily solve must be optimal"
+            )
+        if evidence.source_name != f"Pricing_{trading_date}":
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: evidence source does not match trading date"
+            )
+
+    @staticmethod
+    def _evidence_dict(evidence: HistoricalShortfallEvidence) -> dict[str, Any]:
+        return {
+            "source_name": evidence.source_name,
+            "records": [asdict(record) for record in evidence.records],
+        }
+
+    @staticmethod
+    def _evidence_from_dict(values: dict[str, Any]) -> HistoricalShortfallEvidence:
+        if set(values) != {"source_name", "records"} or not isinstance(
+            values["records"], list
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: unexpected checkpoint evidence schema"
+            )
+        lines = ["|".join(HISTORICAL_COLUMNS)]
+        for record in values["records"]:
+            if not isinstance(record, dict):
+                raise EvidenceContractError(
+                    "REQ-G12-HISTORICAL: unexpected checkpoint evidence record"
+                )
+            try:
+                lines.append(
+                    "|".join(
+                        str(record[name])
+                        for name in (
+                            "case_id",
+                            "date_time",
+                            "node",
+                            "solve_loop",
+                            "energy_shortfall_mw",
+                            "adjustment_mw",
+                            "model_status",
+                            "solver_status",
+                        )
+                    )
+                )
+            except KeyError as error:
+                raise EvidenceContractError(
+                    "REQ-G12-HISTORICAL: unexpected checkpoint evidence record"
+                ) from error
+        source_name = values["source_name"]
+        if not isinstance(source_name, str):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: invalid checkpoint evidence source"
+            )
+        return HistoricalShortfallEvidence.parse(
+            "\n".join(lines) + "\n", source_name=source_name
+        )
+
+    @staticmethod
+    def _logical_sha256(values: dict[str, Any]) -> str:
+        return hashlib.sha256(
+            json.dumps(values, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+
+
+class HistoricalPopulationCheckpointStore:
+    """Atomically persist and qualify resumable daily checkpoints."""
+
+    def __init__(self, root: Path) -> None:
+        self.root = root
+
+    def write(self, checkpoint: HistoricalPopulationCheckpoint) -> Path:
+        self.root.mkdir(parents=True, exist_ok=True)
+        path = self._path(checkpoint.trading_date)
+        temporary = path.with_suffix(".json.tmp")
+        temporary.write_text(
+            json.dumps(
+                checkpoint.to_dict(), sort_keys=True, separators=(",", ":")
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        temporary.replace(path)
+        return path
+
+    def load(self, trading_date: str) -> HistoricalPopulationCheckpoint | None:
+        path = self._path(trading_date)
+        if not path.is_file():
+            return None
+        try:
+            values = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: unreadable population checkpoint"
+            ) from error
+        if not isinstance(values, dict):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: checkpoint must be a JSON object"
+            )
+        return HistoricalPopulationCheckpoint.from_dict(values)
+
+    def reusable(
+        self,
+        trading_date: str,
+        *,
+        source_sha256: str,
+        patch_sha256: str,
+        solver_profile: str,
+    ) -> bool:
+        checkpoint = self.load(trading_date)
+        return bool(
+            checkpoint is not None
+            and checkpoint.source_sha256 == source_sha256
+            and checkpoint.patch_sha256 == patch_sha256
+            and checkpoint.solver_profile == solver_profile
+            and checkpoint.solved_case_count == checkpoint.selected_case_count
+            and checkpoint.all_solves_optimal
+        )
+
+    def _path(self, trading_date: str) -> Path:
+        if not _TRADING_DATE.fullmatch(trading_date):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: invalid YYYYMMDD trading date"
+            )
+        return self.root / f"{trading_date}.json"
