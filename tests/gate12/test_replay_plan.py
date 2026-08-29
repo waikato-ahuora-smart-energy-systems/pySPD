@@ -10,6 +10,7 @@ from tools.gate12.evidence import (
     EvidenceContractError,
 )
 from tools.gate12.historical_population import (
+    HISTORICAL_EXECUTION_PROFILE,
     HistoricalGdxCaseIndex,
     HistoricalInputArtifact,
     HistoricalInputInventory,
@@ -97,13 +98,17 @@ def test_affected_manifest_loader_is_strict_and_accepts_merge_profile() -> None:
         "schema_version": 1,
         "source_release": manifest.source_release,
         "reference_commit": manifest.reference_commit,
-        "execution_profile": "portable-profile",
+        "execution_profile": HISTORICAL_EXECUTION_PROFILE,
         "identities": [identity.__dict__ for identity in manifest.identities],
     }
 
     loaded = HistoricalAffectedManifestLoader().from_dict(payload)
 
     assert loaded == manifest
+    payload["execution_profile"] = "thresholded-invalid-profile"
+    with pytest.raises(EvidenceContractError, match="execution profile"):
+        HistoricalAffectedManifestLoader().from_dict(payload)
+    payload["execution_profile"] = HISTORICAL_EXECUTION_PROFILE
     payload["unexpected"] = True
     with pytest.raises(EvidenceContractError, match="manifest schema"):
         HistoricalAffectedManifestLoader().from_dict(payload)

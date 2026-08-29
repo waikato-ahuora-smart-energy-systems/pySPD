@@ -203,6 +203,7 @@ def main(arguments: list[str] | None = None) -> int:
             "schema_version": 1,
             "source_release": manifest.source_release,
             "reference_commit": manifest.reference_commit,
+            "execution_profile": HISTORICAL_EXECUTION_PROFILE,
             "identities": [asdict(identity) for identity in manifest.identities],
         }
         (work_directory / "interval-identity-manifest.json").write_text(

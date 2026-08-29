@@ -14,6 +14,7 @@ from tools.gate12.evidence import (
     EvidenceContractError,
 )
 from tools.gate12.historical_population import (
+    HISTORICAL_EXECUTION_PROFILE,
     HistoricalGdxCaseIndex,
     HistoricalInputInventory,
 )
@@ -29,6 +30,7 @@ class HistoricalAffectedManifestLoader:
         "schema_version",
         "source_release",
         "reference_commit",
+        "execution_profile",
         "identities",
     })
     _identity_fields: ClassVar[frozenset[str]] = frozenset({
@@ -42,8 +44,7 @@ class HistoricalAffectedManifestLoader:
 
     def from_dict(self, payload: dict[str, Any]) -> AffectedIntervalManifest:
         if (
-            set(payload)
-            not in {self._required, self._required | {"execution_profile"}}
+            set(payload) != self._required
             or payload.get("schema_version") != 1
             or not isinstance(payload.get("source_release"), str)
             or not isinstance(payload.get("reference_commit"), str)
@@ -51,6 +52,10 @@ class HistoricalAffectedManifestLoader:
         ):
             raise EvidenceContractError(
                 "REQ-G12-REPLAY: unexpected affected manifest schema"
+            )
+        if payload["execution_profile"] != HISTORICAL_EXECUTION_PROFILE:
+            raise EvidenceContractError(
+                "REQ-G12-REPLAY: affected manifest execution profile mismatch"
             )
         raw_identities = payload["identities"]
         if any(
