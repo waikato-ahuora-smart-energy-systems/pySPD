@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+from dataclasses import asdict
 from pathlib import Path
 
 from tools.gate12.evidence import (
@@ -13,6 +14,8 @@ from tools.gate12.evidence import (
     EvidenceContractError,
 )
 from tools.gate12.historical_population import (
+    GamsTransferCaseIndexLoader,
+    HistoricalAffectedManifestBuilder,
     HistoricalInputInventory,
     HistoricalPopulationCheckpointStore,
     HistoricalPopulationRunner,
@@ -101,6 +104,36 @@ def main(arguments: list[str] | None = None) -> int:
     (work_directory / "population-summary.json").write_text(
         json.dumps(summary, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
+    if passed:
+        index_loader = GamsTransferCaseIndexLoader()
+        case_indices = {
+            artifact.trading_date: index_loader.load(
+                args.input_root.resolve()
+                / artifact.trading_date[:4]
+                / f"Pricing_{artifact.trading_date}.gdx",
+                args.system_directory.resolve(),
+            )
+            for artifact in inventory.artifacts
+        }
+        manifest = HistoricalAffectedManifestBuilder().build(
+            checkpoints=checkpoints,
+            inventory=inventory,
+            case_indices=case_indices,
+            source_release=(
+                "https://github.com/ElectricityAuthority/vSPD/releases/tag/v5.0.4"
+            ),
+            reference_commit=REFERENCE_COMMIT,
+        )
+        manifest_payload = {
+            "schema_version": 1,
+            "source_release": manifest.source_release,
+            "reference_commit": manifest.reference_commit,
+            "identities": [asdict(identity) for identity in manifest.identities],
+        }
+        (work_directory / "interval-identity-manifest.json").write_text(
+            json.dumps(manifest_payload, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
     print(json.dumps(summary, sort_keys=True))
     return 0 if passed else 1
 
