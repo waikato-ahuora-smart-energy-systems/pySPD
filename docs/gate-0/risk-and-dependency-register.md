@@ -45,7 +45,7 @@ roles until named people are appointed.
 | `D-008` | Daily Pricing GDX access | G1 | 139 hash-bound daily inputs fetched and converted | Gate 1 inventory and Gate 2 corpus qualification | Data steward |
 | `D-009` | 2023/2025 historical packs | G1 | Git commits identified; rights/applicability pending | Hashes, legal decision, profile mapping | Validation lead |
 | `D-010` | Gate evidence storage | G0/G1 | Not selected | Immutable retention service and access policy | Release owner |
-| `D-011` | Linux x86_64 CI | G2 | Workflow configured; remote execution pending | Clean `uv sync --frozen` and test run | Release owner |
+| `D-011` | Linux x86_64 CI | Before any Linux support claim | Deferred by explicit project direction in ADR-0011 | Clean `uv sync --frozen` and test run | Release owner |
 | `D-012` | Pyomo/solver package versions | G2 | Selected and locked | Gate 2 environment qualification and `uv.lock` | Technical lead |
 
 ## Escalation

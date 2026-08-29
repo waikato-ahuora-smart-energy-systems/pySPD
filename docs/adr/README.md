@@ -15,6 +15,7 @@ replaces; accepted history is not rewritten.
 | [ADR-0008](0008-interim-scip-highs-reference-profile.md) | Treat optimal SCIP MIP + HiGHS fixed RMIP as the active adequate reference; defer CPLEX | Accepted by project direction |
 | [ADR-0009](0009-gate-1-review-authority.md) | Gate 1 does not require an independent validation reviewer or approval | Accepted by project direction |
 | [ADR-0010](0010-gate-1-date-level-shortfall-qualification.md) | Qualify the shortfall population by 139 hash-bound dates and representative exact fixtures at Gate 1; replay all 546 intervals at Gate 8 | Accepted by project direction |
+| [ADR-0011](0011-linux-ci-deferred-after-gate-2.md) | Defer Linux x86_64 execution and restrict Gate 2 qualification to macOS arm64 | Accepted by explicit project direction |
 
 ## Status values
 

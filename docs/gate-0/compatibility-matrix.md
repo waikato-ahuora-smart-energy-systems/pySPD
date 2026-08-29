@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Gate 2 macOS qualification complete; Linux CI execution pending |
+| Status | Gate 2 closed for macOS arm64; Linux deferred by ADR-0011 |
 | Observation date | 29 August 2026 |
 | Development platform | macOS arm64 |
 
@@ -78,7 +78,7 @@ full pricing requalification, and Gate 6 plus Gate 7 approval.
 | Platform | Intended support | Current evidence |
 |---|---|---|
 | macOS arm64 | Development and portable profiles | Frozen environments, canonical runtime, GDX adapter, Pyomo, and HiGHS qualified at Gate 2 |
-| Linux x86_64 | CI and release target | CI matrix configured; first remote run is pending |
+| Linux x86_64 | Deferred target; unsupported today | CI matrix configured but execution explicitly skipped by ADR-0011 |
 | Windows x86_64 | Not first-release target | Deferred unless sponsor adds scope |
 
 Canonical logical-content hashes must remain stable across qualified platforms

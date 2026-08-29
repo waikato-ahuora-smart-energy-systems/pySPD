@@ -4,8 +4,10 @@
 |---|---|
 | Gate | G2 — Data and LP foundation ready |
 | Started | 29 August 2026 |
-| Current decision | **CLOSURE CANDIDATE — LINUX CI RUN PENDING** |
+| Closed | 29 August 2026 |
+| Current decision | **CLOSED — PASS FOR MACOS ARM64 PROFILE** |
 | Gate 1 dependency | Closed by commit `c10c522` |
+| Linux scope | Deferred by ADR-0011; no Linux claim |
 
 ## Implemented foundation
 
@@ -75,18 +77,18 @@ installed.
 | Frozen `uv` environments | Default, GDX, oracle, docs, Gurobi, deferred-empty CPLEX | Pass |
 | Continuous LP backend contracts | HiGHS availability/version/options/status/safe-load tests | Pass |
 | Deterministic class assembly | Dependency, ownership, formulation, sealing, signature tests | Pass |
-| Probity evidence and changed-path audit | Bound ledger plus `.github/workflows/quality.yml` | Local pass; remote CI pending |
-| Linux x86_64 release target | Configured CI matrix | **Pending first remote run** |
+| Probity evidence and changed-path audit | 14 bound records plus repository audit | Pass |
+| Linux x86_64 release target | Configured CI matrix; ADR-0011 | Deferred outside qualified profile |
 
 CPLEX validation remains explicitly deferred by ADR-0008 and project direction;
 no CPLEX-specific parity claim is made. Gurobi installation is qualified only as
 an optional dependency, not as a validated solver backend.
 
-## Remaining before formal closure
+## Closure decision
 
-- Commit and validate the current implementation's immutable Probity red/green
-  records.
-- Push the committed workflow and obtain one green Linux x86_64 run.
+All Gate 2 criteria within the qualified macOS arm64 profile pass. The project
+explicitly directed that Linux x86_64 execution be skipped; ADR-0011 preserves
+that limitation and prohibits a Linux claim. There are no unexplained data,
+runtime, solver-contract, architecture, corpus, or Probity blockers.
 
-Stage 3 remains unauthorized until these final evidence actions are complete and
-the decision above is changed to `CLOSED — PASS`.
+Gate 2 is closed and Stage 3 is authorized.
