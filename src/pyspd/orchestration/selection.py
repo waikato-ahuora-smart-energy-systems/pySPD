@@ -9,6 +9,10 @@ from pyspd.data.raw import RawSymbol, RawSymbols
 from pyspd.preprocess import PreprocessingSettings, Vspd506Preprocessor
 from pyspd.preprocess.input import CaseInput, nonzero
 from pyspd.reserve import ReserveCase
+from pyspd.reserve.data import RESERVE_FORMULATION_ID
+from pyspd.v16.compatibility import SPD16_FORMULATION_ID
+from pyspd.v16.data import Spd16Case
+from pyspd.v16.preprocess import SPD16_SOURCE_PROFILE_ID, Spd16SourcePreprocessor
 
 from .overrides import OverrideAudit
 from .types import DailyCase, OrchestrationError, PreparedCase, ScheduleType
@@ -87,7 +91,13 @@ class DailyCaseSelector:
             for ordinal, item in enumerate(discovered)
         )
 
-    def case_data(self, symbols: RawSymbols, selected: DailyCase) -> CaseData:
+    def case_data(
+        self,
+        symbols: RawSymbols,
+        selected: DailyCase,
+        *,
+        formulation_id: str = _BASE_FORMULATION,
+    ) -> CaseData:
         if selected.source_sha256 != symbols.source_sha256:
             raise OrchestrationError("selected case belongs to a different source")
         case_symbols: list[RawSymbol] = []
@@ -109,7 +119,7 @@ class DailyCaseSelector:
                 )
             )
         return CaseData(
-            _BASE_FORMULATION,
+            formulation_id,
             CaseIdentifier(
                 selected.case_id, selected.date_time, selected.trading_period
             ),
@@ -127,16 +137,28 @@ class DailyCasePreparer:
         *,
         daily_mode: bool,
         override_audit: OverrideAudit | None = None,
+        formulation_id: str = RESERVE_FORMULATION_ID,
     ) -> PreparedCase:
         if case_data.identifier.case_id != selected.case_id:
             raise OrchestrationError("case data does not match selected case")
-        preprocessing = Vspd506Preprocessor(
-            PreprocessingSettings(
-                daily_mode=daily_mode,
-                apply_rtd_load_reconstruction=True,
+        settings = PreprocessingSettings(
+            daily_mode=daily_mode,
+            apply_rtd_load_reconstruction=True,
+        )
+        if formulation_id == RESERVE_FORMULATION_ID:
+            if case_data.formulation_id != _BASE_FORMULATION:
+                raise OrchestrationError("v5 model requires the v5 source profile")
+            preprocessing = Vspd506Preprocessor(settings).transform(case_data)
+            reserve_case: ReserveCase = ReserveCase.from_sources(
+                preprocessing, case_data
             )
-        ).transform(case_data)
-        reserve_case = ReserveCase.from_sources(preprocessing, case_data)
+        elif formulation_id == SPD16_FORMULATION_ID:
+            if case_data.formulation_id != SPD16_SOURCE_PROFILE_ID:
+                raise OrchestrationError("v16 model requires the v16 source profile")
+            preprocessing = Spd16SourcePreprocessor(settings).transform(case_data)
+            reserve_case = Spd16Case.from_sources(preprocessing, case_data)
+        else:
+            raise OrchestrationError(f"unknown formulation: {formulation_id}")
         assert reserve_case.network is not None
         source = CaseInput(case_data)
         dt_parameter = source.numeric("i_dateTimeParameter")

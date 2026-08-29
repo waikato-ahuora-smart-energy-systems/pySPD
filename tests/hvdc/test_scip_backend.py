@@ -85,7 +85,15 @@ def test_scip_rejected_states_preserve_normalized_distinctions(
             binary_model(), load_solution=False
         )
     assert GamsScipBackend._normalize_status(termination) is status
-    assert GamsScipBackend()._version() == (54,)
+    assert GamsScipBackend(
+        system_directory="/Library/Frameworks/GAMS.framework/Versions/54/Resources"
+    )._version() == (54,)
+
+
+def test_default_backend_prefers_uv_managed_gams_runtime() -> None:
+    backend = GamsScipBackend()
+    assert backend.system_directory.endswith("site-packages/gamspy_base")
+    assert (backend._version()[:1]) == (54,)
 
 
 def test_timeout_incumbent_is_explicit_and_options_are_forwarded() -> None:

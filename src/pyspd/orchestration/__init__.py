@@ -20,6 +20,7 @@ from pyspd.orchestration.solver import (
     ShortfallLoop,
     ShortfallLoopResult,
     ShortfallTransition,
+    Spd16CaseExecutor,
 )
 from pyspd.orchestration.types import (
     CaseRunResult,
@@ -77,4 +78,5 @@ __all__ = [
     "ShortfallLoopResult",
     "ShortfallTransition",
     "SolveObservation",
+    "Spd16CaseExecutor",
 ]

@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from pyspd import __version__
+from pyspd.data import SymbolCatalog
 from pyspd.data.gdx import GdxAdapter
 from pyspd.orchestration import (
     DailyCasePreparer,
@@ -18,9 +19,18 @@ from pyspd.orchestration import (
     DailyRunResult,
     OverrideApplier,
     ReserveCaseExecutor,
+    Spd16CaseExecutor,
 )
-from pyspd.reporting import ArtifactProvenance, ReportManifest, daily_report_registry
+from pyspd.orchestration.pricing import MarketPricePostProcessor
+from pyspd.reporting import (
+    ArtifactProvenance,
+    DailyReportRegistry,
+    ReportManifest,
+    daily_report_registry,
+)
 from pyspd.reserve.data import RESERVE_FORMULATION_ID
+from pyspd.v16.compatibility import SPD16_FORMULATION_ID
+from pyspd.v16.preprocess import SPD16_SOURCE_PROFILE_ID
 
 
 class ConfigurationError(ValueError):
@@ -101,8 +111,15 @@ class PyspdApplication:
     """Composition root with explicit formulation selection and no date switching."""
 
     def __init__(self) -> None:
-        self._formulations = {RESERVE_FORMULATION_ID: RESERVE_FORMULATION_ID}
+        self._formulations = {
+            RESERVE_FORMULATION_ID: RESERVE_FORMULATION_ID,
+            SPD16_FORMULATION_ID: SPD16_FORMULATION_ID,
+        }
         self._reports = daily_report_registry()
+
+    @property
+    def report_registry(self) -> DailyReportRegistry:
+        return self._reports
 
     @property
     def formulation_ids(self) -> tuple[str, ...]:
@@ -120,15 +137,32 @@ class PyspdApplication:
         )
         if symbols.source_sha256 != configuration.source_sha256:
             raise ConfigurationError("GDX adapter source hash mismatch")
+        catalog = (
+            SymbolCatalog.spd_v16()
+            if configuration.formulation_id == SPD16_FORMULATION_ID
+            else SymbolCatalog.vspd_v5()
+        )
+        catalog.validate(symbols)
+        source_profile = (
+            SPD16_SOURCE_PROFILE_ID
+            if configuration.formulation_id == SPD16_FORMULATION_ID
+            else "vspd-v5.0.6"
+        )
         selector = DailyCaseSelector()
         selected = selector.select(symbols)
         prepared = []
         for specification in selected:
-            case_data = selector.case_data(symbols, specification)
+            case_data = selector.case_data(
+                symbols, specification, formulation_id=source_profile
+            )
             case_data, audit = OverrideApplier().apply(case_data, ())
             prepared.append(
                 DailyCasePreparer().prepare(
-                    case_data, specification, daily_mode=True, override_audit=audit
+                    case_data,
+                    specification,
+                    daily_mode=True,
+                    override_audit=audit,
+                    formulation_id=configuration.formulation_id,
                 )
             )
         daily_configuration = DailyRunConfiguration(
@@ -140,7 +174,17 @@ class PyspdApplication:
                 f"{platform.system()}-{platform.machine()}-gams-scip-highs"
             ),
         )
-        result = DailyRunner(ReserveCaseExecutor()).run(
+        executor = (
+            Spd16CaseExecutor()
+            if configuration.formulation_id == SPD16_FORMULATION_ID
+            else ReserveCaseExecutor()
+        )
+        postprocessor = MarketPricePostProcessor(
+            bad_price_factor=(
+                3.0 if configuration.formulation_id == SPD16_FORMULATION_ID else 5.0
+            )
+        )
+        result = DailyRunner(executor, postprocessor=postprocessor).run(
             daily_configuration, tuple(prepared)
         )
         lock_path = Path(__file__).resolve().parents[2] / "uv.lock"

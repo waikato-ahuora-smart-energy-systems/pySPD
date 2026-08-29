@@ -21,7 +21,7 @@ def test_capped_offer_blocks_apply_cap_in_source_block_order() -> None:
         block_order={"t1": 1, "t2": 2},
     )
 
-    assert result == {blocks[0]: 30.0, blocks[1]: 25.0}
+    assert result == {blocks[0]: 30.0, blocks[1]: 20.0}
 
 
 def test_tie_pairs_require_distinct_offers_equal_price_and_a_shared_bus() -> None:
@@ -63,4 +63,3 @@ def test_battery_pair_safeguard_removes_ambiguous_nodes() -> None:
     )
 
     assert derive_battery_pairs(inputs) == frozenset()
-

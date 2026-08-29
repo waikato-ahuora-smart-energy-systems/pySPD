@@ -35,6 +35,12 @@ highs = [
 ]
 oracle = [
     "gamspy>=1.27.0",
+    "gamspy-highs==54.3.1",
+    "gamspy-ipopt==54.3.1",
+    "gamspy-miles==54.3.1",
+    "gamspy-reshop==54.3.1",
+    "gamspy-scip==54.3.1",
+    "gamspy-shot==54.3.1",
 ]
 gdx = [
     "gamspy>=1.27.0",

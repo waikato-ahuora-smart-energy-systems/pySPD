@@ -7,6 +7,9 @@ import os
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
+from importlib.metadata import PackageNotFoundError, version
+from importlib.util import find_spec
+from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
@@ -40,6 +43,18 @@ class SolverConfiguration:
 
 
 DEFAULT_SOLVER_CONFIGURATION = SolverConfiguration()
+
+_SYSTEM_GAMS_DIRECTORY = "/Library/Frameworks/GAMS.framework/Versions/54/Resources"
+
+
+def _default_gams_system_directory() -> str:
+    """Prefer the uv-managed GAMS runtime when the optional oracle group exists."""
+    specification = find_spec("gamspy_base")
+    if specification is not None and specification.submodule_search_locations:
+        candidate = Path(next(iter(specification.submodule_search_locations)))
+        if (candidate / "gams").is_file():
+            return str(candidate)
+    return _SYSTEM_GAMS_DIRECTORY
 
 
 @dataclass(frozen=True, slots=True)
@@ -172,10 +187,10 @@ class GamsScipBackend(SolverBackend):
 
     def __init__(
         self,
-        system_directory: str = "/Library/Frameworks/GAMS.framework/Versions/54/Resources",
+        system_directory: str | None = None,
         solver_factory: Callable[[str], Any] | None = None,
     ) -> None:
-        self.system_directory = system_directory
+        self.system_directory = system_directory or _default_gams_system_directory()
         self._solver_factory = solver_factory or pyo.SolverFactory
 
     def solve_mip(
@@ -280,7 +295,12 @@ class GamsScipBackend(SolverBackend):
         name = os.path.basename(
             os.path.dirname(os.path.normpath(self.system_directory))
         )
-        return (int(name),) if name.isdigit() else ()
+        if name.isdigit():
+            return (int(name),)
+        try:
+            return tuple(int(part) for part in version("gamspy-base").split("."))
+        except (PackageNotFoundError, ValueError):
+            return ()
 
     @staticmethod
     def _normalize_status(

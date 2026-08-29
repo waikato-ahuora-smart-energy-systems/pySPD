@@ -9,9 +9,11 @@ from typing import Any, Protocol
 
 import pyomo.environ as pyo
 
-from pyspd.architecture import ModelAssembler
+from pyspd.architecture import Formulation, ModelAssembler, PricingEngine
 from pyspd.preprocess.shortfall import ShortfallTransferResolver, ShortfallTransferState
 from pyspd.reserve import ReserveCase, ReservePricingEngine, reserve_formulation
+from pyspd.v16.data import Spd16Case
+from pyspd.v16.formulation import Spd16PricingEngine, spd16_formulation
 
 from .types import Key, PreparedCase, SolveObservation
 
@@ -191,9 +193,9 @@ class ReserveCaseExecutor:
         if not isinstance(prepared.payload, ReserveCase):
             raise TypeError("ReserveCaseExecutor requires a ReserveCase payload")
         case = _updated_case(prepared)
-        built = ModelAssembler().assemble(reserve_formulation(), case)
+        built = ModelAssembler().assemble(self.formulation(), case)
         outcome = built.formulation.solve_policy().solve(built)
-        prices = ReservePricingEngine().price(built, outcome)
+        prices = self.pricing_engine().price(built, outcome)
         primary = outcome.primary_model
         generation = _values(primary.artifacts["generation"])
         scarcity = _values(primary.artifacts["energy_scarcity_node"])
@@ -268,6 +270,27 @@ class ReserveCaseExecutor:
             objective=outcome.primary_snapshot.objective,
             solve_payload=outcome,
         )
+
+    def formulation(self) -> Formulation:
+        return reserve_formulation()
+
+    def pricing_engine(self) -> PricingEngine:
+        return ReservePricingEngine()
+
+
+class Spd16CaseExecutor(ReserveCaseExecutor):
+    """Execute an SPD v16 case through the same qualified solver state machine."""
+
+    def solve(self, prepared: PreparedCase) -> SolveObservation:
+        if not isinstance(prepared.payload, Spd16Case):
+            raise TypeError("Spd16CaseExecutor requires a Spd16Case payload")
+        return super().solve(prepared)
+
+    def formulation(self) -> Formulation:
+        return spd16_formulation()
+
+    def pricing_engine(self) -> PricingEngine:
+        return Spd16PricingEngine()
 
 
 def _updated_case(prepared: PreparedCase) -> ReserveCase:

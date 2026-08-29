@@ -51,4 +51,3 @@ def test_v16_catalog_adds_the_battery_matching_symbol_without_mutating_v5() -> N
         ),
     )
     v16.validate(source)
-

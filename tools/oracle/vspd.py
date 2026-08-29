@@ -281,6 +281,50 @@ headerTimeStamp none
 """
 
 
+def _add_v16_battery_discrete(
+    declarations: str, fixed_lp_solve: str, matrix_export: str
+) -> tuple[str, str, str]:
+    """Extend the v5 pricing overlay with the sole new v16 binary family."""
+
+    declarations = declarations.replace(
+        "  pyspd_LAMBDAHVDCRESERVE_up(ca,dt,isl,resC,rd,rsbp)\n  ;",
+        "  pyspd_LAMBDAHVDCRESERVE_up(ca,dt,isl,resC,rd,rsbp)\n"
+        "  pyspd_BATTERYCHARGINGMODE_lo(ca,dt,n,n1)\n"
+        "  pyspd_BATTERYCHARGINGMODE_up(ca,dt,n,n1)\n"
+        "  ;",
+    )
+    fixed_lp_solve = fixed_lp_solve.replace(
+        "pyspd_PURCHASEBLOCKBINARY_up(t,bd,blk) = PURCHASEBLOCKBINARY.up(t,bd,blk);",
+        "pyspd_PURCHASEBLOCKBINARY_up(t,bd,blk) = PURCHASEBLOCKBINARY.up(t,bd,blk);\n"
+        "pyspd_BATTERYCHARGINGMODE_lo(t,n,n1) = BATTERYCHARGINGMODE.lo(t,n,n1);\n"
+        "pyspd_BATTERYCHARGINGMODE_up(t,n,n1) = BATTERYCHARGINGMODE.up(t,n,n1);",
+        1,
+    )
+    fixed_lp_solve = fixed_lp_solve.replace(
+        "PURCHASEBLOCKBINARY.fx(t,bd,blk) = round(PURCHASEBLOCKBINARY.l(t,bd,blk));",
+        "PURCHASEBLOCKBINARY.fx(t,bd,blk) = round(PURCHASEBLOCKBINARY.l(t,bd,blk));\n"
+        "BATTERYCHARGINGMODE.fx(t,n,n1) = round(BATTERYCHARGINGMODE.l(t,n,n1));",
+        1,
+    )
+    fixed_lp_solve = fixed_lp_solve.replace(
+        "PURCHASEBLOCKBINARY.up(t,bd,blk) = pyspd_PURCHASEBLOCKBINARY_up(t,bd,blk);",
+        "PURCHASEBLOCKBINARY.up(t,bd,blk) = pyspd_PURCHASEBLOCKBINARY_up(t,bd,blk);\n"
+        "BATTERYCHARGINGMODE.lo(t,n,n1) = pyspd_BATTERYCHARGINGMODE_lo(t,n,n1);\n"
+        "BATTERYCHARGINGMODE.up(t,n,n1) = pyspd_BATTERYCHARGINGMODE_up(t,n,n1);",
+        1,
+    )
+    matrix_export = matrix_export.replace(
+        "PURCHASEBLOCKBINARY.fx(t,bd,blk) = round(PURCHASEBLOCKBINARY.l(t,bd,blk));",
+        "PURCHASEBLOCKBINARY.fx(t,bd,blk) = round(PURCHASEBLOCKBINARY.l(t,bd,blk));\n"
+        "BATTERYCHARGINGMODE.fx(t,n,n1) = round(BATTERYCHARGINGMODE.l(t,n,n1));",
+    )
+    matrix_export = matrix_export.replace(
+        "HVDCSENTINSEGMENT, PURCHASEBLOCKBINARY, HVDCSENDZERO,",
+        "HVDCSENTINSEGMENT, PURCHASEBLOCKBINARY, BATTERYCHARGINGMODE, HVDCSENDZERO,",
+    )
+    return declarations, fixed_lp_solve, matrix_export
+
+
 class ListingParseError(ValueError):
     """Raised when a GAMS listing does not contain the required solve evidence."""
 
@@ -394,9 +438,7 @@ class VspdListingParser:
         r"\*\*\*\* OBJECTIVE VALUE\s+(?P<objective>[-+0-9.Ee]+)",
         re.DOTALL,
     )
-    _resource_usage = re.compile(
-        r"RESOURCE USAGE, LIMIT\s+(?P<seconds>[-+0-9.Ee]+)"
-    )
+    _resource_usage = re.compile(r"RESOURCE USAGE, LIMIT\s+(?P<seconds>[-+0-9.Ee]+)")
 
     def parse_file(self, path: Path) -> ListingResult:
         return self.parse_text(path.read_text(errors="replace"))
@@ -757,9 +799,7 @@ class InstrumentationNeutralityComparison:
             == operational_records(control),
             "same_reports": value(instrumented, "reports", "logical_sha256")
             == value(control, "reports", "logical_sha256"),
-            "same_published_prices": same_price_report(
-                "published_energy_prices"
-            ),
+            "same_published_prices": same_price_report("published_energy_prices"),
             "same_dps_prices": same_price_report("node_prices"),
             "same_pricing_solution": value(
                 instrumented,
@@ -1128,8 +1168,7 @@ class VspdSourcePatcher:
                 section_3,
                 "$onImplicitAssign\n"
                 "execute_unload 'pyspd_checkpoint_01_loaded.gdx';\n"
-                "$offImplicitAssign\n\n"
-                + section_3,
+                "$offImplicitAssign\n\n" + section_3,
                 expected_count=1,
             )
             section_7 = "* 7. The vSPD solve loop"
@@ -1138,8 +1177,7 @@ class VspdSourcePatcher:
                 section_7,
                 "$onImplicitAssign\n"
                 "execute_unload 'pyspd_checkpoint_02_preprocessed.gdx';\n"
-                "$offImplicitAssign\n\n"
-                + section_7,
+                "$offImplicitAssign\n\n" + section_7,
                 expected_count=1,
             )
         self._replace_exact(
@@ -1149,8 +1187,14 @@ class VspdSourcePatcher:
             "* 9. Write results to CSV report files and GDX files",
             expected_count=1,
         )
-        (programs / "pyspd_pricing_declarations.inc").write_text(_PRICING_DECLARATIONS)
+        declarations = _PRICING_DECLARATIONS
         fixed_lp_solve = _FIXED_LP_SOLVE
+        matrix_export = _MATRIX_EXPORT
+        if "BATTERYCHARGINGMODE" in solve.read_text():
+            declarations, fixed_lp_solve, matrix_export = _add_v16_battery_discrete(
+                declarations, fixed_lp_solve, matrix_export
+            )
+        (programs / "pyspd_pricing_declarations.inc").write_text(declarations)
         if not capture_state_evidence:
             fixed_lp_solve = fixed_lp_solve.replace(
                 "$setglobal pyspdSolveModel %pyspdPricingModel%\n"
@@ -1160,11 +1204,9 @@ class VspdSourcePatcher:
                 "",
             ).replace("$include pyspd_post_solve_snapshot.inc\n", "")
         (programs / "pyspd_fixed_lp_solve.inc").write_text(fixed_lp_solve)
-        (programs / "pyspd_matrix_export.inc").write_text(_MATRIX_EXPORT)
+        (programs / "pyspd_matrix_export.inc").write_text(matrix_export)
         if capture_state_evidence:
-            (programs / "pyspd_pre_solve_snapshot.inc").write_text(
-                _PRE_SOLVE_SNAPSHOT
-            )
+            (programs / "pyspd_pre_solve_snapshot.inc").write_text(_PRE_SOLVE_SNAPSHOT)
             (programs / "pyspd_post_solve_snapshot.inc").write_text(
                 _POST_SOLVE_SNAPSHOT
             )

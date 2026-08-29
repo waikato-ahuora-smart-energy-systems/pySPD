@@ -8,6 +8,7 @@ from pyspd.application import (
     PyspdApplication,
 )
 from pyspd.cli import main
+from pyspd.v16 import SPD16_FORMULATION_ID
 
 FORMULATION = "vspd-v5.0.6-reserve"
 
@@ -41,7 +42,9 @@ def test_application_configuration_is_strict_and_hash_bound(tmp_path) -> None:
 
 def test_application_exposes_only_registered_formulations() -> None:
     application = PyspdApplication()
-    assert application.formulation_ids == (FORMULATION,)
+    assert application.formulation_ids == tuple(
+        sorted((FORMULATION, SPD16_FORMULATION_ID))
+    )
     try:
         application.validate_formulation("date-switched-latest")
     except ConfigurationError as error:
@@ -53,4 +56,6 @@ def test_application_exposes_only_registered_formulations() -> None:
 def test_cli_formulations_is_stable_json(capsys) -> None:
     assert main(["formulations", "--json"]) == 0
     payload = json.loads(capsys.readouterr().out)
-    assert payload == {"formulations": [FORMULATION]}
+    assert payload == {
+        "formulations": sorted((FORMULATION, SPD16_FORMULATION_ID))
+    }

@@ -16,6 +16,7 @@ _SUPPORTED = frozenset(
         "vspd-v5.0.6-ac-network",
         "vspd-v5.0.6-hvdc",
         "vspd-v5.0.6-reserve",
+        "spd-v16.0-reserve",
     }
 )
 

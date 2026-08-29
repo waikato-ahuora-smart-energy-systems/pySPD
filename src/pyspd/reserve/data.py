@@ -95,6 +95,16 @@ class ReserveData:
     deficit_reserve_ce_penalty: float = 100_000.0
     deficit_reserve_ece_penalty: float = 800_000.0
     enforce_nmir_sos2: bool = True
+    risk_classes: tuple[str, ...] = RISK_CLASSES
+    ce_risks: frozenset[str] = CE_RISKS
+    ece_risks: frozenset[str] = ECE_RISKS
+    generator_risks: frozenset[str] = GEN_RISKS
+    manual_risks: frozenset[str] = MANUAL_RISKS
+    hvdc_risks: frozenset[str] = HVDC_RISKS
+    hvdc_secondary_risks: frozenset[str] = HVDC_SECONDARY_RISKS
+    link_risks: frozenset[str] = frozenset()
+    shareable_risks: frozenset[str] = GEN_RISKS | MANUAL_RISKS
+    group_risks: frozenset[str] = GEN_RISKS
 
     def __post_init__(self) -> None:
         for name in (
@@ -105,8 +115,18 @@ class ReserveData:
             "risk_group_offer",
             "island_risk_group",
             "island_link_risk_group",
+            "ce_risks",
+            "ece_risks",
+            "generator_risks",
+            "manual_risks",
+            "hvdc_risks",
+            "hvdc_secondary_risks",
+            "link_risks",
+            "shareable_risks",
+            "group_risks",
         ):
             object.__setattr__(self, name, frozenset(getattr(self, name)))
+        object.__setattr__(self, "risk_classes", tuple(self.risk_classes))
         for item in fields(self):
             value = getattr(self, item.name)
             if isinstance(value, Mapping):
@@ -166,8 +186,7 @@ class ReserveData:
         periods = sorted(hvdc_case.periods)
         islands = frozenset(result.set("bus_island").members)
         island_domain = frozenset(
-            (case, datetime, island)
-            for case, datetime, _bus, island in islands
+            (case, datetime, island) for case, datetime, _bus, island in islands
         )
         offer_island = result.set("offer_island").members
         offer_parameter = source.numeric("i_dateTimeOfferParameter")
@@ -246,9 +265,7 @@ class ReserveData:
             control[(*period, "backward")] = sharing.get(
                 (*period, "backwardHVDCcontrolBand"), 0.0
             )
-        hvdc_maximum = _hvdc_maximum(
-            island_domain, islands, hvdc_case, source, result
-        )
+        hvdc_maximum = _hvdc_maximum(island_domain, islands, hvdc_case, source, result)
         energy_flow, energy_loss, reserve_flow, reserve_loss = _nmir_breakpoints(
             island_domain, islands, hvdc_case, source, sharing
         )
@@ -260,9 +277,7 @@ class ReserveData:
         for island in island_domain:
             for reserve_class in RESERVE_CLASSES:
                 for risk in RISK_CLASSES:
-                    value = free_reserve_input.get(
-                        (*island, reserve_class, risk), 0.0
-                    )
+                    value = free_reserve_input.get((*island, reserve_class, risk), 0.0)
                     if reserve_class == "FIR" and risk in GEN_RISKS | MANUAL_RISKS:
                         value -= sum(
                             shared_nfr[other]
@@ -300,9 +315,7 @@ class ReserveData:
         }
         reserve_scarcity_limit = result.parameter("scarcity_reserve_limit").values
         reserve_scarcity_price = result.parameter("scarcity_reserve_price").values
-        reserve_scarcity_enabled = result.parameter(
-            "reserve_scarcity_enabled"
-        ).values
+        reserve_scarcity_enabled = result.parameter("reserve_scarcity_enabled").values
         return cls(
             island_domain,
             offer_island,
@@ -351,9 +364,7 @@ class ReserveData:
 @dataclass(frozen=True, slots=True)
 class ReserveCase(HvdcCase):
     reserve: ReserveData | None = None
-    formulation_id: str = field(
-        default=RESERVE_FORMULATION_ID, init=False, repr=False
-    )
+    formulation_id: str = field(default=RESERVE_FORMULATION_ID, init=False, repr=False)
 
     def __post_init__(self) -> None:
         super(ReserveCase, self).__post_init__()
@@ -403,8 +414,7 @@ def _hvdc_maximum(
             link
             for link in data.links
             for *prefix, bus in data.sending_bus
-            if tuple(prefix) == link
-            and (*island[:2], bus, island[2]) in bus_island
+            if tuple(prefix) == link and (*island[:2], bus, island[2]) in bus_island
         }
         monopoles: list[float] = []
         for link in sending:
@@ -429,10 +439,7 @@ def _hvdc_maximum(
             if constraint[:2] == island[:2]
             and senses.get(constraint) == -1.0
             and not nonzero(ramping.get(constraint, 0.0))
-            and sum(
-                branch_factors.get((*constraint, link[2]), 0.0)
-                for link in sending
-            )
+            and sum(branch_factors.get((*constraint, link[2]), 0.0) for link in sending)
             == 2.0
         ]
         bipole = min(bipole_candidates, default=sum(data.capacity[x] for x in sending))
@@ -462,8 +469,7 @@ def _nmir_breakpoints(
             link
             for link in data.links
             for *prefix, bus in data.sending_bus
-            if tuple(prefix) == link
-            and (*island[:2], bus, island[2]) in bus_island
+            if tuple(prefix) == link and (*island[:2], bus, island[2]) in bus_island
         ]
         capacity = sum(data.capacity[link] for link in sending)
         resistances = [resistance.get(link, 0.0) for link in sending]
@@ -482,9 +488,7 @@ def _nmir_breakpoints(
         for index in range(6):
             losses.append(
                 losses[-1]
-                + scaling
-                * segment_factor[index]
-                * (segment_flow[index] - flows[index])
+                + scaling * segment_factor[index] * (segment_flow[index] - flows[index])
             )
         for index, breakpoint in enumerate(ENERGY_BREAKPOINTS):
             flow[(*island, breakpoint)] = flows[index]
@@ -518,8 +522,7 @@ def _shared_nfr_maximum(
             case.bid_limit[block]
             for block in case.bid_blocks
             for b_case, b_dt, b_name, i_name in bid_island
-            if block[:3] == (b_case, b_dt, b_name)
-            and (b_case, b_dt, i_name) == island
+            if block[:3] == (b_case, b_dt, b_name) and (b_case, b_dt, i_name) == island
         )
         offset = island_parameter.get((*island, "sharedNFRLoadOffset"), 0.0)
         rmt = island_parameter.get((*island, "RMTlimitFIR"), 0.0)

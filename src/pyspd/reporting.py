@@ -17,6 +17,7 @@ import pyomo.environ as pyo
 
 from pyspd.orchestration import DailyRunResult
 from pyspd.reserve.data import RESERVE_FORMULATION_ID
+from pyspd.v16.compatibility import SPD16_FORMULATION_ID
 
 
 class ReportError(ValueError):
@@ -293,7 +294,7 @@ class V5DailyReportRenderer(DailyReportRenderer):
     def render(self, results: DailyCollectedResults) -> ReportBundle:
         if results.provenance.formulation_id not in self.supported_formulations:
             raise ReportError("v5 renderer received another formulation")
-        definitions = _v5_definitions()
+        definitions = _daily_definitions(results.provenance.formulation_id)
         rows: dict[str, list[dict[str, str]]] = {name: [] for name in definitions}
         run = results.result
         for case in run.cases:
@@ -406,6 +407,19 @@ class V5DailyReportRenderer(DailyReportRenderer):
         return ReportBundle(results.provenance, tables)
 
 
+_V16 = frozenset({SPD16_FORMULATION_ID})
+
+
+class Spd16DailyResultSchema(DailyResultSchema):
+    supported_formulations = _V16
+
+
+class Spd16DailyReportRenderer(V5DailyReportRenderer):
+    """Separate v16 renderer class using the common deterministic table shape."""
+
+    supported_formulations = _V16
+
+
 def daily_report_registry() -> DailyReportRegistry:
     registry = DailyReportRegistry()
     registry.register(
@@ -415,6 +429,13 @@ def daily_report_registry() -> DailyReportRegistry:
             V5DailyReportRenderer,
         )
     )
+    registry.register(
+        DailyReportProfile(
+            SPD16_FORMULATION_ID,
+            Spd16DailyResultSchema,
+            Spd16DailyReportRenderer,
+        )
+    )
     return registry
 
 
@@ -422,7 +443,7 @@ def _fields(*values: tuple[str, str]) -> tuple[ReportField, ...]:
     return tuple(ReportField(name, unit) for name, unit in values)
 
 
-def _v5_definitions() -> dict[str, ReportDefinition]:
+def _daily_definitions(formulation_id: str) -> dict[str, ReportDefinition]:
     common = (("case_id", "id"), ("date_time", "datetime"))
     specifications: dict[str, tuple[tuple[str, str], ...]] = {
         "summary": (
@@ -487,7 +508,7 @@ def _v5_definitions() -> dict[str, ReportDefinition]:
         ),
     }
     return {
-        name: ReportDefinition(name, RESERVE_FORMULATION_ID, _fields(*fields))
+        name: ReportDefinition(name, formulation_id, _fields(*fields))
         for name, fields in specifications.items()
     }
 

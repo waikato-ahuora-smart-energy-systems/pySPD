@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from datetime import date
+
 from pyspd.application import PyspdApplication
+from pyspd.architecture import ModelAssembler
 from pyspd.reporting import Spd16DailyReportRenderer, Spd16DailyResultSchema
 from pyspd.reserve import reserve_formulation
-from pyspd.v16 import SPD16_FORMULATION_ID
+from pyspd.v16 import SPD16_FORMULATION_ID, IndependentSpd16Validator
 from pyspd.v16.components import (
     Spd16BatteryModeComponent,
     Spd16ReserveEconomicsComponent,
@@ -11,6 +14,7 @@ from pyspd.v16.components import (
     Spd16ReserveRiskComponent,
     Spd16TieBreakComponent,
 )
+from pyspd.v16.data import SPD16_RISK_CLASSES, Spd16Case
 from pyspd.v16.formulation import (
     Spd16PricingEngine,
     Spd16ReportRenderer,
@@ -18,6 +22,7 @@ from pyspd.v16.formulation import (
     Spd16SolvePolicy,
     spd16_formulation,
 )
+from tests.reserve.conftest import make_reserve_case
 
 
 def test_v16_is_a_separately_composed_class_based_formulation() -> None:
@@ -48,14 +53,40 @@ def test_v16_is_explicitly_selectable_in_application_and_reporting() -> None:
 
 
 def test_v16_zero_reserve_price_uses_sum_of_requirement_duals() -> None:
-    assert Spd16PricingEngine.select_reserve_price(
-        island_reserve_mw=0.0,
-        definition_dual=99.0,
-        requirement_duals=(2.0, 3.5, -0.5),
-    ) == 5.0
-    assert Spd16PricingEngine.select_reserve_price(
-        island_reserve_mw=1.0,
-        definition_dual=7.0,
-        requirement_duals=(2.0, 3.5),
-    ) == 7.0
+    assert (
+        Spd16PricingEngine.select_reserve_price(
+            island_reserve_mw=0.0,
+            definition_dual=99.0,
+            requirement_duals=(2.0, 3.5, -0.5),
+        )
+        == 5.0
+    )
+    assert (
+        Spd16PricingEngine.select_reserve_price(
+            island_reserve_mw=1.0,
+            definition_dual=7.0,
+            requirement_duals=(2.0, 3.5),
+        )
+        == 7.0
+    )
 
+
+def test_v16_assembles_and_runs_scip_then_fixed_highs_rmip() -> None:
+    case = Spd16Case.from_reserve_case(
+        make_reserve_case(), source_date=date(2026, 6, 23)
+    )
+    built = ModelAssembler().assemble(spd16_formulation(), case)
+
+    assert set(built.model.ReserveDomains.RiskClass) == set(SPD16_RISK_CLASSES)
+    assert built.artifacts.owners["island_risk"] == "reserve_risk"
+    assert built.artifacts.owners["reserve_requirement"] == "reserve_requirement"
+    outcome = Spd16SolvePolicy().solve(built)
+    assert outcome.primary_mip is not None
+    assert outcome.primary_mip.solve.backend == "gams-scip"
+    assert outcome.primary_mip.solve.status.value == "optimal"
+    assert outcome.pricing_lp.backend == "highs"
+    assert outcome.pricing_lp.status.value == "optimal"
+    prices = Spd16PricingEngine().price(built, outcome)
+    assert prices.reserve
+    validation = IndependentSpd16Validator().validate(outcome, prices.reserve)
+    assert validation.passed, validation.residuals

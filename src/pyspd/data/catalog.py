@@ -43,6 +43,31 @@ class SymbolCatalog:
         return cls.from_payload(json.loads(resource.read_text(encoding="utf-8")))
 
     @classmethod
+    def spd_v16(cls) -> SymbolCatalog:
+        """Return the v16 source contract as the pinned v5 contract plus its delta."""
+
+        v5 = cls.vspd_v5()
+        battery_match = SymbolSpec(
+            name="i_busUnitAndKey3Match",
+            aliases=(),
+            symbol_type=SymbolType.SET,
+            dimension=4,
+            domains=("ca", "dt", "n", "n1"),
+            units="identity mapping",
+            consumer="SPD v16 paired-battery preprocessing",
+            required=True,
+            missingness="required on and after the SPD v16 effective date",
+            ordering="source GDX UEL order is authoritative",
+            domain_variants=(),
+        )
+        return cls(
+            formulation="spd-v16.0",
+            missingness=v5.missingness,
+            ordering=v5.ordering,
+            symbols=(*v5.symbols, battery_match),
+        )
+
+    @classmethod
     def from_path(cls, path: Path) -> SymbolCatalog:
         return cls.from_payload(json.loads(path.read_text(encoding="utf-8")))
 
@@ -83,9 +108,7 @@ class SymbolCatalog:
 
     def validate(self, raw: RawSymbols) -> None:
         expected = {spec.name: spec for spec in self.symbols}
-        aliases = {
-            alias: spec.name for spec in self.symbols for alias in spec.aliases
-        }
+        aliases = {alias: spec.name for spec in self.symbols for alias in spec.aliases}
         actual: dict[str, Any] = {}
         for symbol in raw.symbols:
             canonical_name = aliases.get(symbol.name, symbol.name)
@@ -95,9 +118,7 @@ class SymbolCatalog:
                 )
             actual[canonical_name] = symbol
         missing = sorted(
-            name
-            for name in set(expected) - set(actual)
-            if expected[name].required
+            name for name in set(expected) - set(actual) if expected[name].required
         )
         unexpected = sorted(set(actual) - set(expected))
         if missing:
@@ -140,9 +161,7 @@ class SymbolCatalog:
                         )
 
     @staticmethod
-    def _domains_equivalent(
-        actual: tuple[str, ...], expected: tuple[str, ...]
-    ) -> bool:
+    def _domains_equivalent(actual: tuple[str, ...], expected: tuple[str, ...]) -> bool:
         if actual == expected:
             return True
         semantics = {
