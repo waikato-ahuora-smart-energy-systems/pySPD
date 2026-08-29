@@ -595,6 +595,7 @@ class ReserveRiskComponent(ModelComponent):
                 offer
                 for r_ca, r_dt, r_group, offer, r_risk in data.risk_group_offer
                 if (r_ca, r_dt, r_group, r_risk) == (ca, dt, group, risk)
+                and (ca, dt, offer) in case.offers
             ]
             directional = (ca, dt, island, group, risk) in data.island_link_risk_group
             gross = (
