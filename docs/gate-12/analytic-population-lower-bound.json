@@ -3,6 +3,7 @@
   "candidate_interval_count": 434,
   "declared_interval_count": 546,
   "full_evidence_sha256": "1a06bf2c988d80495daf76179410c11a34ba57b23d59b98f40104783ebec8901",
+  "full_evidence_file": "analytic-population-lower-bound-full.json",
   "per_date": {
     "20221106": {
       "candidate_interval_count": 4,
