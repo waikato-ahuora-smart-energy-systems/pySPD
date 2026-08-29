@@ -23,7 +23,7 @@ from tools.oracle.vspd import ListingResult, VspdListingParser
 
 MATERIAL_SHORTFALL_MW = 1e-6
 HISTORICAL_EXECUTION_PROFILE = (
-    "historical-v5.0.2-dailymode1-scip-solvelink5-first-loop"
+    "historical-v5.0.2-dailymode1-scip-solvelink5-first-loop-rtd-only"
 )
 HISTORICAL_COLUMNS = (
     "case_id",
