@@ -1,0 +1,5 @@
+__________ test_all_gate_ledgers_cover_every_changed_production_path ___________
+E       assert 14 >= 21
+FAILED tests/probity/test_ledger.py::test_all_gate_ledgers_cover_every_changed_production_path
+1 failed in 1.34s
+REQ-G3-LEDGER: repository auditor ignores Gate 3 evidence records

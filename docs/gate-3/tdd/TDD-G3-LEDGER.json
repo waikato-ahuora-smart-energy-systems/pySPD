@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G3-LEDGER",
+  "requirement_ids": ["REQ-G3-LEDGER"],
+  "production_paths": ["tools/probity_audit.py"],
+  "parent_commit": "7ec923fe02ba51a1cd260cc641aeecbd01602af7",
+  "implementation_commit": "179efa2b35a15749633b7043c0ab160a1b887291",
+  "test_patch_sha256": "a7f8530ac65c0ba85d24cda32b4753f029f2364770ca9d9145800d66fd6098ad",
+  "test_files": [{"path": "tests/probity/test_ledger.py", "sha256": "716ae9b92f5396952e0010c64dca1e780a99a385adf00b19014eb2026577406f"}],
+  "command": "uv run pytest tests/probity/test_ledger.py -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "f1a56598495c7339a0cc0b060a83e15fff5b163558fc2df935c4d646ad889b0d",
+  "red": {"timestamp": "2026-08-29T15:10:00+12:00", "exit_code": 1, "output_sha256": "b544fbdc5548d0bc39ff4bbe029580fabf9402dde2b492fa6cb362cfd2d5ba51", "duration_seconds": 1.34, "expected_failure_fingerprint": "REQ-G3-LEDGER: repository auditor ignores Gate 3 evidence records", "log_uri": "docs/gate-3/tdd/logs/ledger-red.log"},
+  "green": {"timestamp": "2026-08-29T15:11:00+12:00", "exit_code": 0, "output_sha256": "18ec7a0d5beb9e8603df56b2aa9ecc95fb5f9a51a488fd7c1b9fac15f198a632", "duration_seconds": 2.04, "log_uri": "docs/gate-3/tdd/logs/ledger-green.log"},
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}
