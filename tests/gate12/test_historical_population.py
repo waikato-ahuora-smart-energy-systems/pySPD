@@ -5,7 +5,10 @@ from __future__ import annotations
 import pytest
 
 from tools.gate12.evidence import EvidenceContractError
-from tools.gate12.historical_population import HistoricalShortfallEvidence
+from tools.gate12.historical_population import (
+    HistoricalShortfallEvidence,
+    HistoricalVspdSourcePatcher,
+)
 
 HEADER = (
     "case_id|datetime|node|loop|energy_shortfall_mw|adjustment_mw|"
@@ -64,3 +67,49 @@ def test_historical_shortfall_evidence_rejects_schema_drift() -> None:
             "case_id|datetime|node\n5101|date|node\n",
             source_name="Pricing_20221106",
         )
+
+
+def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
+    programs = tmp_path / "Programs"
+    programs.mkdir()
+    (programs / "vSPDsettings.inc").write_text(
+        "$setglobal inputPath                     '%system.fp%..\\Input\\'\n"
+        "$setglobal outputPath                    '%system.fp%..\\Output\\'\n"
+        "$setglobal ovrdPath                      '%system.fp%..\\Override\\'\n"
+        "Scalar dailymode                         / 1 / ;\n"
+        "$setglobal Solver                          Cplex\n"
+    )
+    (programs / "vSPDperiod.gms").write_text(
+        '$ifthen exist "%inputPath%\\%GDXname%.gdx"\n'
+        '$gdxin "%inputPath%\\%GDXname%.gdx"\n'
+        "execute_unload '%programPath%\\vSPDperiod.gdx'\n"
+    )
+    (programs / "vSPDsolve.gms").write_text(
+        'File rep "Write to a report" /"ProgressReport.txt"/;\n'
+        "option lp = %Solver% ;\n"
+        "option mip = %Solver% ;\n"
+        + '.Optfile = 1 ;\n' * 3
+        +
+        '$if not exist "%inputPath%\\%GDXname%.gdx" $goto nextInput\n'
+        '$gdxin "%inputPath%\\%GDXname%.gdx"\n'
+        "PotentialModellingInconsistency(ca,dt,n)= 1 $ outage(ca,dt,n) ;\n"
+        "EnergyShortFallCheck(t,n) = 1 $ { (EnergyShortfallMW(t,n) > 0) and ok(t,n) } ;\n"
+        "ShortfallAdjustmentMW(t,n) $ EligibleShortfallRemoval(t,n) = EnergyShortfallMW(t,n) ;\n"
+        '$if not exist "%inputPath%\\%GDXname%.gdx" putclose rep "missing";\n'
+    )
+
+    patcher = HistoricalVspdSourcePatcher()
+    result = patcher.apply(programs)
+
+    assert result.profile == "historical-v5.0.2-scip-first-loop"
+    assert len(result.logical_sha256) == 64
+    settings = (programs / "vSPDsettings.inc").read_text()
+    solve = (programs / "vSPDsolve.gms").read_text()
+    assert "Scalar dailymode                         / 0 / ;" in settings
+    assert "option lp = HiGHS ;" in solve
+    assert "option mip = SCIP ;" in solve
+    assert "EnergyShortfallMW(t,n) > 0.000001" in solve
+    assert "gate12_%GDXname%_shortfall.txt" in solve
+
+    with pytest.raises(EvidenceContractError, match="source drift"):
+        patcher.apply(programs)
