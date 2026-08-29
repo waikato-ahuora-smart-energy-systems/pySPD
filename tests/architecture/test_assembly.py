@@ -102,8 +102,11 @@ def test_assembly_is_dependency_ordered_and_deterministic() -> None:
     second = ModelAssembler().assemble(selected, case_data=("immutable",))
 
     assert first.build_order == second.build_order == ("domain", "balance")
+    assert first.structural_signature == second.structural_signature
     assert tuple(first.artifacts.values) == ("nodes", "balance")
     assert first.artifacts.owners == {"nodes": "domain", "balance": "balance"}
+    with pytest.raises(AssemblyError, match="sealed"):
+        first.artifacts.register("late", "late_artifact", object())
 
 
 def test_missing_cycles_and_duplicate_ownership_fail_before_build() -> None:

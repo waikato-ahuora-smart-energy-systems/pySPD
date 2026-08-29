@@ -105,6 +105,8 @@ class SymbolCatalog:
         if unexpected:
             raise SymbolCatalogError(f"unexpected symbols: {', '.join(unexpected)}")
         for name, spec in expected.items():
+            if name not in actual:
+                continue
             symbol = actual[name]
             if symbol.symbol_type is not spec.symbol_type:
                 raise SymbolCatalogError(

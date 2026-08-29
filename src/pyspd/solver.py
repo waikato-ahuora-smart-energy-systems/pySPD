@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 from types import MappingProxyType
@@ -21,6 +21,7 @@ class SolveStatus(StrEnum):
     LIMIT = "limit"
     ERROR = "error"
     UNAVAILABLE = "unavailable"
+    NO_SOLUTION = "no_solution"
     UNKNOWN = "unknown"
 
 
@@ -72,6 +73,9 @@ class HighsBackend(SolverBackend):
     name = "highs"
     interface = "pyomo.contrib.appsi_highs"
 
+    def __init__(self, solver_factory: Callable[[str], Any] | None = None) -> None:
+        self._solver_factory = solver_factory or pyo.SolverFactory
+
     def solve(
         self,
         model: pyo.ConcreteModel,
@@ -80,7 +84,7 @@ class HighsBackend(SolverBackend):
         load_solution: bool = True,
         accept_nonoptimal: bool = False,
     ) -> SolveResult:
-        solver = pyo.SolverFactory("appsi_highs")
+        solver = self._solver_factory("appsi_highs")
         if solver is None or not solver.available(exception_flag=False):
             raise SolverExecutionError(
                 "HiGHS is unavailable; install the uv 'highs' dependency group"
@@ -95,13 +99,21 @@ class HighsBackend(SolverBackend):
         raw_status = raw_results.solver.status
         termination = raw_results.solver.termination_condition
         status = self._normalize(raw_status, termination)
+        solution_count = len(getattr(raw_results, "solution", ()))
+        if status is SolveStatus.OPTIMAL and solution_count == 0:
+            status = SolveStatus.NO_SOLUTION
         loaded = False
         if status is SolveStatus.OPTIMAL and load_solution:
             model.solutions.load_from(raw_results)
             loaded = True
         elif status is not SolveStatus.OPTIMAL and not accept_nonoptimal:
+            detail = (
+                "optimal status but no solution"
+                if status is SolveStatus.NO_SOLUTION
+                else status.value
+            )
             raise SolverExecutionError(
-                f"HiGHS returned {status.value}: solver={raw_status}, "
+                f"HiGHS returned {detail}: solver={raw_status}, "
                 f"termination={termination}"
             )
         return SolveResult(

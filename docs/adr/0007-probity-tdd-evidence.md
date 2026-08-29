@@ -2,9 +2,9 @@
 
 | Field | Value |
 |---|---|
-| Status | Proposed |
+| Status | Accepted by explicit project direction |
 | Date | 28 August 2026 |
-| Deciders | Technical lead, validation lead, release owner |
+| Deciders | Project direction; technical implementation agent |
 
 ## Context
 

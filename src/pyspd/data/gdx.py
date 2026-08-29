@@ -4,11 +4,17 @@ from __future__ import annotations
 
 import hashlib
 import math
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyspd.data.raw import RawRecord, RawSymbol, RawSymbols, SymbolType
 from pyspd.data.values import ScalarValue, ValueKind
+
+if TYPE_CHECKING:
+    import pyarrow as pa
+
+    from pyspd.data.feed import CanonicalFeed
 
 
 class GdxAdapter:
@@ -36,6 +42,129 @@ class GdxAdapter:
             source_sha256=cls._file_sha256(path),
             special_values=gt.SpecialValues,
         )
+
+    @classmethod
+    def write_feed(
+        cls,
+        path: Path,
+        root: Path,
+        *,
+        system_directory: Path | None = None,
+        compression: str = "zstd",
+    ) -> CanonicalFeed:
+        try:
+            import gams.transfer as gt
+        except ImportError as error:  # pragma: no cover - exercised by env contract
+            raise RuntimeError(
+                "GDX conversion requires the uv 'gdx' dependency group"
+            ) from error
+        from pyspd.data.feed import CanonicalFeed
+
+        path = path.resolve()
+        container = gt.Container(
+            system_directory=str(system_directory.resolve())
+            if system_directory is not None
+            else None
+        )
+        container.read(str(path))
+        return CanonicalFeed.write_tables(
+            source_name=path.name,
+            source_sha256=cls._file_sha256(path),
+            items=cls._transfer_tables(container, gt.SpecialValues),
+            root=root,
+            compression=compression,
+        )
+
+    @classmethod
+    def _transfer_tables(
+        cls, container: Any, special_values: Any
+    ) -> Iterator[tuple[dict[str, Any], pa.Table]]:
+        import numpy as np
+        import pyarrow as pa
+
+        type_map = {
+            "set": SymbolType.SET,
+            "parameter": SymbolType.PARAMETER,
+            "variable": SymbolType.VARIABLE,
+            "equation": SymbolType.EQUATION,
+            "alias": SymbolType.ALIAS,
+        }
+        predicates = (
+            ("isEps", ValueKind.EPS.value),
+            ("isNA", ValueKind.NA.value),
+            ("isUndef", ValueKind.UNDEF.value),
+            ("isPosInf", ValueKind.POSITIVE_INFINITY.value),
+            ("isNegInf", ValueKind.NEGATIVE_INFINITY.value),
+        )
+        for name in container.listSymbols():
+            source = container[name]
+            dimension = int(source.dimension)
+            frame = source.records
+            has_columns = frame is not None and len(frame.columns) >= dimension
+            uel_orders = (
+                [
+                    [str(uel) for uel in source.getUELs(dimensions=index)]
+                    for index in range(dimension)
+                ]
+                if has_columns
+                else [[] for _ in range(dimension)]
+            )
+            value_fields = (
+                [str(column) for column in frame.columns[dimension:]]
+                if has_columns
+                else []
+            )
+            metadata = {
+                "name": str(name),
+                "symbol_type": type_map[type(source).__name__.lower()].value,
+                "dimension": dimension,
+                "domains": [str(domain) for domain in source.domain_names],
+                "description": str(source.description),
+                "uel_orders": uel_orders,
+                "value_fields": value_fields,
+            }
+            count = 0 if frame is None else len(frame)
+            columns: dict[str, Any] = {
+                "record_ordinal": pa.array(range(count), type=pa.int64())
+            }
+            for index in range(dimension):
+                values = [] if not has_columns else frame.iloc[:, index].astype(str)
+                columns[f"key_{index}"] = pa.array(values, type=pa.string())
+            for field_index, field_name in enumerate(value_fields, start=dimension):
+                series = frame.iloc[:, field_index]
+                if field_name == "element_text":
+                    text = series.fillna("").astype(str)
+                    columns[f"{field_name}__kind"] = pa.array(
+                        [ValueKind.TEXT.value] * count, type=pa.string()
+                    )
+                    columns[f"{field_name}__number"] = pa.nulls(
+                        count, type=pa.float64()
+                    )
+                    columns[f"{field_name}__text"] = pa.array(
+                        text, type=pa.string()
+                    )
+                    continue
+                numeric = np.asarray(series, dtype=np.float64)
+                kinds = np.full(count, ValueKind.FINITE.value, dtype=object)
+                special_mask = np.zeros(count, dtype=bool)
+                for predicate, kind in predicates:
+                    mask = np.asarray(
+                        getattr(special_values, predicate)(numeric), dtype=bool
+                    )
+                    kinds[mask] = kind
+                    special_mask |= mask
+                if np.any(~special_mask & ~np.isfinite(numeric)):
+                    raise ValueError(
+                        f"{name}.{field_name} contains an unclassified non-finite value"
+                    )
+                numeric = numeric.copy()
+                numeric[(~special_mask) & (numeric == 0.0)] = 0.0
+                columns[f"{field_name}__kind"] = pa.array(kinds, type=pa.string())
+                columns[f"{field_name}__number"] = pa.array(
+                    numeric, mask=special_mask, type=pa.float64()
+                )
+                columns[f"{field_name}__text"] = pa.nulls(count, type=pa.string())
+            yield metadata, pa.Table.from_pydict(columns)
 
     @classmethod
     def from_container(

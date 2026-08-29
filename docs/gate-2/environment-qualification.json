@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "captured_date": "2026-08-29",
+  "status": "passed-on-qualified-platform",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "python": "3.13.14",
+  "uv": "0.11.29",
+  "uv_lock_sha256": "70fcf7f6d7130ba5b3a552a21e0cbc3709eaf130dccc705e5280aab917ad7b2f",
+  "pyproject_sha256": "4a5a494edfa2ea2c91d504ccaef47003f4658fdf3d71178cd8edda117c4e5a57",
+  "frozen_syncs": [
+    {
+      "selection": "default (dev + highs)",
+      "environment": "/private/tmp/pyspd-gate2-env-default",
+      "status": "passed"
+    },
+    {
+      "selection": "dev + highs + gdx",
+      "environment": "/private/tmp/pyspd-gate2-env-gdx",
+      "status": "passed"
+    },
+    {
+      "selection": "oracle",
+      "environment": "/private/tmp/pyspd-gate2-env-oracle",
+      "status": "passed"
+    },
+    {
+      "selection": "docs",
+      "environment": "/private/tmp/pyspd-gate2-env-docs",
+      "status": "passed"
+    },
+    {
+      "selection": "gurobi",
+      "environment": "/private/tmp/pyspd-gate2-env-gurobi",
+      "status": "installation-passed-runtime-not-qualified"
+    },
+    {
+      "selection": "cplex",
+      "environment": "/private/tmp/pyspd-gate2-env-cplex",
+      "status": "empty-deferred-group-sync-passed"
+    }
+  ],
+  "locked_versions": {
+    "gamsapi": "54.3.1",
+    "gamspy": "1.27.0",
+    "highspy": "1.15.1",
+    "mkdocs": "1.6.1",
+    "mkdocs-material": "9.7.7",
+    "pyarrow": "22.0.0",
+    "pyomo": "6.10.1"
+  },
+  "gams_free_runtime_check": {
+    "environment": "default",
+    "gams_module_available": false,
+    "feed_symbol_count": 42,
+    "selected_case_record_count": 14896,
+    "feed_logical_sha256": "9aa2351cbea42a2773acd464809d6d09c9a9826639ff0cf72e4ffd8c3270ac91",
+    "status": "passed"
+  },
+  "external_solver_scope": {
+    "highs_lp": "qualified by backend contract tests",
+    "gurobi": "dependency installation only; optional runtime validation deferred",
+    "cplex": "deferred by ADR-0008 and user direction"
+  }
+}

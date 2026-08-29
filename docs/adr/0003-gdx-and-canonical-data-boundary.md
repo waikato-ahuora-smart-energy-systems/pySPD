@@ -2,9 +2,9 @@
 
 | Field | Value |
 |---|---|
-| Status | Proposed |
+| Status | Accepted by project direction |
 | Date | 28 August 2026 |
-| Deciders | Data lead, technical lead, validation lead, legal reviewer |
+| Deciders | Project direction; technical implementation agent |
 
 ## Context
 

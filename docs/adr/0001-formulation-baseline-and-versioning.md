@@ -2,9 +2,9 @@
 
 | Field | Value |
 |---|---|
-| Status | Proposed |
+| Status | Accepted by project direction |
 | Date | 28 August 2026 |
-| Deciders | Gate 0 sponsor, technical lead, market SME, validation lead |
+| Deciders | Project direction; technical implementation agent |
 
 ## Context
 

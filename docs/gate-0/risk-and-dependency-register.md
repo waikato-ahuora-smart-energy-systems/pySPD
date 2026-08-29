@@ -17,7 +17,7 @@ roles until named people are appointed.
 | `R-003` | Source/data/specification rights prohibit intended distribution | Medium | Critical | Legal review, fetch-by-hash, attribution, no premature redistribution | Legal reviewer | **G0 hold** |
 | `R-004` | Native GAMS/CPLEX oracle cannot be licensed or reproduced | Medium | High | ADR-0008 active SCIP/HiGHS reference; CPLEX claims prohibited until later cross-validation | Sponsor/technical lead | Deferred; not a current gate hold |
 | `R-005` | MIP price convention is assumed incorrectly | Low | Critical | Explicit fixed-discrete RMIP, canonical matrix/solution snapshots, independent price and LP checks | Optimization lead | Controlled for sample; expand corpus |
-| `R-006` | GDX ordering/sparse/special values are lost | Medium | Critical | Explicit logical encoding, cross-reader and round-trip tests | Data lead | G2 |
+| `R-006` | GDX ordering/sparse/special values are lost | Medium | Critical | Explicit logical encoding, cross-reader and round-trip tests | Data lead | Controlled at G2; monitor |
 | `R-007` | Historical schema/date branches are missed | Medium | High | Versioned schemas, boundary corpus, preprocessing checkpoints | Data lead | G1/G3 |
 | `R-008` | HiGHS is misrepresented as full-model capable | Medium | High | LP-only profile; named SOS reformulations and Gates 6/7 | Technical lead | Controlled by ADR |
 | `R-009` | Solver degeneracy is mistaken for a defect or used to hide one | High | High | Common optimum target/ranges, KKT, independent classification | Validation lead | G1/G9 |
@@ -25,8 +25,8 @@ roles until named people are appointed.
 | `R-011` | Branch-flow fallback publishes degraded economics silently | Low | Critical | Typed degraded state, result/report manifest, release failure by default | Technical lead | G6/G7/G8 |
 | `R-012` | Daily data completeness is mistaken for case-type completeness | Medium | High | Signed case-type matrix and separate corpus per type | Validation lead | G0/G9 |
 | `R-013` | Golden outputs are regenerated from PySPD defects | Medium | Critical | Oracle-only goldens, separate review, hashes, CI baseline protection | Validation lead | G1 onward |
-| `R-014` | Probity hook is treated as complete TDD proof | Medium | High | Immutable red/green schema and CI enforcement | Release owner | G2 |
-| `R-015` | Class architecture becomes a monolith or circular plugin graph | Medium | High | ABC contracts, ownership/dependency validation, extension tests | Technical lead | G2/G4 |
+| `R-014` | Probity hook is treated as complete TDD proof | Medium | High | Immutable red/green schema, repository coverage audit, and CI enforcement | Release owner | Controlled at G2; monitor |
+| `R-015` | Class architecture becomes a monolith or circular plugin graph | Medium | High | ABC contracts, ownership/dependency validation, extension tests | Technical lead | Controlled at G2; extend at G4 |
 | `R-016` | Full-corpus qualification is too slow and gets skipped | Medium | High | Tiered CI, immutable cache, isolated parallelism, release gate remains mandatory | Release owner | G9 |
 | `R-017` | Independent assurance begins too late | Medium | High | Appoint validation lead at G0 and review evidence every gate | Sponsor | **G0 hold** |
 | `R-018` | Scope expands to DPS/DWH/FTR/Pivot before baseline parity | Medium | High | Signed scope matrix and formal change control | Sponsor | Controlled; monitor |
@@ -42,11 +42,11 @@ roles until named people are appointed.
 | `D-005` | GAMS runtime/licence | G0/G1 | GAMS 54.3.1 installed outside `PATH`; full-size SCIP/HiGHS executed | [Gate 1 runtime evidence](../gate-1/runtime-evidence.json) | Technical lead |
 | `D-006` | Native GAMS CPLEX runtime/licence | Deferred cross-validation | Link present but size-limited; GAMSPy entitlement is not transferable | Version/licence/options manifest and full-size price run before CPLEX-specific claims | Technical lead |
 | `D-007` | v15/v16/licence/audit PDF archive | G0 | URLs known; hashes/storage pending | Immutable URI, size, SHA-256 | Data steward |
-| `D-008` | Daily Pricing GDX access | G1 | Public source identified; corpus not fetched | Per-file manifest and representative fetch | Data steward |
+| `D-008` | Daily Pricing GDX access | G1 | 139 hash-bound daily inputs fetched and converted | Gate 1 inventory and Gate 2 corpus qualification | Data steward |
 | `D-009` | 2023/2025 historical packs | G1 | Git commits identified; rights/applicability pending | Hashes, legal decision, profile mapping | Validation lead |
 | `D-010` | Gate evidence storage | G0/G1 | Not selected | Immutable retention service and access policy | Release owner |
-| `D-011` | Linux x86_64 CI | G2 | Not configured | Clean `uv sync --frozen` and test run | Release owner |
-| `D-012` | Pyomo/solver package versions | G2 | Not selected | ADR update and `uv.lock` | Technical lead |
+| `D-011` | Linux x86_64 CI | G2 | Workflow configured; remote execution pending | Clean `uv sync --frozen` and test run | Release owner |
+| `D-012` | Pyomo/solver package versions | G2 | Selected and locked | Gate 2 environment qualification and `uv.lock` | Technical lead |
 
 ## Escalation
 

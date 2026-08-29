@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -117,6 +119,7 @@ class BuiltModel:
     formulation: Formulation
     case_data: Any
     build_order: tuple[str, ...]
+    structural_signature: str
 
 
 class ModelAssembler:
@@ -181,12 +184,43 @@ class ModelAssembler:
             for name, value in values.items():
                 artifacts.register(component_type.name, name, value)
         artifacts.seal()
+        build_order = tuple(component.name for component in ordered)
+        structural_payload = {
+            "formulation_id": formulation.formulation_id,
+            "build_order": list(build_order),
+            "components": [
+                {
+                    "class": f"{component.__module__}.{component.__qualname__}",
+                    "name": component.name,
+                    "requires": sorted(component.requires),
+                    "provides": sorted(component.provides),
+                }
+                for component in ordered
+            ],
+            "extensions": [
+                f"{extension.__module__}.{extension.__qualname__}"
+                for extension in (
+                    *formulation.preprocessors,
+                    formulation.solve_policy,
+                    formulation.pricing_engine,
+                    formulation.result_schema,
+                    formulation.report_renderer,
+                )
+            ],
+            "artifact_owners": dict(artifacts.owners),
+        }
+        structural_signature = hashlib.sha256(
+            json.dumps(
+                structural_payload, sort_keys=True, separators=(",", ":")
+            ).encode()
+        ).hexdigest()
         return BuiltModel(
             model=model,
             artifacts=artifacts,
             formulation=formulation,
             case_data=transformed,
-            build_order=tuple(component.name for component in ordered),
+            build_order=build_order,
+            structural_signature=structural_signature,
         )
 
     @staticmethod

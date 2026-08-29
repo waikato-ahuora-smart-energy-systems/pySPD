@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -42,6 +42,7 @@ class TddEvidenceValidator:
         expected_parent: str,
         expected_implementation: str,
         expected_environment_sha256: str,
+        committed_test_content: Callable[[str, str], bytes] | None = None,
     ) -> None:
         schema = json.loads(self.schema_path.read_text(encoding="utf-8"))
         try:
@@ -69,8 +70,13 @@ class TddEvidenceValidator:
 
         test_files = evidence["test_files"]
         for item in test_files:
-            path = self._within_root(item["path"])
-            if self._file_sha256(path) != item["sha256"]:
+            if committed_test_content is None:
+                content = self._within_root(item["path"]).read_bytes()
+            else:
+                content = committed_test_content(
+                    expected_implementation, item["path"]
+                )
+            if hashlib.sha256(content).hexdigest() != item["sha256"]:
                 raise TddEvidenceError(f"test file hash mismatch: {item['path']}")
         if logical_test_patch_sha256(test_files) != evidence["test_patch_sha256"]:
             raise TddEvidenceError("test patch logical hash does not match")

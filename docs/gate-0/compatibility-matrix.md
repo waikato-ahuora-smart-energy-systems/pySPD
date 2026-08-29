@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Proposed; SCIP/HiGHS characterization profile executed |
+| Status | Gate 2 macOS qualification complete; Linux CI execution pending |
 | Observation date | 29 August 2026 |
 | Development platform | macOS arm64 |
 
@@ -37,7 +37,9 @@ alone never selects a formulation.
 |---|---|---|---|
 | Python | `>=3.13,<3.14` | `uv` Python 3.13.14 | Candidate |
 | `uv` | Locked project workflow | 0.11.29 | Candidate |
-| Pyomo | Exact version to be selected in Stage 2 | Not yet a dependency | Pending |
+| Pyomo | `>=6.9,<7`, locked | 6.10.1 | Gate 2 qualified |
+| PyArrow | `>=18,<23`, locked | 22.0.0 | Gate 2 qualified |
+| HiGHS Python API | `>=1.11,<2`, locked | 1.15.1 | LP backend qualified |
 | GAMSPy | Oracle experiment group | 1.27.0 / GAMS API 54.3.1 | Qualified for GAMSPy-native models only |
 | Probity | 1.10.0 | 1.10.0 | Available |
 | Node | 22.x for Probity tooling | 22.23.2 | Available |
@@ -54,7 +56,7 @@ Python setup, dependency changes, test commands, and package execution use
 | `gams-scip-smoke` | Full-size source/data/objective smoke | Native GAMS, SCIP MIP, HiGHS LP | 15/15 primary MIPs optimal; objectives within `0.0001 NZD` of committed CPLEX | Characterization qualified; no prices |
 | `gams-scip-highs-pricing` | Active vSPD execution and pricing reference | SCIP MIP, explicit discrete/SOS fixing, HiGHS RMIP | 15 MIPs + 15 RMIPs optimal; 135 finite node prices; two deterministic runs | Adequate when every required solve is status `1/1`; ADR-0008 |
 | `pyomo-cplex-parity` | Deferred strict CPLEX matrix/solution/price parity | LP/MIP/SOS, duals, quality, IIS | CPLEX not detected | Deferred by ADR-0008 |
-| `pyomo-highs-lp` | Open LP/default CI | LP/MIP without native reference SOS | HiGHS executable not detected; `highspy` not installed | Stage 2 pending |
+| `pyomo-highs-lp` | Open LP/default CI | Continuous LP, status/options/version reporting, safe solution loading | APPSI HiGHS 1.15.1; optimal/infeasible/unbounded/limit/error/unavailable/no-solution paths tested | Gate 2 qualified |
 | `pyomo-highs-reformulated` | Optional portable full model | Approved binary/incremental SOS replacements | Not implemented | Gates 6/7 deferred |
 | `pyomo-gurobi-crosscheck` | Independent commercial check | LP/MIP/SOS, duals, IIS | `gurobi_cl` not detected | Optional pending |
 
@@ -75,8 +77,8 @@ full pricing requalification, and Gate 6 plus Gate 7 approval.
 
 | Platform | Intended support | Current evidence |
 |---|---|---|
-| macOS arm64 | Development and portable profiles | `uv`/Python/Node observed; solvers pending |
-| Linux x86_64 | CI and release target | No clean-build evidence yet |
+| macOS arm64 | Development and portable profiles | Frozen environments, canonical runtime, GDX adapter, Pyomo, and HiGHS qualified at Gate 2 |
+| Linux x86_64 | CI and release target | CI matrix configured; first remote run is pending |
 | Windows x86_64 | Not first-release target | Deferred unless sponsor adds scope |
 
 Canonical logical-content hashes must remain stable across qualified platforms

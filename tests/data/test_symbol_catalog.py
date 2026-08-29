@@ -53,3 +53,18 @@ def test_catalog_rejects_missing_unexpected_and_mismatched_symbols() -> None:
             uel_orders=((), ()),
         )
         catalog.validate(replace(valid, symbols=(bad, *valid.symbols[1:])))
+
+
+def test_catalog_accepts_explicitly_optional_historical_family_absence() -> None:
+    catalog = SymbolCatalog.vspd_v5()
+    source = empty_source(catalog)
+    without_optional = replace(
+        source,
+        symbols=tuple(
+            symbol
+            for symbol in source.symbols
+            if symbol.name != "i_dateTimeRiskGroupBranch"
+        ),
+    )
+
+    catalog.validate(without_optional)

@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "captured_date": "2026-08-29",
+  "platform": "macOS arm64",
+  "format": "pyspd-canonical-feed-v1",
+  "daily_benchmark": {
+    "trading_date": "20240407",
+    "input_size_bytes": 40308748,
+    "input_sha256": "e428dd4c4e76e3d2ebb13332e55d70afa84e7cee145224ea70ebe951c70be867",
+    "symbol_count": 42,
+    "record_count": 3873677,
+    "raw_symbols_path": {
+      "elapsed_seconds": 44.31,
+      "peak_rss_bytes": 6399148032
+    },
+    "direct_canonical_feed_path": {
+      "elapsed_seconds": 14.37,
+      "peak_rss_bytes": 673415168,
+      "allocated_feed_size_kibibytes": 9964,
+      "logical_sha256": "9aa2351cbea42a2773acd464809d6d09c9a9826639ff0cf72e4ffd8c3270ac91"
+    },
+    "gams_free_lazy_case_load": {
+      "symbol_count": 42,
+      "record_count": 14896,
+      "status": "passed"
+    }
+  },
+  "cross_reader": {
+    "input_name": "RTD_202502261155_251012025022255930_20250226115400.gdx",
+    "input_size_bytes": 58124,
+    "input_sha256": "f010065a800a0c48a1147fd3543d372eaa65acc9e0f0ed6ea64546a474655c65",
+    "symbol_count": 43,
+    "record_count": 14751,
+    "raw_logical_sha256": "1875d3a9f6071f520a5dcd5ec1c81361306a913d37cc58faffe04b1eb0ff8279",
+    "comparison": "every symbol, domain, UEL order, record identity, value field, and special-value kind",
+    "status": "exactly-equal"
+  },
+  "encoding_independence": {
+    "encodings": [
+      "Parquet 2.6 with Zstandard",
+      "Parquet 2.6 with Snappy"
+    ],
+    "expected_logical_sha256": "6625493ac0680efd0bb106a83aee17212fd3ad11e06f941c8d20958cd7650796",
+    "physical_manifests_differ": true,
+    "logical_hashes_equal": true
+  },
+  "integrity_controls": [
+    "source SHA-256",
+    "per-symbol physical SHA-256",
+    "per-symbol encoding-independent logical SHA-256",
+    "feed logical SHA-256",
+    "one source record per Parquet row",
+    "feed-root path confinement"
+  ]
+}
