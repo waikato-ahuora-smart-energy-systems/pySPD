@@ -1,0 +1,17 @@
+Command: uv run pytest tests/hvdc/test_gate6_contract.py -q
+Exit: 1
+
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_gate6_hvdc_and_mip_pricing_vertical_slice_exists _____________
+
+    def test_gate6_hvdc_and_mip_pricing_vertical_slice_exists() -> None:
+>       assert Path("src/pyspd/hvdc/formulation.py").is_file(), (
+            "REQ-G6-HVDC: class-based HVDC and MIP-pricing formulation is absent"
+        )
+E       AssertionError: REQ-G6-HVDC: class-based HVDC and MIP-pricing formulation is absent
+
+tests/hvdc/test_gate6_contract.py:7: AssertionError
+=========================== short test summary info ============================
+FAILED tests/hvdc/test_gate6_contract.py::test_gate6_hvdc_and_mip_pricing_vertical_slice_exists
+1 failed in 0.10s

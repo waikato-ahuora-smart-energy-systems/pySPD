@@ -12,7 +12,9 @@ from pyspd.network.data import AC_NETWORK_FORMULATION_ID, NetworkCase, NetworkDa
 
 type Key = tuple[str, ...]
 
-_SUPPORTED = frozenset({AC_NETWORK_FORMULATION_ID})
+_SUPPORTED = frozenset(
+    {AC_NETWORK_FORMULATION_ID, "vspd-v5.0.6-hvdc", "vspd-v5.0.6-reserve"}
+)
 
 
 def _case(context: BuildContext) -> NetworkCase:

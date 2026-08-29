@@ -1,0 +1,72 @@
+{
+  "case": {
+    "case_id": "11012022110000479",
+    "date_time": "01-NOV-2022 13:00",
+    "trading_period": "TP27"
+  },
+  "finite_difference_price": {
+    "absolute_error": 2.2714894652331452e-05,
+    "dual_price_nzd_per_mwh": 7.0740055386606455,
+    "finite_difference_price_nzd_per_mwh": 7.074028253555298,
+    "fixed_decisions_unchanged": true,
+    "node": [
+      "11012022110000479",
+      "01-NOV-2022 13:00",
+      "TWI2201"
+    ],
+    "passed": true,
+    "perturbation_mw": 0.0001,
+    "tolerance": 0.01
+  },
+  "independent_validation": {
+    "maximum_residual": 2.842170943040401e-14,
+    "passed": true,
+    "residual_count": 17,
+    "tolerance": 1e-07
+  },
+  "model": {
+    "constraint_count": 30723,
+    "hvdc_breakpoint_count": 28,
+    "hvdc_link_count": 4,
+    "structural_signature": "da88a4f35d58be0324232c6afbf349b94473e0a5226dff18b92ae66e3f485081",
+    "variable_count": 41312
+  },
+  "passed": true,
+  "pricing_model_audit": {
+    "approved_algebra_unchanged": true,
+    "complete_fix_set": true,
+    "fixed_name_count": 0,
+    "passed": true,
+    "pricing_algebra_sha256": "5e3d60ad01bbb6edf2400522f85271a2d77cc3cbce63015c80d6da04b792f6f2",
+    "pricing_discrete_count": 0,
+    "pricing_sos_count": 0,
+    "pricing_state_sha256": "885bcbe69004bfe74ce320dd66bb4e4d226d991fa8d01d3cbd773adcfebbcf4c",
+    "primary_algebra_sha256": "5e3d60ad01bbb6edf2400522f85271a2d77cc3cbce63015c80d6da04b792f6f2",
+    "primary_discrete_count": 0,
+    "primary_sos_count": 0,
+    "primary_state_sha256": "885bcbe69004bfe74ce320dd66bb4e4d226d991fa8d01d3cbd773adcfebbcf4c"
+  },
+  "profile": "vspd-v5.0.6-hvdc-stage6",
+  "schema_version": 1,
+  "solution": {
+    "all_node_prices_finite": true,
+    "fixed_discrete_count": 0,
+    "node_price_count": 523,
+    "pricing_objective_nzd": 90147624.85856354,
+    "primary_objective_nzd": 90147624.85856354
+  },
+  "source": {
+    "name": "RTD_202211011300_11012022110000479_20221101125901.gdx",
+    "sha256": "2e21665f55aaf9d8b7ef566c3ba436f8ae19ab355694caf52c7fc01e3f8f423b"
+  },
+  "state_machine": {
+    "detected_issues": [],
+    "elapsed_seconds": 8.077347917016596,
+    "initial_backend": "highs",
+    "mip_resolve_triggered": false,
+    "pricing_backend": "highs",
+    "pricing_status": "optimal",
+    "primary_backend": "highs",
+    "primary_status": "optimal"
+  }
+}
