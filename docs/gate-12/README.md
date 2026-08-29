@@ -123,6 +123,17 @@ profile is reusable. The corrected `exact-positive` profile leaves
 `EnergyShortfallMW > 0` unchanged and restricts the threshold only to progress
 logging.
 
+The corrected profile has completed its first hash-bound qualification date.
+On `Pricing_20221204.gdx`, all 274 selected RTD cases solved once in canonical
+GDX order, every primary and cleanup solve was optimal, and all 274 interval
+identities emitted eligible shortfall-transfer evidence (1,806 node records).
+The source, patch, raw listing, progress, evidence, and logical checkpoint
+hashes are retained in
+[`historical-exact-positive-qualification.json`](historical-exact-positive-qualification.json).
+This proves that the corrected oracle observes the disclosed defect, but it is
+deliberately classified as single-date trigger evidence rather than the final
+139-date population manifest.
+
 Run or resume the governed enumeration with `uv`:
 
 ```bash

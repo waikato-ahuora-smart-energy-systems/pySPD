@@ -2,7 +2,7 @@
 
 | ID | Exit criterion | Current evidence | Status |
 |---|---|---|---|
-| `G12-01` | Exactly 546 unique affected identities across all 139 Gate 1 hashes | All 139 hashes screened; 434 diagnostic candidates and a 112-count gap recorded without claiming membership; corrected daily-mode benchmark is explicitly excluded; first production profile was invalidated after a threshold changed the historical branch; tested exact-positive RTD-only profile is ready to restart | In progress |
+| `G12-01` | Exactly 546 unique affected identities across all 139 Gate 1 hashes | All 139 hashes screened; 434 analytic candidates remain diagnostic only. The corrected exact-positive profile has now completed a hash-bound one-day qualification: all 274 canonical RTD cases on 2022-12-04 solved optimally and all 274 triggered the pinned strict-positive branch. Full 139-date enumeration is in progress | In progress |
 | `G12-02` | All 546 cases replayed through pinned GAMS and PySPD | Prefix-complete PySPD replay planner and atomic per-date configuration writer implemented and tested; execution waits for the exact population manifest | Pending execution |
 | `G12-03` | Complete normal, outage, high/negative-price, scarcity, islanding, 46-period, and 50-period days | Required categories enforced by `Gate12EvidenceIndex`; Gate 1 DST inputs are hash-bound | Pending execution |
 | `G12-04` | Identical selection, order, prior-dispatch initialization, and fallback path | Historical checkpoints require exact canonical GDX progress order; application selection fails on missing/duplicate identities; replay plans include the canonical same-day prefix through the last affected case; cross-implementation state-transition comparison remains pending | Partial |

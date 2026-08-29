@@ -1,0 +1,26 @@
+{
+  "affected_identity_count": 274,
+  "all_solves_optimal": true,
+  "artifact_sha256": {
+    "evidence": "10f1ef4843cda74232f46642cbd2d69ef8f5c4a93261a33976f906db2ec3e69a",
+    "listing": "5d4c62fbf2c94928c8a274014ed4d637636b449aa18c9ee51485f4599ae4bf93",
+    "progress": "7ce41740fe9685779933567503ca570842be8450df9a4527a3f1cab5226ecf16"
+  },
+  "checkpoint_sha256": "c0b2970a410e11e9e654c481108c8c339c95ec18ee6a7e84250c4313cf3aa3b2",
+  "classification": "qualifying-single-date-trigger-evidence",
+  "evidence_record_count": 1806,
+  "execution_profile": "historical-v5.0.2-dailymode1-scip-solvelink5-first-loop-rtd-only-canonical-order-exact-positive",
+  "notes": [
+    "This artifact qualifies the corrected exact-positive historical trigger on one governed date; it is not the 139-date population manifest.",
+    "Every selected RTD case solved once in canonical GDX order and all primary and cleanup solves were optimal.",
+    "Eligible GAMS EPS shortfall values may render as zero in the text evidence; membership is retained because the pinned model evaluated the strict-positive predicate."
+  ],
+  "patch_profile": "historical-v5.0.2-dailymode1-scip-first-loop-exact-positive",
+  "patch_sha256": "c556eaf1d6023c589250f23f33e9bb7029661faf3a51c8a5499a7a9b3045701a",
+  "reference_commit": "3360a91ebd48f2e3cbb52a5e6766d893011054be",
+  "schema_version": 1,
+  "selected_case_count": 274,
+  "solved_case_count": 274,
+  "source_sha256": "848a80308a6c5e55bafb7b2a46882d3a1381d856e7c8b56f0a3bcb8239e80e3e",
+  "trading_date": "20221204"
+}
