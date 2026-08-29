@@ -1,0 +1,101 @@
+{
+  "objective_components_nzd": {
+    "balance_penalty": 0.0,
+    "movement_cost": 0.5016565,
+    "net_benefit": 90131158.94580351,
+    "ramp_penalty": 0.0,
+    "scarcity_cost": 0.0,
+    "system_benefit": 0,
+    "system_cost": 17340.552539999986,
+    "system_penalty": 0.5016565
+  },
+  "passed": true,
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "pricing": {
+    "absolute_errors": {
+      "[\"11012022110000479\",\"01-NOV-2022 13:00\",\"NI\"]": 3.073692326438504e-06,
+      "[\"11012022110000479\",\"01-NOV-2022 13:00\",\"SI\"]": 1.0601997375486727e-05
+    },
+    "dual_normalization": "negative objective sensitivity to +1 MW required load",
+    "dual_prices": {
+      "[\"11012022110000479\",\"01-NOV-2022 13:00\",\"NI\"]": 80.0605,
+      "[\"11012022110000479\",\"01-NOV-2022 13:00\",\"SI\"]": 0.0295
+    },
+    "duration_conversion": "vSPD marginal prices are not interval-scaled; interval revenue for 1 MW is price * interval_minutes / 60",
+    "finite_difference_epsilon_mw": 0.001,
+    "finite_difference_prices": {
+      "[\"11012022110000479\",\"01-NOV-2022 13:00\",\"NI\"]": 80.06049692630768,
+      "[\"11012022110000479\",\"01-NOV-2022 13:00\",\"SI\"]": 0.02948939800262451
+    },
+    "maximum_absolute_error": 1.0601997375486727e-05,
+    "one_mw_interval_revenue_nzd": {
+      "[\"11012022110000479\",\"01-NOV-2022 13:00\",\"NI\"]": 6.671708333333333,
+      "[\"11012022110000479\",\"01-NOV-2022 13:00\",\"SI\"]": 0.002458333333333333
+    },
+    "raw_duals": {
+      "[\"11012022110000479\",\"01-NOV-2022 13:00\",\"NI\"]": -80.0605,
+      "[\"11012022110000479\",\"01-NOV-2022 13:00\",\"SI\"]": -0.0295
+    },
+    "unit": "NZD/MWh"
+  },
+  "profile": "macOS-arm64-highs-core-energy",
+  "python": "3.13.14",
+  "schema_version": 1,
+  "solver": {
+    "backend": "highs",
+    "interface": "pyomo.contrib.appsi_highs",
+    "options": {
+      "dual_feasibility_tolerance": 1e-08,
+      "primal_feasibility_tolerance": 1e-08,
+      "random_seed": 0,
+      "solver": "simplex",
+      "threads": 1
+    },
+    "solution_loaded": true,
+    "status": "optimal",
+    "termination": "optimal",
+    "version": [
+      1,
+      15,
+      1
+    ]
+  },
+  "source": {
+    "case": {
+      "case_id": "11012022110000479",
+      "date_time": "01-NOV-2022 13:00",
+      "trading_period": "TP27"
+    },
+    "name": "RTD_202211011300_11012022110000479_20221101125901.gdx",
+    "sha256": "2e21665f55aaf9d8b7ef566c3ba436f8ae19ab355694caf52c7fc01e3f8f423b"
+  },
+  "structure": {
+    "build_order": [
+      "core_domains",
+      "demand_bids",
+      "energy_offers",
+      "energy_scarcity",
+      "energy_balance",
+      "generation_ramping",
+      "core_economics"
+    ],
+    "formulation_id": "vspd-v5.0.6-core-energy",
+    "offer_blocks": 149,
+    "offers": 99,
+    "periods": 1,
+    "preprocessing_signature": "33bf37b4295d70ac35bfb7aa2070ffa4ebb935e00fb6ebab2e599e544ca16f7f",
+    "regions": 2,
+    "scarcity_blocks": 10460,
+    "structural_signature": "ec5ac8c00672f402b41cd8d0f29591ee242d3d6a5cde33a7340d89d896147a20"
+  },
+  "tolerances": {
+    "finite_difference_price_nzd_per_mwh": 2e-05,
+    "objective_component_nzd": 1e-07,
+    "primal_residual_mw": 1e-07
+  },
+  "validation": {
+    "maximum_bound_violation_mw": 0.0,
+    "maximum_objective_component_error_nzd": 1.1102230246251565e-16,
+    "maximum_primal_residual_mw": 4.547473508864641e-13
+  }
+}

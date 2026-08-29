@@ -33,13 +33,15 @@ def test_canonical_matrix_has_exact_bounds_coefficients_and_stable_hash() -> Non
     assert (generation_block.lower, generation_block.upper, generation_block.objective) == (
         0.0,
         20.0,
-        -7.0,
+        0.0,
     )
     definition = next(
         row for row in left.rows if "GenerationOfferDefinition" in row.name
     )
     assert sorted(value for _name, value in definition.coefficients) == [-1.0, 1.0]
     assert definition.lower == definition.upper == 0.0
+    cost_definition = next(row for row in left.rows if "SystemCostDefinition" in row.name)
+    assert -7.0 in {value for _name, value in cost_definition.coefficients}
 
 
 class SyntheticComponent(ModelComponent):

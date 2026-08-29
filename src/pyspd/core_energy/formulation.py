@@ -25,6 +25,7 @@ from pyspd.core_energy.components import (
     DemandBidsComponent,
     EnergyBalanceComponent,
     EnergyOffersComponent,
+    EnergyScarcityComponent,
     GenerationRampingComponent,
 )
 from pyspd.core_energy.data import CORE_ENERGY_FORMULATION_ID, CoreEnergyCase, Region
@@ -121,7 +122,11 @@ class CoreEnergyResults:
 
 
 def _values(component: Any) -> dict[tuple[str, ...], float]:
-    return {tuple(index): float(pyo.value(component[index])) for index in component}
+    output: dict[tuple[str, ...], float] = {}
+    for index in component:
+        value = pyo.value(component[index], exception=False)
+        output[tuple(index)] = 0.0 if value is None else float(value)
+    return output
 
 
 class CoreEnergyResultSchema(ResultSchema):
@@ -146,6 +151,8 @@ class CoreEnergyResultSchema(ResultSchema):
                     "balance_penalty",
                     "ramp_penalty",
                     "movement_cost",
+                    "scarcity_cost",
+                    "system_penalty",
                     "net_benefit",
                 )
             },
@@ -178,6 +185,7 @@ def core_energy_formulation(*, preprocess: bool = False) -> Formulation:
             CoreDomainsComponent,
             EnergyOffersComponent,
             DemandBidsComponent,
+            EnergyScarcityComponent,
             EnergyBalanceComponent,
             GenerationRampingComponent,
             CoreEconomicsComponent,

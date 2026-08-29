@@ -69,6 +69,7 @@ def validate_core_energy(
     ramp_surplus = _values(artifacts["ramp_surplus"])
     up_delta = _values(artifacts["generation_up_delta"])
     down_delta = _values(artifacts["generation_down_delta"])
+    scarcity_block = _values(artifacts["energy_scarcity_block"])
 
     balance_residuals = {
         region: sum(
@@ -89,7 +90,7 @@ def validate_core_energy(
 
     ramp_up_violations: dict[tuple[str, ...], float] = {}
     ramp_down_violations: dict[tuple[str, ...], float] = {}
-    for offer in ramp_deficit:
+    for offer in artifacts["ramp_up"]:
         ca, dt, _name = offer
         total = generation[offer] + sum(
             generation[(map_ca, map_dt, secondary)]
@@ -130,14 +131,30 @@ def validate_core_energy(
             for key in ramp_deficit
         ),
         "movement_cost": data.movement_penalty
-        * sum(up_delta[key] + down_delta[key] for key in up_delta),
+        * sum(
+            up_delta[key] + down_delta[key]
+            for key in up_delta
+            if data.study_mode[key[:2]] in {101.0, 201.0}
+        ),
+        "scarcity_cost": sum(
+            scarcity_block[key] * data.scarcity_price[key]
+            for key in data.scarcity_blocks
+        ),
     }
+    independent["system_penalty"] = (
+        independent["balance_penalty"]
+        + independent["ramp_penalty"]
+        + independent["movement_cost"]
+    )
     independent["net_benefit"] = (
         independent["system_benefit"]
         - independent["system_cost"]
-        - independent["balance_penalty"]
-        - independent["ramp_penalty"]
-        - independent["movement_cost"]
+        - independent["system_penalty"]
+        - independent["scarcity_cost"]
+        + sum(
+            data.scarcity_limit[key] * data.scarcity_price[key]
+            for key in data.scarcity_blocks
+        )
     )
     errors = {
         name: float(pyo.value(artifacts[name])) - value
@@ -187,14 +204,18 @@ def finite_difference_price(
 
 
 def _values(component: Any) -> dict[tuple[str, ...], float]:
-    return {
-        tuple(index): float(pyo.value(component[index]))
-        for index in component
-    }
+    output: dict[tuple[str, ...], float] = {}
+    for index in component:
+        value = pyo.value(component[index], exception=False)
+        output[tuple(index)] = 0.0 if value is None else float(value)
+    return output
 
 
 def _bound_violation(variable: Any) -> float:
-    value = float(pyo.value(variable))
+    raw_value = pyo.value(variable, exception=False)
+    if raw_value is None:
+        return 0.0
+    value = float(raw_value)
     lower = None if variable.lb is None else float(pyo.value(variable.lb))
     upper = None if variable.ub is None else float(pyo.value(variable.ub))
     return max(

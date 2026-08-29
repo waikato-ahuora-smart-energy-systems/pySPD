@@ -1,0 +1,54 @@
+{
+  "case": {
+    "case_id": "11012022110000479",
+    "date_time": "01-NOV-2022 13:00",
+    "trading_period": "TP27"
+  },
+  "differences": {
+    "coefficient_mismatches": 0,
+    "column_mismatches": 0,
+    "extra_columns": 0,
+    "extra_nonzeros": 0,
+    "extra_rows": 0,
+    "missing_columns": 0,
+    "missing_nonzeros": 0,
+    "missing_rows": 0,
+    "row_bound_mismatches": 0
+  },
+  "gams": {
+    "column_count": 11632,
+    "logical_sha256": "6ccb1945bdc91ad17403e28628e770be547ce6e02e1982690a0dd8250fa3ef3f",
+    "nonzero_count": 12892,
+    "row_count": 882,
+    "sense": "maximize",
+    "structural_sha256": "6b7a6f4d9cd222fc0e65514bff4e3bca31bb66344ffa27f9c047f5ee0ee910e5"
+  },
+  "passed": true,
+  "precision_rule": {
+    "absolute_tolerance": 1e-09
+  },
+  "profile": "vspd-v5.0.6-core-energy-stage4",
+  "python": {
+    "column_count": 11632,
+    "logical_sha256": "6ccb1945bdc91ad17403e28628e770be547ce6e02e1982690a0dd8250fa3ef3f",
+    "nonzero_count": 12892,
+    "row_count": 882,
+    "sense": "maximize",
+    "structural_sha256": "6b7a6f4d9cd222fc0e65514bff4e3bca31bb66344ffa27f9c047f5ee0ee910e5"
+  },
+  "schema_version": 1,
+  "sources": {
+    "dictionary_gdx": {
+      "name": "pyspd_solve_1_dict.gdx",
+      "sha256": "910f50e84fe2a74f7338e553f85f40b9d468058364bfa9c169d6038a6f9e8d7f"
+    },
+    "input_gdx": {
+      "name": "RTD_202211011300_11012022110000479_20221101125901.gdx",
+      "sha256": "2e21665f55aaf9d8b7ef566c3ba436f8ae19ab355694caf52c7fc01e3f8f423b"
+    },
+    "matrix_gdx": {
+      "name": "pyspd_solve_1_matrix.gdx",
+      "sha256": "cd2d0d9bca43a7071ce19e07b53932090a316b39e202aa8c079083a0686a40a1"
+    }
+  }
+}

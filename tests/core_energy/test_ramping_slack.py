@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pyomo.environ as pyo
 import pytest
 
@@ -69,3 +71,27 @@ def test_explicit_ramp_slack_restores_feasibility_when_cap_conflicts() -> None:
     )
     assert pyo.value(built.artifacts["balance_deficit"]["C1", "T1", "NI"]) == 0.0
     assert pyo.value(built.artifacts["balance_surplus"]["C1", "T1", "NI"]) == 0.0
+
+
+def test_primary_secondary_generation_is_coupled_in_primary_ramp() -> None:
+    data = make_core_case(
+        load=60.0,
+        offers=(("PRIMARY", 100.0, 100.0), ("SECONDARY", 100.0, 0.0)),
+        starts={"PRIMARY": 50.0, "SECONDARY": 0.0},
+        ramp_up={"PRIMARY": 0.0},
+        study_mode=101.0,
+    )
+    data = replace(
+        data,
+        primary_offers=frozenset({("C1", "T1", "PRIMARY")}),
+        primary_secondary=frozenset(
+            {("C1", "T1", "PRIMARY", "SECONDARY")}
+        ),
+    )
+    built = _solve(data)
+    total = sum(
+        pyo.value(built.artifacts["generation"]["C1", "T1", offer])
+        for offer in ("PRIMARY", "SECONDARY")
+    )
+    assert total == pytest.approx(50.0)
+    assert pyo.value(built.artifacts["balance_deficit"]["C1", "T1", "NI"]) == 10.0

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pyomo.environ as pyo
 import pytest
 
@@ -35,6 +37,8 @@ def test_independent_objective_residual_complementarity_and_finite_difference() 
             "balance_penalty": 0.0,
             "ramp_penalty": 0.0,
             "movement_cost": 0.0,
+            "scarcity_cost": 0.0,
+            "system_penalty": 0.0,
             "net_benefit": -1_000.0,
         }
     )
@@ -56,3 +60,23 @@ def test_infeasible_physics_is_optimal_with_explicit_balance_slack() -> None:
     )
     prices = CoreEnergyPricingEngine().price(built, result)
     assert prices.values[("C1", "T1", "NI")] == pytest.approx(500_000.0)
+
+
+def test_energy_scarcity_blocks_are_explicit_and_set_price() -> None:
+    data = make_core_case(load=80.0, offers=(("GEN", 50.0, 10.0),))
+    node = ("C1", "T1", "N1")
+    scarcity_block = (*node, "t1")
+    data = replace(
+        data,
+        nodes=frozenset({node}),
+        node_region={node: ("C1", "T1", "NI")},
+        scarcity_blocks=frozenset({scarcity_block}),
+        scarcity_limit={scarcity_block: 100.0},
+        scarcity_price={scarcity_block: 1_000.0},
+        scarcity_enabled={("C1", "T1"): 1.0},
+    )
+    built = ModelAssembler().assemble(core_energy_formulation(), data)
+    result = CoreEnergySolvePolicy().solve(built)
+    prices = CoreEnergyPricingEngine().price(built, result)
+    assert pyo.value(built.artifacts["energy_scarcity_block"][scarcity_block]) == 30.0
+    assert prices.values[("C1", "T1", "NI")] == pytest.approx(1_000.0)

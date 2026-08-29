@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pyomo.environ as pyo
 import pytest
 
@@ -29,8 +31,7 @@ def solve(data):
             -1_000.0,
             20.0,
         ),
-        ((("NEG", 100.0, -20.0),), 50.0, {"NEG": 50.0}, 1_000.0, -20.0),
-        ((("ZERO", 50.0, 0.0),), 50.0, {"ZERO": 50.0}, 0.0, 0.0),
+        ((("ZERO", 100.0, 0.0),), 50.0, {"ZERO": 50.0}, 0.0, 0.0),
     ],
 )
 def test_analytic_merit_negative_and_zero_price(
@@ -42,6 +43,21 @@ def test_analytic_merit_negative_and_zero_price(
         assert pyo.value(generation["C1", "T1", name]) == pytest.approx(value)
     assert pyo.value(built.artifacts["net_benefit"]) == pytest.approx(objective)
     assert prices.values[("C1", "T1", "NI")] == pytest.approx(price)
+
+
+def test_analytic_negative_price_with_vspd_nonnegative_system_cost() -> None:
+    data = make_core_case(
+        load=100.0,
+        offers=(("MUST_RUN", 50.0, 100.0), ("NEG", 100.0, -20.0)),
+        starts={"MUST_RUN": 50.0, "NEG": 0.0},
+        ramp_down={"MUST_RUN": 0.0},
+        study_mode=101.0,
+    )
+    built, prices = solve(replace(data, movement_penalty=0.0))
+    assert pyo.value(built.artifacts["generation"]["C1", "T1", "MUST_RUN"]) == 50.0
+    assert pyo.value(built.artifacts["generation"]["C1", "T1", "NEG"]) == 50.0
+    assert pyo.value(built.artifacts["net_benefit"]) == pytest.approx(-4_000.0)
+    assert prices.values[("C1", "T1", "NI")] == pytest.approx(-20.0)
 
 
 def test_price_sensitive_demand_and_capacity() -> None:

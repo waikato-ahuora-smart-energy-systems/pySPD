@@ -27,6 +27,8 @@ class ConstraintRiskStep(PreprocessingStep):
             "offer_island",
             "directional_risk_factor",
             "case_datetime",
+            "node",
+            "required_load",
         }
     )
     provides = frozenset(
@@ -47,6 +49,9 @@ class ConstraintRiskStep(PreprocessingStep):
             "reserve_scarcity_enabled",
             "bad_price_factor",
             "scarcity_energy_price_max",
+            "scarcity_energy_block",
+            "scarcity_energy_limit",
+            "scarcity_energy_price",
             "scarcity_reserve_limit",
             "scarcity_reserve_price",
         }
@@ -64,6 +69,10 @@ class ConstraintRiskStep(PreprocessingStep):
         bids = _members(artifacts, "bid")
         offer_island = _members(artifacts, "offer_island")
         case_datetimes = _members(artifacts, "case_datetime")
+        nodes = _members(artifacts, "node")
+        required_load_artifact = artifacts["required_load"]
+        if not isinstance(required_load_artifact, SparseParameter):
+            raise TypeError("required_load")
 
         branch_factors = source.numeric("i_dateTimeBranchConstraintFactors")
         branch_constraints = frozenset(
@@ -163,6 +172,9 @@ class ConstraintRiskStep(PreprocessingStep):
             key: value if nonzero(value) else 5.0 for key, value in bad_price.items()
         }
         national_price = source.component("i_dateTimeScarcityNationalFactor", "price")
+        national_factor = source.component(
+            "i_dateTimeScarcityNationalFactor", "factor"
+        )
         scarcity_price_max = {
             key: max(
                 (
@@ -178,6 +190,47 @@ class ConstraintRiskStep(PreprocessingStep):
             "i_dateTimeScarcityResrvLimit", "limitMW"
         )
         reserve_price_input = source.component("i_dateTimeScarcityResrvLimit", "price")
+        node_limit_input = source.optional_component(
+            "i_dateTimeScarcityNodeLimit", "limitMW"
+        )
+        node_limit_price = source.optional_component(
+            "i_dateTimeScarcityNodeLimit", "price"
+        )
+        node_factor_input = source.optional_component(
+            "i_dateTimeScarcityNodeFactor", "factor"
+        )
+        node_factor_price = source.optional_component(
+            "i_dateTimeScarcityNodeFactor", "price"
+        )
+        energy_blocks = frozenset(
+            (*node, f"t{block}") for node in nodes for block in range(1, 21)
+        )
+        energy_limit_input: dict[tuple[str, ...], float] = {}
+        energy_price_input: dict[tuple[str, ...], float] = {}
+        for key in energy_blocks:
+            case, datetime, _node, block = key
+            enabled = nonzero(energy_scarcity.get((case, datetime), 0.0))
+            load = required_load_artifact.get(key[:3])
+            limit = (
+                national_factor.get((case, datetime, block), 0.0) * load
+                if enabled and load > 0.0
+                else 0.0
+            )
+            price = (
+                national_price.get((case, datetime, block), 0.0)
+                if enabled and limit > 0.0
+                else 0.0
+            )
+            if enabled and load > 0.0 and nonzero(node_factor_input.get(key, 0.0)):
+                limit = node_factor_input[key] * load
+            if enabled and nonzero(node_factor_price.get(key, 0.0)):
+                price = node_factor_price[key]
+            if enabled and nonzero(node_limit_input.get(key, 0.0)):
+                limit = node_limit_input[key]
+            if enabled and nonzero(node_limit_price.get(key, 0.0)):
+                price = node_limit_price[key]
+            energy_limit_input[key] = limit
+            energy_price_input[key] = price
 
         branch_dims = ("case", "datetime", "branch_constraint")
         market_dims = ("case", "datetime", "market_node_constraint")
@@ -241,6 +294,21 @@ class ConstraintRiskStep(PreprocessingStep):
                 "scarcity_energy_price_max",
                 ("case", "datetime"),
                 scarcity_price_max,
+            ),
+            "scarcity_energy_block": SparseSet(
+                "scarcity_energy_block",
+                ("case", "datetime", "node", "block"),
+                energy_blocks,
+            ),
+            "scarcity_energy_limit": SparseParameter(
+                "scarcity_energy_limit",
+                ("case", "datetime", "node", "block"),
+                energy_limit_input,
+            ),
+            "scarcity_energy_price": SparseParameter(
+                "scarcity_energy_price",
+                ("case", "datetime", "node", "block"),
+                energy_price_input,
             ),
             "scarcity_reserve_limit": SparseParameter(
                 "scarcity_reserve_limit",
