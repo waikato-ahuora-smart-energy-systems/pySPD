@@ -185,6 +185,12 @@ serially; this affects elapsed time, not evidence semantics.
 - strict-profile and portable-profile result summaries kept separate; and
 - a discrepancy register with zero unresolved material entries at closure.
 
+`E2ECaseEvidenceBuilder` accepts canonical bytes for exactly the twelve required
+case surfaces and hashes each independently; duplicates or omissions fail.
+`E2EDayEvidenceBuilder` separately hashes canonical order, original output,
+repeat output, resumed output, and reports, leaving repeat/resume drift visible
+to the closure validator rather than collapsing the artifacts early.
+
 ## Fail-closed rules
 
 - A date list is not an interval-identity manifest.

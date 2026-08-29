@@ -7,9 +7,13 @@ from dataclasses import replace
 import pytest
 
 from tools.gate12.evidence import (
+    REQUIRED_E2E_SURFACES,
     AffectedIntervalIdentity,
     AffectedIntervalManifest,
+    CaseSurfaceArtifact,
     DegeneracyCertificate,
+    E2ECaseEvidenceBuilder,
+    E2EDayEvidenceBuilder,
     EvidenceContractError,
     Observable,
     ParityComparator,
@@ -63,6 +67,43 @@ def test_interval_manifest_requires_exact_hash_bound_population() -> None:
         replace(manifest, identities=_identities(427)).validate(
             expected_source_hashes=_hashes()
         )
+
+
+def test_case_evidence_builder_hashes_every_raw_surface_artifact() -> None:
+    artifacts = tuple(
+        CaseSurfaceArtifact(name, f"{name}\n".encode(), passed=True)
+        for name in REQUIRED_E2E_SURFACES
+    )
+
+    evidence = E2ECaseEvidenceBuilder().build(
+        case_id="case-1",
+        trading_date="20221106",
+        source_sha256="a" * 64,
+        solver_profile=SolverProfile.PORTABLE_SCIP_HIGHS,
+        artifacts=artifacts,
+    )
+
+    evidence.validate()
+    assert set(evidence.surface_sha256) == set(REQUIRED_E2E_SURFACES)
+    assert len(set(evidence.surface_sha256.values())) == len(artifacts)
+
+
+def test_day_evidence_builder_exposes_repeat_or_resume_drift() -> None:
+    builder = E2EDayEvidenceBuilder()
+    evidence = builder.build(
+        trading_date="20221106",
+        category="normal",
+        source_sha256="a" * 64,
+        case_order=b"case-1\n",
+        output=b"output\n",
+        repeat_output=b"output\n",
+        resumed_output=b"changed\n",
+        report=b"report\n",
+        passed=True,
+    )
+
+    with pytest.raises(EvidenceContractError, match="repeated and resumed"):
+        evidence.validate()
 
 
 def test_interval_manifest_rejects_duplicate_and_unbound_identity() -> None:

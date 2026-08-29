@@ -132,6 +132,95 @@ class E2EDayEvidence:
 
 
 @dataclass(frozen=True)
+class CaseSurfaceArtifact:
+    """Raw canonical bytes and comparison outcome for one case surface."""
+
+    name: str
+    payload: bytes
+    passed: bool
+    unresolved_material_count: int = 0
+
+    def __post_init__(self) -> None:
+        if (
+            not self.name.strip()
+            or not isinstance(self.payload, bytes)
+            or not isinstance(self.unresolved_material_count, int)
+            or isinstance(self.unresolved_material_count, bool)
+            or self.unresolved_material_count < 0
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-E2E: invalid canonical case surface artifact"
+            )
+
+
+class E2ECaseEvidenceBuilder:
+    """Hash exact raw artifacts without allowing a surface to disappear."""
+
+    def build(
+        self,
+        *,
+        case_id: str,
+        trading_date: str,
+        source_sha256: str,
+        solver_profile: SolverProfile,
+        artifacts: tuple[CaseSurfaceArtifact, ...],
+    ) -> E2ECaseEvidence:
+        by_name = {artifact.name: artifact for artifact in artifacts}
+        if len(by_name) != len(artifacts) or set(by_name) != set(
+            REQUIRED_E2E_SURFACES
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-E2E: exact canonical case surfaces are required"
+            )
+        unresolved = sum(
+            artifact.unresolved_material_count for artifact in artifacts
+        )
+        return E2ECaseEvidence(
+            case_id=case_id,
+            trading_date=trading_date,
+            source_sha256=source_sha256,
+            solver_profile=solver_profile,
+            surface_sha256={
+                name: hashlib.sha256(by_name[name].payload).hexdigest()
+                for name in sorted(by_name)
+            },
+            unresolved_material_count=unresolved,
+            passed=bool(
+                unresolved == 0 and all(artifact.passed for artifact in artifacts)
+            ),
+        )
+
+
+class E2EDayEvidenceBuilder:
+    """Hash whole-day output, repeat, resume, order, and report artifacts."""
+
+    def build(
+        self,
+        *,
+        trading_date: str,
+        category: str,
+        source_sha256: str,
+        case_order: bytes,
+        output: bytes,
+        repeat_output: bytes,
+        resumed_output: bytes,
+        report: bytes,
+        passed: bool,
+    ) -> E2EDayEvidence:
+        return E2EDayEvidence(
+            trading_date=trading_date,
+            category=category,
+            source_sha256=source_sha256,
+            case_order_sha256=hashlib.sha256(case_order).hexdigest(),
+            output_sha256=hashlib.sha256(output).hexdigest(),
+            repeat_output_sha256=hashlib.sha256(repeat_output).hexdigest(),
+            resumed_output_sha256=hashlib.sha256(resumed_output).hexdigest(),
+            report_sha256=hashlib.sha256(report).hexdigest(),
+            passed=passed,
+        )
+
+
+@dataclass(frozen=True)
 class Gate12EvidenceIndex:
     """Fail-closed closure index across cases, days, profiles, and discrepancies."""
 
