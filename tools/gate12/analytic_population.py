@@ -9,9 +9,21 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from pathlib import Path
 
-from tools.gate12.evidence import EvidenceContractError
+from tools.gate12.evidence import AffectedIntervalIdentity, EvidenceContractError
 from tools.gate12.historical_population import MATERIAL_SHORTFALL_MW
+
+ANALYTIC_GDX_SYMBOLS = (
+    "i_runMode",
+    "i_dateTimeTradePeriodMap",
+    "i_dateTimeNodeParameter",
+    "i_dateTimeParameter",
+    "i_dateTimeIslandParameter",
+    "i_dateTimeNodeBus",
+    "i_dateTimeBusIsland",
+    "i_dateTimeBusElectricalIsland",
+)
 
 
 @dataclass(frozen=True)
@@ -34,6 +46,14 @@ class HistoricalFirstLoopResult:
     """Reconstructed load and provably affected dead-node shortfall."""
 
     required_load: dict[str, float]
+    affected_shortfall_mw: dict[str, float]
+
+
+@dataclass(frozen=True)
+class HistoricalAnalyticAffectedInterval:
+    """One analytically selected interval and its reconstructed node evidence."""
+
+    identity: AffectedIntervalIdentity
     affected_shortfall_mw: dict[str, float]
 
 
@@ -192,3 +212,190 @@ class HistoricalFirstLoopLoadReconstructor:
             required_load=required_load,
             affected_shortfall_mw=affected,
         )
+
+
+class HistoricalAnalyticPopulationSelector:
+    """Select affected identities from canonical first-loop cases."""
+
+    def __init__(
+        self, reconstructor: HistoricalFirstLoopLoadReconstructor | None = None
+    ) -> None:
+        self._reconstructor = reconstructor or HistoricalFirstLoopLoadReconstructor()
+
+    def select(
+        self,
+        cases: tuple[HistoricalFirstLoopCase, ...],
+        *,
+        trading_date: str,
+        source_sha256: str,
+    ) -> tuple[HistoricalAnalyticAffectedInterval, ...]:
+        if len(trading_date) != 8 or not trading_date.isdigit():
+            raise EvidenceContractError(
+                "REQ-G12-POPULATION: invalid analytic trading date"
+            )
+        if len(source_sha256) != 64 or any(
+            character not in "0123456789abcdef" for character in source_sha256
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-POPULATION: invalid analytic source SHA-256"
+            )
+        records: list[HistoricalAnalyticAffectedInterval] = []
+        for case in cases:
+            result = self._reconstructor.reconstruct(case)
+            if not result.affected_shortfall_mw:
+                continue
+            records.append(
+                HistoricalAnalyticAffectedInterval(
+                    identity=AffectedIntervalIdentity(
+                        case_id=case.case_id,
+                        date_time=case.date_time,
+                        trading_period=case.trading_period,
+                        trading_date=trading_date,
+                        source_sha256=source_sha256,
+                        discovery_rationale=(
+                            "pinned-v5.0.2 first-loop RTD load reconstruction; "
+                            "positive required load at electrical-island-0 node"
+                        ),
+                    ),
+                    affected_shortfall_mw=result.affected_shortfall_mw,
+                )
+            )
+        records.sort(key=lambda item: item.identity.key)
+        return tuple(records)
+
+
+class GamsTransferFirstLoopCaseLoader:
+    """Adapt the eight canonical GDX symbols to first-loop domain objects."""
+
+    def load(
+        self, path: Path, system_directory: Path
+    ) -> tuple[HistoricalFirstLoopCase, ...]:
+        from collections import defaultdict
+
+        from gams.transfer import Container
+
+        container = Container(system_directory=str(system_directory))
+        container.read(str(path), symbols=list(ANALYTIC_GDX_SYMBOLS))
+        frames = {
+            name: container[name].records for name in ANALYTIC_GDX_SYMBOLS
+        }
+        if any(frame is None for frame in frames.values()):
+            raise EvidenceContractError(
+                "REQ-G12-POPULATION: canonical GDX symbol lacks records"
+            )
+
+        run_mode = frames["i_runMode"]
+        period_map = frames["i_dateTimeTradePeriodMap"]
+        node_parameter = frames["i_dateTimeNodeParameter"]
+        date_time_parameter = frames["i_dateTimeParameter"]
+        island_parameter = frames["i_dateTimeIslandParameter"]
+        node_bus = frames["i_dateTimeNodeBus"]
+        bus_island = frames["i_dateTimeBusIsland"]
+        bus_electrical = frames["i_dateTimeBusElectricalIsland"]
+        assert run_mode is not None
+        assert period_map is not None
+        assert node_parameter is not None
+        assert date_time_parameter is not None
+        assert island_parameter is not None
+        assert node_bus is not None
+        assert bus_island is not None
+        assert bus_electrical is not None
+
+        study_mode = {
+            str(row.ca): int(float(row.value))
+            for row in run_mode.itertuples(index=False)
+            if str(row.casePar) == "studyMode"
+        }
+        periods = {
+            (str(row.ca), str(row.dt)): str(row.tp)
+            for row in period_map.itertuples(index=False)
+        }
+        date_parameters = {
+            (str(row.ca), str(row.dt), str(row.dtPar)): float(row.value)
+            for row in date_time_parameter.itertuples(index=False)
+        }
+        island_parameters: dict[
+            tuple[str, str], dict[tuple[str, str], float]
+        ] = defaultdict(dict)
+        for row in island_parameter.itertuples(index=False):
+            island_parameters[(str(row.ca), str(row.dt))][
+                (str(row.isl), str(row.islPar))
+            ] = float(row.value)
+
+        renamed_node_parameters = {
+            "nonConformingFactor": "nonConformingLoad",
+        }
+        node_parameters: dict[
+            tuple[str, str], dict[tuple[str, str], float]
+        ] = defaultdict(dict)
+        for row in node_parameter.itertuples(index=False):
+            name = renamed_node_parameters.get(str(row.nodePar), str(row.nodePar))
+            node_parameters[(str(row.ca), str(row.dt))][
+                (str(row.n), name)
+            ] = float(row.value)
+
+        node_buses: dict[tuple[str, str, str], set[str]] = defaultdict(set)
+        for row in node_bus.itertuples(index=False):
+            node_buses[(str(row.ca), str(row.dt), str(row.n))].add(str(row.b))
+        bus_islands: dict[tuple[str, str, str], set[str]] = defaultdict(set)
+        for row in bus_island.itertuples(index=False):
+            bus_islands[(str(row.ca), str(row.dt), str(row.b))].add(str(row.isl))
+        electrical = {
+            (str(row.ca), str(row.dt), str(row.b)): float(row.value)
+            for row in bus_electrical.itertuples(index=False)
+        }
+
+        cases: list[HistoricalFirstLoopCase] = []
+        for key, trading_period in periods.items():
+            case_id, date_time = key
+            if study_mode.get(case_id) not in {101, 201}:
+                continue
+            mappings = {
+                node: buses
+                for (mapped_case, mapped_time, node), buses in node_buses.items()
+                if (mapped_case, mapped_time) == key
+            }
+            market_islands = {
+                node: tuple(
+                    sorted(
+                        {
+                            island
+                            for bus in buses
+                            for island in bus_islands.get((*key, bus), set())
+                        }
+                    )
+                )
+                for node, buses in mappings.items()
+            }
+            if any(not mapped for mapped in market_islands.values()):
+                raise EvidenceContractError(
+                    "REQ-G12-POPULATION: node lacks a market-island mapping"
+                )
+            electrical_sum = {
+                node: sum(electrical.get((*key, bus), 0.0) for bus in buses)
+                for node, buses in mappings.items()
+            }
+            cases.append(
+                HistoricalFirstLoopCase(
+                    case_id=case_id,
+                    date_time=date_time,
+                    trading_period=trading_period,
+                    shortfall_transfer_enabled=(
+                        date_parameters.get((*key, "enrgShortfallTransfer"), 0.0)
+                        == 1.0
+                    ),
+                    use_actual_load=(
+                        date_parameters.get((*key, "useActualLoad"), 0.0) == 1.0
+                    ),
+                    island_parameters=island_parameters[key],
+                    node_parameters=node_parameters[key],
+                    node_market_islands=market_islands,
+                    node_electrical_island_sum=electrical_sum,
+                )
+            )
+        cases.sort(key=lambda item: (item.date_time, item.case_id))
+        if not cases:
+            raise EvidenceContractError(
+                "REQ-G12-POPULATION: GDX has no RTD first-loop cases"
+            )
+        return tuple(cases)
