@@ -104,6 +104,7 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
         "EnergyShortFallCheck(t,n) = 1 $ { (EnergyShortfallMW(t,n) > 0) and ok(t,n) } ;\n"
         "ShortfallAdjustmentMW(t,n) $ EligibleShortfallRemoval(t,n) = EnergyShortfallMW(t,n) ;\n"
         '$if not exist "%inputPath%\\%GDXname%.gdx" putclose rep "missing";\n'
+        '$gdxin "%inputPath%\\%GDXname%.gdx"\n'
     )
 
     patcher = HistoricalVspdSourcePatcher()
