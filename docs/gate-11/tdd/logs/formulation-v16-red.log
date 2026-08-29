@@ -1,0 +1,17 @@
+Gate 11 RED phase
+Date: 2026-08-29 Pacific/Auckland
+Command: uv run pytest tests/v16 -q
+Expected result: collection fails because the independently specified SPD v16
+compatibility, preprocessing, formulation, pricing, and reporting classes do
+not yet exist.
+
+Observed result: 3 collection errors. `pyspd.v16` and the separate v16 daily
+report classes were absent. No production test executed.
+
+The tests require:
+- explicit 23 June 2026 compatibility enforcement;
+- the 44-symbol v16 schema with i_busUnitAndKey3Match;
+- capped offer, same-price/same-bus, and guarded battery-pair preprocessing;
+- replacement class composition for tie-break, battery, reserve risk,
+  reserve requirement, economics, pricing, result schema, and renderer;
+- application/report selection without altering the v5 structural fingerprint.
