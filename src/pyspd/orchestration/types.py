@@ -184,6 +184,7 @@ class SolveObservation:
     node_bus_allocation: Mapping[Key, float]
     bus_electrical_island: Mapping[Key, float]
     node_electrical_island: Mapping[Key, float]
+    node_market_island: Mapping[Key, str] = field(default_factory=dict)
     node_transfer: tuple[tuple[Key, Key], ...] = ()
     bus_adjacency: frozenset[tuple[Key, Key]] = frozenset()
     connected_bus_flow: Mapping[Key, float] = field(default_factory=dict)
@@ -212,6 +213,9 @@ class SolveObservation:
                 raise OrchestrationError(f"{name} contains a non-finite value")
             object.__setattr__(self, name, MappingProxyType(values))
         object.__setattr__(self, "node_transfer", tuple(self.node_transfer))
+        object.__setattr__(
+            self, "node_market_island", _proxy(self.node_market_island)
+        )
         object.__setattr__(self, "bus_adjacency", frozenset(self.bus_adjacency))
         object.__setattr__(self, "degraded_reasons", tuple(self.degraded_reasons))
 

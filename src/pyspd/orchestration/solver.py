@@ -262,6 +262,9 @@ class ReserveCaseExecutor:
             node_bus_allocation=network.node_bus_allocation,
             bus_electrical_island=network.bus_electrical_island,
             node_electrical_island=node_island,
+            node_market_island={
+                node: case.node_region[node][2] for node in case.nodes
+            },
             node_transfer=prepared.node_transfer,
             bus_adjacency=adjacency,
             connected_bus_flow=connected_flow,

@@ -68,6 +68,7 @@ def make_observation(
         node_bus_allocation={(*n1, "B1"): 1.0, (*n2, "B2"): 1.0},
         bus_electrical_island={b1: 1.0, b2: 1.0},
         node_electrical_island={n1: 1.0, n2: 1.0},
+        node_market_island={n1: "NI", n2: "NI"},
         node_transfer=((n1, n2),),
         bus_adjacency=frozenset({(b1, b2)}),
         connected_bus_flow={b1: 0.0, b2: 1.0},

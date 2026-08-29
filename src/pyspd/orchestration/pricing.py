@@ -98,12 +98,17 @@ class MarketPricePostProcessor:
         }
         sources: dict[Key, Key] = {}
         if price_transfer_enabled and dead_nodes:
+            price_islands: Mapping[Key, float | str] = (
+                observation.node_market_island
+                if observation.node_market_island
+                else observation.node_electrical_island
+            )
             self._transfer_dead_prices(
                 node_prices,
                 dead_nodes,
                 sources,
                 observation.node_transfer,
-                observation.node_electrical_island,
+                price_islands,
             )
         return PriceTrace(
             raw_bus=raw,
@@ -202,9 +207,9 @@ class MarketPricePostProcessor:
         dead_nodes: set[Key],
         sources: dict[Key, Key],
         mappings: tuple[tuple[Key, Key], ...],
-        islands: Mapping[Key, float],
+        islands: Mapping[Key, float | str],
     ) -> None:
-        island_map: dict[Key, float] = dict(islands)
+        island_map: dict[Key, float | str] = dict(islands)
         remaining = set(dead_nodes)
         for _iteration in range(len(remaining) + 1):
             changed = False
