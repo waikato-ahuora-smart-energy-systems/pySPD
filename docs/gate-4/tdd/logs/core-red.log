@@ -1,0 +1,18 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________ test_gate4_core_energy_vertical_slice_exists _________________
+
+    def test_gate4_core_energy_vertical_slice_exists() -> None:
+>       assert Path("src/pyspd/core_energy/formulation.py").is_file(), (
+            "REQ-G4-CORE: class-based core energy formulation is absent"
+        )
+E       AssertionError: REQ-G4-CORE: class-based core energy formulation is absent
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = PosixPath('src/pyspd/core_energy/formulation.py').is_file
+E        +      where PosixPath('src/pyspd/core_energy/formulation.py') = Path('src/pyspd/core_energy/formulation.py')
+
+tests/core_energy/test_gate4_contract.py:7: AssertionError
+=========================== short test summary info ============================
+FAILED tests/core_energy/test_gate4_contract.py::test_gate4_core_energy_vertical_slice_exists
+1 failed in 0.16s

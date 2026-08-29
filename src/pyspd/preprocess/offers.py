@@ -34,6 +34,10 @@ class OfferBidLoadStep(PreprocessingStep):
             "offer_island",
             "primary_offer",
             "secondary_offer",
+            "primary_secondary_offer",
+            "intermittent_offer",
+            "price_responsive_offer",
+            "potential_mw",
             "energy_offer_mw",
             "energy_offer_price",
             "generation_offer_block",
@@ -384,6 +388,22 @@ class OfferBidLoadStep(PreprocessingStep):
             ),
             "primary_offer": SparseSet("primary_offer", offer_dims, primary),
             "secondary_offer": SparseSet("secondary_offer", offer_dims, secondary),
+            "primary_secondary_offer": SparseSet(
+                "primary_secondary_offer",
+                (*offer_dims, "secondary_offer"),
+                primary_secondary,
+            ),
+            "intermittent_offer": SparseSet(
+                "intermittent_offer",
+                offer_dims,
+                frozenset(key for key in valid_offers if nonzero(intermittent.get(key, 0.0))),
+            ),
+            "price_responsive_offer": SparseSet(
+                "price_responsive_offer",
+                offer_dims,
+                frozenset(key for key in valid_offers if nonzero(responsive.get(key, 0.0))),
+            ),
+            "potential_mw": SparseParameter("potential_mw", offer_dims, potential),
             "energy_offer_mw": SparseParameter(
                 "energy_offer_mw", offer_block_dims, energy_mw
             ),
