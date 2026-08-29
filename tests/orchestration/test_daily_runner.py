@@ -1,0 +1,137 @@
+from __future__ import annotations
+
+from dataclasses import replace
+
+from pyspd.orchestration import (
+    CaseRunStatus,
+    DailyRunConfiguration,
+    DailyRunner,
+    DailyRunState,
+    OrchestrationError,
+    RunEventKind,
+)
+from tests.orchestration.conftest import (
+    SequenceExecutor,
+    make_daily_case,
+    make_observation,
+    make_prepared,
+)
+
+
+def configuration() -> DailyRunConfiguration:
+    return DailyRunConfiguration("vspd-v5.0.6-reserve", "0" * 64, 3)
+
+
+def test_shortfall_transfer_resolves_and_records_each_transition() -> None:
+    executor = SequenceExecutor(
+        [make_observation(shortfall=1.0), make_observation(shortfall=0.0)]
+    )
+    result = DailyRunner(executor).run(configuration(), (make_prepared(),))
+    case = result.cases[0]
+    n1 = ("C1", "01-JAN-2024 00:00", "N1")
+    n2 = ("C1", "01-JAN-2024 00:00", "N2")
+    assert result.state is DailyRunState.COMPLETE
+    assert case.solve_count == 2
+    assert case.transfers[(n1, n2)] == 1.2
+    assert case.final_required_load[n1] == 8.8
+    assert case.final_required_load[n2] == 21.2
+    assert RunEventKind.SHORTFALL_TRANSFERRED in {event.kind for event in case.events}
+
+
+def test_bounded_loop_exposes_degraded_result_instead_of_hanging() -> None:
+    observation = make_observation(shortfall=1.0)
+    executor = SequenceExecutor([observation, observation, observation])
+    result = DailyRunner(executor).run(configuration(), (make_prepared(),))
+    case = result.cases[0]
+    assert case.status is CaseRunStatus.DEGRADED
+    assert case.solve_count == 3
+    assert len(case.transfers) == 1
+    assert len(executor.calls) == 3
+    assert RunEventKind.LOOP_LIMIT_REACHED in {event.kind for event in case.events}
+    assert not any(
+        event.kind is RunEventKind.SOLVE_STARTED and event.solve_loop == 4
+        for event in case.events
+    )
+
+
+def test_ineligible_shortfall_disables_scaling_once_then_accepts() -> None:
+    prepared = replace(
+        make_prepared(),
+        load_bad_nodes=frozenset(),
+        potential_inconsistency_nodes=frozenset(),
+    )
+    executor = SequenceExecutor(
+        [make_observation(shortfall=1.0), make_observation(shortfall=1.0)]
+    )
+    result = DailyRunner(executor).run(configuration(), (prepared,))
+    case = result.cases[0]
+    node = ("C1", "01-JAN-2024 00:00", "N1")
+    assert case.solve_count == 2
+    assert executor.calls[1].scaling_disabled_nodes == frozenset({node})
+    assert (
+        sum(
+            event.kind is RunEventKind.SHORTFALL_SCALING_DISABLED
+            for event in case.events
+        )
+        == 1
+    )
+
+
+def test_override_audit_is_visible_before_solve() -> None:
+    prepared = replace(
+        make_prepared(),
+        override_entry_count=3,
+        override_input_sha256="1" * 64,
+        override_output_sha256="2" * 64,
+    )
+    result = DailyRunner(SequenceExecutor([make_observation()])).run(
+        configuration(), (prepared,)
+    )
+    event = next(
+        item
+        for item in result.cases[0].events
+        if item.kind is RunEventKind.OVERRIDES_APPLIED
+    )
+    assert event.details == {"entry_count": 3, "symbols_changed": True}
+
+
+def test_prior_accepted_generation_initializes_zero_start_next_case() -> None:
+    first = make_prepared(make_daily_case())
+    second = make_prepared(make_daily_case("C2", "01-JAN-2024 00:05", ordinal=1))
+    executor = SequenceExecutor(
+        [make_observation(generation=42.0), make_observation(second.specification)]
+    )
+    DailyRunner(executor).run(configuration(), (first, second))
+    assert executor.calls[1].generation_start["G1"] == 42.0
+
+
+def test_interrupted_run_resumes_exact_prefix_and_rejects_environment_mix() -> None:
+    first = make_prepared(make_daily_case())
+    second = make_prepared(make_daily_case("C2", "01-JAN-2024 00:05", ordinal=1))
+    executor = SequenceExecutor(
+        [make_observation(), make_observation(second.specification)]
+    )
+    interrupted = DailyRunner(executor).run(
+        configuration(), (first, second), stop_after=1
+    )
+    assert interrupted.state is DailyRunState.INTERRUPTED
+    assert interrupted.checkpoint is not None
+    resumed = DailyRunner(executor).run(
+        configuration(), (first, second), resume=interrupted.checkpoint
+    )
+    assert resumed.state is DailyRunState.COMPLETE
+    assert len(resumed.cases) == 2
+    changed = DailyRunConfiguration(
+        "vspd-v5.0.6-reserve",
+        "0" * 64,
+        3,
+        environment_fingerprint="different",
+    )
+    try:
+        DailyRunner(executor).run(
+            changed, (first, second), resume=interrupted.checkpoint
+        )
+    except OrchestrationError as error:
+        assert "configuration/environment mismatch" in str(error)
+    else:  # pragma: no cover - assertion guard
+        raise AssertionError("unsafe resume was accepted")

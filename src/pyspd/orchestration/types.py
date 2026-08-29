@@ -122,6 +122,14 @@ class DailyCase:
             )
         if self.ordinal < 0:
             raise OrchestrationError("case ordinal must be nonnegative")
+        compatible_modes = {
+            ScheduleType.RTD: frozenset({101, 201}),
+            ScheduleType.PRSS: frozenset({130, 131}),
+        }
+        if self.study_mode not in compatible_modes[self.schedule_type]:
+            raise OrchestrationError(
+                "REQ-G8-ORCHESTRATION: incompatible study mode and schedule type"
+            )
 
 
 @dataclass(frozen=True, slots=True)
