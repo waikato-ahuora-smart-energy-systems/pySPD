@@ -1,5 +1,6 @@
 """Probity tests for pinned-v5.0.2 affected-interval evidence."""
 
+import json
 from pathlib import Path
 
 import pytest
@@ -20,7 +21,7 @@ from tools.gate12.historical_population import (
 from tools.oracle.vspd import ListingResult, SolveRecord
 
 HEADER = (
-    "case_id|datetime|node|loop|energy_shortfall_mw|adjustment_mw|"
+    "case_id|datetime|node|target_node|loop|energy_shortfall_mw|adjustment_mw|"
     "model_status|solver_status\n"
 )
 
@@ -41,11 +42,53 @@ def test_case_index_selects_only_disclosed_rtd_modes() -> None:
     )
 
 
-def test_historical_shortfall_evidence_accepts_optimal_first_loop_rows() -> None:
+def test_exact_positive_selector_is_machine_readably_invalidated() -> None:
+    root = Path(__file__).resolve().parents[2]
+    original = json.loads(
+        (root / "docs/gate-12/historical-exact-positive-qualification.json").read_text()
+    )
+    evidence = json.loads(
+        (root / "docs/gate-12/historical-exact-positive-invalidation.json").read_text()
+    )
+
+    assert original["classification"].startswith("invalidated-")
+    assert original["qualifies_population"] is False
+    assert original["superseded_by"].endswith("invalidation.json")
+    assert evidence["classification"] == "invalidated-population-selector"
+    assert evidence["observed_identity_count"] > evidence["declared_population_count"]
+    assert evidence["observed_date_count"] < 139
+    assert evidence["qualifies_population"] is False
+    assert "dailymode0" in evidence["replacement_profile"]
+    assert "actual node-to-node transfers" in evidence["replacement_rule"]
+
+
+def test_material_transfer_population_method_is_hash_bound_and_qualified() -> None:
+    root = Path(__file__).resolve().parents[2]
+    evidence = json.loads(
+        (
+            root / "docs/gate-12/historical-material-transfer-qualification.json"
+        ).read_text()
+    )
+
+    assert evidence["classification"] == "qualifying-single-date-population-method"
+    assert evidence["selected_case_count"] == evidence["solved_case_count"] == 270
+    assert evidence["all_solves_optimal"] is True
+    assert evidence["affected_identity_count"] == len(evidence["identities"]) == 4
+    assert (
+        evidence["evidence_record_count"]
+        == sum(len(identity["transfers"]) for identity in evidence["identities"])
+        == 6
+    )
+    assert all(evidence["independent_analytic_match"].values())
+    assert evidence["population_passed"] is False
+    assert all(len(value) == 64 for value in evidence["artifact_sha256"].values())
+
+
+def test_historical_shortfall_evidence_accepts_optimal_material_transfer_rows() -> None:
     text = HEADER + (
-        "51012022111800831|06-NOV-2022 07:00|WAI0111|1|4.5969|4.5971|1|1\n"
-        "51012022111800831|06-NOV-2022 07:00|WAI0501|1|0.5108|0.5110|1|1\n"
-        "51012022111815836|06-NOV-2022 07:15|WAI0111|1|1.25|1.2502|1|1\n"
+        "51012022111800831|06-NOV-2022 07:00|WAI0111|WAI0501|1|4.5969|4.5971|1|1\n"
+        "51012022111800831|06-NOV-2022 07:00|WAI0501|WAI1101|1|0.5108|0.5110|1|1\n"
+        "51012022111815836|06-NOV-2022 07:15|WAI0111|WAI0501|1|1.25|1.2502|1|1\n"
     )
 
     evidence = HistoricalShortfallEvidence.parse(text, source_name="Pricing_20221106")
@@ -62,28 +105,30 @@ def test_historical_shortfall_evidence_accepts_optimal_first_loop_rows() -> None
     "row,match",
     [
         (
-            "5101|06-NOV-2022 07:00|WAI0111|2|4.5|4.5002|1|1\n",
+            "5101|06-NOV-2022 07:00|WAI0111|WAI0501|2|4.5|4.5002|1|1\n",
             "first solve loop",
         ),
         (
-            "5101|06-NOV-2022 07:00|WAI0111|1|-0.0000001|0.0002001|1|1\n",
-            "non-negative shortfall",
+            "5101|06-NOV-2022 07:00|WAI0111|WAI0501|1|-0.0000001|0.0002001|1|1\n",
+            "material shortfall",
         ),
         (
-            "5101|06-NOV-2022 07:00|WAI0111|1|4.5|4.5002|8|1\n",
+            "5101|06-NOV-2022 07:00|WAI0111|WAI0501|1|4.5|4.5002|8|1\n",
             "optimal solve",
         ),
         (
-            "5101|06-NOV-2022 07:00|WAI0111|1|nan|4.5002|1|1\n",
+            "5101|06-NOV-2022 07:00|WAI0111|WAI0501|1|nan|4.5002|1|1\n",
             "finite",
+        ),
+        (
+            "5101|06-NOV-2022 07:00|WAI0111||1|4.5|4.5002|1|1\n",
+            "identity fields",
         ),
     ],
 )
 def test_historical_shortfall_evidence_fails_closed(row: str, match: str) -> None:
     with pytest.raises(EvidenceContractError, match=match):
-        HistoricalShortfallEvidence.parse(
-            HEADER + row, source_name="Pricing_20221106"
-        )
+        HistoricalShortfallEvidence.parse(HEADER + row, source_name="Pricing_20221106")
 
 
 def test_historical_shortfall_evidence_rejects_schema_drift() -> None:
@@ -113,14 +158,17 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
         'File rep "Write to a report" /"ProgressReport.txt"/;\n'
         "option lp = %Solver% ;\n"
         "option mip = %Solver% ;\n"
-        + '.Optfile = 1 ;\n' * 3
-        +
-        '$if not exist "%inputPath%\\%GDXname%.gdx" $goto nextInput\n'
+        + ".Optfile = 1 ;\n"
+        * 3
+        + '$if not exist "%inputPath%\\%GDXname%.gdx" $goto nextInput\n'
         '$gdxin "%inputPath%\\%GDXname%.gdx"\n'
-            "PotentialModellingInconsistency(ca,dt,n)= 1 $ outage(ca,dt,n) ;\n"
-            "EnergyShortFallCheck(t,n) = 1 $ { (EnergyShortfallMW(t,n) > 0) and ok(t,n) } ;\n"
-            "loop( (t,n) $ EnergyShortfallMW(t,n),\n"
-            "ShortfallAdjustmentMW(t,n) $ EligibleShortfallRemoval(t,n) = EnergyShortfallMW(t,n) ;\n"
+        "PotentialModellingInconsistency(ca,dt,n)= 1 $ outage(ca,dt,n) ;\n"
+        "EnergyShortFallCheck(t,n) = 1 $ { (EnergyShortfallMW(t,n) > 0) and ok(t,n) } ;\n"
+        "loop( (t,n) $ EnergyShortfallMW(t,n),\n"
+        "ShortfallAdjustmentMW(t,n) $ EligibleShortfallRemoval(t,n) = EnergyShortfallMW(t,n) ;\n"
+        "            loop( nodeTonode(t,n,n1) $ ShortfallTransferFromTo(t,n,n1),\n"
+        "               putclose rep 'Short fall adjustment from 'n.tl' to ', n1.tl,': ', ShortfallAdjustmentMW(t,n)' MW' /;\n"
+        "            ) ;\n"
         '$if not exist "%inputPath%\\%GDXname%.gdx" putclose rep "missing";\n'
         '$gdxin "%inputPath%\\%GDXname%.gdx"\n'
     )
@@ -129,38 +177,36 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
     result = patcher.apply(programs)
 
     assert result.profile == (
-        "historical-v5.0.2-dailymode1-scip-first-loop-exact-positive"
+        "historical-v5.0.2-dailymode0-scip-first-loop-material-transfer"
     )
     assert len(result.logical_sha256) == 64
     settings = (programs / "vSPDsettings.inc").read_text()
     solve = (programs / "vSPDsolve.gms").read_text()
-    assert "Scalar dailymode                         / 1 / ;" in settings
+    assert "Scalar dailymode                         / 0 / ;" in settings
     assert "option lp = HiGHS ;" in solve
     assert "option mip = SCIP ;" in solve
     assert "EnergyShortfallMW(t,n) > 0" in solve
     assert "EnergyShortfallMW(t,n) > 0.000001" not in solve
-    assert (
-        "loop( (t,n) $ (abs(EnergyShortfallMW(t,n)) > 0.000001)," in solve
-    )
+    assert "loop( (t,n) $ (abs(EnergyShortfallMW(t,n)) > 0.000001)," in solve
     assert "gate12_%GDXname%_shortfall.txt" in solve
+    assert "n1.tl:0" in solve
 
     with pytest.raises(EvidenceContractError, match="source drift"):
         patcher.apply(programs)
 
 
-def test_historical_evidence_retains_tiny_positive_or_eps_rendered_trigger() -> None:
-    evidence = HistoricalShortfallEvidence.parse(
-        HEADER + "case|date|node|1|0.0|0.0000001|1|1\n",
-        source_name="Pricing_20221106",
-    )
-
-    assert evidence.affected_cases == (("case", "date"),)
+def test_historical_evidence_rejects_eps_scale_actual_transfer() -> None:
+    with pytest.raises(EvidenceContractError, match="material shortfall"):
+        HistoricalShortfallEvidence.parse(
+            HEADER + "case|date|node|target|1|0.0|0.0000001|1|1\n",
+            source_name="Pricing_20221106",
+        )
 
 
 def _checkpoint() -> HistoricalPopulationCheckpoint:
     evidence = HistoricalShortfallEvidence.parse(
         HEADER
-        + "51012022111800831|06-NOV-2022 07:00|WAI0111|1|4.5969|4.5971|1|1\n",
+        + "51012022111800831|06-NOV-2022 07:00|WAI0111|WAI0501|1|4.5969|4.5971|1|1\n",
         source_name="Pricing_20221106",
     )
     return HistoricalPopulationCheckpoint.create(
@@ -249,7 +295,9 @@ def test_checkpoint_store_rejects_tampering(tmp_path: Path) -> None:
     store = HistoricalPopulationCheckpointStore(tmp_path)
     store.write(_checkpoint())
     path = tmp_path / "20221106.json"
-    path.write_text(path.read_text().replace('"solved_case_count":278', '"solved_case_count":1'))
+    path.write_text(
+        path.read_text().replace('"solved_case_count":278', '"solved_case_count":1')
+    )
 
     with pytest.raises(EvidenceContractError, match="logical hash"):
         store.load("20221106")
@@ -290,7 +338,7 @@ def test_daily_completion_requires_exact_successful_optimal_population() -> None
         listing=listing,
         listing_text="listing",
         evidence_text=HEADER
-        + "51012022111800831|06-NOV-2022 07:00|WAI0111|1|4.5|4.5|1|1\n",
+        + "51012022111800831|06-NOV-2022 07:00|WAI0111|WAI0501|1|4.5|4.5|1|1\n",
     )
 
     assert checkpoint.selected_case_count == 2
@@ -358,7 +406,7 @@ def test_historical_manifest_builder_requires_exact_546_across_139_dates() -> No
             for case_index in range(affected_count)
         )
         rows = "".join(
-            f"{case}|{date_time}|NODE|1|1.0|1.0|1|1\n"
+            f"{case}|{date_time}|NODE|TARGET|1|1.0|1.0|1|1\n"
             for case, date_time in cases
         )
         evidence = HistoricalShortfallEvidence.parse(
@@ -398,5 +446,5 @@ def test_historical_manifest_builder_requires_exact_546_across_139_dates() -> No
     assert len(manifest.identities) == 546
     assert len({identity.trading_date for identity in manifest.identities}) == 139
     assert "first-loop" in manifest.identities[0].discovery_rationale
-    assert "strict-positive" in manifest.identities[0].discovery_rationale
-    assert "material shortfall" not in manifest.identities[0].discovery_rationale
+    assert "non-daily" in manifest.identities[0].discovery_rationale
+    assert "material shortfall transfer" in manifest.identities[0].discovery_rationale

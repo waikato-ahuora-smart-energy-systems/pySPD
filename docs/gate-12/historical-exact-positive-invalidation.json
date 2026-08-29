@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "classification": "invalidated-population-selector",
+  "reference_commit": "3360a91ebd48f2e3cbb52a5e6766d893011054be",
+  "patch_profile": "historical-v5.0.2-dailymode1-scip-first-loop-exact-positive",
+  "patch_sha256": "c556eaf1d6023c589250f23f33e9bb7029661faf3a51c8a5499a7a9b3045701a",
+  "declared_population_count": 546,
+  "observed_identity_count": 737,
+  "observed_date_count": 3,
+  "reason": "The profile recorded eligible-removal predicates, including GAMS EPS residues, before proving a material shortfall transfer. Three governed dates alone produce 737 identities, so the selector cannot represent the Authority-declared 546-case population.",
+  "checkpoints": [
+    {
+      "trading_date": "20221106",
+      "selected_case_count": 270,
+      "observed_identity_count": 215,
+      "source_sha256": "282ac2abeaa2f0c7c6e26b967e2ba90289c0ba5a9e696b99069d11350d3037b8",
+      "logical_sha256": "ea22011cce68ef3b460596247643fb750999077437508e643801c5e4a90e2a9a",
+      "raw_checkpoint_sha256": "ee27a1ad081f81e392129e2f7a5d41bed10f9259748432d501c1508d78ac146e"
+    },
+    {
+      "trading_date": "20221107",
+      "selected_case_count": 263,
+      "observed_identity_count": 248,
+      "source_sha256": "e8e8dc6981d0c9b468c9abee1f33abf751e7f72aa19171d4c0bf04a7b3d62308",
+      "logical_sha256": "5d8438b7e8b2c8b6c23d97b6b2574121858a3f9c745169cf63c767c746f5ad2a",
+      "raw_checkpoint_sha256": "05d4df7076345a90cf915c5ef77094a5c30fc432bb36beb64046e30902c009b3"
+    },
+    {
+      "trading_date": "20221204",
+      "selected_case_count": 274,
+      "observed_identity_count": 274,
+      "source_sha256": "848a80308a6c5e55bafb7b2a46882d3a1381d856e7c8b56f0a3bcb8239e80e3e",
+      "logical_sha256": "c0b2970a410e11e9e654c481108c8c339c95ec18ee6a7e84250c4313cf3aa3b2",
+      "raw_checkpoint_sha256": "f3cc07a1a879264808b00d6b931f6f4113fb8d709037e05d6ba09195834959fb"
+    }
+  ],
+  "replacement_profile": "historical-v5.0.2-dailymode0-scip-solvelink5-first-loop-rtd-only-canonical-order-material-transfer",
+  "replacement_rule": "Recompute the first RTD load under the pinned non-daily oracle, preserve the strict-positive model branch, and retain only actual node-to-node transfers whose source shortfall exceeds 1e-6 MW.",
+  "qualifies_population": false
+}

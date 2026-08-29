@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from tools.gate12.evidence import (
+    EXPECTED_AFFECTED_INTERVALS,
     AffectedIntervalIdentity,
     AffectedIntervalManifest,
     EvidenceContractError,
@@ -25,13 +26,14 @@ from tools.oracle.vspd import ListingResult, VspdListingParser
 
 MATERIAL_SHORTFALL_MW = 1e-6
 HISTORICAL_EXECUTION_PROFILE = (
-    "historical-v5.0.2-dailymode1-scip-solvelink5-first-loop-rtd-only-"
-    "canonical-order-exact-positive"
+    "historical-v5.0.2-dailymode0-scip-solvelink5-first-loop-rtd-only-"
+    "canonical-order-material-transfer"
 )
 HISTORICAL_COLUMNS = (
     "case_id",
     "datetime",
     "node",
+    "target_node",
     "loop",
     "energy_shortfall_mw",
     "adjustment_mw",
@@ -268,9 +270,7 @@ class HistoricalPopulationShardPlanner:
             raise EvidenceContractError(
                 "REQ-G12-HISTORICAL: invalid population shard count"
             )
-        bins: list[list[HistoricalInputArtifact]] = [
-            [] for _ in range(shard_count)
-        ]
+        bins: list[list[HistoricalInputArtifact]] = [[] for _ in range(shard_count)]
         totals = [0] * shard_count
         for artifact in sorted(
             inventory.artifacts,
@@ -318,9 +318,7 @@ class GamsTransferCaseIndexLoader:
         from gams.transfer import Container
 
         container = Container(system_directory=str(system_directory))
-        container.read(
-            str(path), symbols=["i_dateTimeTradePeriodMap", "i_runMode"]
-        )
+        container.read(str(path), symbols=["i_dateTimeTradePeriodMap", "i_runMode"])
         records = container["i_dateTimeTradePeriodMap"].records
         run_mode_records = container["i_runMode"].records
         if records is None or run_mode_records is None:
@@ -349,9 +347,7 @@ class GamsTransferCaseIndexLoader:
             for key, trading_period in periods.items()
             if study_mode.get(key[0]) in {101, 201}
         }
-        return HistoricalGdxCaseIndex(
-            cases=tuple(selected), trading_periods=selected
-        )
+        return HistoricalGdxCaseIndex(cases=tuple(selected), trading_periods=selected)
 
 
 class HistoricalGamsExecutor(Protocol):
@@ -365,9 +361,10 @@ class HistoricalGamsExecutor(Protocol):
 class SubprocessHistoricalGamsExecutor:
     """Run GAMS without treating process exit alone as solve evidence."""
 
-    _NETWORK_LICENCE_MARKERS = (
-        "Error when trying to start network session",
+    _NETWORK_LICENCE_START = "Error when trying to start network session"
+    _NETWORK_LICENCE_REASONS = (
         "server for licensing",
+        '"reason":"node_limit"',
     )
 
     def __init__(
@@ -433,13 +430,15 @@ class SubprocessHistoricalGamsExecutor:
             text = log_path.read_text(errors="replace")
         except OSError:
             return False
-        return all(marker in text for marker in self._NETWORK_LICENCE_MARKERS)
+        return self._NETWORK_LICENCE_START in text and any(
+            marker in text for marker in self._NETWORK_LICENCE_REASONS
+        )
 
 
 class HistoricalVspdSourcePatcher:
     """Apply the minimal, fail-closed v5.0.2 population-discovery overlay."""
 
-    profile = "historical-v5.0.2-dailymode1-scip-first-loop-exact-positive"
+    profile = "historical-v5.0.2-dailymode0-scip-first-loop-material-transfer"
 
     def apply(self, programs: Path) -> HistoricalPatchEvidence:
         settings = programs / "vSPDsettings.inc"
@@ -471,6 +470,11 @@ class HistoricalVspdSourcePatcher:
             settings_text,
             "$setglobal Solver                          Cplex",
             "$setglobal Solver                          SCIP",
+        )
+        settings_text = self._replace(
+            settings_text,
+            "Scalar dailymode                         / 1 / ;",
+            "Scalar dailymode                         / 0 / ;",
         )
 
         period_text = period.read_text(encoding="utf-8")
@@ -505,7 +509,7 @@ class HistoricalVspdSourcePatcher:
             'File gate12 "Gate 12 historical shortfall evidence" '
             '/"gate12_%GDXname%_shortfall.txt"/;\n'
             "gate12.lw = 0; gate12.ap = 0; gate12.nd = 12;\n"
-            "putclose gate12 'case_id|datetime|node|loop|energy_shortfall_mw|"
+            "putclose gate12 'case_id|datetime|node|target_node|loop|energy_shortfall_mw|"
             "adjustment_mw|model_status|solver_status' /;\n"
             "gate12.ap = 1;",
         )
@@ -521,14 +525,17 @@ class HistoricalVspdSourcePatcher:
         )
         solve_text = self._sub(
             solve_text,
-            r"^(\s*ShortfallAdjustmentMW\(t,n\)\s*\$\s*EligibleShortfallRemoval\(t,n\)[^\n]*;)$",
+            r"^(\s*loop\( nodeTonode\(t,n,n1\) \$ ShortfallTransferFromTo\(t,n,n1\),\n"
+            r"\s*putclose rep [^\n]*;\n\s*\) ;[^\n]*)$",
             r"\1\n\n"
-            "        loop( (t,n) $ EligibleShortfallRemoval(t,n),\n"
-            "            putclose gate12 ca.tl:0 '|' dt.tl:0 '|' n.tl:0 '|'\n"
-            "                LoopCount(ca,dt):0:0 '|' EnergyShortfallMW(t,n):0:12 '|'\n"
-            "                ShortfallAdjustmentMW(t,n):0:12 '|' vSPD_NMIR.modelstat:0:0 '|'\n"
-            "                vSPD_NMIR.solvestat:0:0 /;\n"
-            "        ) ;",
+            "            loop( nodeTonode(t,n,n1)\n"
+            "                $ { ShortfallTransferFromTo(t,n,n1)\n"
+            "                and (abs(EnergyShortfallMW(t,n)) > 0.000001) },\n"
+            "               putclose gate12 ca.tl:0 '|' dt.tl:0 '|' n.tl:0 '|' n1.tl:0 '|'\n"
+            "                   LoopCount(ca,dt):0:0 '|' EnergyShortfallMW(t,n):0:12 '|'\n"
+            "                   ShortfallAdjustmentMW(t,n):0:12 '|' vSPD_NMIR.modelstat:0:0 '|'\n"
+            "                   vSPD_NMIR.solvestat:0:0 /;\n"
+            "            ) ;",
         )
 
         settings.write_text(settings_text, encoding="utf-8")
@@ -575,6 +582,7 @@ class HistoricalShortfallRecord:
     case_id: str
     date_time: str
     node: str
+    target_node: str
     solve_loop: int
     energy_shortfall_mw: float
     adjustment_mw: float
@@ -613,7 +621,12 @@ class HistoricalShortfallEvidence:
 
     @staticmethod
     def _record(row: dict[str, str]) -> HistoricalShortfallRecord:
-        required_text = (row["case_id"], row["datetime"], row["node"])
+        required_text = (
+            row["case_id"],
+            row["datetime"],
+            row["node"],
+            row["target_node"],
+        )
         if any(not value.strip() for value in required_text):
             raise EvidenceContractError(
                 "REQ-G12-HISTORICAL: identity fields must not be empty"
@@ -636,9 +649,9 @@ class HistoricalShortfallEvidence:
             raise EvidenceContractError(
                 "REQ-G12-HISTORICAL: discovery must use the first solve loop"
             )
-        if energy < 0.0:
+        if energy <= MATERIAL_SHORTFALL_MW:
             raise EvidenceContractError(
-                "REQ-G12-HISTORICAL: expected a non-negative shortfall trigger"
+                "REQ-G12-HISTORICAL: expected a material shortfall transfer"
             )
         if adjustment < energy:
             raise EvidenceContractError(
@@ -652,6 +665,7 @@ class HistoricalShortfallEvidence:
             case_id=row["case_id"],
             date_time=row["datetime"],
             node=row["node"],
+            target_node=row["target_node"],
             solve_loop=solve_loop,
             energy_shortfall_mw=energy,
             adjustment_mw=adjustment,
@@ -749,7 +763,9 @@ class HistoricalPopulationCheckpoint:
             raise EvidenceContractError(
                 "REQ-G12-HISTORICAL: unexpected checkpoint schema"
             )
-        unsigned = {key: value for key, value in values.items() if key != "logical_sha256"}
+        unsigned = {
+            key: value for key, value in values.items() if key != "logical_sha256"
+        }
         if values["logical_sha256"] != cls._logical_sha256(unsigned):
             raise EvidenceContractError(
                 "REQ-G12-HISTORICAL: checkpoint logical hash mismatch"
@@ -887,6 +903,7 @@ class HistoricalPopulationCheckpoint:
                             "case_id",
                             "date_time",
                             "node",
+                            "target_node",
                             "solve_loop",
                             "energy_shortfall_mw",
                             "adjustment_mw",
@@ -926,9 +943,7 @@ class HistoricalPopulationCheckpointStore:
         path = self._path(checkpoint.trading_date)
         temporary = path.with_suffix(".json.tmp")
         temporary.write_text(
-            json.dumps(
-                checkpoint.to_dict(), sort_keys=True, separators=(",", ":")
-            )
+            json.dumps(checkpoint.to_dict(), sort_keys=True, separators=(",", ":"))
             + "\n",
             encoding="utf-8",
         )
@@ -1014,9 +1029,7 @@ class HistoricalDailyCompletionValidator:
             listing.all_optimal
             and len(listing.primary) == len(selected_cases)
             and not listing.pricing
-            and all(
-                record.solver == "SCIP" for record in listing.operational_records
-            )
+            and all(record.solver == "SCIP" for record in listing.operational_records)
         )
         if not exact_progress or not exact_listing:
             raise EvidenceContractError(
@@ -1088,9 +1101,10 @@ class HistoricalAffectedManifestBuilder:
                         "REQ-G12-POPULATION: affected case lacks a trading period"
                     )
                 node_evidence = ",".join(
-                    f"{record.node}={record.energy_shortfall_mw:.12g}MW"
+                    f"{record.node}->{record.target_node}={record.adjustment_mw:.12g}MW"
                     for record in sorted(
-                        records_by_case[case_key], key=lambda value: value.node
+                        records_by_case[case_key],
+                        key=lambda value: (value.node, value.target_node),
                     )
                 )
                 identities.append(
@@ -1101,9 +1115,8 @@ class HistoricalAffectedManifestBuilder:
                         trading_date=artifact.trading_date,
                         source_sha256=artifact.sha256,
                         discovery_rationale=(
-                            "pinned-v5.0.2 optimal SCIP first-loop strict-positive "
-                            "eligible shortfall transfer; values retain GAMS EPS "
-                            f"rendering: {node_evidence}"
+                            "pinned-v5.0.2 non-daily optimal SCIP first-loop material "
+                            f"shortfall transfers: {node_evidence}"
                         ),
                     )
                 )
@@ -1164,6 +1177,20 @@ class HistoricalPopulationRunner:
                 solver_profile=HISTORICAL_EXECUTION_PROFILE,
             )
         )
+        retained = tuple(
+            checkpoint
+            for artifact in self.inventory.artifacts
+            if (checkpoint := self.checkpoint_store.load(artifact.trading_date))
+            is not None
+            and self.checkpoint_store.reusable(
+                artifact.trading_date,
+                source_sha256=artifact.sha256,
+                patch_sha256=self.patch_evidence.logical_sha256,
+                solver_profile=HISTORICAL_EXECUTION_PROFILE,
+            )
+        )
+        affected_count = sum(item.affected_case_count for item in retained)
+        self._validate_affected_count(affected_count)
         if pending:
             self.executor.execute(
                 self.gams_executable,
@@ -1172,6 +1199,8 @@ class HistoricalPopulationRunner:
             )
         for artifact in pending:
             checkpoint = self._run_day(artifact, sources[artifact.trading_date])
+            affected_count += checkpoint.affected_case_count
+            self._validate_affected_count(affected_count)
             self.checkpoint_store.write(checkpoint)
         results = tuple(
             self.checkpoint_store.load(artifact.trading_date)
@@ -1182,6 +1211,14 @@ class HistoricalPopulationRunner:
                 "REQ-G12-HISTORICAL: enumeration left an incomplete checkpoint set"
             )
         return tuple(checkpoint for checkpoint in results if checkpoint is not None)
+
+    @staticmethod
+    def _validate_affected_count(affected_count: int) -> None:
+        if affected_count > EXPECTED_AFFECTED_INTERVALS:
+            raise EvidenceContractError(
+                "REQ-G12-POPULATION: enumeration exceeded the declared "
+                f"{EXPECTED_AFFECTED_INTERVALS}-case population"
+            )
 
     def _run_day(
         self, artifact: HistoricalInputArtifact, source: Path
@@ -1209,8 +1246,7 @@ class HistoricalPopulationRunner:
         listing_text = (self.programs / "vSPDsolve.lst").read_text(errors="replace")
         listing = self.listing_parser.parse_text(listing_text)
         evidence_path = (
-            self.programs
-            / f"gate12_Pricing_{artifact.trading_date}_shortfall.txt"
+            self.programs / f"gate12_Pricing_{artifact.trading_date}_shortfall.txt"
         )
         return self.completion_validator.validate(
             trading_date=artifact.trading_date,
@@ -1256,8 +1292,7 @@ class HistoricalPopulationRunner:
         for path in (
             self.programs / "ProgressReport.txt",
             self.programs / "vSPDsolve.lst",
-            self.programs
-            / f"gate12_Pricing_{artifact.trading_date}_shortfall.txt",
+            self.programs / f"gate12_Pricing_{artifact.trading_date}_shortfall.txt",
         ):
             path.unlink(missing_ok=True)
 

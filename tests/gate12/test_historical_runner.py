@@ -22,7 +22,7 @@ from tools.gate12.historical_population import (
 )
 
 HEADER = (
-    "case_id|datetime|node|loop|energy_shortfall_mw|adjustment_mw|"
+    "case_id|datetime|node|target_node|loop|energy_shortfall_mw|adjustment_mw|"
     "model_status|solver_status\n"
 )
 
@@ -41,12 +41,8 @@ def test_population_shards_are_complete_unique_and_deterministic() -> None:
 
     shards = HistoricalPopulationShardPlanner().plan(inventory, shard_count=2)
 
-    assert shards == HistoricalPopulationShardPlanner().plan(
-        inventory, shard_count=2
-    )
-    flattened = tuple(
-        artifact for shard in shards for artifact in shard.artifacts
-    )
+    assert shards == HistoricalPopulationShardPlanner().plan(inventory, shard_count=2)
+    flattened = tuple(artifact for shard in shards for artifact in shard.artifacts)
     assert set(flattened) == set(inventory.artifacts)
     assert len(flattened) == len(set(flattened))
     assert [sum(item.size_bytes for item in shard.artifacts) for shard in shards] == [
@@ -77,11 +73,10 @@ class FakeGamsExecutor:
         self.commands.append(arguments)
         if arguments[0] == "vSPDsolve.gms":
             (programs / "ProgressReport.txt").write_text(
-                "The caseID: case_1 (06-NOV-2022 07:00) "
-                "is 1st solved successfully.\n"
+                "The caseID: case_1 (06-NOV-2022 07:00) is 1st solved successfully.\n"
             )
             (programs / "gate12_Pricing_20221106_shortfall.txt").write_text(
-                HEADER + "case_1|06-NOV-2022 07:00|WAI0111|1|4.5|4.5|1|1\n"
+                HEADER + "case_1|06-NOV-2022 07:00|WAI0111|WAI0501|1|4.5|4.5|1|1\n"
             )
             (programs / "vSPDsolve.lst").write_text(
                 "Solution Report     SOLVE vSPD_NMIR Using MIP\n"
@@ -121,9 +116,7 @@ def _runner(tmp_path: Path) -> tuple[HistoricalPopulationRunner, FakeGamsExecuto
         system_directory=tmp_path / "gams",
         gams_executable=tmp_path / "gams" / "gams",
         patch_evidence=patch,
-        checkpoint_store=HistoricalPopulationCheckpointStore(
-            tmp_path / "checkpoints"
-        ),
+        checkpoint_store=HistoricalPopulationCheckpointStore(tmp_path / "checkpoints"),
         index_loader=FakeIndexLoader(),
         executor=executor,
     )
@@ -132,6 +125,8 @@ def _runner(tmp_path: Path) -> tuple[HistoricalPopulationRunner, FakeGamsExecuto
 
 def test_population_runner_executes_and_resumes_by_checkpoint(tmp_path: Path) -> None:
     assert "rtd-only" in HISTORICAL_EXECUTION_PROFILE
+    assert "first-loop" in HISTORICAL_EXECUTION_PROFILE
+    assert "dailymode0" in HISTORICAL_EXECUTION_PROFILE
     runner, executor = _runner(tmp_path)
 
     first = runner.run()
@@ -148,9 +143,17 @@ def test_population_runner_executes_and_resumes_by_checkpoint(tmp_path: Path) ->
     assert "solvelink=5" in executor.commands[-1]
     assert first[0].solver_profile == HISTORICAL_EXECUTION_PROFILE
     assert (runner.programs.parent / "Input" / "Pricing_20221106.gdx").is_symlink()
-    assert (runner.programs / "vSPDtpsToSolve.inc").read_text() == (
-        "/\ncase_1\n/\n"
-    )
+    assert (runner.programs / "vSPDtpsToSolve.inc").read_text() == ("/\ncase_1\n/\n")
+
+
+def test_population_runner_rejects_population_overrun_before_more_work(
+    tmp_path: Path,
+) -> None:
+    runner, _ = _runner(tmp_path)
+
+    runner._validate_affected_count(546)
+    with pytest.raises(EvidenceContractError, match="exceeded.*546"):
+        runner._validate_affected_count(547)
 
 
 def test_population_runner_rejects_source_or_patch_drift(tmp_path: Path) -> None:
@@ -198,6 +201,37 @@ def test_gams_executor_retries_only_transient_network_licence_failure(
 
     assert calls == 2
     assert delays == [17.0]
+
+
+def test_gams_executor_retries_gams54_node_limit_response(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    programs = tmp_path / "Programs"
+    programs.mkdir()
+    calls = 0
+
+    def run(*args: object, **kwargs: object) -> object:
+        nonlocal calls
+        del args, kwargs
+        calls += 1
+        (programs / "vSPDmodel.log").write_text(
+            "Error when trying to start network session:\n"
+            '{"detail":{"message":"Node limit exceeded","reason":"node_limit"}}\n'
+        )
+        return type("Completed", (), {"returncode": 1 if calls == 1 else 0})()
+
+    monkeypatch.setattr("tools.gate12.historical_population.subprocess.run", run)
+    delays: list[float] = []
+    executor = SubprocessHistoricalGamsExecutor(
+        network_license_attempts=2,
+        network_license_retry_seconds=9.0,
+        sleeper=delays.append,
+    )
+
+    executor.execute(tmp_path / "gams", programs, ("vSPDmodel.gms", "lo=2"))
+
+    assert calls == 2
+    assert delays == [9.0]
 
 
 def test_gams_executor_does_not_retry_nonlicence_failure(

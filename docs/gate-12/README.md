@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Gate | G12 — E2E parity validated |
-| Status | **PLANNED — MANDATORY PARITY DEBT REGISTERED** |
+| Status | **ACTIVE — HISTORICAL POPULATION ENUMERATION IN PROGRESS** |
 | Applicable baselines | vSPD v5.0.6 at `21b1cf33…`; SPD v16 feature source at `84ed3c9…` |
 | Entry | After Gate 10 for v5.0.6; after applicable Gate 11 work for a new formulation |
 | Package manager | `uv` only |
@@ -77,13 +77,20 @@ v5.0.2 shortfall-transfer oracle.
 ## Historical population execution
 
 The population oracle is pinned to vSPD v5.0.2 commit
-`3360a91ebd48f2e3cbb52a5e6766d893011054be`. It retains `dailymode = 1`, because
-the Authority's 546-interval disclosure is specifically the daily-mode RTD
-defect, uses SCIP for the primary MIP, limits discovery to the first historical
-shortfall decision, and preserves the pinned model's exact strict-positive
-shortfall predicate. Evidence retains every eligible identity, including a GAMS
-EPS value that renders numerically as zero; the `1e-6 MW` threshold belongs only
-to the explicitly non-qualifying analytic candidate screen.
+`3360a91ebd48f2e3cbb52a5e6766d893011054be`. Identity discovery uses
+`dailymode = 0` for one narrowly defined reason: it forces the pinned RTD load
+calculation that reveals the material shortfall which the defective daily path
+suppresses by retaining stale input demand. This discovery profile is not a
+daily-mode parity substitute. Every emitted identity must still be replayed
+through the daily-mode state machine by GAMS and PySPD under `G12-02`.
+
+The discovery profile uses SCIP for the primary MIP, limits execution to the
+first historical shortfall decision, preserves the pinned model's exact
+strict-positive branch, and records only a selected node-to-node transfer whose
+source `EnergyShortfallMW` exceeds `1e-6 MW`. The threshold controls evidence
+emission only; it does not alter the historical branch or the optimization.
+The separation between discovery and daily-mode replay is governed by
+[ADR-0013](../adr/0013-gate-12-shortfall-population-discovery.md).
 The source overlay is fail-closed and hash-addressed; unexpected upstream text
 does not get silently patched.
 
@@ -103,9 +110,10 @@ hashes.
 An earlier `dailymode = 0` full-day rehearsal on `Pricing_20221106.gdx`
 completed 278 optimal primary solves and 11 optimal cleanup solves. Its four
 cases and six node values exactly agree with the algebraic reconstructor, which
-qualifies that candidate calculation, but the run is explicitly rejected as
-evidence for the Authority-disclosed daily-mode population. A new workspace and
-profile are required for all accepted population checkpoints.
+qualifies that candidate calculation. It is not accepted as a population
+checkpoint because it selected the historical `All` surface rather than the
+exact canonical RTD surface. The replacement profile must reproduce those four
+cases on the 270-case canonical RTD surface before population execution.
 
 A corrected `dailymode = 1` benchmark on `Pricing_20230510.gdx` completed all
 305 cases on the broad historical `All` surface with optimal primary and cleanup
@@ -116,23 +124,27 @@ but is invalidated even as trigger evidence because it both predates the exact
 RTD-only execution profile (278 cases on that input) and changed the historical
 strict-positive branch.
 
-An initial exact-order production attempt was invalidated before population use
-after its first date exposed that the forensic overlay had applied the analytic
-`1e-6 MW` threshold to the historical model decision itself. No result from that
-profile is reusable. The corrected `exact-positive` profile leaves
-`EnergyShortfallMW > 0` unchanged and restricts the threshold only to progress
-logging.
+Two predecessor profiles are invalidated. The first applied the analytic
+`1e-6 MW` threshold to the model decision itself and therefore changed the
+historical state machine. The second preserved that branch but treated every
+eligible-removal predicate—including GAMS `EPS` residues—as population
+membership before proving a material transfer. It produced 737 identities on
+only three dates, exceeding the declared 546-case population. The latter
+failure and all supporting checkpoint hashes are retained in
+[`historical-exact-positive-invalidation.json`](historical-exact-positive-invalidation.json).
+The earlier single-date artifact is retained only as invalidated forensic
+history; it is not qualifying trigger or population evidence.
 
-The corrected profile has completed its first hash-bound qualification date.
-On `Pricing_20221204.gdx`, all 274 selected RTD cases solved once in canonical
-GDX order, every primary and cleanup solve was optimal, and all 274 interval
-identities emitted eligible shortfall-transfer evidence (1,806 node records).
-The source, patch, raw listing, progress, evidence, and logical checkpoint
-hashes are retained in
-[`historical-exact-positive-qualification.json`](historical-exact-positive-qualification.json).
-This proves that the corrected oracle observes the disclosed defect, but it is
-deliberately classified as single-date trigger evidence rather than the final
-139-date population manifest.
+The replacement profile passed its canonical qualification on
+`Pricing_20221106.gdx`: all 270 selected RTD cases solved once in GDX order,
+all operational solves were optimal, and exactly the four expected identities
+and six node-to-node transfers were emitted. Identity, node, and displayed
+quantity evidence exactly matches the independent algebraic reconstruction.
+The source, overlay, listing, progress, transfer, checkpoint, and comparison
+hashes are frozen in
+[`historical-material-transfer-qualification.json`](historical-material-transfer-qualification.json).
+This qualifies the discovery method for the 139-date enumeration; it does not
+promote a one-date shard to the final population manifest.
 
 Run or resume the governed enumeration with `uv`:
 

@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "classification": "qualifying-single-date-population-method",
+  "reference_commit": "3360a91ebd48f2e3cbb52a5e6766d893011054be",
+  "trading_date": "20221106",
+  "source_sha256": "282ac2abeaa2f0c7c6e26b967e2ba90289c0ba5a9e696b99069d11350d3037b8",
+  "patch_profile": "historical-v5.0.2-dailymode0-scip-first-loop-material-transfer",
+  "patch_sha256": "d83fb782682b289e5fb04b46469a7573b29dc489c7e1fe4cb5d19de92cccf19a",
+  "execution_profile": "historical-v5.0.2-dailymode0-scip-solvelink5-first-loop-rtd-only-canonical-order-material-transfer",
+  "selected_case_count": 270,
+  "solved_case_count": 270,
+  "all_solves_optimal": true,
+  "affected_identity_count": 4,
+  "evidence_record_count": 6,
+  "checkpoint_logical_sha256": "a9b5a3b692b3163710851c824021c5d90edc96fe73fe76471e96e123dbdc14d2",
+  "raw_checkpoint_sha256": "9e61c53273732e83fc867430501e5785e1e5ab95763f2f7657ccbcd6706d126f",
+  "artifact_sha256": {
+    "evidence": "5529a21fa55f908477e32b84bd8f3242a8ae0232f282511d3f8739e6baf6c1dc",
+    "listing": "279e1d54d74cd27de9bc8240b461980156e0a5e31cf6bff3830d03414d7a0413",
+    "progress": "fbb3e4e34fbe0280cdce10200a7522d20e2b5b53a180b19dea61e8a4e3b8da21"
+  },
+  "identities": [
+    {
+      "case_id": "51012022111800831",
+      "date_time": "06-NOV-2022 07:00",
+      "transfers": [
+        {"source_node": "WAI0111", "target_node": "EDG1102", "shortfall_mw": 4.596938272732},
+        {"source_node": "WAI0501", "target_node": "EDG1102", "shortfall_mw": 0.510770919192}
+      ]
+    },
+    {
+      "case_id": "51012022111805834",
+      "date_time": "06-NOV-2022 07:05",
+      "transfers": [
+        {"source_node": "WAI0111", "target_node": "EDG1102", "shortfall_mw": 4.473002930519},
+        {"source_node": "WAI0501", "target_node": "EDG1102", "shortfall_mw": 0.508295787559}
+      ]
+    },
+    {
+      "case_id": "51012022111810835",
+      "date_time": "06-NOV-2022 07:10",
+      "transfers": [
+        {"source_node": "WAI0111", "target_node": "EDG1102", "shortfall_mw": 4.253936279381}
+      ]
+    },
+    {
+      "case_id": "61012022110425024",
+      "date_time": "06-NOV-2022 17:25",
+      "transfers": [
+        {"source_node": "WAI0501", "target_node": "EDG1102", "shortfall_mw": 1.113154050811}
+      ]
+    }
+  ],
+  "independent_analytic_match": {
+    "identity_count_equal": true,
+    "identities_equal": true,
+    "node_identity_count_equal": true,
+    "values_equal_at_displayed_precision": true
+  },
+  "population_passed": false,
+  "qualification_scope": "The discovery method is qualified for full 139-date enumeration; this one-date artifact is not the final 546-case manifest."
+}
