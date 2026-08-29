@@ -32,6 +32,8 @@ from pyspd.reserve.data import RESERVE_FORMULATION_ID
 from pyspd.v16.compatibility import SPD16_FORMULATION_ID
 from pyspd.v16.preprocess import SPD16_SOURCE_PROFILE_ID
 
+PORTABLE_SOLVER_PROFILE = "scip-mip-fixed-highs-rmip"
+
 
 class ConfigurationError(ValueError):
     """Public application configuration is invalid or ambiguous."""
@@ -52,6 +54,7 @@ class ApplicationConfiguration:
     output_directory: Path
     source_sha256: str
     gams_system_directory: Path
+    solver_profile: str = PORTABLE_SOLVER_PROFILE
     case_ids: tuple[str, ...] = ()
     maximum_solve_loops: int = 5
     price_rounding_decimals: int = 5
@@ -66,6 +69,10 @@ class ApplicationConfiguration:
         object.__setattr__(self, "case_ids", tuple(self.case_ids))
         if not self.formulation_id.strip():
             raise ConfigurationError("formulation_id must be explicit")
+        if self.solver_profile != PORTABLE_SOLVER_PROFILE:
+            raise ConfigurationError(
+                "solver_profile must explicitly select " + PORTABLE_SOLVER_PROFILE
+            )
         if not input_path.is_file():
             raise ConfigurationError(f"input file does not exist: {input_path}")
         if not system.is_dir():
@@ -89,6 +96,7 @@ class ApplicationConfiguration:
             "case_ids": list(self.case_ids),
             "maximum_solve_loops": self.maximum_solve_loops,
             "price_rounding_decimals": self.price_rounding_decimals,
+            "solver_profile": self.solver_profile,
             "source_sha256": self.source_sha256,
         }
         return hashlib.sha256(
@@ -203,7 +211,7 @@ class PyspdApplication:
             result.configuration_sha256,
             __version__,
             _file_sha256(lock_path),
-            "scip-mip-fixed-highs-rmip",
+            configuration.solver_profile,
             daily_configuration.environment_fingerprint,
         )
         profile = self._reports.resolve(configuration.formulation_id)
