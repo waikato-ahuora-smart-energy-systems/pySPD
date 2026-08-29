@@ -1,0 +1,41 @@
+{
+  "accessed_at": "2026-08-30",
+  "article": {
+    "authors": [
+      "Jack O'Leary",
+      "Martin Atkins",
+      "Isaac Severinsen"
+    ],
+    "doi": "10.1016/j.energy.2026.141862",
+    "journal": "Energy",
+    "pages_or_article": "141862",
+    "pii": "S0360544226019699",
+    "title": "Operational and market impacts of residential solar photovoltaics using a system operator-derived dispatch framework",
+    "volume": "360",
+    "year": 2026
+  },
+  "full_text": {
+    "acquired": false,
+    "file_sha256": null,
+    "notes": "Publisher page was access-restricted; no full-text method or result claim is admitted from abstract metadata.",
+    "supplements_acquired": false
+  },
+  "method_boundary": {
+    "abstract_verified": [
+      "New Zealand electricity-market application",
+      "historical baseline versus residential-PV counterfactual scenarios",
+      "household adoption rates within 5-20 percent",
+      "hourly distributed-PV representation",
+      "grid-demand reduction at relevant nodes",
+      "wholesale-price, market-stability, and energy-supply outcomes"
+    ],
+    "full_method_extracted": false,
+    "replication_implementation_authorized": false
+  },
+  "schema_version": 1,
+  "sources": {
+    "abstract_metadata": "https://ideas.repec.org/a/eee/energy/v360y2026ics0360544226019699.html",
+    "doi": "https://doi.org/10.1016/j.energy.2026.141862",
+    "publisher": "https://www.sciencedirect.com/science/article/pii/S0360544226019699"
+  }
+}

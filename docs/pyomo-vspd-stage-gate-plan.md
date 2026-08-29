@@ -4,9 +4,9 @@
 
 | Document field | Value |
 |---|---|
-| Status | Controlled reference; executed through Gate 11 |
-| Document version | 0.5 |
-| Date | 29 August 2026 |
+| Status | Controlled reference; executed through Gate 11; Gate 12 active; Gate 13 planned |
+| Document version | 0.6 |
+| Date | 30 August 2026 |
 | Repository | `pySPD` |
 | Reference compatibility baseline | vSPD `v5.0.6`, commit `21b1cf33f5607399331dcb1c03270348def5ccc8` |
 | Governing formulation context for v5 features | SPD Model Formulation v15.0 |
@@ -14,7 +14,7 @@
 | Primary modelling framework | Pyomo |
 | Initial portability solver | HiGHS |
 | Historical parity solver | CPLEX |
-| Next formal review | Gate 12 |
+| Next formal review | Gate 12, followed by Gate 13 paper-replication entry review |
 
 ## 1. Purpose and authority
 
@@ -674,6 +674,7 @@ branch, risk, objective, status, and price records corresponding to the source
 | Validated v5.0.6 implementation | Gate 9 full-corpus criteria and independent internal validation pass |
 | Independently verified release | Gate 10 external or organizationally independent review passes |
 | E2E parity validated | Gate 12 exact end-to-end parity criteria pass for the declared formulation/solver profile |
+| Paper study replicated | Gate 13 reproduces the declared paper methods and results within its evidence boundary; partial or failed reproduction is labelled explicitly |
 | Audited release | A formally scoped audit explicitly certifies that PySPD release |
 
 ### 8.4 Stage entry rule
@@ -710,6 +711,7 @@ all affected downstream stages.
 | 10. Independent verification and release | Independent assurance, packaging, documentation, and operational readiness pass | G10 Release authorized |
 | 11. Formulation evolution | Each v16 or later delta repeats impact analysis and affected assurance | G11 New formulation authorized |
 | 12. End-to-end parity validation | Exact affected-interval, full-day, report, and price parity is proven for each declared compatibility profile | G12 E2E parity validated |
+| 13. Residential-PV study replication | The paper's demand-overlay scenarios, execution, metrics, and reported findings are reproduced with source-complete evidence | G13 Residential-PV study replicated |
 
 ## 10. Detailed stages and gates
 
@@ -1603,6 +1605,196 @@ under the recorded project direction. It does require machine-checkable
 evidence for every criterion; a solver deferral or missing public identity list
 cannot be counted as passing parity evidence.
 
+### Stage 13 — Residential-PV counterfactual study replication
+
+**Objective:** reproduce, as closely and transparently as the available source
+material and data permit, the model modifications, scenarios, experiment
+execution, and reported findings in O'Leary, Atkins, and Severinsen,
+“Operational and market impacts of residential solar photovoltaics using a
+system operator-derived dispatch framework,” *Energy* 360 (2026), article
+141862, DOI [`10.1016/j.energy.2026.141862`](https://doi.org/10.1016/j.energy.2026.141862),
+using the validated class-based PySPD model.
+
+Stage 13 is a named research profile layered on a Gate 12-qualified formulation.
+It must not silently change the v5 or v16 compatibility models, their source
+hashes, or their release claims. Paper-specific transformations are immutable
+scenario inputs and composable experiment services unless the full paper proves
+that a mathematical formulation change is required. Any such change receives a
+separate formulation/profile identifier, component-level source map, and impact
+analysis against Gates 3–12.
+
+#### 13.1 Source boundary and entry conditions
+
+The accessible bibliographic record and abstract establish only that the study:
+
+- analyses the New Zealand electricity market in a hydro-dominated system;
+- compares historical conditions with counterfactual residential-PV scenarios;
+- considers household adoption rates within a stated 5–20% range;
+- represents distributed PV at hourly resolution as reduced grid demand at
+  relevant nodes; and
+- evaluates wholesale-price, market-stability, and energy-supply effects using
+  a replica of the system operator's scheduling, pricing, and dispatch engine.
+
+Those facts are sufficient to define the Stage 13 boundary, but not to claim a
+replication. The complete paper, supplements, data descriptions, equations,
+tables, and figures are not present in the repository and the publisher page
+was access-restricted when this stage was created. Before scenario
+implementation, Stage 13 must acquire a lawfully accessible copy, record its
+SHA-256 and bibliographic identity, and extract every method choice that can
+affect results. At minimum this includes:
+
+- exact historical study dates, input releases, market-engine version, modes,
+  case-selection rules, and solver settings;
+- the complete adoption-rate scenario set rather than an inferred sequence
+  between 5% and 20%;
+- household-count, installed-capacity, PV-generation, weather, node-allocation,
+  regional, and demand datasets, including versions, units, licences, and
+  transformations;
+- the PV capacity-per-household assumptions and all derating, orientation,
+  efficiency, aggregation, interpolation, timezone, daylight-saving, and
+  missing-data rules;
+- the exact mapping from hourly PV to dispatch intervals, pricing cases,
+  trading periods, and grid nodes;
+- whether demand is floored at zero, may become net export, or is reassigned,
+  curtailed, or otherwise bounded;
+- the treatment of losses, reserves, scarcity, outages, hydro constraints,
+  demand bids, overrides, prior dispatch, and publication weighting;
+- every metric definition, aggregation window, normalization, statistical test,
+  uncertainty treatment, and reported precision; and
+- all reported tables, figures, headline quantities, exclusions, limitations,
+  and sensitivity analyses that define the replication targets.
+
+If any required source or parameter cannot be obtained, the register records it
+as unavailable and the result is labelled a partial replication. An assumed
+value may be explored only in a separately named sensitivity scenario; it may
+not be represented as the paper's method.
+
+#### 13.2 Class-based extension architecture
+
+The study profile extends PySPD through explicit, independently testable
+classes:
+
+- `ResidentialPvScenarioDefinition` — immutable scenario identity, adoption
+  rate, data hashes, temporal policy, allocation policy, and formulation ID;
+- `ResidentialPvSourceCatalog` — verifies source files, schemas, units,
+  licences, special values, and SHA-256 identities;
+- `ResidentialPvProfileBuilder` — reproduces the paper's PV production series
+  without accessing model state;
+- `ResidentialPvNodeAllocator` — maps household/PV quantities to canonical
+  market nodes with an auditable conservation ledger;
+- `ResidentialPvTemporalMapper` — maps the paper's hourly series to exact case,
+  dispatch-interval, trading-period, timezone, and daylight-saving identities;
+- `ResidentialPvLoadOverlay` — applies the paper-defined counterfactual demand
+  change to immutable prepared inputs and emits before/after/delta hashes;
+- `ResidentialPvExperimentRunner` — executes baseline and scenarios in a
+  deterministic order through the approved solver profile and resumable daily
+  orchestration;
+- `ResidentialPvMetrics` — calculates only source-mapped operational, price,
+  generation, hydro, stability, security, and energy-supply measures;
+- `ResidentialPvReplicationComparator` — compares reproduced tables, figures,
+  and claims against digitized or machine-readable paper targets under named
+  tolerances; and
+- `ResidentialPvEvidencePackBuilder` — binds paper, data, configuration, code,
+  dependency, solver, run, metric, comparison, and report hashes.
+
+These classes depend on interfaces rather than global data or date switches.
+The base `Formulation`, `ModelAssembler`, solver policy, pricing state machine,
+and report registry remain reusable and formulation-selected.
+
+#### 13.3 Counterfactual and experiment work
+
+Stage 13 will:
+
+1. freeze a paper-method register with a bidirectional mapping from each source
+   section/equation/table/figure to a PySPD class, configuration field, test,
+   and evidence artifact;
+2. reproduce the paper's historical baseline first and prove that a zero-PV
+   overlay is byte- or tolerance-identical to the unmodified PySPD run;
+3. build the exact published adoption scenarios and no others in the primary
+   replication set;
+4. apply residential PV as the paper specifies, initially expected from the
+   abstract to be a node-level demand reduction, while retaining the original
+   input and a complete delta ledger;
+5. execute identical case selection, prior-dispatch initialization, overrides,
+   primary solve, fixed-discrete pricing solve, price repair, publication, and
+   reporting for the baseline and every scenario;
+6. reproduce all paper metrics and reported tables/figures at their declared
+   spatial and temporal aggregation;
+7. separate direct replication from project-added robustness checks, solver
+   sensitivity, alternate weather years, alternate allocation methods, and
+   newer-market-formulation experiments;
+8. explain every material difference through input, method, model version,
+   solver/basis, price post-processing, or reporting evidence; and
+9. publish a reproducibility capsule driven exclusively by committed
+   configuration and `uv.lock`, with licensed or restricted data fetched by
+   verified hash rather than redistributed without permission.
+
+#### 13.4 Required tests and validation
+
+Probity TDD applies to every Stage 13 production change. Required tests include:
+
+- strict paper/source/data schemas and deliberate hash, unit, domain, and
+  missing-field failures;
+- hand-calculated household-adoption, capacity, PV-output, temporal-resampling,
+  and node-allocation microcases;
+- conservation of PV energy through source, temporal, regional, node, case,
+  trading-period, and national aggregations;
+- explicit timezone and 46/48/50-period daylight-saving cases;
+- zero-adoption identity and exact before/after demand-delta tests;
+- negative-demand/net-export boundary tests matching the extracted paper rule;
+- proof that only intended demand parameters or explicitly mapped formulation
+  components differ from the baseline structural fingerprint;
+- scenario-order independence, deterministic reruns, and interrupted/resumed
+  equality;
+- optimal primary and fixed-discrete pricing solves, independent feasibility,
+  objective, price, publication, and report validation;
+- baseline reproduction before counterfactual interpretation;
+- exact scenario membership and complete output-field coverage;
+- metric tests for price levels/distributions, volatility or the paper's exact
+  stability measure, generation by source, hydro displacement/deferral, demand,
+  unserved energy, reserves, scarcity, congestion, losses, and emissions only
+  where the full paper defines them;
+- digitization uncertainty and rounding tests for targets available only in
+  figures; and
+- deliberate comparator failures for omitted dates/nodes, incorrect weights,
+  shifted timestamps, wrong adoption scaling, changed demand floors, stale
+  baseline state, and unsupported agreement claims.
+
+#### Gate 13 — Residential-PV study replicated
+
+Gate 13 passes only when:
+
+- Gate 12 has passed for the selected underlying formulation and solver claim,
+  or the Gate 13 decision explicitly limits itself to a lower, clearly named
+  assurance boundary without implying Gate 12 parity;
+- the complete paper and applicable supplements are lawfully acquired, hashed,
+  registered, and fully mapped, or the gate decision is explicitly `PARTIAL`
+  because identified material source content is unavailable;
+- the exact paper baseline, model version, study period, data, adoption
+  scenarios, transformations, metrics, and tolerances are frozen and
+  reproducible;
+- the zero-PV run proves that the study overlay does not alter the qualified
+  baseline;
+- all PV transformations conserve the expected quantities and every adjusted
+  node/case is traceable to source data and scenario configuration;
+- baseline and scenario solves complete under named solver profiles with no
+  hidden failures, stale state, or unexplained infeasibility;
+- every in-scope paper table, figure, and headline result is reproduced within
+  its approved precision or has an evidence-bound explanation of the difference;
+- solver-sensitive and model-version-sensitive results are disclosed separately
+  rather than averaged into apparent agreement;
+- repeated and resumed executions produce the same scenario manifests,
+  accepted paths, metrics, comparisons, and reports;
+- the base v5/v16 structural and regression evidence remains unchanged;
+- the Stage 13 discrepancy register contains zero unresolved material records
+  for a `PASS`; and
+- the final decision uses one of `REPLICATED`, `PARTIALLY REPLICATED`, or
+  `NOT REPRODUCIBLE`, with the evidence boundary stated in user-facing language.
+
+No separate independent human reviewer or approval is required under current
+project direction. Machine-checkable source, transformation, execution, and
+comparison evidence remains mandatory.
+
 ## 11. Requirement and evidence traceability
 
 The traceability register is a release-controlled dataset, not a narrative
@@ -2021,6 +2213,8 @@ acceptance still fails closed on missing evidence or unresolved criteria.
 | Re-solve loop diverges or publishes stale values | Wrong result or nontermination | Explicit state machine, loop bounds, path parity, failure tests | Technical lead |
 | Public sample is unrepresentative | False confidence | Stratified and complete historical corpus | Validation lead |
 | Full-year corpus is expensive | Slow feedback or skipped assurance | Tiered CI, immutable cache, parallel isolation; never reduce release gate silently | Release owner |
+| Stage 13 paper, supplements, or study data are unavailable | Assumed methods masquerade as replication | Full-text/data entry gate, hashes, explicit `PARTIAL`/`NOT REPRODUCIBLE` outcomes, assumptions isolated as sensitivities | Technical lead |
+| Residential-PV temporal or node allocation is reconstructed incorrectly | Plausible but economically invalid counterfactual results | Source-mapped temporal/allocation classes, conservation ledger, DST tests, zero-PV identity | Data lead |
 | Vectorized Pyomo construction is too slow/large | Operationally impractical release | Sparse domains, profiling, persistent updates, Gate 9 budgets | Technical lead |
 | Commercial solver unavailable | Inability to prove historical parity | Early licence access, portable HiGHS profile, retain oracle artifacts | Sponsor |
 | Golden output updated to match a defect | Test suite ratifies wrong behavior | Oracle-only goldens, separate review, hashes and provenance | Validation lead |
@@ -2084,6 +2278,8 @@ They are recalibrated at Gate 1 after real corpus and performance measurements.
 | 9 | 6–12 weeks | Full historical data and controlled compute |
 | 10 | 6–12 weeks | Independent reviewer availability |
 | 11 | Per formulation delta | Authoritative current-version inputs |
+| 12 | 12–24 weeks | Complete E2E corpus, licensed oracle execution, price resolution |
+| 13 | 8–16 weeks after source acquisition | Full paper/supplements, study data, Gate 12-qualified baseline |
 
 After Gate 2, some component work can overlap, but no component may skip its
 predecessor evidence. A realistic compatibility release is a substantial
@@ -2107,6 +2303,12 @@ commitment. Gate 1 is the first responsible point for a delivery forecast.
 9. Amend `pyproject.toml` using `uv` to introduce only the dependencies needed
    for the first failing data-contract tests.
 10. Begin Stage 2 under Probity TDD only after Gate 1 passes.
+11. Acquire and hash the complete Stage 13 paper and any supplements through a
+    lawful publisher, author, or institutional source.
+12. Populate the Stage 13 method register without inferring inaccessible
+    parameters from the abstract.
+13. Begin Stage 13 scenario implementation only after its source-entry
+    checklist passes and without interrupting Gate 12 evidence execution.
 
 ## 21. Reference register
 
@@ -2162,6 +2364,12 @@ commitment. Gate 1 is the first responsible point for a delivery forecast.
 - [Pyomo timing utilities](https://pyomo.readthedocs.io/en/stable/api/pyomo.common.timing.html)
 - [Pyomo model-size reporting](https://pyomo.readthedocs.io/en/stable/api/pyomo.util.model_size.html)
 
-All web references in this document were reviewed on 28 August 2026. Gate 0
+### Stage 13 residential-PV replication
+
+- [O'Leary, Atkins, and Severinsen (2026), publisher record](https://www.sciencedirect.com/science/article/pii/S0360544226019699)
+- [DOI 10.1016/j.energy.2026.141862](https://doi.org/10.1016/j.energy.2026.141862)
+- [Accessible bibliographic record and abstract](https://ideas.repec.org/a/eee/energy/v360y2026ics0360544226019699.html)
+
+All web references in this document were reviewed on 30 August 2026. Gate 0
 must archive or hash the exact versions used for the project baseline because
 web content and public repositories can change.
