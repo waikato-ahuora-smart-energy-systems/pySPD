@@ -6,6 +6,7 @@ import pytest
 
 from tools.gate12.evidence import EvidenceContractError
 from tools.gate12.historical_population import (
+    GamsTransferCaseIndexLoader,
     HistoricalAffectedManifestBuilder,
     HistoricalDailyCompletionValidator,
     HistoricalGdxCaseIndex,
@@ -22,6 +23,22 @@ HEADER = (
     "case_id|datetime|node|loop|energy_shortfall_mw|adjustment_mw|"
     "model_status|solver_status\n"
 )
+
+
+def test_case_index_selects_only_disclosed_rtd_modes() -> None:
+    index = GamsTransferCaseIndexLoader.select_rtd(
+        periods={
+            ("rtd", "06-NOV-2022 07:00"): "TP15",
+            ("dispatch_lite", "06-NOV-2022 07:05"): "TP15",
+            ("prss", "06-NOV-2022 07:30"): "TP16",
+        },
+        study_mode={"rtd": 101, "dispatch_lite": 201, "prss": 130},
+    )
+
+    assert index.cases == (
+        ("dispatch_lite", "06-NOV-2022 07:05"),
+        ("rtd", "06-NOV-2022 07:00"),
+    )
 
 
 def test_historical_shortfall_evidence_accepts_optimal_first_loop_rows() -> None:
