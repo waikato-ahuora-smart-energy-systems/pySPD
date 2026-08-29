@@ -18,6 +18,7 @@ from tools.gate12.historical_population import (
     HistoricalPopulationRunner,
     HistoricalPopulationShardPlanner,
     HistoricalPopulationWorkspace,
+    SubprocessHistoricalGamsExecutor,
 )
 
 HEADER = (
@@ -165,6 +166,65 @@ def test_population_runner_rejects_source_or_patch_drift(tmp_path: Path) -> None
     (runner.programs / "vSPDsolve.gms").write_text("changed")
     with pytest.raises(EvidenceContractError, match="patch hash"):
         runner.run()
+
+
+def test_gams_executor_retries_only_transient_network_licence_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    programs = tmp_path / "Programs"
+    programs.mkdir()
+    calls = 0
+
+    def run(*args: object, **kwargs: object) -> object:
+        nonlocal calls
+        del args, kwargs
+        calls += 1
+        if calls == 1:
+            (programs / "vSPDmodel.log").write_text(
+                "Error when trying to start network session\n"
+                "Problems with interprocess communition server for licensing\n"
+            )
+        return type("Completed", (), {"returncode": 1 if calls == 1 else 0})()
+
+    monkeypatch.setattr("tools.gate12.historical_population.subprocess.run", run)
+    delays: list[float] = []
+    executor = SubprocessHistoricalGamsExecutor(
+        network_license_attempts=2,
+        network_license_retry_seconds=17.0,
+        sleeper=delays.append,
+    )
+
+    executor.execute(tmp_path / "gams", programs, ("vSPDmodel.gms", "lo=2"))
+
+    assert calls == 2
+    assert delays == [17.0]
+
+
+def test_gams_executor_does_not_retry_nonlicence_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    programs = tmp_path / "Programs"
+    programs.mkdir()
+    (programs / "vSPDmodel.log").write_text("Compilation error\n")
+    calls = 0
+
+    def run(*args: object, **kwargs: object) -> object:
+        nonlocal calls
+        del args, kwargs
+        calls += 1
+        return type("Completed", (), {"returncode": 1})()
+
+    monkeypatch.setattr("tools.gate12.historical_population.subprocess.run", run)
+    executor = SubprocessHistoricalGamsExecutor(
+        network_license_attempts=3,
+        network_license_retry_seconds=0.0,
+        sleeper=lambda _: None,
+    )
+
+    with pytest.raises(EvidenceContractError, match="did not complete"):
+        executor.execute(tmp_path / "gams", programs, ("vSPDmodel.gms", "lo=2"))
+
+    assert calls == 1
 
 
 class FakePatcher:

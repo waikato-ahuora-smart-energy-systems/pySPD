@@ -33,6 +33,8 @@ def test_historical_cli_requires_all_reproducibility_inputs() -> None:
     assert str(arguments.inventory) == "/inventory.json"
     assert str(arguments.work_directory) == "/work"
     assert arguments.execution_scope == "population"
+    assert arguments.network_license_attempts == 6
+    assert arguments.network_license_retry_seconds == 300.0
 
 
 def test_historical_cli_has_explicit_non_qualifying_shard_scope() -> None:

@@ -10,6 +10,8 @@ import math
 import re
 import shutil
 import subprocess
+import time
+from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Protocol
@@ -363,18 +365,75 @@ class HistoricalGamsExecutor(Protocol):
 class SubprocessHistoricalGamsExecutor:
     """Run GAMS without treating process exit alone as solve evidence."""
 
+    _NETWORK_LICENCE_MARKERS = (
+        "Error when trying to start network session",
+        "server for licensing",
+    )
+
+    def __init__(
+        self,
+        *,
+        network_license_attempts: int = 1,
+        network_license_retry_seconds: float = 300.0,
+        sleeper: Callable[[float], None] = time.sleep,
+    ) -> None:
+        if (
+            not isinstance(network_license_attempts, int)
+            or isinstance(network_license_attempts, bool)
+            or network_license_attempts < 1
+            or not math.isfinite(network_license_retry_seconds)
+            or network_license_retry_seconds < 0.0
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: invalid GAMS network-licence retry policy"
+            )
+        self.network_license_attempts = network_license_attempts
+        self.network_license_retry_seconds = network_license_retry_seconds
+        self.sleeper = sleeper
+
     def execute(
         self, executable: Path, programs: Path, arguments: tuple[str, ...]
     ) -> None:
-        completed = subprocess.run(
-            [str(executable), *arguments],
-            cwd=programs,
-            check=False,
-        )
-        if completed.returncode != 0:
+        log_path = programs / Path(arguments[0]).with_suffix(".log").name
+        for attempt in range(1, self.network_license_attempts + 1):
+            previous_log_signature = self._file_signature(log_path)
+            completed = subprocess.run(
+                [str(executable), *arguments],
+                cwd=programs,
+                check=False,
+            )
+            if completed.returncode == 0:
+                return
+            transient = self._is_new_network_licence_failure(
+                log_path, previous_log_signature
+            )
+            if transient and attempt < self.network_license_attempts:
+                self.sleeper(self.network_license_retry_seconds)
+                continue
             raise EvidenceContractError(
                 "REQ-G12-HISTORICAL: GAMS process did not complete"
             )
+
+    @staticmethod
+    def _file_signature(path: Path) -> tuple[int, int] | None:
+        try:
+            stat = path.stat()
+        except OSError:
+            return None
+        return (stat.st_mtime_ns, stat.st_size)
+
+    def _is_new_network_licence_failure(
+        self,
+        log_path: Path,
+        previous_signature: tuple[int, int] | None,
+    ) -> bool:
+        if self._file_signature(log_path) == previous_signature:
+            return False
+        try:
+            text = log_path.read_text(errors="replace")
+        except OSError:
+            return False
+        return all(marker in text for marker in self._NETWORK_LICENCE_MARKERS)
 
 
 class HistoricalVspdSourcePatcher:

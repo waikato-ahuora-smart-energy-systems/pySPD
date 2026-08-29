@@ -22,6 +22,7 @@ from tools.gate12.historical_population import (
     HistoricalPopulationRunner,
     HistoricalPopulationWorkspace,
     HistoricalVspdSourcePatcher,
+    SubprocessHistoricalGamsExecutor,
 )
 
 REFERENCE_COMMIT = "3360a91ebd48f2e3cbb52a5e6766d893011054be"
@@ -78,6 +79,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--gams-executable", type=Path, required=True)
     parser.add_argument("--system-directory", type=Path, required=True)
     parser.add_argument(
+        "--network-license-attempts",
+        type=int,
+        default=6,
+        help="Maximum attempts for the specific transient GAMS network-licence failure.",
+    )
+    parser.add_argument(
+        "--network-license-retry-seconds",
+        type=float,
+        default=300.0,
+        help="Delay between transient GAMS network-licence attempts.",
+    )
+    parser.add_argument(
         "--execution-scope",
         choices=("population", "shard"),
         default="population",
@@ -127,6 +140,10 @@ def main(arguments: list[str] | None = None) -> int:
         patch_evidence=workspace.patch_evidence,
         checkpoint_store=HistoricalPopulationCheckpointStore(
             work_directory / "checkpoints"
+        ),
+        executor=SubprocessHistoricalGamsExecutor(
+            network_license_attempts=args.network_license_attempts,
+            network_license_retry_seconds=args.network_license_retry_seconds,
         ),
     )
     checkpoints = runner.run()

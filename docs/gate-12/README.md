@@ -148,6 +148,10 @@ uv run --group gdx python -m tools.gate12.enumerate_historical \
 
 The command produces per-date checkpoints, `population-summary.json`, and—only
 after the exact declared population is proven—`interval-identity-manifest.json`.
+The command retries only the observed transient GAMS network-licence session
+error, by default up to six attempts separated by 300 seconds. Every other GAMS
+failure remains immediate and fail-closed; the retry does not relax optimality,
+case-order, artifact-hash, or checkpoint validation.
 
 `ApplicationConfiguration.case_ids` is the governed PySPD replay selector. The
 ordered identity list is included in the configuration hash; duplicates, blank
