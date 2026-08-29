@@ -7,6 +7,10 @@ import pytest
 from tools.gate12.evidence import EvidenceContractError
 from tools.gate12.historical_population import (
     HistoricalDailyCompletionValidator,
+    HistoricalAffectedManifestBuilder,
+    HistoricalGdxCaseIndex,
+    HistoricalInputArtifact,
+    HistoricalInputInventory,
     HistoricalPopulationCheckpoint,
     HistoricalPopulationCheckpointStore,
     HistoricalShortfallEvidence,
@@ -264,3 +268,53 @@ def test_daily_completion_fails_closed(failure: str) -> None:
             listing=ListingResult(records=(record,)),
             evidence_text=HEADER,
         )
+
+
+def test_historical_manifest_builder_requires_exact_546_across_139_dates() -> None:
+    artifacts = []
+    checkpoints = []
+    indices = {}
+    for date_index in range(139):
+        trading_date = f"2022{date_index:04d}"
+        source_sha256 = f"{date_index + 1:064x}"
+        affected_count = 4 if date_index < 129 else 3
+        cases = tuple(
+            (f"case_{date_index}_{case_index}", f"DT-{date_index}-{case_index}")
+            for case_index in range(affected_count)
+        )
+        rows = "".join(
+            f"{case}|{date_time}|NODE|1|1.0|1.0|1|1\n"
+            for case, date_time in cases
+        )
+        evidence = HistoricalShortfallEvidence.parse(
+            HEADER + rows, source_name=f"Pricing_{trading_date}"
+        )
+        artifacts.append(HistoricalInputArtifact(trading_date, 1, source_sha256))
+        checkpoints.append(
+            HistoricalPopulationCheckpoint.create(
+                trading_date=trading_date,
+                source_sha256=source_sha256,
+                patch_sha256="a" * 64,
+                solver_profile="historical-v5.0.2-scip-first-loop",
+                selected_case_count=affected_count,
+                solved_case_count=affected_count,
+                all_solves_optimal=True,
+                evidence=evidence,
+            )
+        )
+        indices[trading_date] = HistoricalGdxCaseIndex(
+            cases=cases,
+            trading_periods={case: f"TP{i + 1}" for i, case in enumerate(cases)},
+        )
+
+    manifest = HistoricalAffectedManifestBuilder().build(
+        checkpoints=tuple(checkpoints),
+        inventory=HistoricalInputInventory(tuple(artifacts)),
+        case_indices=indices,
+        source_release="v5.0.4",
+        reference_commit="3360a91",
+    )
+
+    assert len(manifest.identities) == 546
+    assert len({identity.trading_date for identity in manifest.identities}) == 139
+    assert "first-loop" in manifest.identities[0].discovery_rationale
