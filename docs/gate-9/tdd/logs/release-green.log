@@ -1,0 +1,13 @@
+Command: uv run pytest tests/results tests/application tests/architecture/test_rebuild_policy.py -q
+Exit code: 0
+
+........                                                                 [100%]
+8 passed in 0.77s
+
+Repository verification:
+
+- uv run pytest -q: 239 passed, 1 skipped in 46.05s
+- uv run mypy src: Success, no issues found in 57 source files
+- uv run ruff check .: All checks passed
+- uv sync --frozen: exit 0
+- uv sync --frozen --group oracle: exit 0

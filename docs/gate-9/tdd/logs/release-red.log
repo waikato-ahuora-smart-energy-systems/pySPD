@@ -1,6 +1,8 @@
 Command: uv run pytest tests/results tests/application tests/architecture/test_rebuild_policy.py -q
 Exit code: 2
 
+Expected behavioral contract: REQ-G9-RELEASE: class-based report, API, CLI, and rebuild contracts are absent
+
 Collection failed exactly because the Gate 9 production contracts did not yet
 exist:
 

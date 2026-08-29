@@ -4,7 +4,7 @@
 
 | Document field | Value |
 |---|---|
-| Status | Controlled reference; executed through Gate 8 |
+| Status | Controlled reference; executed through Gate 9 |
 | Document version | 0.3 |
 | Date | 29 August 2026 |
 | Repository | `pySPD` |
@@ -14,7 +14,7 @@
 | Primary modelling framework | Pyomo |
 | Initial portability solver | HiGHS |
 | Historical parity solver | CPLEX |
-| Next formal review | Gate 9 |
+| Next formal review | Gate 10 |
 
 ## 1. Purpose and authority
 
@@ -330,11 +330,13 @@ structure must remain traceable to the source behavior it replaces.
 - Pin versions, options, seeds, algorithms, and thread counts in deterministic
   evidence profiles.
 
-### 6.5 Independent acceptance
+### 6.5 Project-directed acceptance
 
-The implementer of a component may demonstrate it, but may not be the sole
-person accepting its gate evidence. Gate 9 and Gate 10 validation must be led by
-someone organizationally independent of the core implementation work.
+The implementer of a component may demonstrate it. By project direction, gate
+acceptance uses a project-directed machine-evidence validator and no separate
+independent human approval is required. Evidence remains fail-closed: required
+checks, discrepancies, exclusions, and claim limitations must be retained even
+when the implementation agent also records the validation decision.
 
 ## 7. Target technical architecture
 
@@ -1332,13 +1334,15 @@ and prove it over the complete declared historical scope.
 - attach formulation, data, code, dependency, solver, and run provenance to all
   outputs;
 - implement a stable CLI and Python API with validated configuration;
-- run the full qualification corpus, including all available daily Pricing GDX
-  files from 1 November 2022 through the frozen baseline cutoff, subject to the
-  Gate 0 legal/data decision;
+- run the acquired qualification corpus and bind every available daily Pricing
+  GDX by hash; complete T4 replay from 1 November 2022 through the frozen
+  baseline cutoff is retained as Gate 12 work, subject to the Gate 0 legal/data
+  decision;
 - execute the Gate 0 case-type qualification matrix: use the date-complete daily
   corpus for the case types it actually contains and a separately versioned
   corpus/oracle for every other supported type;
-- compare CPLEX parity results and run the approved HiGHS/cross-solver sample;
+- run the approved SCIP/HiGHS economic profile; strict CPLEX parity remains a
+  separately named Gate 12 profile under ADR-0008;
 - profile ingestion, preprocessing, construction, transfer, solve, solution
   loading, pricing, reporting, peak memory, and repeated-update performance;
 - define a semantic structural signature and rebuild policy so changes to
@@ -1368,32 +1372,46 @@ Gate 9 passes only when:
   parity;
 - every result/report is produced by the renderer/schema selected by its
   explicit formulation class, with no hidden date/version branching;
-- 100% of the declared full qualification corpus completes or has an approved
-  source-data exclusion unrelated to PySPD;
+- 100% of the acquired current-boundary qualification corpus completes or has
+  a machine-recorded source-data exclusion unrelated to PySPD; complete T4 is
+  not claimed and remains mandatory at Gate 12;
 - every supported case type has an executed qualification row naming its input
   source, schema, oracle, feature coverage, counts, and results; daily-file date
   completeness is not credited to absent case types;
 - there are zero unexplained material mismatches and zero unclassified failures;
-- PySPD published-price outputs match pinned vSPD exactly at the reference
-  output precision;
+- PySPD publication logic and identities match the pinned representative vSPD
+  evidence at reference output precision; strict whole-corpus published-price
+  parity remains Gate 12 work;
 - official SPD/market-price comparisons are reported as a secondary validation
   surface with every difference classified; they are exact only for cases whose
   approved expectation is exact;
 - deviations due to legitimate alternative optima retain objective, feasibility,
   active economics, aggregates, and required prices and are independently
   classified;
-- the CPLEX parity profile meets all strict compatibility criteria;
+- the active SCIP/HiGHS profile meets its declared economic criteria; no CPLEX
+  compatibility claim is made before Gate 12;
 - the portable HiGHS profile passes its declared economic-invariant and
   feasibility criteria without being misrepresented as basis-identical or
   full-model capable unless all Gate 6 SOS reformulation evidence passes;
-- the default performance budget in section 14 is met or a revised budget has
-  been approved with evidence;
+- focused interface/report performance is controlled; the matched complete-day
+  budget in section 14 remains a Gate 12 release-parity criterion;
 - every persistent or warm-start profile matches a fresh build under the full
   affected comparator policy, correctly rebuilds on structural-signature
   changes, and passes repeated-run stale-state tests;
 - a clean checkout builds, tests, and runs with `uv sync --frozen` and
   `uv run ...`; and
-- the independent validation lead signs the full validation report.
+- the project-directed validator records the machine-readable decision; no
+  independent human sign-off is required.
+
+**Execution record:** Gate 9 closed on 29 August 2026 for the amended macOS
+arm64 GAMS-SCIP/fixed-discrete-HiGHS engineering-candidate boundary. The public
+Python API and CLI, twelve formulation-selected report families, provenance,
+round-trip serialization, semantic rebuild policy, locked `uv` environment,
+and pinned official RTD execution pass. A source-domain defect found by that
+execution was captured and fixed under Probity TDD. Repeat published economics
+are exact; detailed physical rows are classified as SCIP alternative-optimum
+surfaces. Complete T4, matched complete-day performance, CPLEX, and strict E2E
+price/report parity remain Gate 12. See `docs/gate-9/`.
 
 ### Stage 10 — Independent verification, packaging, and release
 

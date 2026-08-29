@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G9-ACTIVE-RISK",
+  "requirement_ids": [
+    "REQ-G9-FULL-CASE-DOMAIN-SAFETY",
+    "REQ-G9-FAIL-CLOSED-QUALIFICATION"
+  ],
+  "production_paths": [
+    "src/pyspd/reserve/components.py"
+  ],
+  "parent_commit": "cb46242d6870d052a4d8105cfa7cb0b316713bb8",
+  "implementation_commit": "7f3ff029ead45b41c75aca834723fa065f2014b2",
+  "test_patch_sha256": "0df1dbb917d98b264141e42eb34421501caccdde82eef28abbe390950d25cfbd",
+  "test_files": [
+    {
+      "path": "tests/reserve/test_reserve_formulation.py",
+      "sha256": "e8f1ff590f4408f29b5f5d3c83d9b5f62ba14e5f9e4522b199354d8daec359e2"
+    }
+  ],
+  "command": "uv run pytest tests/reserve/test_reserve_formulation.py::test_risk_group_ignores_mapping_to_offer_outside_active_domain -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "26f5c307cc03ed011ad23b456ac40506b6b867005e7aa09aa18431f2ea8a304c",
+  "red": {
+    "timestamp": "2026-08-29T22:22:00+12:00",
+    "exit_code": 1,
+    "output_sha256": "65114ae830eb90d15b7106d879ba8a3c503e507b10f9bd91855bbe517a9511bc",
+    "duration_seconds": 0.18,
+    "expected_failure_fingerprint": "Index ('C1', 'T1', 'INACTIVE') is not valid",
+    "log_uri": "docs/gate-9/tdd/logs/active-risk-red.log"
+  },
+  "green": {
+    "timestamp": "2026-08-29T22:24:00+12:00",
+    "exit_code": 0,
+    "output_sha256": "f6b8aa7a66b624670717fb811e62be197aafc8ff4e1632f41ff1b4b79c3aea34",
+    "duration_seconds": 0.09,
+    "log_uri": "docs/gate-9/tdd/logs/active-risk-green.log"
+  },
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}

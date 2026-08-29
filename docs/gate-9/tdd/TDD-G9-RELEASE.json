@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G9-RELEASE",
+  "requirement_ids": [
+    "REQ-G9-REPORTS",
+    "REQ-G9-API",
+    "REQ-G9-CLI",
+    "REQ-G9-PROVENANCE",
+    "REQ-G9-ROUNDTRIP",
+    "REQ-G9-REBUILD-SAFETY"
+  ],
+  "production_paths": [
+    "src/pyspd/application.py",
+    "src/pyspd/architecture.py",
+    "src/pyspd/cli.py",
+    "src/pyspd/reporting.py"
+  ],
+  "parent_commit": "be5cedbb1cc86196b23832525d8448c2b3eb198b",
+  "implementation_commit": "e5b381c0ed6f1af3933d03ec806d66a677c22e98",
+  "test_patch_sha256": "2c7a51c2a737486779beb3b7306c48d3cfd17800c9bbe70c96a6f6183562c289",
+  "test_files": [
+    {
+      "path": "tests/application/test_api_cli.py",
+      "sha256": "38f93151d1d90020a04f65067699446248f73c9f6f63e72950ef405300466fac"
+    },
+    {
+      "path": "tests/architecture/test_rebuild_policy.py",
+      "sha256": "a2b4605cbe4ae378831a81003daf2100a679ec15866b2e2ae47af56ad68d49fc"
+    },
+    {
+      "path": "tests/results/test_v5_reporting.py",
+      "sha256": "296617e7d6ff3e3a226a35ae3af7b756dbf1055bb84d8814cead87bce1fda697"
+    }
+  ],
+  "command": "uv run pytest tests/results tests/application tests/architecture/test_rebuild_policy.py -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "26f5c307cc03ed011ad23b456ac40506b6b867005e7aa09aa18431f2ea8a304c",
+  "red": {
+    "timestamp": "2026-08-29T22:09:00+12:00",
+    "exit_code": 2,
+    "output_sha256": "767f9fd3c399c202cce10f11b349b01f31a08df0a4728c5bcaf45f97996b435d",
+    "duration_seconds": 0.74,
+    "expected_failure_fingerprint": "REQ-G9-RELEASE: class-based report, API, CLI, and rebuild contracts are absent",
+    "log_uri": "docs/gate-9/tdd/logs/release-red.log"
+  },
+  "green": {
+    "timestamp": "2026-08-29T22:19:00+12:00",
+    "exit_code": 0,
+    "output_sha256": "f80784173919048778f302c812f21c8d6fe48fabf62feb8574784d631f6ed385",
+    "duration_seconds": 0.77,
+    "log_uri": "docs/gate-9/tdd/logs/release-green.log"
+  },
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}

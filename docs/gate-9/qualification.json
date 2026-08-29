@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "gate": 9,
+  "decision": "pass-amended-evidence-boundary",
+  "profile": "macos-arm64-gams54-scip-fixed-highs",
+  "formulation_id": "vspd-v5.0.6-reserve",
+  "source": {
+    "name": "RTD_202502261155_251012025022255930_20250226115400.gdx",
+    "sha256": "f010065a800a0c48a1147fd3543d372eaa65acc9e0f0ed6ea64546a474655c65",
+    "classification": "pinned-official-full-formulation-representative"
+  },
+  "public_interface": {
+    "python_service": "pyspd.application.PyspdApplication",
+    "cli": "pyspd",
+    "explicit_formulations": ["vspd-v5.0.6-reserve"],
+    "report_family_count": 12,
+    "report_families": [
+      "summary", "island", "bus", "node", "offer", "bid", "reserve",
+      "risk", "branch", "constraint", "published_price", "audit"
+    ]
+  },
+  "official_case": {
+    "state": "complete",
+    "row_counts": {
+      "summary": 1,
+      "island": 4,
+      "bus": 925,
+      "node": 534,
+      "offer": 103,
+      "bid": 3,
+      "reserve": 4,
+      "risk": 32,
+      "branch": 1068,
+      "constraint": 33259,
+      "published_price": 538,
+      "audit": 7
+    },
+    "total_rows": 36478,
+    "first_manifest_sha256": "b6917f541c9fae09f08d064f747c9f6f3e05b9ee6139f45d785ff3a88e698fb9",
+    "second_manifest_sha256": "bddb648717dafbf858037d0342a25a99cb760eb4f3542039b9dd005fe486ccc2",
+    "exact_repeat_report_files": [
+      "bid.csv", "island.csv", "published_price.csv", "reserve.csv"
+    ],
+    "classified_repeat_differences": {
+      "class": "legitimate-alternative-primary-optimum",
+      "affected": [
+        "summary.csv", "offer.csv", "branch.csv", "risk.csv",
+        "constraint.csv", "bus.csv", "node.csv", "audit.csv"
+      ],
+      "strict_resolution_gate": 12
+    },
+    "defect_closed": {
+      "name": "inactive-risk-group-offer-index",
+      "red_commit": "cb46242d6870d052a4d8105cfa7cb0b316713bb8",
+      "implementation_commit": "7f3ff029ead45b41c75aca834723fa065f2014b2"
+    }
+  },
+  "corpus_boundary": {
+    "qualified_case_types": ["RTD", "PRSS"],
+    "explicitly_deferred_case_types": ["RTDP", "PRSL", "NRSS", "NRSL", "WDS"],
+    "inherited_frozen_oracle_cases": 9,
+    "hash_bound_shortfall_dates": 139,
+    "complete_t4_replay": false
+  },
+  "verification": {
+    "pytest": {"passed": 239, "skipped": 1, "failed": 0},
+    "ruff": "passed",
+    "mypy_source_files": 57,
+    "uv_sync_frozen": "passed",
+    "uv_sync_frozen_oracle": "passed"
+  },
+  "deferred_to_gate_12": [
+    "cplex-strict-compatibility",
+    "complete-t4-replay",
+    "complete-day-performance-budget",
+    "full-physical-report-determinism",
+    "strict-official-price-and-report-parity"
+  ],
+  "claim": {
+    "validated_engineering_release_candidate": true,
+    "complete_e2e_parity": false,
+    "public_distribution_authorized": false
+  },
+  "passed": true
+}

@@ -1,0 +1,8 @@
+Command: uv run pytest tests/reserve/test_reserve_formulation.py::test_risk_group_ignores_mapping_to_offer_outside_active_domain -q
+Exit code: 0
+
+.                                                                        [100%]
+1 passed in 0.09s
+
+The pinned official RTD case subsequently completed through the public CLI and
+produced all twelve report families.
