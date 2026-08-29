@@ -2,11 +2,19 @@
 
 from __future__ import annotations
 
+import hashlib
+from pathlib import Path
+
+import pytest
+
 from tools.gate12.analytic_population import (
+    HistoricalAnalyticDayEnumerator,
     HistoricalAnalyticPopulationSelector,
     HistoricalFirstLoopCase,
     HistoricalFirstLoopLoadReconstructor,
 )
+from tools.gate12.evidence import EvidenceContractError
+from tools.gate12.historical_population import HistoricalInputArtifact
 
 
 def test_first_loop_reconstruction_identifies_scaled_dead_node_shortfall() -> None:
@@ -111,3 +119,41 @@ def test_population_selector_emits_only_hash_bound_affected_identity() -> None:
     assert records[0].identity.case_id == "affected"
     assert records[0].identity.source_sha256 == "a" * 64
     assert records[0].affected_shortfall_mw == {"DEAD": 5.0}
+
+
+def test_day_enumerator_verifies_source_before_loading(tmp_path: Path) -> None:
+    source = tmp_path / "Pricing_20221106.gdx"
+    source.write_bytes(b"canonical-gdx")
+    artifact = HistoricalInputArtifact(
+        trading_date="20221106",
+        size_bytes=source.stat().st_size,
+        sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+    )
+
+    class Loader:
+        calls = 0
+
+        def load(
+            self, path: Path, system_directory: Path
+        ) -> tuple[HistoricalFirstLoopCase, ...]:
+            self.calls += 1
+            assert path == source
+            return ()
+
+    loader = Loader()
+    result = HistoricalAnalyticDayEnumerator(loader=loader).enumerate(
+        artifact=artifact,
+        path=source,
+        system_directory=tmp_path,
+    )
+    assert result.source_sha256 == artifact.sha256
+    assert loader.calls == 1
+
+    source.write_bytes(b"tampered")
+    with pytest.raises(EvidenceContractError, match="source size or hash"):
+        HistoricalAnalyticDayEnumerator(loader=loader).enumerate(
+            artifact=artifact,
+            path=source,
+            system_directory=tmp_path,
+        )
+    assert loader.calls == 1
