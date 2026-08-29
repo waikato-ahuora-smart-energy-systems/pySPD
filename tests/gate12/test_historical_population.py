@@ -398,3 +398,5 @@ def test_historical_manifest_builder_requires_exact_546_across_139_dates() -> No
     assert len(manifest.identities) == 546
     assert len({identity.trading_date for identity in manifest.identities}) == 139
     assert "first-loop" in manifest.identities[0].discovery_rationale
+    assert "strict-positive" in manifest.identities[0].discovery_rationale
+    assert "material shortfall" not in manifest.identities[0].discovery_rationale

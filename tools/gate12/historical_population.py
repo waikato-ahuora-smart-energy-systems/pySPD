@@ -1101,8 +1101,9 @@ class HistoricalAffectedManifestBuilder:
                         trading_date=artifact.trading_date,
                         source_sha256=artifact.sha256,
                         discovery_rationale=(
-                            "pinned-v5.0.2 optimal SCIP first-loop material "
-                            f"shortfall transfer: {node_evidence}"
+                            "pinned-v5.0.2 optimal SCIP first-loop strict-positive "
+                            "eligible shortfall transfer; values retain GAMS EPS "
+                            f"rendering: {node_evidence}"
                         ),
                     )
                 )
