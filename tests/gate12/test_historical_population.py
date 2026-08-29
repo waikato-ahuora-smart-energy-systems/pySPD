@@ -153,6 +153,11 @@ def test_population_checkpoint_round_trips_and_is_reusable(tmp_path: Path) -> No
     assert loaded is not None
     assert loaded.affected_case_count == 1
     assert len(loaded.logical_sha256) == 64
+    assert loaded.artifact_sha256 == {
+        "evidence": "c" * 64,
+        "listing": "b" * 64,
+        "progress": "a" * 64,
+    }
     assert store.reusable(
         "20221106",
         source_sha256="2" * 64,
