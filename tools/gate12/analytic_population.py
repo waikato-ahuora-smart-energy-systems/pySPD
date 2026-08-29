@@ -13,10 +13,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
-from tools.gate12.evidence import AffectedIntervalIdentity, EvidenceContractError
+from tools.gate12.evidence import (
+    EXPECTED_TRADING_DATES,
+    AffectedIntervalIdentity,
+    AffectedIntervalManifest,
+    EvidenceContractError,
+)
 from tools.gate12.historical_population import (
     MATERIAL_SHORTFALL_MW,
     HistoricalInputArtifact,
+    HistoricalInputInventory,
 )
 
 ANALYTIC_GDX_SYMBOLS = (
@@ -70,6 +76,14 @@ class HistoricalAnalyticDayResult:
     source_sha256: str
     selected_rtd_case_count: int
     affected: tuple[HistoricalAnalyticAffectedInterval, ...]
+
+
+@dataclass(frozen=True)
+class HistoricalAnalyticPopulationEvidence:
+    """Complete exact population plus its per-date algebraic evidence."""
+
+    manifest: AffectedIntervalManifest
+    daily_results: tuple[HistoricalAnalyticDayResult, ...]
 
 
 class HistoricalFirstLoopCaseLoader(Protocol):
@@ -332,6 +346,61 @@ class HistoricalAnalyticDayEnumerator:
             source_sha256=source_sha256,
             selected_rtd_case_count=len(cases),
             affected=affected,
+        )
+
+
+class HistoricalAnalyticPopulationEvidenceBuilder:
+    """Close population discovery only at the Authority-declared boundary."""
+
+    SOURCE_RELEASE = "https://github.com/ElectricityAuthority/vSPD/releases/tag/v5.0.4"
+    REFERENCE_COMMIT = "3360a91ebd48f2e3cbb52a5e6766d893011054be"
+
+    def build(
+        self,
+        *,
+        daily_results: tuple[HistoricalAnalyticDayResult, ...],
+        inventory: HistoricalInputInventory,
+    ) -> HistoricalAnalyticPopulationEvidence:
+        if len(daily_results) != EXPECTED_TRADING_DATES:
+            raise EvidenceContractError(
+                "REQ-G12-POPULATION: expected exactly 139 daily results"
+            )
+        result_by_date = {result.trading_date: result for result in daily_results}
+        if len(result_by_date) != len(daily_results):
+            raise EvidenceContractError(
+                "REQ-G12-POPULATION: daily result dates must be unique"
+            )
+        expected_hashes = {
+            artifact.trading_date: artifact.sha256 for artifact in inventory.artifacts
+        }
+        if set(result_by_date) != set(expected_hashes):
+            raise EvidenceContractError(
+                "REQ-G12-POPULATION: daily results do not match Gate 1 inventory"
+            )
+        if any(
+            result.source_sha256 != expected_hashes[result.trading_date]
+            for result in daily_results
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-POPULATION: daily result source hash mismatch"
+            )
+        manifest = AffectedIntervalManifest(
+            source_release=self.SOURCE_RELEASE,
+            reference_commit=self.REFERENCE_COMMIT,
+            identities=tuple(
+                record.identity
+                for result in sorted(
+                    daily_results, key=lambda result: result.trading_date
+                )
+                for record in result.affected
+            ),
+        )
+        manifest.validate(expected_source_hashes=expected_hashes)
+        return HistoricalAnalyticPopulationEvidence(
+            manifest=manifest,
+            daily_results=tuple(
+                sorted(daily_results, key=lambda result: result.trading_date)
+            ),
         )
 
 

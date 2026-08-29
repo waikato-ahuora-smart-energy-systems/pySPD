@@ -15,8 +15,10 @@ from tools.gate12.analytic_population import (
     HistoricalFirstLoopLoadReconstructor,
 )
 from tools.gate12.evidence import EvidenceContractError
-from tools.gate12.historical_population import HistoricalInputArtifact
-from tools.gate12.historical_population import HistoricalInputInventory
+from tools.gate12.historical_population import (
+    HistoricalInputArtifact,
+    HistoricalInputInventory,
+)
 
 
 def test_first_loop_reconstruction_identifies_scaled_dead_node_shortfall() -> None:
