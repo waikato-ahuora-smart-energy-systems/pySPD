@@ -117,7 +117,9 @@ def test_population_runner_executes_and_resumes_by_checkpoint(tmp_path: Path) ->
     assert "solvelink=5" in executor.commands[-1]
     assert first[0].solver_profile == HISTORICAL_EXECUTION_PROFILE
     assert (runner.programs.parent / "Input" / "Pricing_20221106.gdx").is_symlink()
-    assert (runner.programs / "vSPDtpsToSolve.inc").read_text() == "/\nAll\n/\n"
+    assert (runner.programs / "vSPDtpsToSolve.inc").read_text() == (
+        "/\ncase_1\n/\n"
+    )
 
 
 def test_population_runner_rejects_source_or_patch_drift(tmp_path: Path) -> None:
