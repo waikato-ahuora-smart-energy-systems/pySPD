@@ -221,6 +221,98 @@ class E2EDayEvidenceBuilder:
 
 
 @dataclass(frozen=True)
+class DiscrepancyRecord:
+    """One identity-specific E2E delta and its evidence-bound resolution."""
+
+    discrepancy_id: str
+    case_id: str
+    surface: str
+    identity: tuple[str, ...]
+    absolute_error: float
+    material: bool
+    resolution: str | None = None
+    resolution_evidence_sha256: str | None = None
+
+    @property
+    def resolved(self) -> bool:
+        return bool(self.resolution and self.resolution_evidence_sha256)
+
+    def validate(self) -> None:
+        if (
+            not self.discrepancy_id.strip()
+            or not self.case_id.strip()
+            or self.surface not in REQUIRED_E2E_SURFACES
+            or not self.identity
+            or any(not value.strip() for value in self.identity)
+            or not math.isfinite(self.absolute_error)
+            or self.absolute_error < 0.0
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-DISCREPANCY: invalid discrepancy identity or value"
+            )
+        if (self.resolution is None) != (self.resolution_evidence_sha256 is None):
+            raise EvidenceContractError(
+                "REQ-G12-DISCREPANCY: resolution text and evidence must be paired"
+            )
+        if self.resolution_evidence_sha256 is not None and not _SHA256.fullmatch(
+            self.resolution_evidence_sha256
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-DISCREPANCY: invalid resolution evidence hash"
+            )
+
+
+@dataclass(frozen=True)
+class DiscrepancyRegister:
+    """Deterministic register that cannot close with a material open delta."""
+
+    records: tuple[DiscrepancyRecord, ...]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "records", tuple(self.records))
+        for record in self.records:
+            record.validate()
+        identifiers = [record.discrepancy_id for record in self.records]
+        keys = [
+            (record.case_id, record.surface, record.identity)
+            for record in self.records
+        ]
+        if len(identifiers) != len(set(identifiers)) or len(keys) != len(set(keys)):
+            raise EvidenceContractError(
+                "REQ-G12-DISCREPANCY: duplicate discrepancy identity"
+            )
+
+    @property
+    def unresolved_material_count(self) -> int:
+        return sum(record.material and not record.resolved for record in self.records)
+
+    @property
+    def logical_sha256(self) -> str:
+        payload = [
+            {
+                "discrepancy_id": record.discrepancy_id,
+                "case_id": record.case_id,
+                "surface": record.surface,
+                "identity": list(record.identity),
+                "absolute_error": record.absolute_error.hex(),
+                "material": record.material,
+                "resolution": record.resolution,
+                "resolution_evidence_sha256": record.resolution_evidence_sha256,
+            }
+            for record in sorted(self.records, key=lambda item: item.discrepancy_id)
+        ]
+        return hashlib.sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+
+    def validate_closure(self) -> None:
+        if self.unresolved_material_count:
+            raise EvidenceContractError(
+                "REQ-G12-DISCREPANCY: unresolved material discrepancies remain"
+            )
+
+
+@dataclass(frozen=True)
 class Gate12EvidenceIndex:
     """Fail-closed closure index across cases, days, profiles, and discrepancies."""
 

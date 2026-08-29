@@ -190,6 +190,9 @@ case surfaces and hashes each independently; duplicates or omissions fail.
 `E2EDayEvidenceBuilder` separately hashes canonical order, original output,
 repeat output, resumed output, and reports, leaving repeat/resume drift visible
 to the closure validator rather than collapsing the artifacts early.
+`DiscrepancyRegister` assigns every delta a unique case/surface/identity key and
+requires resolution text and a SHA-256 evidence artifact as a pair. Its closure
+check rejects any material record that remains unresolved.
 
 ## Fail-closed rules
 

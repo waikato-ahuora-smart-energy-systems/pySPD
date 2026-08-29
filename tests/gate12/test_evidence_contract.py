@@ -12,6 +12,8 @@ from tools.gate12.evidence import (
     AffectedIntervalManifest,
     CaseSurfaceArtifact,
     DegeneracyCertificate,
+    DiscrepancyRecord,
+    DiscrepancyRegister,
     E2ECaseEvidenceBuilder,
     E2EDayEvidenceBuilder,
     EvidenceContractError,
@@ -104,6 +106,32 @@ def test_day_evidence_builder_exposes_repeat_or_resume_drift() -> None:
 
     with pytest.raises(EvidenceContractError, match="repeated and resumed"):
         evidence.validate()
+
+
+def test_discrepancy_register_rejects_unresolved_material_difference() -> None:
+    open_record = DiscrepancyRecord(
+        discrepancy_id="G12-DIFF-001",
+        case_id="case-1",
+        surface="node-price",
+        identity=("TP1", "BEN2201"),
+        absolute_error=0.25,
+        material=True,
+    )
+    register = DiscrepancyRegister((open_record,))
+
+    assert register.unresolved_material_count == 1
+    with pytest.raises(EvidenceContractError, match="unresolved material"):
+        register.validate_closure()
+
+    resolved = replace(
+        open_record,
+        resolution="common optimal face certificate",
+        resolution_evidence_sha256="f" * 64,
+    )
+    closed = DiscrepancyRegister((resolved,))
+    closed.validate_closure()
+    assert closed.unresolved_material_count == 0
+    assert len(closed.logical_sha256) == 64
 
 
 def test_interval_manifest_rejects_duplicate_and_unbound_identity() -> None:
