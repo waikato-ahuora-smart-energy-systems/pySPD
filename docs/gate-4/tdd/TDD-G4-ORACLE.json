@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G4-ORACLE",
+  "requirement_ids": [
+    "REQ-G4-MATRIX-PARITY",
+    "REQ-G4-OBJECTIVE",
+    "REQ-G4-SCARCITY",
+    "REQ-G4-INDEPENDENT-PRICE"
+  ],
+  "production_paths": [
+    "src/pyspd/core_energy/components.py",
+    "src/pyspd/core_energy/data.py",
+    "src/pyspd/core_energy/formulation.py",
+    "src/pyspd/core_energy/validation.py",
+    "src/pyspd/preprocess/constraints.py",
+    "tools/gate3/oracle_parity.py",
+    "tools/gate4/__init__.py",
+    "tools/gate4/oracle_matrix.py",
+    "tools/gate4/qualification.py"
+  ],
+  "parent_commit": "b2a023c5f27aff6ce7c0ab6e5330fadc58820af0",
+  "implementation_commit": "b798b2893b08f5256c55b5d00eed2854d942bedb",
+  "test_patch_sha256": "208c99615f79411ab1a09d67217801cd17212d171f7cbf3e53ec792fc57acb28",
+  "test_files": [
+    {"path": "tests/core_energy/test_dispatch.py", "sha256": "12401bd924fe39725d6c56fa5d14dcee3022bb1f63f0cd51e42699e6a54b5c4e"},
+    {"path": "tests/core_energy/test_matrix_assembly.py", "sha256": "40f820591032ac15a31d8c44f7c50cac094beac0ccc8936fd6edfed14407308c"},
+    {"path": "tests/core_energy/test_ramping_slack.py", "sha256": "52c25a45d5e678af9ea898b12731de2ef87b838614558debc77bc18de88419b6"},
+    {"path": "tests/core_energy/test_validation_pricing.py", "sha256": "be9a28d80260eb674bbeb1a1fcfb8343fc7f9d599bad0fa8b48fb208d88301f3"},
+    {"path": "tests/preprocess/test_pipeline.py", "sha256": "86e04d0b6fbfa20c74de2d1c1ec8bdff581da1a5f0cfb9ee8cb4702541165efd"},
+    {"path": "tests/core_energy/test_gate4_evidence.py", "sha256": "2095999f9b2c0865689983cdc48d9d509efc5c22b39ea62240f3567d9fa721c5"}
+  ],
+  "command": "uv run pytest tests/core_energy -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "4f1d94bf5e9f5a995f79fe93b71d506b82d71bbbdc0a7df811d9fc6c29f39ebf",
+  "red": {
+    "timestamp": "2026-08-29T18:00:00+12:00",
+    "exit_code": 1,
+    "output_sha256": "8b6183365533637a395ce41a7c5f5a6177a21775241e3b91c58a40e79cbad75e",
+    "duration_seconds": 0.16,
+    "expected_failure_fingerprint": "REQ-G4-CORE: class-based core energy formulation is absent",
+    "log_uri": "docs/gate-4/tdd/logs/core-red.log"
+  },
+  "green": {
+    "timestamp": "2026-08-29T19:00:00+12:00",
+    "exit_code": 0,
+    "output_sha256": "c5e9c7190ce1c4245dd8b8a275e3e371e47b8d1c808c25836b35db5d465b0372",
+    "duration_seconds": 0.16,
+    "log_uri": "docs/gate-4/tdd/logs/core-green.log"
+  },
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}
