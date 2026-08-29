@@ -9,6 +9,7 @@ import pytest
 
 from tools.gate12.evidence import EvidenceContractError
 from tools.gate12.historical_population import (
+    HISTORICAL_EXECUTION_PROFILE,
     HistoricalGdxCaseIndex,
     HistoricalInputArtifact,
     HistoricalInputInventory,
@@ -113,6 +114,8 @@ def test_population_runner_executes_and_resumes_by_checkpoint(tmp_path: Path) ->
         "vSPDsolve.gms",
     ]
     assert all("lo=2" in command for command in executor.commands)
+    assert "solvelink=5" in executor.commands[-1]
+    assert first[0].solver_profile == HISTORICAL_EXECUTION_PROFILE
     assert (runner.programs.parent / "Input" / "Pricing_20221106.gdx").is_symlink()
     assert (runner.programs / "vSPDtpsToSolve.inc").read_text() == "/\nAll\n/\n"
 
