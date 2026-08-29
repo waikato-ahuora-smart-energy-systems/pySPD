@@ -1036,7 +1036,7 @@ class HistoricalPopulationRunner:
             self.executor.execute(
                 self.gams_executable,
                 self.programs,
-                ("vSPDmodel.gms", "s=vSPDmodel", "lo=3"),
+                ("vSPDmodel.gms", "s=vSPDmodel", "lo=2"),
             )
         for artifact in pending:
             checkpoint = self._run_day(artifact, sources[artifact.trading_date])
@@ -1059,7 +1059,7 @@ class HistoricalPopulationRunner:
         self.executor.execute(
             self.gams_executable,
             self.programs,
-            ("vSPDperiod.gms", "lo=3"),
+            ("vSPDperiod.gms", "lo=2"),
         )
         self.executor.execute(
             self.gams_executable,
@@ -1067,7 +1067,7 @@ class HistoricalPopulationRunner:
             (
                 "vSPDsolve.gms",
                 "r=vSPDmodel",
-                "lo=3",
+                "lo=2",
                 "ide=1",
                 "Errmsg=1",
                 "holdFixed=0",
