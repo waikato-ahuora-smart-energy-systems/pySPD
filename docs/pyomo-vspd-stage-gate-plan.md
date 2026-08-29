@@ -4,9 +4,9 @@
 
 | Document field | Value |
 |---|---|
-| Status | Proposed reference plan |
-| Document version | 0.1 |
-| Date | 28 August 2026 |
+| Status | Controlled reference; executed through Gate 7 |
+| Document version | 0.2 |
+| Date | 29 August 2026 |
 | Repository | `pySPD` |
 | Reference compatibility baseline | vSPD `v5.0.6`, commit `21b1cf33f5607399331dcb1c03270348def5ccc8` |
 | Governing formulation context for v5 features | SPD Model Formulation v15.0 |
@@ -14,7 +14,7 @@
 | Primary modelling framework | Pyomo |
 | Initial portability solver | HiGHS |
 | Historical parity solver | CPLEX |
-| Next formal review | Gate 0 |
+| Next formal review | Gate 8 |
 
 ## 1. Purpose and authority
 
@@ -1243,6 +1243,13 @@ Gate 7 passes only when:
 - objective and economic invariants match across the stratified reserve corpus;
   and
 - no unexplained material formulation mismatch remains.
+
+**Execution record:** Gate 7 closed on 29 August 2026 for the qualified macOS
+arm64/GAMS-SCIP/HiGHS profile. The canonical Gate 7 projection matches GAMS
+exactly over 15,381 columns and 1,403 rows; the full SCIP-MIP to fixed-discrete
+HiGHS-RMIP solve, independent validation, energy/reserve price perturbations,
+and cumulative regression suite pass. Native CPLEX and Linux execution remain
+deferred by ADR-0008 and ADR-0011. See `docs/gate-7/`.
 
 ### Stage 8 — Daily orchestration, overrides, and market post-processing
 
