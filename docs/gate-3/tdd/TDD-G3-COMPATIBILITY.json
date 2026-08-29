@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G3-COMPATIBILITY",
+  "requirement_ids": ["REQ-G3-COMPATIBILITY", "REQ-G3-OVERRIDES"],
+  "production_paths": ["src/pyspd/preprocess/compatibility.py"],
+  "parent_commit": "a9cb72806e24a043673807d4d5619d50aef5aab4",
+  "implementation_commit": "7ec923fe02ba51a1cd260cc641aeecbd01602af7",
+  "test_patch_sha256": "02cf667781a5ffccb495d02f0937ea10ef2c43fccdb0ec4711f76c46ab581cd3",
+  "test_files": [{"path": "tests/preprocess/test_compatibility_overrides.py", "sha256": "19c511037216f223aaff4d81a46cc14a708bfaa1b2dc622768d9e63029579cb8"}],
+  "command": "uv run pytest tests/preprocess -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "f1a56598495c7339a0cc0b060a83e15fff5b163558fc2df935c4d646ad889b0d",
+  "red": {"timestamp": "2026-08-29T15:00:00+12:00", "exit_code": 1, "output_sha256": "cd62fa271a2fde51d1e467ef8a0992a112267ffe561229419665b8e4db5d7eed", "duration_seconds": 0.10, "expected_failure_fingerprint": "REQ-G3-COMPATIBILITY: date branches and override order are absent", "log_uri": "docs/gate-3/tdd/logs/preprocess-red.log"},
+  "green": {"timestamp": "2026-08-29T15:06:00+12:00", "exit_code": 0, "output_sha256": "bc9c36acc5440fa547b9b2fd206e3e4cb73647d02e5cd87189c7bb632811b6e2", "duration_seconds": 0.40, "log_uri": "docs/gate-3/tdd/logs/preprocess-green.log"},
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}

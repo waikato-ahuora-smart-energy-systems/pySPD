@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G3-TOPOLOGY",
+  "requirement_ids": ["REQ-G3-TOPOLOGY"],
+  "production_paths": ["src/pyspd/preprocess/topology.py"],
+  "parent_commit": "a9cb72806e24a043673807d4d5619d50aef5aab4",
+  "implementation_commit": "7ec923fe02ba51a1cd260cc641aeecbd01602af7",
+  "test_patch_sha256": "5eba68f6fd7b0aba0e53ae52133580b247617af062294f5e475d3908ec84b38f",
+  "test_files": [{"path": "tests/preprocess/test_topology.py", "sha256": "2a9cea036583d25cccb436b13a96a97e37c3dca4bcd273def2fa406c30f7de84"}],
+  "command": "uv run pytest tests/preprocess -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "f1a56598495c7339a0cc0b060a83e15fff5b163558fc2df935c4d646ad889b0d",
+  "red": {"timestamp": "2026-08-29T15:00:00+12:00", "exit_code": 1, "output_sha256": "cd62fa271a2fde51d1e467ef8a0992a112267ffe561229419665b8e4db5d7eed", "duration_seconds": 0.10, "expected_failure_fingerprint": "REQ-G3-TOPOLOGY: node, bus, island, and branch derivations are absent", "log_uri": "docs/gate-3/tdd/logs/preprocess-red.log"},
+  "green": {"timestamp": "2026-08-29T15:06:00+12:00", "exit_code": 0, "output_sha256": "bc9c36acc5440fa547b9b2fd206e3e4cb73647d02e5cd87189c7bb632811b6e2", "duration_seconds": 0.40, "log_uri": "docs/gate-3/tdd/logs/preprocess-green.log"},
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}

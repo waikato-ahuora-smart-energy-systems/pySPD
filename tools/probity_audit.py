@@ -1,4 +1,4 @@
-"""Fail-closed audit of committed Gate 2 Probity evidence coverage."""
+"""Fail-closed audit of committed Probity evidence coverage for every gate."""
 
 from __future__ import annotations
 
@@ -90,18 +90,21 @@ def changed_production_paths(
 
 def audit_repository(root: Path) -> dict[str, Any]:
     root = root.resolve()
-    evidence_root = root / "docs/gate-2/tdd"
-    environment_path = evidence_root / "environment.json"
-    environment_sha256 = hashlib.sha256(environment_path.read_bytes()).hexdigest()
     validator = TddEvidenceValidator(
         root, root / "docs/gate-0/schemas/tdd-evidence.schema.json"
     )
 
     grouped: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
-    evidence_paths = sorted(evidence_root.glob("TDD-*.json"))
+    evidence_paths = sorted(root.glob("docs/gate-*/tdd/TDD-*.json"))
     if not evidence_paths:
-        raise TddEvidenceError("no Gate 2 TDD evidence records found")
+        raise TddEvidenceError("no gate TDD evidence records found")
     for path in evidence_paths:
+        environment_path = path.parent / "environment.json"
+        if not environment_path.is_file():
+            raise TddEvidenceError(
+                f"missing gate environment manifest: {environment_path}"
+            )
+        environment_sha256 = hashlib.sha256(environment_path.read_bytes()).hexdigest()
         evidence = json.loads(path.read_text(encoding="utf-8"))
         implementation = evidence.get("implementation_commit")
         if not implementation:
@@ -158,6 +161,7 @@ def audit_repository(root: Path) -> dict[str, Any]:
         )
     return {
         "evidence_record_count": len(evidence_paths),
+        "gate_count": len({path.parent.parent.name for path in evidence_paths}),
         "implementation_count": len(implementations),
         "implementations": implementations,
     }

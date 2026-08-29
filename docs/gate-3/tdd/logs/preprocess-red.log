@@ -1,0 +1,8 @@
+Gate 3 behavioral red mirror executed with uv on 2026-08-29.
+AssertionError: REQ-G3-COMPATIBILITY: date branches and override order are absent
+AssertionError: REQ-G3-LOSSES: vSPD loss tranche preprocessing is absent
+AssertionError: REQ-G3-OFFERS-LOAD: offer, bid, and load preprocessing is absent
+AssertionError: REQ-G3-PIPELINE: dependency-ordered preprocessing is not implemented
+AssertionError: REQ-G3-TOPOLOGY: node, bus, island, and branch derivations are absent
+AssertionError: REQ-G3-EVIDENCE: oracle and corpus qualification evidence are absent
+6 behavioral assertions failed; retained execution durations were 0.10s each.

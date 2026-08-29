@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G3-LOSSES-INVARIANTS",
+  "requirement_ids": ["REQ-G3-LOSSES", "REQ-G3-INVARIANTS"],
+  "production_paths": ["src/pyspd/preprocess/invariants.py", "src/pyspd/preprocess/losses.py"],
+  "parent_commit": "a9cb72806e24a043673807d4d5619d50aef5aab4",
+  "implementation_commit": "7ec923fe02ba51a1cd260cc641aeecbd01602af7",
+  "test_patch_sha256": "91cc10010bcd74c3ce0d40cb63c88502554e8863d6567c3e2306c85dd32582ca",
+  "test_files": [
+    {"path": "tests/preprocess/test_loss_curves.py", "sha256": "fb9a80e02c3a173ce7e5ef7e67a2378e2ead990a26c849d99d8a691b6660ab8e"},
+    {"path": "tests/preprocess/test_invariants.py", "sha256": "740c0b034c769ee15ce3066bc371fa621437a23fb95d01f760c95cb849636ace"},
+    {"path": "tests/preprocess/test_properties.py", "sha256": "a6f2e83262241d0c5b454a6cda53807c2453b1fd6efbe2050867d2531bfdaa16"}
+  ],
+  "command": "uv run pytest tests/preprocess -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "f1a56598495c7339a0cc0b060a83e15fff5b163558fc2df935c4d646ad889b0d",
+  "red": {"timestamp": "2026-08-29T15:00:00+12:00", "exit_code": 1, "output_sha256": "cd62fa271a2fde51d1e467ef8a0992a112267ffe561229419665b8e4db5d7eed", "duration_seconds": 0.10, "expected_failure_fingerprint": "REQ-G3-LOSSES: vSPD loss tranche preprocessing is absent", "log_uri": "docs/gate-3/tdd/logs/preprocess-red.log"},
+  "green": {"timestamp": "2026-08-29T15:06:00+12:00", "exit_code": 0, "output_sha256": "bc9c36acc5440fa547b9b2fd206e3e4cb73647d02e5cd87189c7bb632811b6e2", "duration_seconds": 0.40, "log_uri": "docs/gate-3/tdd/logs/preprocess-green.log"},
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}

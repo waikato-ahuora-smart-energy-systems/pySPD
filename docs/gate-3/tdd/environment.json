@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "captured_date": "2026-08-29",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "python": "3.13.14",
+  "package_manager": "uv",
+  "uv_lock_sha256": "70fcf7f6d7130ba5b3a552a21e0cbc3709eaf130dccc705e5280aab917ad7b2f",
+  "packages": {
+    "gamspy": "1.27.0",
+    "hypothesis": "6.165.10",
+    "pyarrow": "22.0.0",
+    "pyomo": "6.10.1"
+  },
+  "qualification_profile": "macOS arm64; Linux x86_64 deferred by ADR-0011",
+  "log_capture": "Retained pytest output relevant to each behavioral fingerprint; hashes bind the retained UTF-8 bytes."
+}
