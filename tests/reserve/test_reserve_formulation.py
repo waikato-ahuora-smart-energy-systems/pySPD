@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from itertools import product
 
 import pyomo.environ as pyo
@@ -59,6 +60,18 @@ def test_every_risk_class_and_secondary_risk_algebra_is_built() -> None:
     assert len(built.artifacts["group_island_risk"]) == 2
     assert len(built.artifacts["hvdc_generator_island_risk"]) == 4
     assert len(built.artifacts["hvdc_manual_island_risk"]) == 8
+
+
+def test_risk_group_ignores_mapping_to_offer_outside_active_domain() -> None:
+    case = make_reserve_case()
+    assert case.reserve is not None
+    reserve = replace(
+        case.reserve,
+        risk_group_offer=case.reserve.risk_group_offer
+        | {("C1", "T1", "G1", "INACTIVE", "genRisk")},
+    )
+    built = ModelAssembler().assemble(reserve_formulation(), replace(case, reserve=reserve))
+    assert len(built.artifacts["group_island_risk"]) == 2
 
 
 @pytest.mark.parametrize("risk_class", RISK_CLASSES)

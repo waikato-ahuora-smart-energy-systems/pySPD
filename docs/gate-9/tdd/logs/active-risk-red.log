@@ -1,0 +1,11 @@
+Command: uv run pytest tests/reserve/test_reserve_formulation.py::test_risk_group_ignores_mapping_to_offer_outside_active_domain -q
+Exit code: 1
+
+The official RTD qualification case exposed the same focused failure:
+
+KeyError: Index ('C1', 'T1', 'INACTIVE') is not valid for indexed component
+'EnergyOffers.Generation'.
+
+The risk-group mapping contained a legitimate source record for an offer that
+was absent from the active generation domain; the constraint builder did not
+filter it before indexing the Pyomo variable.
