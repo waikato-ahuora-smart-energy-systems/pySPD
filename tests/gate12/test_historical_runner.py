@@ -182,3 +182,17 @@ def test_population_workspace_rejects_metadata_tampering(tmp_path: Path) -> None
 
     with pytest.raises(EvidenceContractError, match="metadata hash"):
         HistoricalPopulationWorkspace.open(root)
+
+
+def test_population_workspace_rejects_patched_source_tampering(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    (source / "Programs").mkdir(parents=True)
+    (source / "Programs" / "vSPDsolve.gms").write_text("original")
+    root = tmp_path / "work"
+    workspace = HistoricalPopulationWorkspace.prepare(
+        source_tree=source, root=root, patcher=FakePatcher()
+    )
+    (workspace.programs / "vSPDsolve.gms").write_text("tampered")
+
+    with pytest.raises(EvidenceContractError, match="patched source hash"):
+        HistoricalPopulationWorkspace.open(root)
