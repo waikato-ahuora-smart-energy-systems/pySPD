@@ -1057,6 +1057,12 @@ Gate 4 passes only when:
 - no production model code exists without traceability and prior failing-test
   evidence.
 
+**Execution record:** Gate 4 closed on 29 August 2026 for the qualified macOS
+arm64/HiGHS profile. The retained GAMS and Pyomo projections have identical
+logical and structural hashes across 882 rows, 11,632 columns, and 12,892
+nonzeros. CPLEX and Linux x86_64 remain deferred under ADR-0008 and ADR-0011;
+no claim is made for either. See `docs/gate-4/closure-decision.md`.
+
 ### Stage 5 — AC network, losses, and security constraints
 
 **Objective:** reproduce AC topology and generic security behavior without yet
