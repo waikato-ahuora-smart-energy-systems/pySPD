@@ -23,7 +23,8 @@ from tools.oracle.vspd import ListingResult, VspdListingParser
 
 MATERIAL_SHORTFALL_MW = 1e-6
 HISTORICAL_EXECUTION_PROFILE = (
-    "historical-v5.0.2-dailymode1-scip-solvelink5-first-loop-rtd-only"
+    "historical-v5.0.2-dailymode1-scip-solvelink5-first-loop-rtd-only-"
+    "canonical-order"
 )
 HISTORICAL_COLUMNS = (
     "case_id",
@@ -347,7 +348,7 @@ class GamsTransferCaseIndexLoader:
             if study_mode.get(key[0]) in {101, 201}
         }
         return HistoricalGdxCaseIndex(
-            cases=tuple(sorted(selected)), trading_periods=selected
+            cases=tuple(selected), trading_periods=selected
         )
 
 
@@ -953,7 +954,7 @@ class HistoricalDailyCompletionValidator:
             selected_cases
             and len(selected) == len(selected_cases)
             and len(successful) == len(selected_cases)
-            and set(successful) == selected
+            and successful == selected_cases
         )
         exact_listing = bool(
             listing.all_optimal

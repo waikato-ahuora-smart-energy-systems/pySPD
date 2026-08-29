@@ -87,8 +87,10 @@ does not get silently patched.
 `HistoricalPopulationRunner` verifies every Gate 1 source size and SHA-256,
 reads the GDX run-mode surface, selects exactly RTD modes 101 and 201, and
 accepts a daily checkpoint only when the progress identities are exact, every
-selected case has one optimal primary solve, all cleanup solves are optimal,
-and the emitted node evidence is a subset of the selected cases. Each atomic
+selected case is solved once in canonical GDX order with an optimal primary
+solve, all cleanup solves are optimal, and the emitted node evidence is a
+subset of the selected cases. Lexically sorted or otherwise permuted progress
+is rejected even when membership is identical. Each atomic
 checkpoint binds the raw listing, progress, and evidence hashes as well as the
 source, patch, and solver profile. Resume skips only a fully matching
 checkpoint. `HistoricalAffectedManifestBuilder` then refuses to emit the final

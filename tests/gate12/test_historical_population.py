@@ -36,8 +36,8 @@ def test_case_index_selects_only_disclosed_rtd_modes() -> None:
     )
 
     assert index.cases == (
-        ("dispatch_lite", "06-NOV-2022 07:05"),
         ("rtd", "06-NOV-2022 07:00"),
+        ("dispatch_lite", "06-NOV-2022 07:05"),
     )
 
 
@@ -283,6 +283,30 @@ def test_daily_completion_requires_exact_successful_optimal_population() -> None
 
     assert checkpoint.selected_case_count == 2
     assert checkpoint.solved_case_count == 2
+
+
+def test_daily_completion_rejects_noncanonical_solve_order() -> None:
+    selected = (
+        ("case_1", "06-NOV-2022 07:00"),
+        ("case_2", "06-NOV-2022 07:05"),
+    )
+    progress = "\n".join(
+        f"The caseID: {case} ({date_time}) is 1st solved successfully."
+        for case, date_time in reversed(selected)
+    )
+
+    with pytest.raises(EvidenceContractError, match="daily completion"):
+        HistoricalDailyCompletionValidator().validate(
+            trading_date="20221106",
+            source_sha256="2" * 64,
+            patch_sha256="a" * 64,
+            solver_profile="historical-v5.0.2-scip-first-loop",
+            selected_cases=selected,
+            progress_text=progress,
+            listing=ListingResult(records=tuple(_solve(case) for case, _ in selected)),
+            listing_text="listing",
+            evidence_text=HEADER,
+        )
 
 
 @pytest.mark.parametrize("failure", ["missing", "non_optimal", "wrong_solver"])
