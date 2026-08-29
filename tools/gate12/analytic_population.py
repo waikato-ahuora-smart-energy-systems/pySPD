@@ -7,12 +7,17 @@ Gate 12 uses it only to enumerate the immutable historical E2E population.
 
 from __future__ import annotations
 
+import hashlib
 import math
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 
 from tools.gate12.evidence import AffectedIntervalIdentity, EvidenceContractError
-from tools.gate12.historical_population import MATERIAL_SHORTFALL_MW
+from tools.gate12.historical_population import (
+    MATERIAL_SHORTFALL_MW,
+    HistoricalInputArtifact,
+)
 
 ANALYTIC_GDX_SYMBOLS = (
     "i_runMode",
@@ -55,6 +60,24 @@ class HistoricalAnalyticAffectedInterval:
 
     identity: AffectedIntervalIdentity
     affected_shortfall_mw: dict[str, float]
+
+
+@dataclass(frozen=True)
+class HistoricalAnalyticDayResult:
+    """Hash-bound analytic results for one canonical daily GDX."""
+
+    trading_date: str
+    source_sha256: str
+    selected_rtd_case_count: int
+    affected: tuple[HistoricalAnalyticAffectedInterval, ...]
+
+
+class HistoricalFirstLoopCaseLoader(Protocol):
+    """Load canonical first-loop cases from a daily artifact."""
+
+    def load(
+        self, path: Path, system_directory: Path
+    ) -> tuple[HistoricalFirstLoopCase, ...]: ...
 
 
 class HistoricalFirstLoopLoadReconstructor:
@@ -262,6 +285,54 @@ class HistoricalAnalyticPopulationSelector:
             )
         records.sort(key=lambda item: item.identity.key)
         return tuple(records)
+
+
+class HistoricalAnalyticDayEnumerator:
+    """Verify provenance and enumerate a single daily GDX fail-closed."""
+
+    def __init__(
+        self,
+        *,
+        loader: HistoricalFirstLoopCaseLoader | None = None,
+        selector: HistoricalAnalyticPopulationSelector | None = None,
+    ) -> None:
+        self._loader = loader or GamsTransferFirstLoopCaseLoader()
+        self._selector = selector or HistoricalAnalyticPopulationSelector()
+
+    def enumerate(
+        self,
+        *,
+        artifact: HistoricalInputArtifact,
+        path: Path,
+        system_directory: Path,
+    ) -> HistoricalAnalyticDayResult:
+        try:
+            size = path.stat().st_size
+            digest = hashlib.sha256()
+            with path.open("rb") as stream:
+                for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                    digest.update(chunk)
+        except OSError as error:
+            raise EvidenceContractError(
+                "REQ-G12-POPULATION: canonical source is unreadable"
+            ) from error
+        source_sha256 = digest.hexdigest()
+        if size != artifact.size_bytes or source_sha256 != artifact.sha256:
+            raise EvidenceContractError(
+                "REQ-G12-POPULATION: source size or hash mismatch"
+            )
+        cases = self._loader.load(path, system_directory)
+        affected = self._selector.select(
+            cases,
+            trading_date=artifact.trading_date,
+            source_sha256=source_sha256,
+        )
+        return HistoricalAnalyticDayResult(
+            trading_date=artifact.trading_date,
+            source_sha256=source_sha256,
+            selected_rtd_case_count=len(cases),
+            affected=affected,
+        )
 
 
 class GamsTransferFirstLoopCaseLoader:
