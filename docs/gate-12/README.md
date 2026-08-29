@@ -85,14 +85,15 @@ The source overlay is fail-closed and hash-addressed; unexpected upstream text
 does not get silently patched.
 
 `HistoricalPopulationRunner` verifies every Gate 1 source size and SHA-256,
-selects every case in each daily GDX, and accepts a daily checkpoint only when
-the progress identities are exact, every selected case has one optimal primary
-solve, all cleanup solves are optimal, and the emitted node evidence is a
-subset of the selected cases. Each atomic checkpoint binds the raw listing,
-progress, and evidence hashes as well as the source, patch, and solver profile.
-Resume skips only a fully matching checkpoint. `HistoricalAffectedManifestBuilder`
-then refuses to emit the final manifest unless it contains exactly 546 unique
-identities across all 139 source hashes.
+reads the GDX run-mode surface, selects exactly RTD modes 101 and 201, and
+accepts a daily checkpoint only when the progress identities are exact, every
+selected case has one optimal primary solve, all cleanup solves are optimal,
+and the emitted node evidence is a subset of the selected cases. Each atomic
+checkpoint binds the raw listing, progress, and evidence hashes as well as the
+source, patch, and solver profile. Resume skips only a fully matching
+checkpoint. `HistoricalAffectedManifestBuilder` then refuses to emit the final
+manifest unless it contains exactly 546 unique identities across all 139 source
+hashes.
 
 An earlier `dailymode = 0` full-day rehearsal on `Pricing_20221106.gdx`
 completed 278 optimal primary solves and 11 optimal cleanup solves. Its four
@@ -115,6 +116,17 @@ uv run --group gdx python -m tools.gate12.enumerate_historical \
 
 The command produces per-date checkpoints, `population-summary.json`, and—only
 after the exact declared population is proven—`interval-identity-manifest.json`.
+
+For isolated partial inventories, pass `--execution-scope shard`. A complete
+shard then exits successfully and records `shard_complete: true`, while
+`population_passed` remains false and no interval manifest can be emitted.
+Plan deterministic balanced inventories with `plan_historical_shards`, execute
+each in a separate work directory, and combine them only through
+`merge_historical_shards`. The merger requires exactly one provenance-valid
+checkpoint for every one of the 139 governed dates before applying the same
+546-identity manifest gate. The currently installed network entitlement was
+observed to permit one active enumeration session, so local shards are executed
+serially; this affects elapsed time, not evidence semantics.
 
 ## Required evidence pack
 
