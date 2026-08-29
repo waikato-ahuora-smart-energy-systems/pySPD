@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import date
 
+from pyomo.repn.standard_repn import generate_standard_repn
+
 from pyspd.application import PyspdApplication
 from pyspd.architecture import ModelAssembler
 from pyspd.reporting import Spd16DailyReportRenderer, Spd16DailyResultSchema
@@ -23,6 +25,27 @@ from pyspd.v16.formulation import (
     spd16_formulation,
 )
 from tests.reserve.conftest import make_reserve_case
+
+
+def _generator_risk_effective_share_coefficients(built) -> tuple[float, ...]:
+    generator_risk = built.artifacts["generator_island_risk"]
+    effective_share = built.artifacts["reserve_share_effective"]
+    coefficients: list[float] = []
+    for row in built.model.ReserveRisk.Constraints.values():
+        repn = generate_standard_repn(row.body, compute_values=True)
+        if not any(
+            variable.parent_component() is generator_risk
+            for variable in repn.linear_vars
+        ):
+            continue
+        coefficients.extend(
+            float(coefficient)
+            for variable, coefficient in zip(
+                repn.linear_vars, repn.linear_coefs, strict=True
+            )
+            if variable.parent_component() is effective_share
+        )
+    return tuple(coefficients)
 
 
 def test_v16_is_a_separately_composed_class_based_formulation() -> None:
@@ -90,3 +113,15 @@ def test_v16_assembles_and_runs_scip_then_fixed_highs_rmip() -> None:
     assert prices.reserve
     validation = IndependentSpd16Validator().validate(outcome, prices.reserve)
     assert validation.passed, validation.residuals
+
+
+def test_v16_generator_risk_is_gross_of_effective_shared_reserve() -> None:
+    base = make_reserve_case()
+    v5 = ModelAssembler().assemble(reserve_formulation(), base)
+    v16 = ModelAssembler().assemble(
+        spd16_formulation(),
+        Spd16Case.from_reserve_case(base, source_date=date(2026, 6, 23)),
+    )
+
+    assert _generator_risk_effective_share_coefficients(v5)
+    assert _generator_risk_effective_share_coefficients(v16) == ()
