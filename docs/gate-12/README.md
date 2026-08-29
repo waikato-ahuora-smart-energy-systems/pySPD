@@ -213,6 +213,11 @@ serially; this affects elapsed time, not evidence semantics.
 
 `E2ECaseEvidenceBuilder` accepts canonical bytes for exactly the twelve required
 case surfaces and hashes each independently; duplicates or omissions fail.
+`PyspdCaseSurfaceExporter` now projects every completed PySPD case onto those
+exact surfaces using deterministic hexadecimal floating-point values. It keeps
+selection, state transitions, primary physics and objective, fixed-discrete and
+native-SOS pricing state, raw/repaired/node/reserve prices, publication inputs,
+rounded outputs, and case-filtered report fields independently hashable.
 `E2EDayEvidenceBuilder` separately hashes canonical order, original output,
 repeat output, resumed output, and reports, leaving repeat/resume drift visible
 to the closure validator rather than collapsing the artifacts early.
