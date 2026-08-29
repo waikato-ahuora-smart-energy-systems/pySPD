@@ -15,6 +15,7 @@ from tools.gate12.historical_population import (
     HistoricalPatchEvidence,
     HistoricalPopulationCheckpointStore,
     HistoricalPopulationRunner,
+    HistoricalPopulationWorkspace,
 )
 
 HEADER = (
@@ -124,3 +125,52 @@ def test_population_runner_rejects_source_or_patch_drift(tmp_path: Path) -> None
     (runner.programs / "vSPDsolve.gms").write_text("changed")
     with pytest.raises(EvidenceContractError, match="patch hash"):
         runner.run()
+
+
+class FakePatcher:
+    profile = "test-profile"
+
+    def apply(self, programs: Path) -> HistoricalPatchEvidence:
+        path = programs / "vSPDsolve.gms"
+        path.write_text("patched")
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        return HistoricalPatchEvidence(
+            profile=self.profile,
+            logical_sha256=hashlib.sha256(b"logical").hexdigest(),
+            file_sha256={path.name: digest},
+        )
+
+
+def test_population_workspace_is_created_once_and_reopened(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    (source / "Programs").mkdir(parents=True)
+    (source / "Programs" / "vSPDsolve.gms").write_text("original")
+    root = tmp_path / "work"
+
+    created = HistoricalPopulationWorkspace.prepare(
+        source_tree=source, root=root, patcher=FakePatcher()
+    )
+    reopened = HistoricalPopulationWorkspace.open(root)
+
+    assert created == reopened
+    assert reopened.programs == root / "vspd" / "Programs"
+    assert (reopened.programs / "vSPDsolve.gms").read_text() == "patched"
+    with pytest.raises(EvidenceContractError, match="already exists"):
+        HistoricalPopulationWorkspace.prepare(
+            source_tree=source, root=root, patcher=FakePatcher()
+        )
+
+
+def test_population_workspace_rejects_metadata_tampering(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    (source / "Programs").mkdir(parents=True)
+    (source / "Programs" / "vSPDsolve.gms").write_text("original")
+    root = tmp_path / "work"
+    HistoricalPopulationWorkspace.prepare(
+        source_tree=source, root=root, patcher=FakePatcher()
+    )
+    metadata = root / "patch-evidence.json"
+    metadata.write_text(metadata.read_text().replace("test-profile", "changed"))
+
+    with pytest.raises(EvidenceContractError, match="metadata hash"):
+        HistoricalPopulationWorkspace.open(root)
