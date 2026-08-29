@@ -1,0 +1,17 @@
+Command: uv run pytest tests/network/test_gate5_contract.py -q
+Exit: 1
+
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________ test_gate5_ac_network_vertical_slice_exists __________________
+
+    def test_gate5_ac_network_vertical_slice_exists() -> None:
+>       assert Path("src/pyspd/network/formulation.py").is_file(), (
+            "REQ-G5-NETWORK: class-based AC network formulation is absent"
+        )
+E       AssertionError: REQ-G5-NETWORK: class-based AC network formulation is absent
+
+tests/network/test_gate5_contract.py:7: AssertionError
+=========================== short test summary info ============================
+FAILED tests/network/test_gate5_contract.py::test_gate5_ac_network_vertical_slice_exists
+1 failed in 0.13s

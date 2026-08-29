@@ -1,0 +1,60 @@
+{
+  "case": {
+    "case_id": "11012022110000479",
+    "date_time": "01-NOV-2022 13:00",
+    "trading_period": "TP27"
+  },
+  "finite_difference_price": {
+    "absolute_error": 5.1185427466841904e-05,
+    "finite_difference_price": 0.028312206268310547,
+    "node": [
+      "11012022110000479",
+      "01-NOV-2022 13:00",
+      "TWI2201"
+    ],
+    "passed": true,
+    "perturbation_mw": 0.0001,
+    "reported_price": 0.028261020840843705
+  },
+  "independent_validation": {
+    "maximum_residual": 1.0754774848464876e-10,
+    "passed": true,
+    "residual_count": 29825,
+    "tolerance": 1e-07
+  },
+  "model": {
+    "ac_branch_count": 1044,
+    "branch_constraint_count": 23,
+    "bus_count": 923,
+    "loss_segment_count": 9798,
+    "market_node_constraint_count": 8,
+    "structural_signature": "e2ddd8ddae2f364c990741de0ffdb9e7328326c184a8c18e5281546e5f6779ef"
+  },
+  "passed": true,
+  "profile": "vspd-v5.0.6-ac-network-stage5",
+  "schema_version": 1,
+  "solution": {
+    "all_node_prices_finite": true,
+    "dead_node_count": 2,
+    "maximum_absolute_branch_flow_mw": 343.28366981904475,
+    "net_benefit": -179946491.56252643,
+    "node_price_count": 523,
+    "total_dynamic_ac_loss_mw": 154.98991971104604
+  },
+  "solver": {
+    "backend": "highs",
+    "elapsed_seconds": 1.974914041988086,
+    "interface": "pyomo.contrib.appsi_highs",
+    "solution_loaded": true,
+    "status": "optimal",
+    "version": [
+      1,
+      15,
+      1
+    ]
+  },
+  "source": {
+    "name": "RTD_202211011300_11012022110000479_20221101125901.gdx",
+    "sha256": "2e21665f55aaf9d8b7ef566c3ba436f8ae19ab355694caf52c7fc01e3f8f423b"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "case": {
+    "case_id": "11012022110000479",
+    "date_time": "01-NOV-2022 13:00",
+    "trading_period": "TP27"
+  },
+  "differences": {
+    "coefficient_mismatches": 0,
+    "column_mismatches": 0,
+    "extra_columns": 0,
+    "extra_nonzeros": 0,
+    "extra_rows": 0,
+    "missing_columns": 0,
+    "missing_nonzeros": 0,
+    "missing_rows": 0,
+    "row_bound_mismatches": 0
+  },
+  "gams": {
+    "column_count": 30084,
+    "logical_sha256": "a3c2c229eefc88bd7c2962d8dbcdb2a0f61772a41964f623e11f3d31422e8908",
+    "nonzero_count": 73953,
+    "row_count": 29825,
+    "sense": "maximize",
+    "structural_sha256": "c6dfe07e978906da8695e12f6d054617e47c8d2d0e8c2c6f8190a6b34b5ff392"
+  },
+  "passed": true,
+  "precision_rule": {
+    "absolute_tolerance": 1e-09
+  },
+  "profile": "vspd-v5.0.6-ac-network-stage5",
+  "python": {
+    "column_count": 30084,
+    "logical_sha256": "a3c2c229eefc88bd7c2962d8dbcdb2a0f61772a41964f623e11f3d31422e8908",
+    "nonzero_count": 73953,
+    "row_count": 29825,
+    "sense": "maximize",
+    "structural_sha256": "c6dfe07e978906da8695e12f6d054617e47c8d2d0e8c2c6f8190a6b34b5ff392"
+  },
+  "schema_version": 1,
+  "sources": {
+    "dictionary_gdx": {
+      "name": "pyspd_solve_1_dict.gdx",
+      "sha256": "910f50e84fe2a74f7338e553f85f40b9d468058364bfa9c169d6038a6f9e8d7f"
+    },
+    "input_gdx": {
+      "name": "RTD_202211011300_11012022110000479_20221101125901.gdx",
+      "sha256": "2e21665f55aaf9d8b7ef566c3ba436f8ae19ab355694caf52c7fc01e3f8f423b"
+    },
+    "matrix_gdx": {
+      "name": "pyspd_solve_1_matrix.gdx",
+      "sha256": "cd2d0d9bca43a7071ce19e07b53932090a316b39e202aa8c079083a0686a40a1"
+    }
+  }
+}

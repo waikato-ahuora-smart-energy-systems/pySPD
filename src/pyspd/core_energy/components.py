@@ -10,7 +10,14 @@ import pyomo.environ as pyo
 from pyspd.architecture import BuildContext, ModelComponent
 from pyspd.core_energy.data import CORE_ENERGY_FORMULATION_ID, CoreEnergyCase
 
-_SUPPORTED = frozenset({CORE_ENERGY_FORMULATION_ID})
+_SUPPORTED = frozenset(
+    {
+        CORE_ENERGY_FORMULATION_ID,
+        "vspd-v5.0.6-ac-network",
+        "vspd-v5.0.6-hvdc",
+        "vspd-v5.0.6-reserve",
+    }
+)
 
 
 def _data(context: BuildContext) -> CoreEnergyCase:
