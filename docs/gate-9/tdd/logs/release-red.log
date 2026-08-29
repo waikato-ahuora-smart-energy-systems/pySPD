@@ -1,0 +1,11 @@
+Command: uv run pytest tests/results tests/application tests/architecture/test_rebuild_policy.py -q
+Exit code: 2
+
+Collection failed exactly because the Gate 9 production contracts did not yet
+exist:
+
+- ModuleNotFoundError: No module named 'pyspd.reporting'
+- ModuleNotFoundError: No module named 'pyspd.application'
+- ImportError: cannot import name 'RebuildDecision' from 'pyspd.architecture'
+
+Three collection errors; test execution interrupted.
