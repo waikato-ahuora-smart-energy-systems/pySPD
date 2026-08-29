@@ -14,7 +14,10 @@ from tools.gate12.historical_population import (
     HistoricalInputArtifact,
     HistoricalInputInventory,
 )
-from tools.gate12.replay import HistoricalAffectedReplayPlanner
+from tools.gate12.replay import (
+    HistoricalAffectedManifestLoader,
+    HistoricalAffectedReplayPlanner,
+)
 
 
 def _population():
@@ -68,6 +71,7 @@ def test_replay_plan_preserves_prefix_and_excludes_post_affected_tail() -> None:
     assert plan.batches[0].case_ids[-1] == "affected_0_3"
     assert "tail_0" not in plan.batches[0].case_ids
     assert len(plan.logical_sha256) == 64
+    assert plan.to_dict()["logical_sha256"] == plan.logical_sha256
 
 
 def test_replay_plan_rejects_an_affected_identity_missing_from_gdx_index() -> None:
@@ -85,3 +89,21 @@ def test_replay_plan_rejects_an_affected_identity_missing_from_gdx_index() -> No
             inventory=inventory,
             case_indices=indices,
         )
+
+
+def test_affected_manifest_loader_is_strict_and_accepts_merge_profile() -> None:
+    manifest, _inventory, _indices = _population()
+    payload = {
+        "schema_version": 1,
+        "source_release": manifest.source_release,
+        "reference_commit": manifest.reference_commit,
+        "execution_profile": "portable-profile",
+        "identities": [identity.__dict__ for identity in manifest.identities],
+    }
+
+    loaded = HistoricalAffectedManifestLoader().from_dict(payload)
+
+    assert loaded == manifest
+    payload["unexpected"] = True
+    with pytest.raises(EvidenceContractError, match="manifest schema"):
+        HistoricalAffectedManifestLoader().from_dict(payload)
