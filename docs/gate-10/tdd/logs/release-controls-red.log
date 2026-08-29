@@ -1,0 +1,7 @@
+Command: uv run pytest tests/release -q
+Exit code: 2
+
+Expected behavioral contract: REQ-G10-RELEASE-CONTROLS: canary, quarantine, release-manifest, and packaging controls are absent.
+
+Collection reported that `pyspd.canary` and `pyspd.release` did not exist; the
+packaging metadata and CI deferral tests could not pass the intended contract.
