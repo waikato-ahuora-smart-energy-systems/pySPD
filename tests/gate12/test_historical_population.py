@@ -138,6 +138,11 @@ def _checkpoint() -> HistoricalPopulationCheckpoint:
         selected_case_count=278,
         solved_case_count=278,
         all_solves_optimal=True,
+        artifact_sha256={
+            "progress": "a" * 64,
+            "listing": "b" * 64,
+            "evidence": "c" * 64,
+        },
         evidence=evidence,
     )
 
@@ -192,6 +197,11 @@ def test_population_checkpoint_fails_closed(
         "selected_case_count": 278,
         "solved_case_count": 278,
         "all_solves_optimal": True,
+        "artifact_sha256": {
+            "progress": "a" * 64,
+            "listing": "b" * 64,
+            "evidence": "c" * 64,
+        },
         "evidence": HistoricalShortfallEvidence.parse(
             HEADER, source_name="Pricing_20221106"
         ),
@@ -245,6 +255,7 @@ def test_daily_completion_requires_exact_successful_optimal_population() -> None
         selected_cases=selected,
         progress_text=progress,
         listing=listing,
+        listing_text="listing",
         evidence_text=HEADER
         + "51012022111800831|06-NOV-2022 07:00|WAI0111|1|4.5|4.5|1|1\n",
     )
@@ -272,6 +283,7 @@ def test_daily_completion_fails_closed(failure: str) -> None:
             selected_cases=selected,
             progress_text=progress,
             listing=ListingResult(records=(record,)),
+            listing_text="listing",
             evidence_text=HEADER,
         )
 
@@ -305,6 +317,11 @@ def test_historical_manifest_builder_requires_exact_546_across_139_dates() -> No
                 selected_case_count=affected_count,
                 solved_case_count=affected_count,
                 all_solves_optimal=True,
+                artifact_sha256={
+                    "progress": "a" * 64,
+                    "listing": "b" * 64,
+                    "evidence": "c" * 64,
+                },
                 evidence=evidence,
             )
         )

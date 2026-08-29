@@ -544,6 +544,7 @@ class HistoricalPopulationCheckpoint:
     selected_case_count: int
     solved_case_count: int
     all_solves_optimal: bool
+    artifact_sha256: dict[str, str]
     evidence: HistoricalShortfallEvidence
     logical_sha256: str
 
@@ -558,6 +559,7 @@ class HistoricalPopulationCheckpoint:
         selected_case_count: int,
         solved_case_count: int,
         all_solves_optimal: bool,
+        artifact_sha256: dict[str, str],
         evidence: HistoricalShortfallEvidence,
     ) -> HistoricalPopulationCheckpoint:
         cls._validate(
@@ -568,6 +570,7 @@ class HistoricalPopulationCheckpoint:
             selected_case_count=selected_case_count,
             solved_case_count=solved_case_count,
             all_solves_optimal=all_solves_optimal,
+            artifact_sha256=artifact_sha256,
             evidence=evidence,
         )
         values: dict[str, Any] = {
@@ -579,6 +582,7 @@ class HistoricalPopulationCheckpoint:
             "selected_case_count": selected_case_count,
             "solved_case_count": solved_case_count,
             "all_solves_optimal": all_solves_optimal,
+            "artifact_sha256": artifact_sha256,
             "evidence": cls._evidence_dict(evidence),
         }
         logical_sha256 = cls._logical_sha256(values)
@@ -590,6 +594,7 @@ class HistoricalPopulationCheckpoint:
             selected_case_count=selected_case_count,
             solved_case_count=solved_case_count,
             all_solves_optimal=all_solves_optimal,
+            artifact_sha256=artifact_sha256,
             evidence=evidence,
             logical_sha256=logical_sha256,
         )
@@ -605,6 +610,7 @@ class HistoricalPopulationCheckpoint:
             "selected_case_count",
             "solved_case_count",
             "all_solves_optimal",
+            "artifact_sha256",
             "evidence",
             "logical_sha256",
         }
@@ -632,6 +638,7 @@ class HistoricalPopulationCheckpoint:
                 selected_case_count=values["selected_case_count"],
                 solved_case_count=values["solved_case_count"],
                 all_solves_optimal=values["all_solves_optimal"],
+                artifact_sha256=values["artifact_sha256"],
                 evidence=evidence,
             )
         except (TypeError, ValueError) as error:
@@ -656,6 +663,7 @@ class HistoricalPopulationCheckpoint:
             "selected_case_count": self.selected_case_count,
             "solved_case_count": self.solved_case_count,
             "all_solves_optimal": self.all_solves_optimal,
+            "artifact_sha256": self.artifact_sha256,
             "evidence": self._evidence_dict(self.evidence),
             "logical_sha256": self.logical_sha256,
         }
@@ -674,6 +682,7 @@ class HistoricalPopulationCheckpoint:
         selected_case_count: int,
         solved_case_count: int,
         all_solves_optimal: bool,
+        artifact_sha256: dict[str, str],
         evidence: HistoricalShortfallEvidence,
     ) -> None:
         if not isinstance(trading_date, str) or not _TRADING_DATE.fullmatch(
@@ -705,6 +714,13 @@ class HistoricalPopulationCheckpoint:
         if all_solves_optimal is not True:
             raise EvidenceContractError(
                 "REQ-G12-HISTORICAL: every daily solve must be optimal"
+            )
+        if set(artifact_sha256) != {"progress", "listing", "evidence"} or any(
+            not isinstance(value, str) or not _SHA256.fullmatch(value)
+            for value in artifact_sha256.values()
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: raw completion artifacts require SHA-256 values"
             )
         if evidence.source_name != f"Pricing_{trading_date}":
             raise EvidenceContractError(
@@ -849,6 +865,7 @@ class HistoricalDailyCompletionValidator:
         selected_cases: tuple[tuple[str, str], ...],
         progress_text: str,
         listing: ListingResult,
+        listing_text: str,
         evidence_text: str,
     ) -> HistoricalPopulationCheckpoint:
         selected = set(selected_cases)
@@ -889,6 +906,11 @@ class HistoricalDailyCompletionValidator:
             selected_case_count=len(selected_cases),
             solved_case_count=len(successful),
             all_solves_optimal=True,
+            artifact_sha256={
+                "progress": hashlib.sha256(progress_text.encode()).hexdigest(),
+                "listing": hashlib.sha256(listing_text.encode()).hexdigest(),
+                "evidence": hashlib.sha256(evidence_text.encode()).hexdigest(),
+            },
             evidence=evidence,
         )
 
@@ -1051,7 +1073,8 @@ class HistoricalPopulationRunner:
                 "holdFixed=0",
             ),
         )
-        listing = self.listing_parser.parse_file(self.programs / "vSPDsolve.lst")
+        listing_text = (self.programs / "vSPDsolve.lst").read_text(errors="replace")
+        listing = self.listing_parser.parse_text(listing_text)
         evidence_path = (
             self.programs
             / f"gate12_Pricing_{artifact.trading_date}_shortfall.txt"
@@ -1066,6 +1089,7 @@ class HistoricalPopulationRunner:
                 encoding="utf-8"
             ),
             listing=listing,
+            listing_text=listing_text,
             evidence_text=evidence_path.read_text(encoding="utf-8"),
         )
 
