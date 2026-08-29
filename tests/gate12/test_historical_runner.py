@@ -14,6 +14,7 @@ from tools.gate12.historical_population import (
     HistoricalInputArtifact,
     HistoricalInputInventory,
     HistoricalPatchEvidence,
+    HistoricalPopulationShardPlanner,
     HistoricalPopulationCheckpointStore,
     HistoricalPopulationRunner,
     HistoricalPopulationWorkspace,
@@ -23,6 +24,34 @@ HEADER = (
     "case_id|datetime|node|loop|energy_shortfall_mw|adjustment_mw|"
     "model_status|solver_status\n"
 )
+
+
+def test_population_shards_are_complete_unique_and_deterministic() -> None:
+    inventory = HistoricalInputInventory(
+        tuple(
+            HistoricalInputArtifact(
+                trading_date=f"2022010{position}",
+                size_bytes=size,
+                sha256=f"{position}" * 64,
+            )
+            for position, size in enumerate((9, 8, 7, 6), start=1)
+        )
+    )
+
+    shards = HistoricalPopulationShardPlanner().plan(inventory, shard_count=2)
+
+    assert shards == HistoricalPopulationShardPlanner().plan(
+        inventory, shard_count=2
+    )
+    flattened = tuple(
+        artifact for shard in shards for artifact in shard.artifacts
+    )
+    assert set(flattened) == set(inventory.artifacts)
+    assert len(flattened) == len(set(flattened))
+    assert [sum(item.size_bytes for item in shard.artifacts) for shard in shards] == [
+        15,
+        15,
+    ]
 
 
 class FakeIndexLoader:
