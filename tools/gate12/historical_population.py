@@ -365,7 +365,7 @@ class HistoricalVspdSourcePatcher:
             solve_text, ".Optfile = 1 ;", ".Optfile = 0 ;", 3
         )
         solve_text = self._replace_all(
-            solve_text, "%inputPath%\\%GDXname%.gdx", "%inputPath%/%GDXname%.gdx", 3
+            solve_text, "%inputPath%\\%GDXname%.gdx", "%inputPath%/%GDXname%.gdx", 4
         )
         solve_text = self._sub(
             solve_text,
