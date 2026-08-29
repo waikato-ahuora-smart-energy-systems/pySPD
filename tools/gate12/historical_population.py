@@ -22,7 +22,9 @@ from tools.gate12.evidence import (
 from tools.oracle.vspd import ListingResult, VspdListingParser
 
 MATERIAL_SHORTFALL_MW = 1e-6
-HISTORICAL_EXECUTION_PROFILE = "historical-v5.0.2-scip-solvelink5-first-loop"
+HISTORICAL_EXECUTION_PROFILE = (
+    "historical-v5.0.2-dailymode1-scip-solvelink5-first-loop"
+)
 HISTORICAL_COLUMNS = (
     "case_id",
     "datetime",
@@ -304,7 +306,7 @@ class SubprocessHistoricalGamsExecutor:
 class HistoricalVspdSourcePatcher:
     """Apply the minimal, fail-closed v5.0.2 population-discovery overlay."""
 
-    profile = "historical-v5.0.2-scip-first-loop"
+    profile = "historical-v5.0.2-dailymode1-scip-first-loop"
 
     def apply(self, programs: Path) -> HistoricalPatchEvidence:
         settings = programs / "vSPDsettings.inc"
@@ -331,11 +333,6 @@ class HistoricalVspdSourcePatcher:
             settings_text,
             "'%system.fp%..\\Override\\'",
             "'%system.fp%../Override/'",
-        )
-        settings_text = self._replace(
-            settings_text,
-            "Scalar dailymode                         / 1 / ;",
-            "Scalar dailymode                         / 0 / ;",
         )
         settings_text = self._replace(
             settings_text,
