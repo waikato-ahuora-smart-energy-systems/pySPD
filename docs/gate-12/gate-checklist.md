@@ -3,7 +3,7 @@
 | ID | Exit criterion | Current evidence | Status |
 |---|---|---|---|
 | `G12-01` | Exactly 546 unique affected identities across all 139 Gate 1 hashes | All 139 hashes screened; 434 diagnostic candidates and a 112-count gap recorded without claiming membership; corrected daily-mode benchmark completed 305/305 optimal broad-surface cases and is explicitly excluded; exact RTD-only shard execution is in progress | In progress |
-| `G12-02` | All 546 cases replayed through pinned GAMS and PySPD | Prefix-complete PySPD replay planner implemented and tested; execution waits for the exact population manifest | Pending execution |
+| `G12-02` | All 546 cases replayed through pinned GAMS and PySPD | Prefix-complete PySPD replay planner and atomic per-date configuration writer implemented and tested; execution waits for the exact population manifest | Pending execution |
 | `G12-03` | Complete normal, outage, high/negative-price, scarcity, islanding, 46-period, and 50-period days | Required categories enforced by `Gate12EvidenceIndex`; Gate 1 DST inputs are hash-bound | Pending execution |
 | `G12-04` | Identical selection, order, prior-dispatch initialization, and fallback path | Historical checkpoints require exact canonical GDX progress order; application selection fails on missing/duplicate identities; replay plans include the canonical same-day prefix through the last affected case; cross-implementation state-transition comparison remains pending | Partial |
 | `G12-05` | Primary physics, objective, and fixed-discrete pricing state parity | Portable v16 representative objective and independent validation pass | Partial |

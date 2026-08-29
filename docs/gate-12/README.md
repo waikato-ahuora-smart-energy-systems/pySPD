@@ -143,6 +143,22 @@ requires all 546 globally unique affected case IDs, all 139 source hashes, exact
 date-time/trading-period membership, and every predecessor needed to reproduce
 daily initialization.
 
+After the exact manifest has been emitted, materialize the governed replay
+configurations with:
+
+```bash
+uv run --group gdx python -m tools.gate12.plan_affected_replays \
+  --manifest /path/to/interval-identity-manifest.json \
+  --inventory docs/gate-1/shortfall-input-inventory.json \
+  --input-root /path/to/hash-bound/inputs \
+  --system-directory /path/to/gams-system-directory \
+  --output-directory /path/to/gate12-replay-plan
+```
+
+The command rechecks every source size and SHA-256 before loading canonical GDX
+case order, then atomically writes the logical replay plan, 139 per-date PySPD
+configurations, and a configuration-file hash index.
+
 For isolated partial inventories, pass `--execution-scope shard`. A complete
 shard then exits successfully and records `shard_complete: true`, while
 `population_passed` remains false and no interval manifest can be emitted.
