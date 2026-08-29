@@ -9,7 +9,10 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-from tools.gate12.analytic_population import HistoricalAnalyticDayEnumerator
+from tools.gate12.analytic_population import (
+    HistoricalAnalyticCandidatePolicy,
+    HistoricalAnalyticDayEnumerator,
+)
 from tools.gate12.historical_population import HistoricalInputInventory
 
 
@@ -64,14 +67,17 @@ def main(arguments: list[str] | None = None) -> int:
         )
 
     candidate_count = sum(len(result.candidates) for result in daily_results)
+    verdict = HistoricalAnalyticCandidatePolicy().assess(
+        candidate_count=candidate_count
+    )
     screen_payload: dict[str, Any] = {
         "schema_version": 1,
         "method": "dailymode0 first-loop RTD algebraic dead-node candidate screen",
         "trading_date_count": len(daily_results),
         "candidate_interval_count": candidate_count,
         "declared_interval_count": 546,
-        "declared_count_gap": 546 - candidate_count,
-        "qualifies_exact_population": False,
+        "declared_count_gap": verdict.declared_count_gap,
+        "qualifies_exact_population": verdict.qualifies_exact_population,
         "per_date": {
             result.trading_date: {
                 "source_sha256": result.source_sha256,
@@ -96,7 +102,7 @@ def main(arguments: list[str] | None = None) -> int:
             {
                 "passed": False,
                 "candidate_interval_count": candidate_count,
-                "declared_count_gap": 546 - candidate_count,
+                "declared_count_gap": verdict.declared_count_gap,
                 "diagnostic": (
                     "candidate screen cannot qualify the disclosed dailymode1 "
                     "population; solved enumeration is required"

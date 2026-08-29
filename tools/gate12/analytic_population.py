@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Protocol
 
 from tools.gate12.evidence import (
+    EXPECTED_AFFECTED_INTERVALS,
     AffectedIntervalIdentity,
     EvidenceContractError,
 )
@@ -73,6 +74,29 @@ class HistoricalAnalyticDayResult:
     source_sha256: str
     selected_rtd_case_count: int
     candidates: tuple[HistoricalAnalyticCandidateInterval, ...]
+
+
+@dataclass(frozen=True)
+class HistoricalAnalyticCandidateVerdict:
+    """A deliberately non-qualifying diagnostic count comparison."""
+
+    candidate_count: int
+    declared_count_gap: int
+    qualifies_exact_population: bool = False
+
+
+class HistoricalAnalyticCandidatePolicy:
+    """Prevent an algebraic candidate screen from becoming parity evidence."""
+
+    def assess(self, *, candidate_count: int) -> HistoricalAnalyticCandidateVerdict:
+        if candidate_count < 0:
+            raise EvidenceContractError(
+                "REQ-G12-POPULATION: candidate count must not be negative"
+            )
+        return HistoricalAnalyticCandidateVerdict(
+            candidate_count=candidate_count,
+            declared_count_gap=EXPECTED_AFFECTED_INTERVALS - candidate_count,
+        )
 
 
 class HistoricalFirstLoopCaseLoader(Protocol):
