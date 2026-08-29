@@ -14,6 +14,7 @@ from tools.gate12.evidence import (
     Observable,
     ParityComparator,
     SolverProfile,
+    TwoSidedDegeneracyEvidence,
 )
 
 
@@ -136,3 +137,52 @@ def test_strict_and_portable_profiles_cannot_be_conflated() -> None:
     assert SolverProfile.STRICT_CPLEX.value == "strict-cplex"
     assert SolverProfile.PORTABLE_SCIP_HIGHS.value == "portable-scip-highs"
     assert SolverProfile.STRICT_CPLEX is not SolverProfile.PORTABLE_SCIP_HIGHS
+
+
+def test_two_sided_kink_evidence_issues_a_case_specific_certificate() -> None:
+    evidence = TwoSidedDegeneracyEvidence(
+        case_id="case-1",
+        observable_kind="reserve_price",
+        identity=("TP30", "NI", "FIR"),
+        reference_value=0.11,
+        candidate_value=0.01,
+        negative_perturbation_derivative=0.1100004,
+        positive_perturbation_derivative=0.0100136,
+        derivative_tolerance=2e-5,
+        common_objective_absolute_error=4.5e-5,
+        common_objective_tolerance=1e-4,
+        reference_kkt_passed=True,
+        candidate_kkt_passed=True,
+    )
+
+    certificate = evidence.certificate()
+
+    assert certificate.passed
+    assert certificate.method == "common-optimal-face+kkt+two-sided-finite-difference"
+    assert len(certificate.evidence_sha256) == 64
+    expected = (
+        Observable("case-1", "reserve_price", ("TP30", "NI", "FIR"), 0.11),
+    )
+    actual = (replace(expected[0], value=0.01),)
+    assert ParityComparator(absolute_tolerance=1e-6).compare(
+        expected, actual, certificates=(certificate,)
+    ).passed
+
+
+def test_two_sided_kink_evidence_rejects_value_outside_subgradient_interval() -> None:
+    evidence = TwoSidedDegeneracyEvidence(
+        case_id="case-1",
+        observable_kind="reserve_price",
+        identity=("TP30", "NI", "FIR"),
+        reference_value=0.50,
+        candidate_value=0.01,
+        negative_perturbation_derivative=0.11,
+        positive_perturbation_derivative=0.01,
+        derivative_tolerance=1e-5,
+        common_objective_absolute_error=0.0,
+        common_objective_tolerance=1e-4,
+        reference_kkt_passed=True,
+        candidate_kkt_passed=True,
+    )
+
+    assert not evidence.certificate().passed
