@@ -1,0 +1,710 @@
+{
+  "authority_release": "https://github.com/ElectricityAuthority/vSPD/releases/tag/v5.0.4",
+  "candidate_interval_count": 434,
+  "declared_interval_count": 546,
+  "full_evidence_sha256": "1a06bf2c988d80495daf76179410c11a34ba57b23d59b98f40104783ebec8901",
+  "per_date": {
+    "20221106": {
+      "candidate_interval_count": 4,
+      "selected_rtd_case_count": 270,
+      "source_sha256": "282ac2abeaa2f0c7c6e26b967e2ba90289c0ba5a9e696b99069d11350d3037b8"
+    },
+    "20221107": {
+      "candidate_interval_count": 6,
+      "selected_rtd_case_count": 263,
+      "source_sha256": "e8e8dc6981d0c9b468c9abee1f33abf751e7f72aa19171d4c0bf04a7b3d62308"
+    },
+    "20221109": {
+      "candidate_interval_count": 12,
+      "selected_rtd_case_count": 257,
+      "source_sha256": "60a6dfa4fe9151cad8b545f7a81028b970044d7aa04fc91465878b7607523e04"
+    },
+    "20221116": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 250,
+      "source_sha256": "1e2d55749a0e32939731cab9e2526bb31911f0b1639c5fdfcbd19e142a524463"
+    },
+    "20221117": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 211,
+      "source_sha256": "16de3121925c679e54092a1d91b4eaf95df3f2d1e41ae8cdb7f40a4408e7a659"
+    },
+    "20221124": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 261,
+      "source_sha256": "37f5e7a62a58df0b427d5205377f435d8fb16fa1d15a44c6c608d5a84adce7c9"
+    },
+    "20221125": {
+      "candidate_interval_count": 5,
+      "selected_rtd_case_count": 282,
+      "source_sha256": "913e0b0d2bebb42625293a75754cd4265c401ea566d49c96db490a042ffe5c47"
+    },
+    "20221204": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 274,
+      "source_sha256": "848a80308a6c5e55bafb7b2a46882d3a1381d856e7c8b56f0a3bcb8239e80e3e"
+    },
+    "20230116": {
+      "candidate_interval_count": 8,
+      "selected_rtd_case_count": 283,
+      "source_sha256": "120fdd849890f3d96d197ee549273045e7592f447e689a8d38f85b8250b1d3f2"
+    },
+    "20230117": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 271,
+      "source_sha256": "b2fbbcb045aba74abffb245bd30e4253ba9c64da65cb9feff5dae485b7ef0bf6"
+    },
+    "20230118": {
+      "candidate_interval_count": 4,
+      "selected_rtd_case_count": 277,
+      "source_sha256": "5e422922a518313b995f4da44e0374954dd14aee35dfd2da703851f4101d2c85"
+    },
+    "20230125": {
+      "candidate_interval_count": 6,
+      "selected_rtd_case_count": 276,
+      "source_sha256": "27c99805ec587fa1b474968daf8735a40814de06a3cbef0b505b739eacf34def"
+    },
+    "20230127": {
+      "candidate_interval_count": 3,
+      "selected_rtd_case_count": 252,
+      "source_sha256": "8724eca386e864bbc0cf1f7fa701685ed983431ab6b8210ff7734287931599e6"
+    },
+    "20230214": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 280,
+      "source_sha256": "4acc7539bb37dba8dbcd1ccce489e55d00df8f44a0eebb8ecc6bc496317dc82a"
+    },
+    "20230217": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 277,
+      "source_sha256": "32fac745395e4185d8d46f568afc347355bb49f1c94aa0ab8a87dd9844d04ce9"
+    },
+    "20230220": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 284,
+      "source_sha256": "81da77056cc09d4afce1e1e5236ce696b802a58946749defac723cb358466ded"
+    },
+    "20230228": {
+      "candidate_interval_count": 5,
+      "selected_rtd_case_count": 254,
+      "source_sha256": "6858090afa5a13489f5bf627cb09280ea475b1b8f224a4c2c99c03f5a6677219"
+    },
+    "20230301": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 264,
+      "source_sha256": "6b8dd2d419c1d1810b1e338333063355a267ee1382b7daf1c336fc63a5949e6f"
+    },
+    "20230303": {
+      "candidate_interval_count": 4,
+      "selected_rtd_case_count": 264,
+      "source_sha256": "2a2451d15672480f1687ac359c83d879650e3c66fd5fe924d8e1fb022691ec3c"
+    },
+    "20230305": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 268,
+      "source_sha256": "80e9302dc7f114e181fa935698d38a46f32c994effb8be244dd3555ccbe4e5fd"
+    },
+    "20230306": {
+      "candidate_interval_count": 3,
+      "selected_rtd_case_count": 275,
+      "source_sha256": "7b33bdfed267db49d67f3b0e03ad4bf2945874bacb4fa11bc37a9ce06baad130"
+    },
+    "20230307": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 269,
+      "source_sha256": "f7c01fd2fbcdfbac51d6ba72d586e011b65eb6f33f066fb4a1416df55f31e488"
+    },
+    "20230309": {
+      "candidate_interval_count": 4,
+      "selected_rtd_case_count": 281,
+      "source_sha256": "ba4e481797f6439a38fd54565d51c7ed8d034b2c52baf091ae57369c29d7d81d"
+    },
+    "20230310": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 274,
+      "source_sha256": "991a64578ecc1b6ca5a918e2c496c2ea311277574ce88876cf655fed5e1db4f6"
+    },
+    "20230313": {
+      "candidate_interval_count": 3,
+      "selected_rtd_case_count": 271,
+      "source_sha256": "e7b2a0c0d1b0fdb7d851818864faabb0be8ee0cb8cf31af2e425a9163ddee4cf"
+    },
+    "20230319": {
+      "candidate_interval_count": 5,
+      "selected_rtd_case_count": 283,
+      "source_sha256": "dd997de3da2b63c1c9b5bbf2f9b532d1680d5a52e1fffc7a5420e3daae7a5357"
+    },
+    "20230321": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 278,
+      "source_sha256": "0ca69e2f8e612ca8a8dc142ec88ba22699d605ddad8c3307289f8054a811b5dd"
+    },
+    "20230404": {
+      "candidate_interval_count": 6,
+      "selected_rtd_case_count": 285,
+      "source_sha256": "2c65a3905f60eac541447f41656ee6c8d73841e715ab56441611f06a7c389021"
+    },
+    "20230405": {
+      "candidate_interval_count": 4,
+      "selected_rtd_case_count": 281,
+      "source_sha256": "d39ef3714d000bf80c73f708d005943803725c7eb1f088dbf80fd7c067ea4f11"
+    },
+    "20230419": {
+      "candidate_interval_count": 5,
+      "selected_rtd_case_count": 257,
+      "source_sha256": "f3d4991e64a206dbf4067862354e103608926a4b1d3bfb559eb38656dbfc19bb"
+    },
+    "20230428": {
+      "candidate_interval_count": 5,
+      "selected_rtd_case_count": 279,
+      "source_sha256": "ecb2db390bf3f54e560fea69774510a654d3d1dde56ff2adac15ccfad505dfd5"
+    },
+    "20230508": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 264,
+      "source_sha256": "67c65752f2351098f4761c70c4c2f871f9176d3f509403df1ce6f76c47d3d37a"
+    },
+    "20230509": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 269,
+      "source_sha256": "54cf77a3476372a70d6d40a2b7b3bd631ea77ba9d69c870e630a8f607134ecbb"
+    },
+    "20230510": {
+      "candidate_interval_count": 0,
+      "selected_rtd_case_count": 278,
+      "source_sha256": "50e6cc12a412afad2b370ba19940cd1bbd64943054b9cecdfdbef6005d152e90"
+    },
+    "20230516": {
+      "candidate_interval_count": 0,
+      "selected_rtd_case_count": 272,
+      "source_sha256": "bea2ad667f458299b3de65122f2df2d936b8e3924cd49910246b60e7b92f44ed"
+    },
+    "20230522": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 279,
+      "source_sha256": "3135afd0a13bd3a98a3aea9533391a3faf33903da4d92f22bc34a418921777ad"
+    },
+    "20230523": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 268,
+      "source_sha256": "cbd78b1441fc5991a0a4590088697a526a5abf9c87962e2ebc241146fe3bc012"
+    },
+    "20230530": {
+      "candidate_interval_count": 12,
+      "selected_rtd_case_count": 268,
+      "source_sha256": "41d8105b932826c544fbbd0ff808806650a9c484146e59a9c46b7b33ed527c3a"
+    },
+    "20230531": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 252,
+      "source_sha256": "1c9bc5ec4224e7d4e6024cd80a9dc202ccb1fb4fbfbbb9509b68a6bafb4b6cbf"
+    },
+    "20230601": {
+      "candidate_interval_count": 6,
+      "selected_rtd_case_count": 271,
+      "source_sha256": "83954562ffd60b33ac82f546ff160d6f1c445e234e030f7b3ad36a1ab60dfaea"
+    },
+    "20230612": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 282,
+      "source_sha256": "152f5be2b58924a7f8c33d8bd36500af3329d72cf266d1f37fb13762b25b1d48"
+    },
+    "20230614": {
+      "candidate_interval_count": 9,
+      "selected_rtd_case_count": 284,
+      "source_sha256": "edfc97ab681920a807d4cddb6229c30e59e846220f44ae77135f6449660c5ffc"
+    },
+    "20230616": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 280,
+      "source_sha256": "a62ecb9150f975b70b5897ac75bf2d20c8e6c3342980d93f0ed93fc158ef8950"
+    },
+    "20230617": {
+      "candidate_interval_count": 0,
+      "selected_rtd_case_count": 278,
+      "source_sha256": "3ef56a90b0dcbeb1a402e5275133a2ec422e003987febfccd2a9e9db6267df59"
+    },
+    "20230704": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 261,
+      "source_sha256": "1e7172e71a29f5e952d4716be45f0c095e2d213fac66ba004d86373ae0044a9d"
+    },
+    "20230705": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 264,
+      "source_sha256": "c020a77649a417c86e56d41971deef8a871f37865d32547b7276eb25b9bbae8f"
+    },
+    "20230706": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 264,
+      "source_sha256": "25d3866e8c61ce5bd28707cdfc36e0a4210f7584167b2df24a5f05afd58756aa"
+    },
+    "20230708": {
+      "candidate_interval_count": 0,
+      "selected_rtd_case_count": 272,
+      "source_sha256": "6d9dbd71462192a3ac5a8d86368f5e54b5eac73dc099cf588a1e8105fa055493"
+    },
+    "20230719": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 267,
+      "source_sha256": "2f8d69d9ceb9beceb1c4747b3447695fec3df97db1f638c15419fb4c678096bc"
+    },
+    "20230720": {
+      "candidate_interval_count": 4,
+      "selected_rtd_case_count": 286,
+      "source_sha256": "a6ce28a01d60d42243c019d46883ce00ccbcaf7ba12f86bc34e4f594ad7efa06"
+    },
+    "20230721": {
+      "candidate_interval_count": 3,
+      "selected_rtd_case_count": 279,
+      "source_sha256": "7bf4048e95b1e85639240b30b0e2dda2e29af9e270341ab18a4999a3f846fc13"
+    },
+    "20230726": {
+      "candidate_interval_count": 7,
+      "selected_rtd_case_count": 283,
+      "source_sha256": "0d317a4225c53dea9ce12b3333816f0066eb6d55e288b0290152932d3018430a"
+    },
+    "20230731": {
+      "candidate_interval_count": 0,
+      "selected_rtd_case_count": 283,
+      "source_sha256": "9a90394f3a7805d75a8ab1651d62c880bcf2654ad95281b013a52e2e96289fde"
+    },
+    "20230809": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 282,
+      "source_sha256": "8fbcc7c620973898eb5e5d6f40551b20825ec9207f49a429ea880810e2391742"
+    },
+    "20230810": {
+      "candidate_interval_count": 6,
+      "selected_rtd_case_count": 249,
+      "source_sha256": "fda5c60748db191d26b6035d50bd3bde0356b49e2a6594b41f89752e8b53e03b"
+    },
+    "20230904": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 272,
+      "source_sha256": "cce5a8efb0f7603738b8c9a2d4144810656870af06f09a3a9895ff4d4ec13096"
+    },
+    "20230905": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 281,
+      "source_sha256": "bf145a7ef79ead50eb6878b7278584a458e9c198a6c148d7ffda09fcb83a995f"
+    },
+    "20230917": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 270,
+      "source_sha256": "58983647746e580b84eb0be763228bea1d185b3186784c9d46917f04e9122dc5"
+    },
+    "20230919": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 270,
+      "source_sha256": "10f2e7dce3df2d4fba0da1d3c86f905ea4f3ebe94d30351721e34bb914318d24"
+    },
+    "20230923": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 260,
+      "source_sha256": "984ed45c5f1d2687b7348d78f8b1b51eadfe658d261021dbde1f58157e13ec39"
+    },
+    "20230928": {
+      "candidate_interval_count": 4,
+      "selected_rtd_case_count": 255,
+      "source_sha256": "fe44b2f71d63295a6f91becb37699d30829815397070e8c14dbb7c68081074a0"
+    },
+    "20230930": {
+      "candidate_interval_count": 3,
+      "selected_rtd_case_count": 273,
+      "source_sha256": "abac5744e27b417c4a293363904ec5713e196eb723fdb136e4e9061c6610a566"
+    },
+    "20231001": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 271,
+      "source_sha256": "617cf6eac0d079bd3146e1dbecf4e4094a8e07f611c0c7d0b72e49ee5695be8e"
+    },
+    "20231006": {
+      "candidate_interval_count": 5,
+      "selected_rtd_case_count": 279,
+      "source_sha256": "feb4352ded87e2bdd1f192e7190c55b4a3ae554816a46fc488de8c55a7681250"
+    },
+    "20231008": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 284,
+      "source_sha256": "9c6fe3932df62e1d7ef7f7e0ae7ba8bb1b6dbea28f47bead6eb65d0e92d746c2"
+    },
+    "20231031": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 280,
+      "source_sha256": "6a5172a35ab649252e4d786b34ff5734752717f376e8f3d18adbb80ad5111882"
+    },
+    "20231103": {
+      "candidate_interval_count": 0,
+      "selected_rtd_case_count": 243,
+      "source_sha256": "d5488ec7c86266c587afe414144ea8ede975c162c3736112aa26ee57ec5db3fb"
+    },
+    "20231105": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 278,
+      "source_sha256": "3dbebb6cb2ea8aa7c2f0903ebc1ba3ccbfa75ecb84537c7244506b4240b9946c"
+    },
+    "20231107": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 277,
+      "source_sha256": "a46c15f8267359a4f72051b4f638d658b3134feea5b7ea08542cda35099dc054"
+    },
+    "20231112": {
+      "candidate_interval_count": 13,
+      "selected_rtd_case_count": 256,
+      "source_sha256": "f2a3a56a1c082a0a0bd6e2ef552fa5b1b2906081594147c0d09e5e8de170f691"
+    },
+    "20231113": {
+      "candidate_interval_count": 0,
+      "selected_rtd_case_count": 244,
+      "source_sha256": "2cba7f3ceae412cbeb7a3e6abd37f7ebcbbc19b3bacd51093d660a04c324542a"
+    },
+    "20231115": {
+      "candidate_interval_count": 0,
+      "selected_rtd_case_count": 276,
+      "source_sha256": "f0926c7dccf246e250e3a0b2b7080d536956b6702df27843ebf47a883701ba03"
+    },
+    "20231122": {
+      "candidate_interval_count": 4,
+      "selected_rtd_case_count": 266,
+      "source_sha256": "22ad4f0a7bbc42089be1b9f532397d692d2330a9ddd27daccd5541c78e14f551"
+    },
+    "20231123": {
+      "candidate_interval_count": 3,
+      "selected_rtd_case_count": 246,
+      "source_sha256": "74fc33c93846ce149be294418f108f8209786a0decdcc2485fe92078c9be58dd"
+    },
+    "20231124": {
+      "candidate_interval_count": 3,
+      "selected_rtd_case_count": 270,
+      "source_sha256": "16dab70bf81ee0bd93a7bf26942db28f7fbeb41a039b8ba6cfee58e91d7af07b"
+    },
+    "20231125": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 253,
+      "source_sha256": "7b071ca16443aa46f5ee1fb9061d48e47a758e580cfa05f6738809e87e051955"
+    },
+    "20231126": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 228,
+      "source_sha256": "34adcba4ecca00f640ebc4e2d56b3da588af612059e57306790bcb73dcb29f45"
+    },
+    "20231128": {
+      "candidate_interval_count": 4,
+      "selected_rtd_case_count": 223,
+      "source_sha256": "4eebf2e192fe2d771dbda9f3ddb1fd6738f86064e0afdf1ccd9b99d451e1281b"
+    },
+    "20231206": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 268,
+      "source_sha256": "2e07d0eaa51e18bfc16cd1ef05d1248f3d93158901db805e4070621a1b278218"
+    },
+    "20231208": {
+      "candidate_interval_count": 5,
+      "selected_rtd_case_count": 247,
+      "source_sha256": "6d91d560f68daac04d55d43f5f9cdd830dbd97776c0a61f8317b2641d6d3056d"
+    },
+    "20231215": {
+      "candidate_interval_count": 0,
+      "selected_rtd_case_count": 219,
+      "source_sha256": "b91690650510d92e15c19bb048814ae66b3d7f67b9704279b0ae8b779ac5845a"
+    },
+    "20231226": {
+      "candidate_interval_count": 4,
+      "selected_rtd_case_count": 285,
+      "source_sha256": "95b404cd59d0f72d7ce00b073fe98295541d129dbf0646a1f43c76c225892a31"
+    },
+    "20240209": {
+      "candidate_interval_count": 4,
+      "selected_rtd_case_count": 220,
+      "source_sha256": "c7844db7a58eb67ba2f4f8c52afb75ff8d6d08e83b2b824128a574575a826ee5"
+    },
+    "20240213": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 266,
+      "source_sha256": "0e9e2bfd781e833df65ff0269ffb70e24f6d0b434087f5a49ac1ec1e4dd22387"
+    },
+    "20240215": {
+      "candidate_interval_count": 6,
+      "selected_rtd_case_count": 268,
+      "source_sha256": "2499162f641d425f4cab4b93eb1c0c11516b75106c18676129da940ef135f0c2"
+    },
+    "20240216": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 228,
+      "source_sha256": "7f0b1095fc63dc65af46da58a541c39441e39b51b780e3409f1d952a16f24b7e"
+    },
+    "20240218": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 287,
+      "source_sha256": "cf5f1798454cddc1bad86e7e18281975940ae1e1fb1f9d506721f2e930d02635"
+    },
+    "20240219": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 279,
+      "source_sha256": "e3c316386981ec22f57e29d3313efdfe611ad28462b8e9a171bae32a2545d8e6"
+    },
+    "20240221": {
+      "candidate_interval_count": 5,
+      "selected_rtd_case_count": 272,
+      "source_sha256": "8b0e0c0a190fdca6b3f3eaa78d94b73d5ebdef1d85c25de849c087b31b765385"
+    },
+    "20240307": {
+      "candidate_interval_count": 9,
+      "selected_rtd_case_count": 273,
+      "source_sha256": "453ac22edbc83a671769f6bd184a1d840e49000f6fea59d4bdecfb8d0692fa10"
+    },
+    "20240310": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 275,
+      "source_sha256": "5aa0e47af8f5b91dc6b6459c68aaed3fde8f1e3f1efc913f679a8c9fd44b8631"
+    },
+    "20240311": {
+      "candidate_interval_count": 8,
+      "selected_rtd_case_count": 270,
+      "source_sha256": "88aba62bd3a4a48aba1d74257887b31358bc283b5f5a1b6bbdb688e24d30cb0d"
+    },
+    "20240313": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 261,
+      "source_sha256": "0bc396e19f388443223744ff98650ebdca780707b0414b9901a5e48ad9771004"
+    },
+    "20240317": {
+      "candidate_interval_count": 5,
+      "selected_rtd_case_count": 272,
+      "source_sha256": "eeb115df71fc34da1895a6707bc739533f722b500adaa51bc9b8157218bde6f2"
+    },
+    "20240318": {
+      "candidate_interval_count": 5,
+      "selected_rtd_case_count": 278,
+      "source_sha256": "3adebf1cf28865eda090536520bb36501ae702e4c2e42137a5f78b2405d611a7"
+    },
+    "20240323": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 281,
+      "source_sha256": "fe7968983652f85c012aede867a36f538fdc5317a3db5d44c785dda447d1ef3d"
+    },
+    "20240407": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 275,
+      "source_sha256": "e428dd4c4e76e3d2ebb13332e55d70afa84e7cee145224ea70ebe951c70be867"
+    },
+    "20240429": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 270,
+      "source_sha256": "de2870936389de24f2a8a909c1b22f0cba5e0e5ed78049c96006c298f8a4f3e2"
+    },
+    "20240501": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 280,
+      "source_sha256": "0afd48cc01822d08e60c32b565de99de9767237adcb200335aa9d7adafe01cfd"
+    },
+    "20240503": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 254,
+      "source_sha256": "8416decc96059f21eca051a9fb64ec8d6ad2d6f1d73ed15f30ad09477f5bcd37"
+    },
+    "20240504": {
+      "candidate_interval_count": 7,
+      "selected_rtd_case_count": 272,
+      "source_sha256": "ddca521013f939ed8c14cc575f5c250bb9de076a75206874ab4e57ef1fe86906"
+    },
+    "20240507": {
+      "candidate_interval_count": 10,
+      "selected_rtd_case_count": 273,
+      "source_sha256": "8fb5358859e3a08286678807038f8928bc1c7e1f55004c4637071bf407f23374"
+    },
+    "20240515": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 262,
+      "source_sha256": "b8c489e938a9834f3482a098b7a25f1aa6e68b95e195fe1813f8a2349f61c60d"
+    },
+    "20240519": {
+      "candidate_interval_count": 6,
+      "selected_rtd_case_count": 284,
+      "source_sha256": "5e4b9deb94313f2539981917c04e8e3f6ed8da7aba6710895ce9593bf9012d31"
+    },
+    "20240520": {
+      "candidate_interval_count": 4,
+      "selected_rtd_case_count": 273,
+      "source_sha256": "bdaf04857919be673efceeb5d8a358a10ee3687b2b425e24fd39d90069caeccd"
+    },
+    "20240521": {
+      "candidate_interval_count": 5,
+      "selected_rtd_case_count": 283,
+      "source_sha256": "cfcf77ee5d2f6df669623bacccf220474319c927b316d447cdd9c4f1570954b9"
+    },
+    "20240522": {
+      "candidate_interval_count": 0,
+      "selected_rtd_case_count": 261,
+      "source_sha256": "322883ba3c4f72c687e1291014f0ef47b455c5142c3957929b44aa0d285809dd"
+    },
+    "20240606": {
+      "candidate_interval_count": 0,
+      "selected_rtd_case_count": 277,
+      "source_sha256": "610ce5251431a2f830b5f9e32b17eb78677321027bc1ef0417971e9c2023363f"
+    },
+    "20240612": {
+      "candidate_interval_count": 8,
+      "selected_rtd_case_count": 282,
+      "source_sha256": "aafaa193669add6553fecd5aabf562cf0ef8f1c0e8ed43a8b29f2b9c7bc7a188"
+    },
+    "20240613": {
+      "candidate_interval_count": 3,
+      "selected_rtd_case_count": 274,
+      "source_sha256": "c9fe98dc8ef42f3720eadd694f343b27bcf8ee9e6c57fb5b235c6044699a14a6"
+    },
+    "20240614": {
+      "candidate_interval_count": 5,
+      "selected_rtd_case_count": 266,
+      "source_sha256": "afa6d296fc260797942a6a4fc33530afbef096c15b02ca9e3a03c26c6cc8c139"
+    },
+    "20240616": {
+      "candidate_interval_count": 9,
+      "selected_rtd_case_count": 254,
+      "source_sha256": "12568904d1a5c42727c4364254a7ead47d1c0ef4587fb4bef5d0a1bcce8909e3"
+    },
+    "20240620": {
+      "candidate_interval_count": 0,
+      "selected_rtd_case_count": 280,
+      "source_sha256": "7979e5a7642fc52736f92f4fd39046dcbe108b556ea54f3070fbc0f1453c7890"
+    },
+    "20240621": {
+      "candidate_interval_count": 0,
+      "selected_rtd_case_count": 265,
+      "source_sha256": "4070f4f3cad7940fed6a4536a9e56cd7d41287321ee339f7e915c38e17c99b1d"
+    },
+    "20240623": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 278,
+      "source_sha256": "05812bb76b7fb416c21610b03f32b2b9ee286eb0a2828065849a314b135e9aef"
+    },
+    "20240625": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 279,
+      "source_sha256": "2963ea2dcec844324c8b5229c05a51ad738b5de69ee0e26ce661232b65f0f9a3"
+    },
+    "20240626": {
+      "candidate_interval_count": 3,
+      "selected_rtd_case_count": 277,
+      "source_sha256": "34a6bc2155c705794700c9519e16a44ee19666caaf90904495b5872a0b3eac1c"
+    },
+    "20240705": {
+      "candidate_interval_count": 0,
+      "selected_rtd_case_count": 285,
+      "source_sha256": "6b236214be7c3d5ade79bd04a871f27b38bef2fbcd0272b05224c3476e2ba337"
+    },
+    "20240715": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 286,
+      "source_sha256": "df80c96e2989a453f43c9be915856f6ab24349f3d852b8334635bee9258fddd8"
+    },
+    "20240720": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 282,
+      "source_sha256": "726e675e1fb40a39f2d02acf958c4359f043c635bf0e762f8994013eb1e96b8f"
+    },
+    "20240728": {
+      "candidate_interval_count": 11,
+      "selected_rtd_case_count": 269,
+      "source_sha256": "aaf3b9bfa4dcf71a573e4d291c93156d4bad57354fed297d41d922594c673012"
+    },
+    "20240801": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 279,
+      "source_sha256": "ec223872cc47c302ba1e5421bf6bae9187bd323bfa5f47ecbe2b9dfacba6d62b"
+    },
+    "20240816": {
+      "candidate_interval_count": 4,
+      "selected_rtd_case_count": 286,
+      "source_sha256": "39431ff5eb70b7cc18dd288797b607b70eb91776cfb880028febb59fd58cfc63"
+    },
+    "20240828": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 261,
+      "source_sha256": "54958fcd8cf6db04491514cf22c4dd05dcadec4fde5e349cd2194ade734b13f4"
+    },
+    "20240916": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 278,
+      "source_sha256": "9a70b4bc8ec9d6e186ce5d51633b0b57f6b5519e46c880c305ed4939db3e95db"
+    },
+    "20240917": {
+      "candidate_interval_count": 3,
+      "selected_rtd_case_count": 273,
+      "source_sha256": "765f5368e1bb05e2ff4af170eb1313c78311eaa66e24cab11ea354ec5110fdf8"
+    },
+    "20240927": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 287,
+      "source_sha256": "a1e4ee3cb0457bc25bda438cb69fcc76f6c1943fc8feae2d9647d2db83de361f"
+    },
+    "20240930": {
+      "candidate_interval_count": 0,
+      "selected_rtd_case_count": 250,
+      "source_sha256": "855161c1859e7b6e5e38c88db17dc24bad77ff53e385c5e53588e6bc1a57869b"
+    },
+    "20241020": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 279,
+      "source_sha256": "3371a0a4791e171c966beff272e87b6481d3f55261579b8a4620f7608f51be3e"
+    },
+    "20241022": {
+      "candidate_interval_count": 2,
+      "selected_rtd_case_count": 280,
+      "source_sha256": "d7b13f77b8c7c306fc2de8e8447308954794ea44c27f1c7c2ec727e22d16c708"
+    },
+    "20241026": {
+      "candidate_interval_count": 10,
+      "selected_rtd_case_count": 288,
+      "source_sha256": "b89e60a972f0fdb382dbd4c9dfd1b7ff776a8b821cae6e6be931d05cd4a3ad94"
+    },
+    "20241031": {
+      "candidate_interval_count": 3,
+      "selected_rtd_case_count": 276,
+      "source_sha256": "964de259987a814ad2dae605db38421ac13aeefc9f76e757eee4ab3f0c638451"
+    },
+    "20241110": {
+      "candidate_interval_count": 6,
+      "selected_rtd_case_count": 262,
+      "source_sha256": "0f0561e89a9ea645822b73f405fb52ea511c72a4137df8f7e93ea94d0339a155"
+    },
+    "20241113": {
+      "candidate_interval_count": 1,
+      "selected_rtd_case_count": 280,
+      "source_sha256": "8058596f011b5eec3179a8b578c7451fd0654187fd40a9f1145f610c2fffeb2e"
+    },
+    "20241124": {
+      "candidate_interval_count": 3,
+      "selected_rtd_case_count": 275,
+      "source_sha256": "924d8b0adbe6aefaa6dae160292e32967cf104243ca233ad07a17836301eb0c6"
+    },
+    "20241125": {
+      "candidate_interval_count": 0,
+      "selected_rtd_case_count": 276,
+      "source_sha256": "c3d814a236267b487cb02b29bd99e0e74ac5bbe6eb6f6d1b34ee81fd48c06347"
+    },
+    "20241212": {
+      "candidate_interval_count": 3,
+      "selected_rtd_case_count": 234,
+      "source_sha256": "ba918894d4f6c53e21d687c807f2b0febd766ba6aaad2353cee2768a1f041dd0"
+    },
+    "20250121": {
+      "candidate_interval_count": 4,
+      "selected_rtd_case_count": 280,
+      "source_sha256": "d7a916a4f0519be26a702f787093089045ba3c61af9f046808fd8e98814aa55f"
+    },
+    "20250125": {
+      "candidate_interval_count": 10,
+      "selected_rtd_case_count": 255,
+      "source_sha256": "cade420c7ea6e87dee89beaef13bf1025a149dc95131d7c742c40b172b759a63"
+    }
+  },
+  "profile": "dailymode0 first-loop RTD algebraic dead-node lower bound",
+  "qualifies_exact_population": false,
+  "schema_version": 1,
+  "status": "diagnostic lower bound only; dailymode1 solved enumeration required",
+  "trading_date_count": 139,
+  "unresolved_interval_count": 112,
+  "zero_candidate_date_count": 16
+}

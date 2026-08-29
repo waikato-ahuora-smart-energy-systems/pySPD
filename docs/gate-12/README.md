@@ -23,7 +23,7 @@ physics, fixed-discrete pricing, price repair, publication, and reports.
 
 | Obligation | Gate 8 evidence | Gate 12 completion condition |
 |---|---|---|
-| Affected interval identities | 427 immutable dead-node cases over the 139 hash-bound dates | Exactly 546 unique case IDs, leaving zero unidentified intervals |
+| Affected interval identities | 427 immutable Gate 8 cases; Gate 12 algebraic lower bound now 434 | Exactly 546 unique case IDs, leaving zero unidentified intervals |
 | Shortfall behavior | Exact affected fixture plus bounded analytic state-machine coverage | All 546 cases replayed against pinned GAMS and PySPD |
 | Whole-day behavior | Representative single case | Complete representative normal, feature-rich, outage, 46-period, and 50-period days |
 | Official energy prices | Identity set exact; max difference `1.23576` NZD/MWh | Strict-profile parity or case-specific degeneracy certificate |
@@ -64,18 +64,22 @@ native-SOS qualification profile cannot currently be exported through that
 backend. These are held as explicit Gate 12 debt rather than being inferred
 away from the objective match.
 
-The v5 affected-population evidence is likewise incomplete: the Gate 8 static
-manifest contains 427 of the required 546 identities. Gate 12 will enumerate
-the population by executing the historical v5.0.2 shortfall-transfer logic
-against all 139 hash-bound daily inputs and will fail unless exactly 546 unique
-case IDs are recovered.
+The v5 affected-population evidence is likewise incomplete. Gate 12 has now
+replayed the first-loop RTD load equations against every hash-bound input and
+raised the immutable algebraic lower bound from 427 to 434 identities. The
+screen leaves 112 active-node cases unresolved and correctly refuses to emit
+an exact manifest. Its compact evidence is
+[`analytic-population-lower-bound.json`](analytic-population-lower-bound.json).
+Exact population qualification therefore remains with the solved historical
+v5.0.2 shortfall-transfer oracle.
 
 ## Historical population execution
 
 The population oracle is pinned to vSPD v5.0.2 commit
-`3360a91ebd48f2e3cbb52a5e6766d893011054be`. It reconstructs RTD load with
-`dailymode = 0`, uses SCIP for the primary MIP, limits discovery to the first
-historical shortfall decision, and records only shortfalls above `1e-6 MW`.
+`3360a91ebd48f2e3cbb52a5e6766d893011054be`. It retains `dailymode = 1`, because
+the Authority's 546-interval disclosure is specifically the daily-mode RTD
+defect, uses SCIP for the primary MIP, limits discovery to the first historical
+shortfall decision, and records only shortfalls above `1e-6 MW`.
 The source overlay is fail-closed and hash-addressed; unexpected upstream text
 does not get silently patched.
 
@@ -89,11 +93,12 @@ Resume skips only a fully matching checkpoint. `HistoricalAffectedManifestBuilde
 then refuses to emit the final manifest unless it contains exactly 546 unique
 identities across all 139 source hashes.
 
-The first full-day rehearsal on `Pricing_20221106.gdx` selected and completed
-278 cases, with 278 optimal primary solves and 11 optimal cleanup solves. It
-recovered four affected intervals—07:00, 07:05, 07:10, and 17:25—and six
-node-level shortfall records. This rehearsal confirms the enumerator behavior;
-the clean hash-governed 139-day run supplies the acceptance evidence.
+An earlier `dailymode = 0` full-day rehearsal on `Pricing_20221106.gdx`
+completed 278 optimal primary solves and 11 optimal cleanup solves. Its four
+cases and six node values exactly agree with the algebraic reconstructor, which
+qualifies that lower-bound calculation, but the run is explicitly rejected as
+evidence for the Authority-disclosed daily-mode population. A new workspace and
+profile are required for all accepted population checkpoints.
 
 Run or resume the governed enumeration with `uv`:
 
