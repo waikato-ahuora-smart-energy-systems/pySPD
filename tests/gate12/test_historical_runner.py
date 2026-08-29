@@ -1,0 +1,126 @@
+"""Probity tests for resumable Gate 12 historical enumeration."""
+
+from __future__ import annotations
+
+import hashlib
+from pathlib import Path
+
+import pytest
+
+from tools.gate12.evidence import EvidenceContractError
+from tools.gate12.historical_population import (
+    HistoricalGdxCaseIndex,
+    HistoricalInputArtifact,
+    HistoricalInputInventory,
+    HistoricalPatchEvidence,
+    HistoricalPopulationCheckpointStore,
+    HistoricalPopulationRunner,
+)
+
+HEADER = (
+    "case_id|datetime|node|loop|energy_shortfall_mw|adjustment_mw|"
+    "model_status|solver_status\n"
+)
+
+
+class FakeIndexLoader:
+    def load(self, path: Path, system_directory: Path) -> HistoricalGdxCaseIndex:
+        del path, system_directory
+        return HistoricalGdxCaseIndex(
+            cases=(("case_1", "06-NOV-2022 07:00"),),
+            trading_periods={
+                ("case_1", "06-NOV-2022 07:00"): "TP15",
+            },
+        )
+
+
+class FakeGamsExecutor:
+    def __init__(self) -> None:
+        self.commands: list[str] = []
+
+    def execute(
+        self, executable: Path, programs: Path, arguments: tuple[str, ...]
+    ) -> None:
+        del executable
+        self.commands.append(arguments[0])
+        if arguments[0] == "vSPDsolve.gms":
+            (programs / "ProgressReport.txt").write_text(
+                "The caseID: case_1 (06-NOV-2022 07:00) "
+                "is 1st solved successfully.\n"
+            )
+            (programs / "gate12_Pricing_20221106_shortfall.txt").write_text(
+                HEADER + "case_1|06-NOV-2022 07:00|WAI0111|1|4.5|4.5|1|1\n"
+            )
+            (programs / "vSPDsolve.lst").write_text(
+                "Solution Report     SOLVE vSPD_NMIR Using MIP\n"
+                "SOLVER SCIP\n"
+                "**** SOLVER STATUS     1 Normal Completion\n"
+                "**** MODEL STATUS      1 Optimal\n"
+                "**** OBJECTIVE VALUE                1.0000\n"
+            )
+
+
+def _runner(tmp_path: Path) -> tuple[HistoricalPopulationRunner, FakeGamsExecutor]:
+    programs = tmp_path / "vspd" / "Programs"
+    programs.mkdir(parents=True)
+    files = {}
+    for name in ("vSPDsettings.inc", "vSPDperiod.gms", "vSPDsolve.gms"):
+        path = programs / name
+        path.write_text(name)
+        files[name] = hashlib.sha256(path.read_bytes()).hexdigest()
+    patch = HistoricalPatchEvidence(
+        profile="historical-v5.0.2-scip-first-loop",
+        logical_sha256=hashlib.sha256(b"patch").hexdigest(),
+        file_sha256=files,
+    )
+    source = tmp_path / "inputs" / "2022" / "Pricing_20221106.gdx"
+    source.parent.mkdir(parents=True)
+    source.write_bytes(b"gdx")
+    artifact = HistoricalInputArtifact(
+        trading_date="20221106",
+        size_bytes=3,
+        sha256=hashlib.sha256(b"gdx").hexdigest(),
+    )
+    executor = FakeGamsExecutor()
+    runner = HistoricalPopulationRunner(
+        programs=programs,
+        input_root=tmp_path / "inputs",
+        inventory=HistoricalInputInventory((artifact,)),
+        system_directory=tmp_path / "gams",
+        gams_executable=tmp_path / "gams" / "gams",
+        patch_evidence=patch,
+        checkpoint_store=HistoricalPopulationCheckpointStore(
+            tmp_path / "checkpoints"
+        ),
+        index_loader=FakeIndexLoader(),
+        executor=executor,
+    )
+    return runner, executor
+
+
+def test_population_runner_executes_and_resumes_by_checkpoint(tmp_path: Path) -> None:
+    runner, executor = _runner(tmp_path)
+
+    first = runner.run()
+    second = runner.run()
+
+    assert len(first) == len(second) == 1
+    assert first[0].logical_sha256 == second[0].logical_sha256
+    assert executor.commands == ["vSPDmodel.gms", "vSPDperiod.gms", "vSPDsolve.gms"]
+    assert (runner.programs.parent / "Input" / "Pricing_20221106.gdx").is_symlink()
+    assert (runner.programs / "vSPDtpsToSolve.inc").read_text() == "/\nAll\n/\n"
+
+
+def test_population_runner_rejects_source_or_patch_drift(tmp_path: Path) -> None:
+    runner, executor = _runner(tmp_path)
+    source = runner.input_root / "2022" / "Pricing_20221106.gdx"
+    source.write_bytes(b"changed")
+
+    with pytest.raises(EvidenceContractError, match="source hash"):
+        runner.run()
+    assert executor.commands == []
+
+    source.write_bytes(b"gdx")
+    (runner.programs / "vSPDsolve.gms").write_text("changed")
+    with pytest.raises(EvidenceContractError, match="patch hash"):
+        runner.run()
