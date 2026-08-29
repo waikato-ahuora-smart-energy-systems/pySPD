@@ -133,7 +133,9 @@ identities, and any requested identity absent from the source selection surface
 fail before a solve. An empty tuple remains the explicit complete-day selection.
 The same configuration explicitly names and hashes
 `scip-mip-fixed-highs-rmip`; an unregistered or opportunistically substituted
-solver profile fails before execution.
+solver profile fails before execution. The complete application-configuration
+hash—including ordered case selection and solver profile—is carried into the
+daily-run hash and therefore into result, checkpoint, and report provenance.
 An isolated affected case is diagnostic only because it can omit prior accepted
 dispatch. `HistoricalAffectedReplayPlanner` therefore builds a hash-addressed,
 canonical same-day prefix through the final affected case on every date. It

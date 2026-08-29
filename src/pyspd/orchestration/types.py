@@ -64,6 +64,7 @@ class DailyRunConfiguration:
     price_rounding_decimals: int = 5
     residual_tolerance: float = 1e-6
     environment_fingerprint: str = ""
+    application_configuration_sha256: str = ""
 
     def __post_init__(self) -> None:
         if not self.formulation_id.strip():
@@ -78,6 +79,16 @@ class DailyRunConfiguration:
             raise OrchestrationError("price_rounding_decimals must lie in [0, 12]")
         if self.residual_tolerance <= 0.0 or not math.isfinite(self.residual_tolerance):
             raise OrchestrationError("residual_tolerance must be finite and positive")
+        if self.application_configuration_sha256 and (
+            len(self.application_configuration_sha256) != 64
+            or any(
+                character not in "0123456789abcdef"
+                for character in self.application_configuration_sha256
+            )
+        ):
+            raise OrchestrationError(
+                "application_configuration_sha256 must be a lowercase SHA-256"
+            )
 
     @property
     def logical_sha256(self) -> str:
@@ -90,6 +101,9 @@ class DailyRunConfiguration:
                 "price_rounding_decimals": self.price_rounding_decimals,
                 "residual_tolerance": self.residual_tolerance.hex(),
                 "environment_fingerprint": self.environment_fingerprint,
+                "application_configuration_sha256": (
+                    self.application_configuration_sha256
+                ),
             }
         )
 

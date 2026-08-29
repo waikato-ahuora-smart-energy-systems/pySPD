@@ -190,6 +190,7 @@ class PyspdApplication:
             environment_fingerprint=(
                 f"{platform.system()}-{platform.machine()}-gams-scip-highs"
             ),
+            application_configuration_sha256=configuration.logical_sha256,
         )
         executor = (
             Spd16CaseExecutor()

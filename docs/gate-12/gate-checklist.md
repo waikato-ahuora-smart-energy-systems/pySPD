@@ -12,7 +12,7 @@
 | `G12-08` | Repeat and checkpoint/resume equality | Hash-qualified atomic population resume implemented; whole-day repeat/resume output equality mandatory | Partial |
 | `G12-09` | SCIP-MIP → fix discrete → HiGHS-RMIP portable profile passes | Application configuration now explicitly selects and hashes `scip-mip-fixed-highs-rmip`; representative v5/v16 pathways and independent validators pass; complete population/day execution pending | Partial |
 | `G12-10` | Strict historical CPLEX profile executed | Installed command-line GAMS licence does not entitle CPLEX; GAMSPy-only licence cannot execute the existing `$include`-based GAMS source | Blocked on compatible CPLEX execution entitlement |
-| `G12-11` | Source, configuration, code, dependency, solver, result, comparison, and report hashes indexed | Fail-closed `Gate12EvidenceIndex` and per-day raw-artifact hash contract implemented | Pending final evidence |
+| `G12-11` | Source, configuration, code, dependency, solver, result, comparison, and report hashes indexed | Fail-closed `Gate12EvidenceIndex` and per-day raw-artifact hash contract implemented; ordered selection and explicit solver profile now flow from the application hash into daily result/checkpoint/report provenance | Pending final evidence |
 | `G12-12` | Zero unresolved material discrepancies | Closure index rejects any non-zero discrepancy count | Pending |
 
 Gate 12 remains open until every row is met. No separate independent human

@@ -53,6 +53,14 @@ def test_gate8_public_contract_is_class_based_and_bounded() -> None:
     )
     assert configuration.maximum_solve_loops == 5
 
+    selected = DailyRunConfiguration(
+        formulation_id="vspd-v5.0.6-reserve",
+        source_sha256="0" * 64,
+        maximum_solve_loops=5,
+        application_configuration_sha256="1" * 64,
+    )
+    assert selected.logical_sha256 != configuration.logical_sha256
+
 
 def test_case_contract_rejects_incompatible_study_mode_and_schedule() -> None:
     with pytest.raises(
