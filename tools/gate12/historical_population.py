@@ -386,6 +386,11 @@ class HistoricalVspdSourcePatcher:
             "EnergyShortfallMW(t,n) > 0",
             "EnergyShortfallMW(t,n) > 0.000001",
         )
+        solve_text = self._replace(
+            solve_text,
+            "loop( (t,n) $ EnergyShortfallMW(t,n),",
+            "loop( (t,n) $ (abs(EnergyShortfallMW(t,n)) > 0.000001),",
+        )
         solve_text = self._sub(
             solve_text,
             r"^(\s*ShortfallAdjustmentMW\(t,n\)\s*\$\s*EligibleShortfallRemoval\(t,n\)[^\n]*;)$",
