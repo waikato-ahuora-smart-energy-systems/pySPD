@@ -23,7 +23,7 @@ physics, fixed-discrete pricing, price repair, publication, and reports.
 
 | Obligation | Gate 8 evidence | Gate 12 completion condition |
 |---|---|---|
-| Affected interval identities | 427 immutable Gate 8 cases; Gate 12 algebraic lower bound now 434 | Exactly 546 unique case IDs, leaving zero unidentified intervals |
+| Affected interval identities | 427 Gate 8 candidates; Gate 12 algebraic screen now 434 candidates | Exactly 546 unique case IDs, leaving zero unidentified intervals |
 | Shortfall behavior | Exact affected fixture plus bounded analytic state-machine coverage | All 546 cases replayed against pinned GAMS and PySPD |
 | Whole-day behavior | Representative single case | Complete representative normal, feature-rich, outage, 46-period, and 50-period days |
 | Official energy prices | Identity set exact; max difference `1.23576` NZD/MWh | Strict-profile parity or case-specific degeneracy certificate |
@@ -66,9 +66,10 @@ away from the objective match.
 
 The v5 affected-population evidence is likewise incomplete. Gate 12 has now
 replayed the first-loop RTD load equations against every hash-bound input and
-raised the immutable algebraic lower bound from 427 to 434 identities. The
-screen leaves 112 active-node cases unresolved and correctly refuses to emit
-an exact manifest. Its compact evidence is
+identified 434 diagnostic candidates, seven more than the Gate 8 screen. The
+numerical gap to the declared count is 112, but candidate membership is not
+treated as an affected-case proof. The screen correctly refuses to emit an
+exact manifest. Its compact evidence is
 [`analytic-population-lower-bound.json`](analytic-population-lower-bound.json).
 Exact population qualification therefore remains with the solved historical
 v5.0.2 shortfall-transfer oracle.
@@ -96,7 +97,7 @@ identities across all 139 source hashes.
 An earlier `dailymode = 0` full-day rehearsal on `Pricing_20221106.gdx`
 completed 278 optimal primary solves and 11 optimal cleanup solves. Its four
 cases and six node values exactly agree with the algebraic reconstructor, which
-qualifies that lower-bound calculation, but the run is explicitly rejected as
+qualifies that candidate calculation, but the run is explicitly rejected as
 evidence for the Authority-disclosed daily-mode population. A new workspace and
 profile are required for all accepted population checkpoints.
 

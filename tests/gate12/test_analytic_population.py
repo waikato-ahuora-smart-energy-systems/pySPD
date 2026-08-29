@@ -8,17 +8,13 @@ from pathlib import Path
 import pytest
 
 from tools.gate12.analytic_population import (
+    HistoricalAnalyticCandidateSelector,
     HistoricalAnalyticDayEnumerator,
-    HistoricalAnalyticPopulationEvidenceBuilder,
-    HistoricalAnalyticPopulationSelector,
     HistoricalFirstLoopCase,
     HistoricalFirstLoopLoadReconstructor,
 )
 from tools.gate12.evidence import EvidenceContractError
-from tools.gate12.historical_population import (
-    HistoricalInputArtifact,
-    HistoricalInputInventory,
-)
+from tools.gate12.historical_population import HistoricalInputArtifact
 
 
 def test_first_loop_reconstruction_identifies_scaled_dead_node_shortfall() -> None:
@@ -115,7 +111,7 @@ def test_population_selector_emits_only_hash_bound_affected_identity() -> None:
         case_id="disabled", shortfall_transfer_enabled=False, **common
     )
 
-    records = HistoricalAnalyticPopulationSelector().select(
+    records = HistoricalAnalyticCandidateSelector().select(
         (disabled, affected), trading_date="20221106", source_sha256="a" * 64
     )
 
@@ -161,14 +157,3 @@ def test_day_enumerator_verifies_source_before_loading(tmp_path: Path) -> None:
             system_directory=tmp_path,
         )
     assert loader.calls == 1
-
-
-def test_population_builder_rejects_incomplete_declared_population() -> None:
-    inventory = HistoricalInputInventory(
-        (HistoricalInputArtifact("20221106", 1, "a" * 64),)
-    )
-
-    with pytest.raises(EvidenceContractError, match="exactly 139 daily results"):
-        HistoricalAnalyticPopulationEvidenceBuilder().build(
-            daily_results=(), inventory=inventory
-        )

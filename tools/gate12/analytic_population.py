@@ -1,8 +1,8 @@
 """Algebraically reconstruct the pinned v5.0.2 first-loop RTD load.
 
 The implementation mirrors the load calculation in ``vSPDsolve.gms`` without
-solving the dispatch model.  It is deliberately separate from the Pyomo model:
-Gate 12 uses it only to enumerate the immutable historical E2E population.
+solving the dispatch model.  It is deliberately separate from the Pyomo model
+and supplies only a diagnostic candidate screen, never affected-case proof.
 """
 
 from __future__ import annotations
@@ -14,15 +14,12 @@ from pathlib import Path
 from typing import Protocol
 
 from tools.gate12.evidence import (
-    EXPECTED_TRADING_DATES,
     AffectedIntervalIdentity,
-    AffectedIntervalManifest,
     EvidenceContractError,
 )
 from tools.gate12.historical_population import (
     MATERIAL_SHORTFALL_MW,
     HistoricalInputArtifact,
-    HistoricalInputInventory,
 )
 
 ANALYTIC_GDX_SYMBOLS = (
@@ -61,8 +58,8 @@ class HistoricalFirstLoopResult:
 
 
 @dataclass(frozen=True)
-class HistoricalAnalyticAffectedInterval:
-    """One analytically selected interval and its reconstructed node evidence."""
+class HistoricalAnalyticCandidateInterval:
+    """One diagnostic candidate and its reconstructed node evidence."""
 
     identity: AffectedIntervalIdentity
     affected_shortfall_mw: dict[str, float]
@@ -75,15 +72,7 @@ class HistoricalAnalyticDayResult:
     trading_date: str
     source_sha256: str
     selected_rtd_case_count: int
-    affected: tuple[HistoricalAnalyticAffectedInterval, ...]
-
-
-@dataclass(frozen=True)
-class HistoricalAnalyticPopulationEvidence:
-    """Complete exact population plus its per-date algebraic evidence."""
-
-    manifest: AffectedIntervalManifest
-    daily_results: tuple[HistoricalAnalyticDayResult, ...]
+    candidates: tuple[HistoricalAnalyticCandidateInterval, ...]
 
 
 class HistoricalFirstLoopCaseLoader(Protocol):
@@ -251,8 +240,8 @@ class HistoricalFirstLoopLoadReconstructor:
         )
 
 
-class HistoricalAnalyticPopulationSelector:
-    """Select affected identities from canonical first-loop cases."""
+class HistoricalAnalyticCandidateSelector:
+    """Screen diagnostic identities from canonical first-loop cases."""
 
     def __init__(
         self, reconstructor: HistoricalFirstLoopLoadReconstructor | None = None
@@ -265,7 +254,7 @@ class HistoricalAnalyticPopulationSelector:
         *,
         trading_date: str,
         source_sha256: str,
-    ) -> tuple[HistoricalAnalyticAffectedInterval, ...]:
+    ) -> tuple[HistoricalAnalyticCandidateInterval, ...]:
         if len(trading_date) != 8 or not trading_date.isdigit():
             raise EvidenceContractError(
                 "REQ-G12-POPULATION: invalid analytic trading date"
@@ -276,13 +265,13 @@ class HistoricalAnalyticPopulationSelector:
             raise EvidenceContractError(
                 "REQ-G12-POPULATION: invalid analytic source SHA-256"
             )
-        records: list[HistoricalAnalyticAffectedInterval] = []
+        records: list[HistoricalAnalyticCandidateInterval] = []
         for case in cases:
             result = self._reconstructor.reconstruct(case)
             if not result.affected_shortfall_mw:
                 continue
             records.append(
-                HistoricalAnalyticAffectedInterval(
+                HistoricalAnalyticCandidateInterval(
                     identity=AffectedIntervalIdentity(
                         case_id=case.case_id,
                         date_time=case.date_time,
@@ -308,10 +297,10 @@ class HistoricalAnalyticDayEnumerator:
         self,
         *,
         loader: HistoricalFirstLoopCaseLoader | None = None,
-        selector: HistoricalAnalyticPopulationSelector | None = None,
+        selector: HistoricalAnalyticCandidateSelector | None = None,
     ) -> None:
         self._loader = loader or GamsTransferFirstLoopCaseLoader()
-        self._selector = selector or HistoricalAnalyticPopulationSelector()
+        self._selector = selector or HistoricalAnalyticCandidateSelector()
 
     def enumerate(
         self,
@@ -336,7 +325,7 @@ class HistoricalAnalyticDayEnumerator:
                 "REQ-G12-POPULATION: source size or hash mismatch"
             )
         cases = self._loader.load(path, system_directory)
-        affected = self._selector.select(
+        candidates = self._selector.select(
             cases,
             trading_date=artifact.trading_date,
             source_sha256=source_sha256,
@@ -345,62 +334,7 @@ class HistoricalAnalyticDayEnumerator:
             trading_date=artifact.trading_date,
             source_sha256=source_sha256,
             selected_rtd_case_count=len(cases),
-            affected=affected,
-        )
-
-
-class HistoricalAnalyticPopulationEvidenceBuilder:
-    """Close population discovery only at the Authority-declared boundary."""
-
-    SOURCE_RELEASE = "https://github.com/ElectricityAuthority/vSPD/releases/tag/v5.0.4"
-    REFERENCE_COMMIT = "3360a91ebd48f2e3cbb52a5e6766d893011054be"
-
-    def build(
-        self,
-        *,
-        daily_results: tuple[HistoricalAnalyticDayResult, ...],
-        inventory: HistoricalInputInventory,
-    ) -> HistoricalAnalyticPopulationEvidence:
-        if len(daily_results) != EXPECTED_TRADING_DATES:
-            raise EvidenceContractError(
-                "REQ-G12-POPULATION: expected exactly 139 daily results"
-            )
-        result_by_date = {result.trading_date: result for result in daily_results}
-        if len(result_by_date) != len(daily_results):
-            raise EvidenceContractError(
-                "REQ-G12-POPULATION: daily result dates must be unique"
-            )
-        expected_hashes = {
-            artifact.trading_date: artifact.sha256 for artifact in inventory.artifacts
-        }
-        if set(result_by_date) != set(expected_hashes):
-            raise EvidenceContractError(
-                "REQ-G12-POPULATION: daily results do not match Gate 1 inventory"
-            )
-        if any(
-            result.source_sha256 != expected_hashes[result.trading_date]
-            for result in daily_results
-        ):
-            raise EvidenceContractError(
-                "REQ-G12-POPULATION: daily result source hash mismatch"
-            )
-        manifest = AffectedIntervalManifest(
-            source_release=self.SOURCE_RELEASE,
-            reference_commit=self.REFERENCE_COMMIT,
-            identities=tuple(
-                record.identity
-                for result in sorted(
-                    daily_results, key=lambda result: result.trading_date
-                )
-                for record in result.affected
-            ),
-        )
-        manifest.validate(expected_source_hashes=expected_hashes)
-        return HistoricalAnalyticPopulationEvidence(
-            manifest=manifest,
-            daily_results=tuple(
-                sorted(daily_results, key=lambda result: result.trading_date)
-            ),
+            candidates=candidates,
         )
 
 

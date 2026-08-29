@@ -2,7 +2,7 @@
   "authority_release": "https://github.com/ElectricityAuthority/vSPD/releases/tag/v5.0.4",
   "candidate_interval_count": 434,
   "declared_interval_count": 546,
-  "full_evidence_sha256": "1a06bf2c988d80495daf76179410c11a34ba57b23d59b98f40104783ebec8901",
+  "full_evidence_sha256": "9687b18f7e1b7aa9899af0417cb227bb330e813145e5ed22bac1dd94cbd735c4",
   "full_evidence_file": "analytic-population-lower-bound-full.json",
   "per_date": {
     "20221106": {
@@ -701,11 +701,11 @@
       "source_sha256": "cade420c7ea6e87dee89beaef13bf1025a149dc95131d7c742c40b172b759a63"
     }
   },
-  "profile": "dailymode0 first-loop RTD algebraic dead-node lower bound",
+  "profile": "dailymode0 first-loop RTD algebraic dead-node candidate screen",
   "qualifies_exact_population": false,
   "schema_version": 1,
-  "status": "diagnostic lower bound only; dailymode1 solved enumeration required",
+  "status": "diagnostic candidate screen only; dailymode1 solved enumeration required",
   "trading_date_count": 139,
-  "unresolved_interval_count": 112,
+  "declared_count_gap": 112,
   "zero_candidate_date_count": 16
 }

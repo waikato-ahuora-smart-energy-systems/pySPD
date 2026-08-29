@@ -1,8 +1,8 @@
 {
   "candidate_interval_count": 434,
   "declared_interval_count": 546,
-  "logical_sha256": "8686ada64a26ad584e51f9e4c4843c75be0c8619a353e3adb178378ac0c2c42b",
-  "method": "dailymode0 first-loop RTD algebraic dead-node lower bound",
+  "logical_sha256": "e4285dc10a056be39a50fe4beca5061c1d0f4dc3e363b971d53e6d6558a848e5",
+  "method": "dailymode0 first-loop RTD algebraic dead-node candidate screen",
   "node_evidence": [
     {
       "affected_shortfall_mw": {
@@ -5493,5 +5493,5 @@
   "qualifies_exact_population": false,
   "schema_version": 1,
   "trading_date_count": 139,
-  "unresolved_interval_count": 112
+  "declared_count_gap": 112
 }

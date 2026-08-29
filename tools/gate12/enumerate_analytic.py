@@ -9,11 +9,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-from tools.gate12.analytic_population import (
-    HistoricalAnalyticDayEnumerator,
-    HistoricalAnalyticPopulationEvidenceBuilder,
-)
-from tools.gate12.evidence import EvidenceContractError
+from tools.gate12.analytic_population import HistoricalAnalyticDayEnumerator
 from tools.gate12.historical_population import HistoricalInputInventory
 
 
@@ -63,24 +59,24 @@ def main(arguments: list[str] | None = None) -> int:
         daily_results.append(result)
         print(
             f"[{position:03d}/{len(inventory.artifacts)}] "
-            f"{artifact.trading_date}: {len(result.affected)} affected",
+            f"{artifact.trading_date}: {len(result.candidates)} candidates",
             flush=True,
         )
 
-    candidate_count = sum(len(result.affected) for result in daily_results)
+    candidate_count = sum(len(result.candidates) for result in daily_results)
     screen_payload: dict[str, Any] = {
         "schema_version": 1,
-        "method": "dailymode0 first-loop RTD algebraic dead-node lower bound",
+        "method": "dailymode0 first-loop RTD algebraic dead-node candidate screen",
         "trading_date_count": len(daily_results),
         "candidate_interval_count": candidate_count,
         "declared_interval_count": 546,
-        "unresolved_interval_count": 546 - candidate_count,
+        "declared_count_gap": 546 - candidate_count,
         "qualifies_exact_population": False,
         "per_date": {
             result.trading_date: {
                 "source_sha256": result.source_sha256,
                 "selected_rtd_case_count": result.selected_rtd_case_count,
-                "candidate_interval_count": len(result.affected),
+                "candidate_interval_count": len(result.candidates),
             }
             for result in daily_results
         },
@@ -90,97 +86,27 @@ def main(arguments: list[str] | None = None) -> int:
                 "affected_shortfall_mw": record.affected_shortfall_mw,
             }
             for result in daily_results
-            for record in result.affected
+            for record in result.candidates
         ],
     }
     screen_payload["logical_sha256"] = _logical_sha256(screen_payload)
     _write_json(output_directory / "analytic-candidate-screen.json", screen_payload)
-    try:
-        evidence = HistoricalAnalyticPopulationEvidenceBuilder().build(
-            daily_results=tuple(daily_results), inventory=inventory
-        )
-    except EvidenceContractError as error:
-        print(
-            json.dumps(
-                {
-                    "passed": False,
-                    "candidate_interval_count": candidate_count,
-                    "unresolved_interval_count": 546 - candidate_count,
-                    "diagnostic": str(error),
-                    "output": str(
-                        output_directory / "analytic-candidate-screen.json"
-                    ),
-                },
-                sort_keys=True,
-            )
-        )
-        return 1
-    manifest_payload = {
-        "schema_version": 1,
-        "source_release": evidence.manifest.source_release,
-        "reference_commit": evidence.manifest.reference_commit,
-        "identities": [asdict(identity) for identity in evidence.manifest.identities],
-    }
-    manifest_payload["logical_sha256"] = _logical_sha256(manifest_payload)
-    _write_json(
-        output_directory / "interval-identity-manifest.json", manifest_payload
-    )
-
-    qualification_payload: dict[str, Any] = {
-        "schema_version": 1,
-        "method": {
-            "profile": "pinned-v5.0.2-first-loop-rtd-algebra",
-            "reference_commit": evidence.manifest.reference_commit,
-            "source_equations": "vSPDsolve.gms:878-919,1217-1248",
-            "material_shortfall_mw": 1e-6,
-            "interpretation": (
-                "exact reconstruction of the first-loop required-load equations; "
-                "not a relaxed dispatch solve"
-            ),
-        },
-        "trading_date_count": len(evidence.daily_results),
-        "affected_interval_count": len(evidence.manifest.identities),
-        "selected_rtd_case_count": sum(
-            result.selected_rtd_case_count for result in evidence.daily_results
-        ),
-        "per_date": {
-            result.trading_date: {
-                "source_sha256": result.source_sha256,
-                "selected_rtd_case_count": result.selected_rtd_case_count,
-                "affected_interval_count": len(result.affected),
-            }
-            for result in evidence.daily_results
-        },
-        "node_evidence": [
-            {
-                **asdict(record.identity),
-                "affected_shortfall_mw": record.affected_shortfall_mw,
-            }
-            for result in evidence.daily_results
-            for record in result.affected
-        ],
-        "manifest_logical_sha256": manifest_payload["logical_sha256"],
-        "passed": True,
-    }
-    qualification_payload["logical_sha256"] = _logical_sha256(
-        qualification_payload
-    )
-    _write_json(
-        output_directory / "analytic-population-qualification.json",
-        qualification_payload,
-    )
     print(
         json.dumps(
             {
-                "passed": True,
-                "trading_date_count": len(evidence.daily_results),
-                "affected_interval_count": len(evidence.manifest.identities),
-                "output_directory": str(output_directory),
+                "passed": False,
+                "candidate_interval_count": candidate_count,
+                "declared_count_gap": 546 - candidate_count,
+                "diagnostic": (
+                    "candidate screen cannot qualify the disclosed dailymode1 "
+                    "population; solved enumeration is required"
+                ),
+                "output": str(output_directory / "analytic-candidate-screen.json"),
             },
             sort_keys=True,
         )
     )
-    return 0
+    return 1
 
 
 if __name__ == "__main__":
