@@ -8,12 +8,13 @@ import io
 import json
 import math
 import re
+import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 from tools.gate12.evidence import EvidenceContractError
-from tools.oracle.vspd import ListingResult
+from tools.oracle.vspd import ListingResult, VspdListingParser
 
 MATERIAL_SHORTFALL_MW = 1e-6
 HISTORICAL_COLUMNS = (
@@ -37,6 +38,142 @@ class HistoricalPatchEvidence:
     profile: str
     logical_sha256: str
     file_sha256: dict[str, str]
+
+
+@dataclass(frozen=True)
+class HistoricalInputArtifact:
+    """One Gate 1 hash-bound corrected daily input."""
+
+    trading_date: str
+    size_bytes: int
+    sha256: str
+
+    def __post_init__(self) -> None:
+        if not _TRADING_DATE.fullmatch(self.trading_date):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: invalid inventory trading date"
+            )
+        if self.size_bytes <= 0 or not _SHA256.fullmatch(self.sha256):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: invalid inventory size or SHA-256"
+            )
+
+
+@dataclass(frozen=True)
+class HistoricalInputInventory:
+    """Ordered set of immutable daily inputs used for enumeration."""
+
+    artifacts: tuple[HistoricalInputArtifact, ...]
+
+    def __post_init__(self) -> None:
+        dates = [artifact.trading_date for artifact in self.artifacts]
+        if not dates or len(set(dates)) != len(dates):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: inventory dates must be non-empty and unique"
+            )
+
+    @classmethod
+    def load(cls, path: Path) -> HistoricalInputInventory:
+        try:
+            values = json.loads(path.read_text(encoding="utf-8"))
+            raw_artifacts = values["artifacts"]
+        except (OSError, json.JSONDecodeError, KeyError, TypeError) as error:
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: unreadable Gate 1 input inventory"
+            ) from error
+        if not isinstance(raw_artifacts, list):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: inventory artifacts must be a list"
+            )
+        try:
+            artifacts = tuple(
+                HistoricalInputArtifact(
+                    trading_date=item["trading_date"],
+                    size_bytes=item["size_bytes"],
+                    sha256=item["sha256"],
+                )
+                for item in raw_artifacts
+            )
+        except (KeyError, TypeError) as error:
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: invalid Gate 1 inventory artifact"
+            ) from error
+        if values.get("artifact_count") != len(artifacts):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: Gate 1 inventory count mismatch"
+            )
+        return cls(artifacts)
+
+
+@dataclass(frozen=True)
+class HistoricalGdxCaseIndex:
+    """Selected case identities and their source trading-period mapping."""
+
+    cases: tuple[tuple[str, str], ...]
+    trading_periods: dict[tuple[str, str], str]
+
+    def __post_init__(self) -> None:
+        if not self.cases or len(set(self.cases)) != len(self.cases):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: GDX cases must be non-empty and unique"
+            )
+        if set(self.cases) != set(self.trading_periods):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: incomplete GDX trading-period map"
+            )
+
+
+class HistoricalCaseIndexLoader(Protocol):
+    """Load the exact case/period selection surface of a daily GDX."""
+
+    def load(self, path: Path, system_directory: Path) -> HistoricalGdxCaseIndex: ...
+
+
+class GamsTransferCaseIndexLoader:
+    """Read only the canonical case-to-date/time/trading-period GDX symbol."""
+
+    def load(self, path: Path, system_directory: Path) -> HistoricalGdxCaseIndex:
+        from gams.transfer import Container
+
+        container = Container(system_directory=str(system_directory))
+        container.read(str(path), symbols=["i_dateTimeTradePeriodMap"])
+        records = container["i_dateTimeTradePeriodMap"].records
+        if records is None:
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: missing GDX trading-period mapping"
+            )
+        periods = {
+            (str(row.ca), str(row.dt)): str(row.tp)
+            for row in records.itertuples(index=False)
+        }
+        return HistoricalGdxCaseIndex(
+            cases=tuple(sorted(periods)), trading_periods=periods
+        )
+
+
+class HistoricalGamsExecutor(Protocol):
+    """Execute one GAMS compilation or run step."""
+
+    def execute(
+        self, executable: Path, programs: Path, arguments: tuple[str, ...]
+    ) -> None: ...
+
+
+class SubprocessHistoricalGamsExecutor:
+    """Run GAMS without treating process exit alone as solve evidence."""
+
+    def execute(
+        self, executable: Path, programs: Path, arguments: tuple[str, ...]
+    ) -> None:
+        completed = subprocess.run(
+            [str(executable), *arguments],
+            cwd=programs,
+            check=False,
+        )
+        if completed.returncode != 0:
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: GAMS process did not complete"
+            )
 
 
 class HistoricalVspdSourcePatcher:
@@ -630,3 +767,176 @@ class HistoricalDailyCompletionValidator:
             all_solves_optimal=True,
             evidence=evidence,
         )
+
+
+class HistoricalPopulationRunner:
+    """Enumerate every hash-bound day with exact, resumable evidence."""
+
+    def __init__(
+        self,
+        *,
+        programs: Path,
+        input_root: Path,
+        inventory: HistoricalInputInventory,
+        system_directory: Path,
+        gams_executable: Path,
+        patch_evidence: HistoricalPatchEvidence,
+        checkpoint_store: HistoricalPopulationCheckpointStore,
+        index_loader: HistoricalCaseIndexLoader | None = None,
+        executor: HistoricalGamsExecutor | None = None,
+        listing_parser: VspdListingParser | None = None,
+        completion_validator: HistoricalDailyCompletionValidator | None = None,
+    ) -> None:
+        self.programs = programs
+        self.input_root = input_root
+        self.inventory = inventory
+        self.system_directory = system_directory
+        self.gams_executable = gams_executable
+        self.patch_evidence = patch_evidence
+        self.checkpoint_store = checkpoint_store
+        self.index_loader = index_loader or GamsTransferCaseIndexLoader()
+        self.executor = executor or SubprocessHistoricalGamsExecutor()
+        self.listing_parser = listing_parser or VspdListingParser()
+        self.completion_validator = (
+            completion_validator or HistoricalDailyCompletionValidator()
+        )
+
+    def run(self) -> tuple[HistoricalPopulationCheckpoint, ...]:
+        self._validate_patch()
+        sources = {
+            artifact.trading_date: self._validated_source(artifact)
+            for artifact in self.inventory.artifacts
+        }
+        pending = tuple(
+            artifact
+            for artifact in self.inventory.artifacts
+            if not self.checkpoint_store.reusable(
+                artifact.trading_date,
+                source_sha256=artifact.sha256,
+                patch_sha256=self.patch_evidence.logical_sha256,
+                solver_profile=self.patch_evidence.profile,
+            )
+        )
+        if pending:
+            self.executor.execute(
+                self.gams_executable,
+                self.programs,
+                ("vSPDmodel.gms", "s=vSPDmodel", "lo=3"),
+            )
+        for artifact in pending:
+            checkpoint = self._run_day(artifact, sources[artifact.trading_date])
+            self.checkpoint_store.write(checkpoint)
+        results = tuple(
+            self.checkpoint_store.load(artifact.trading_date)
+            for artifact in self.inventory.artifacts
+        )
+        if any(checkpoint is None for checkpoint in results):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: enumeration left an incomplete checkpoint set"
+            )
+        return tuple(checkpoint for checkpoint in results if checkpoint is not None)
+
+    def _run_day(
+        self, artifact: HistoricalInputArtifact, source: Path
+    ) -> HistoricalPopulationCheckpoint:
+        index = self.index_loader.load(source, self.system_directory)
+        self._stage_day(artifact, source)
+        self.executor.execute(
+            self.gams_executable,
+            self.programs,
+            ("vSPDperiod.gms", "lo=3"),
+        )
+        self.executor.execute(
+            self.gams_executable,
+            self.programs,
+            (
+                "vSPDsolve.gms",
+                "r=vSPDmodel",
+                "lo=3",
+                "ide=1",
+                "Errmsg=1",
+                "holdFixed=0",
+            ),
+        )
+        listing = self.listing_parser.parse_file(self.programs / "vSPDsolve.lst")
+        evidence_path = (
+            self.programs
+            / f"gate12_Pricing_{artifact.trading_date}_shortfall.txt"
+        )
+        return self.completion_validator.validate(
+            trading_date=artifact.trading_date,
+            source_sha256=artifact.sha256,
+            patch_sha256=self.patch_evidence.logical_sha256,
+            solver_profile=self.patch_evidence.profile,
+            selected_cases=index.cases,
+            progress_text=(self.programs / "ProgressReport.txt").read_text(
+                encoding="utf-8"
+            ),
+            listing=listing,
+            evidence_text=evidence_path.read_text(encoding="utf-8"),
+        )
+
+    def _stage_day(self, artifact: HistoricalInputArtifact, source: Path) -> None:
+        input_directory = self.programs.parent / "Input"
+        input_directory.mkdir(parents=True, exist_ok=True)
+        staged_input = input_directory / f"Pricing_{artifact.trading_date}.gdx"
+        if staged_input.exists() or staged_input.is_symlink():
+            staged_input.unlink()
+        staged_input.symlink_to(source)
+        (self.programs / "vSPDcase.inc").write_text(
+            f"$setglobal GDXname Pricing_{artifact.trading_date}\n",
+            encoding="utf-8",
+        )
+        (self.programs / "vSPDtpsToSolve.inc").write_text(
+            "/\nAll\n/\n", encoding="utf-8"
+        )
+        for path in (
+            self.programs / "ProgressReport.txt",
+            self.programs / "vSPDsolve.lst",
+            self.programs
+            / f"gate12_Pricing_{artifact.trading_date}_shortfall.txt",
+        ):
+            path.unlink(missing_ok=True)
+
+    def _validated_source(self, artifact: HistoricalInputArtifact) -> Path:
+        path = (
+            self.input_root
+            / artifact.trading_date[:4]
+            / f"Pricing_{artifact.trading_date}.gdx"
+        )
+        if (
+            not path.is_file()
+            or path.stat().st_size != artifact.size_bytes
+            or self._sha256(path) != artifact.sha256
+        ):
+            raise EvidenceContractError(
+                f"REQ-G12-HISTORICAL: source hash mismatch for {artifact.trading_date}"
+            )
+        return path.resolve()
+
+    def _validate_patch(self) -> None:
+        if (
+            not _SHA256.fullmatch(self.patch_evidence.logical_sha256)
+            or not self.patch_evidence.profile.strip()
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: invalid patch evidence identity"
+            )
+        for name, expected in self.patch_evidence.file_sha256.items():
+            path = self.programs / name
+            if (
+                not _SHA256.fullmatch(expected)
+                or not path.is_file()
+                or self._sha256(path) != expected
+            ):
+                raise EvidenceContractError(
+                    f"REQ-G12-HISTORICAL: patch hash mismatch for {name}"
+                )
+
+    @staticmethod
+    def _sha256(path: Path) -> str:
+        digest = hashlib.sha256()
+        with path.open("rb") as stream:
+            for block in iter(lambda: stream.read(1024 * 1024), b""):
+                digest.update(block)
+        return digest.hexdigest()
