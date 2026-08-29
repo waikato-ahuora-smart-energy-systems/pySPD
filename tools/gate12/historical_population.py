@@ -8,6 +8,7 @@ import io
 import json
 import math
 import re
+import shutil
 import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -38,6 +39,125 @@ class HistoricalPatchEvidence:
     profile: str
     logical_sha256: str
     file_sha256: dict[str, str]
+
+
+class HistoricalSourcePatcher(Protocol):
+    """Apply and identify the governed historical source overlay."""
+
+    profile: str
+
+    def apply(self, programs: Path) -> HistoricalPatchEvidence: ...
+
+
+@dataclass(frozen=True)
+class HistoricalPopulationWorkspace:
+    """A once-created pinned source stage and its signed patch metadata."""
+
+    root: Path
+    programs: Path
+    patch_evidence: HistoricalPatchEvidence
+
+    @classmethod
+    def prepare(
+        cls,
+        *,
+        source_tree: Path,
+        root: Path,
+        patcher: HistoricalSourcePatcher,
+    ) -> HistoricalPopulationWorkspace:
+        if root.exists():
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: enumeration workspace already exists"
+            )
+        if not (source_tree / "Programs").is_dir():
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: source tree lacks Programs"
+            )
+        root.mkdir(parents=True)
+        stage = root / "vspd"
+        shutil.copytree(source_tree, stage)
+        programs = stage / "Programs"
+        patch_evidence = patcher.apply(programs)
+        unsigned = cls._unsigned_metadata(patch_evidence)
+        metadata = {
+            **unsigned,
+            "metadata_sha256": cls._metadata_sha256(unsigned),
+        }
+        (root / "patch-evidence.json").write_text(
+            json.dumps(metadata, sort_keys=True, separators=(",", ":")) + "\n",
+            encoding="utf-8",
+        )
+        return cls(root=root, programs=programs, patch_evidence=patch_evidence)
+
+    @classmethod
+    def open(cls, root: Path) -> HistoricalPopulationWorkspace:
+        path = root / "patch-evidence.json"
+        try:
+            metadata = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: unreadable workspace patch metadata"
+            ) from error
+        expected = {
+            "schema_version",
+            "profile",
+            "logical_sha256",
+            "file_sha256",
+            "metadata_sha256",
+        }
+        if not isinstance(metadata, dict) or set(metadata) != expected:
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: unexpected workspace metadata schema"
+            )
+        unsigned = {
+            key: value for key, value in metadata.items() if key != "metadata_sha256"
+        }
+        if metadata["metadata_sha256"] != cls._metadata_sha256(unsigned):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: workspace metadata hash mismatch"
+            )
+        file_hashes = metadata["file_sha256"]
+        if (
+            metadata["schema_version"] != 1
+            or not isinstance(metadata["profile"], str)
+            or not isinstance(metadata["logical_sha256"], str)
+            or not _SHA256.fullmatch(metadata["logical_sha256"])
+            or not isinstance(file_hashes, dict)
+            or any(
+                not isinstance(name, str)
+                or not isinstance(value, str)
+                or not _SHA256.fullmatch(value)
+                for name, value in file_hashes.items()
+            )
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: invalid workspace patch metadata"
+            )
+        patch_evidence = HistoricalPatchEvidence(
+            profile=metadata["profile"],
+            logical_sha256=metadata["logical_sha256"],
+            file_sha256=file_hashes,
+        )
+        return cls(
+            root=root,
+            programs=root / "vspd" / "Programs",
+            patch_evidence=patch_evidence,
+        )
+
+    @staticmethod
+    def _unsigned_metadata(evidence: HistoricalPatchEvidence) -> dict[str, Any]:
+        return {
+            "schema_version": 1,
+            "profile": evidence.profile,
+            "logical_sha256": evidence.logical_sha256,
+            "file_sha256": evidence.file_sha256,
+        }
+
+    @staticmethod
+    def _metadata_sha256(values: dict[str, Any]) -> str:
+        return hashlib.sha256(
+            json.dumps(values, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
 
 
 @dataclass(frozen=True)
