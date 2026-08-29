@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G5-NETWORK",
+  "requirement_ids": [
+    "REQ-G5-NETWORK",
+    "REQ-G5-AC-FLOW",
+    "REQ-G5-LOSSES",
+    "REQ-G5-SECURITY",
+    "REQ-G5-NODAL-PRICE",
+    "REQ-G5-MATRIX-PARITY"
+  ],
+  "production_paths": [
+    "src/pyspd/core_energy/components.py",
+    "src/pyspd/network/__init__.py",
+    "src/pyspd/network/components.py",
+    "src/pyspd/network/data.py",
+    "src/pyspd/network/formulation.py",
+    "src/pyspd/network/validation.py",
+    "tools/gate5/__init__.py",
+    "tools/gate5/oracle_matrix.py",
+    "tools/gate5/qualification.py"
+  ],
+  "parent_commit": "8adc3592f8c77c7b5da07b906b4898deec29bc9c",
+  "implementation_commit": "ed150d3a1c9dc65f6eb7e8ed11ef2d939b3b00e9",
+  "test_patch_sha256": "b713acd93e6fa13c4961791760e7a83bb433e06ca27564b572aa0f390a77de7b",
+  "test_files": [
+    {"path": "tests/network/conftest.py", "sha256": "380b000b71d7d522ffea6522b635183d8482314e79e0f1cc4cfa2d594db18a62"},
+    {"path": "tests/network/test_ac_network.py", "sha256": "b9495c17028981c051eef954e506e2522e9772618c606b4fdd91000132c3e600"},
+    {"path": "tests/network/test_gate5_contract.py", "sha256": "d85c66d27afe4b48fc23c1a6629e41d5406e1496c236b85920d9b256105fb098"},
+    {"path": "tests/network/test_gate5_evidence.py", "sha256": "5380cd66733f2cda2bab9176eb12991cfa34edd53d06a33b46555458f79eaac5"}
+  ],
+  "command": "uv run pytest tests/network -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "4f1d94bf5e9f5a995f79fe93b71d506b82d71bbbdc0a7df811d9fc6c29f39ebf",
+  "red": {
+    "timestamp": "2026-08-29T20:00:00+12:00",
+    "exit_code": 1,
+    "output_sha256": "5ab8aeb9aa9c60fc22801c277d6a8469016e695e740ea23ea4ef7612807e0f61",
+    "duration_seconds": 0.13,
+    "expected_failure_fingerprint": "REQ-G5-NETWORK: class-based AC network formulation is absent",
+    "log_uri": "docs/gate-5/tdd/logs/network-red.log"
+  },
+  "green": {
+    "timestamp": "2026-08-29T22:00:00+12:00",
+    "exit_code": 0,
+    "output_sha256": "cf1e17ad2146025aa2adab2e3291b0cb21ca0ff4b74d7c6921f6c358d60625c9",
+    "duration_seconds": 0.24,
+    "log_uri": "docs/gate-5/tdd/logs/network-green.log"
+  },
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}

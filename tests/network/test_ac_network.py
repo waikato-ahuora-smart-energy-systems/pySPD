@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pyomo.environ as pyo
 import pytest
+from pyomo.repn.standard_repn import generate_standard_repn
 
 from pyspd.architecture import ModelAssembler
 from pyspd.network import (
@@ -11,7 +14,7 @@ from pyspd.network import (
     ac_network_formulation,
     validate_nodal_price_finite_difference,
 )
-from tests.network.conftest import make_network_case
+from tests.network.conftest import make_network_case, make_three_bus_case
 
 
 def solve(case):
@@ -49,11 +52,39 @@ def test_reverse_flow_uses_backward_direction() -> None:
     ) == pytest.approx(50.0)
 
 
+def test_three_bus_line_preserves_flow_and_price_across_both_edges() -> None:
+    built, prices, _report = solve(make_three_bus_case())
+    for branch in ("L1", "L2"):
+        assert pyo.value(
+            built.artifacts["branch_flow"]["C1", "T1", branch]
+        ) == pytest.approx(50.0)
+    assert prices.bus[("C1", "T1", "B1")] == pytest.approx(10.0)
+    assert prices.bus[("C1", "T1", "B3")] == pytest.approx(10.0)
+
+
 def test_disconnected_topology_is_balanced_locally_and_prices_dead_end() -> None:
     built, prices, _report = solve(make_network_case(connected=False))
     assert len(built.artifacts["branch_flow"]) == 0
     assert pyo.value(built.artifacts["balance_deficit"]["C1", "T1", "B2"]) == pytest.approx(50.0)
     assert prices.bus[("C1", "T1", "B2")] == pytest.approx(500_000.0)
+
+
+def test_dead_node_is_classified_from_electrical_island_status() -> None:
+    case = make_network_case()
+    assert case.network is not None
+    case = replace(
+        case,
+        network=replace(
+            case.network,
+            bus_electrical_island={
+                **case.network.bus_electrical_island,
+                ("C1", "T1", "B2"): 0.0,
+            },
+        ),
+    )
+    _built, prices, _report = solve(case)
+    assert ("C1", "T1", "N2") in prices.dead_nodes
+    assert prices.node[("C1", "T1", "N2")] == 0.0
 
 
 def test_piecewise_losses_and_fixed_loss_allocation() -> None:
@@ -70,6 +101,36 @@ def test_piecewise_losses_and_fixed_loss_allocation() -> None:
     assert flow == pytest.approx(55.5555555556)
     assert loss == pytest.approx(4.5555555556)
     assert prices.bus[("C1", "T1", "B2")] > prices.bus[("C1", "T1", "B1")]
+
+
+def test_loss_segment_boundary_and_reverse_direction_are_exact() -> None:
+    segments = (("ls1", 20.0, 0.05), ("ls2", 100.0, 0.10))
+    forward, _prices, _report = solve(
+        make_network_case(load=19.0, loss_segments=segments)
+    )
+    assert pyo.value(
+        forward.artifacts["branch_flow_block"][
+            "C1", "T1", "L1", "ls1", "forward"
+        ]
+    ) == pytest.approx(20.0)
+    assert pyo.value(
+        forward.artifacts["branch_flow_block"][
+            "C1", "T1", "L1", "ls2", "forward"
+        ]
+    ) == pytest.approx(0.0)
+    reverse, _prices, _report = solve(
+        make_network_case(
+            load=19.0,
+            generation_bus="B2",
+            load_bus="B1",
+            loss_segments=segments,
+        )
+    )
+    assert pyo.value(
+        reverse.artifacts["branch_flow_block"][
+            "C1", "T1", "L1", "ls1", "backward"
+        ]
+    ) == pytest.approx(20.0)
 
 
 def test_all_security_constraint_senses_bind_or_remain_slack() -> None:
@@ -92,6 +153,108 @@ def test_all_security_constraint_senses_bind_or_remain_slack() -> None:
     assert len(built.artifacts["market_node_security_le"]) == 1
     assert len(built.artifacts["market_node_security_ge"]) == 1
     assert len(built.artifacts["market_node_security_eq"]) == 1
+
+
+@pytest.mark.parametrize(
+    ("sense", "limit", "slack_name", "expected_slack"),
+    [
+        (-1.0, 60.0, "branch_constraint_surplus", 0.0),
+        (-1.0, 50.0, "branch_constraint_surplus", 0.0),
+        (-1.0, 30.0, "branch_constraint_surplus", 20.0),
+        (1.0, 40.0, "branch_constraint_deficit", 0.0),
+        (1.0, 50.0, "branch_constraint_deficit", 0.0),
+        (1.0, 70.0, "branch_constraint_deficit", 20.0),
+        (0.0, 50.0, "branch_constraint_deficit", 0.0),
+        (0.0, 60.0, "branch_constraint_deficit", 10.0),
+        (0.0, 40.0, "branch_constraint_surplus", 10.0),
+    ],
+)
+def test_branch_security_binding_nonbinding_and_violated_with_slack(
+    sense, limit, slack_name, expected_slack
+) -> None:
+    case = make_network_case(
+        branch_constraints=(("C", sense, limit, 1.0),)
+    )
+    assert case.network is not None
+    case = replace(
+        case,
+        network=replace(
+            case.network,
+            branch_constraint_deficit_penalty=1.0,
+            branch_constraint_surplus_penalty=1.0,
+        ),
+    )
+    built, _prices, _report = solve(case)
+    assert pyo.value(built.artifacts[slack_name]["C1", "T1", "C"]) == pytest.approx(
+        expected_slack
+    )
+
+
+@pytest.mark.parametrize(
+    ("sense", "limit", "slack_name", "expected_slack"),
+    [
+        (-1.0, 60.0, "market_node_constraint_surplus", 0.0),
+        (-1.0, 50.0, "market_node_constraint_surplus", 0.0),
+        (-1.0, 30.0, "market_node_constraint_surplus", 20.0),
+        (1.0, 40.0, "market_node_constraint_deficit", 0.0),
+        (1.0, 50.0, "market_node_constraint_deficit", 0.0),
+        (1.0, 70.0, "market_node_constraint_deficit", 20.0),
+        (0.0, 50.0, "market_node_constraint_deficit", 0.0),
+        (0.0, 60.0, "market_node_constraint_deficit", 10.0),
+        (0.0, 40.0, "market_node_constraint_surplus", 10.0),
+    ],
+)
+def test_market_node_security_binding_nonbinding_and_violated_with_slack(
+    sense, limit, slack_name, expected_slack
+) -> None:
+    case = make_network_case(
+        market_constraints=(("C", sense, limit, 1.0),)
+    )
+    assert case.network is not None
+    case = replace(
+        case,
+        network=replace(
+            case.network,
+            market_node_deficit_penalty=1.0,
+            market_node_surplus_penalty=1.0,
+        ),
+    )
+    built, _prices, _report = solve(case)
+    assert pyo.value(built.artifacts[slack_name]["C1", "T1", "C"]) == pytest.approx(
+        expected_slack
+    )
+
+
+def test_market_node_bid_factor_is_present_with_exact_sign() -> None:
+    case = make_network_case(
+        load=0.0,
+        bid_limit=20.0,
+        market_constraints=(("BID_FACTOR", -1.0, 100.0, 1.0),),
+    )
+    assert case.network is not None
+    case = replace(
+        case,
+        network=replace(
+            case.network,
+            market_node_energy_offer_factor={},
+            market_node_energy_bid_factor={
+                ("C1", "T1", "BID_FACTOR", "BID"): -1.5
+            },
+        ),
+    )
+    built = ModelAssembler().assemble(ac_network_formulation(), case)
+    constraint = built.artifacts["market_node_security_le"][
+        "C1", "T1", "BID_FACTOR"
+    ]
+    repn = generate_standard_repn(constraint.body)
+    bid_coefficient = next(
+        float(coefficient)
+        for variable, coefficient in zip(
+            repn.linear_vars, repn.linear_coefs, strict=True
+        )
+        if variable.parent_component().name == "DemandBids.Purchase"
+    )
+    assert bid_coefficient == -1.5
 
 
 def test_nodal_price_matches_independent_objective_perturbation() -> None:
