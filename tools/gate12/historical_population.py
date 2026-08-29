@@ -22,6 +22,7 @@ from tools.gate12.evidence import (
 from tools.oracle.vspd import ListingResult, VspdListingParser
 
 MATERIAL_SHORTFALL_MW = 1e-6
+HISTORICAL_EXECUTION_PROFILE = "historical-v5.0.2-scip-solvelink5-first-loop"
 HISTORICAL_COLUMNS = (
     "case_id",
     "datetime",
@@ -1029,7 +1030,7 @@ class HistoricalPopulationRunner:
                 artifact.trading_date,
                 source_sha256=artifact.sha256,
                 patch_sha256=self.patch_evidence.logical_sha256,
-                solver_profile=self.patch_evidence.profile,
+                solver_profile=HISTORICAL_EXECUTION_PROFILE,
             )
         )
         if pending:
@@ -1071,6 +1072,7 @@ class HistoricalPopulationRunner:
                 "ide=1",
                 "Errmsg=1",
                 "holdFixed=0",
+                "solvelink=5",
             ),
         )
         listing_text = (self.programs / "vSPDsolve.lst").read_text(errors="replace")
@@ -1083,7 +1085,7 @@ class HistoricalPopulationRunner:
             trading_date=artifact.trading_date,
             source_sha256=artifact.sha256,
             patch_sha256=self.patch_evidence.logical_sha256,
-            solver_profile=self.patch_evidence.profile,
+            solver_profile=HISTORICAL_EXECUTION_PROFILE,
             selected_cases=index.cases,
             progress_text=(self.programs / "ProgressReport.txt").read_text(
                 encoding="utf-8"

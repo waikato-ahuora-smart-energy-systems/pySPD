@@ -14,6 +14,7 @@ from tools.gate12.evidence import (
     EvidenceContractError,
 )
 from tools.gate12.historical_population import (
+    HISTORICAL_EXECUTION_PROFILE,
     GamsTransferCaseIndexLoader,
     HistoricalAffectedManifestBuilder,
     HistoricalInputInventory,
@@ -92,6 +93,7 @@ def main(arguments: list[str] | None = None) -> int:
         "reference_commit": REFERENCE_COMMIT,
         "patch_profile": workspace.patch_evidence.profile,
         "patch_sha256": workspace.patch_evidence.logical_sha256,
+        "execution_profile": HISTORICAL_EXECUTION_PROFILE,
         "trading_date_count": len(checkpoints),
         "affected_interval_count": affected_count,
         "per_date": per_date,
