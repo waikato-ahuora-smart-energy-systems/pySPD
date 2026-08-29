@@ -1074,7 +1074,7 @@ class HistoricalPopulationRunner:
         self, artifact: HistoricalInputArtifact, source: Path
     ) -> HistoricalPopulationCheckpoint:
         index = self.index_loader.load(source, self.system_directory)
-        self._stage_day(artifact, source)
+        self._stage_day(artifact, source, selected_cases=index.cases)
         self.executor.execute(
             self.gams_executable,
             self.programs,
@@ -1113,7 +1113,13 @@ class HistoricalPopulationRunner:
             evidence_text=evidence_path.read_text(encoding="utf-8"),
         )
 
-    def _stage_day(self, artifact: HistoricalInputArtifact, source: Path) -> None:
+    def _stage_day(
+        self,
+        artifact: HistoricalInputArtifact,
+        source: Path,
+        *,
+        selected_cases: tuple[tuple[str, str], ...],
+    ) -> None:
         input_directory = self.programs.parent / "Input"
         input_directory.mkdir(parents=True, exist_ok=True)
         staged_input = input_directory / f"Pricing_{artifact.trading_date}.gdx"
@@ -1124,8 +1130,15 @@ class HistoricalPopulationRunner:
             f"$setglobal GDXname Pricing_{artifact.trading_date}\n",
             encoding="utf-8",
         )
+        case_ids = tuple(dict.fromkeys(case_id for case_id, _ in selected_cases))
+        if not case_ids or any(
+            not re.fullmatch(r"[A-Za-z0-9_]+", case_id) for case_id in case_ids
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: invalid exact case selection"
+            )
         (self.programs / "vSPDtpsToSolve.inc").write_text(
-            "/\nAll\n/\n", encoding="utf-8"
+            "/\n" + "\n".join(case_ids) + "\n/\n", encoding="utf-8"
         )
         for path in (
             self.programs / "ProgressReport.txt",
