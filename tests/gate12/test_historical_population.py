@@ -6,11 +6,13 @@ import pytest
 
 from tools.gate12.evidence import EvidenceContractError
 from tools.gate12.historical_population import (
+    HistoricalDailyCompletionValidator,
     HistoricalPopulationCheckpoint,
     HistoricalPopulationCheckpointStore,
     HistoricalShortfallEvidence,
     HistoricalVspdSourcePatcher,
 )
+from tools.oracle.vspd import ListingResult, SolveRecord
 
 HEADER = (
     "case_id|datetime|node|loop|energy_shortfall_mw|adjustment_mw|"
@@ -198,3 +200,67 @@ def test_checkpoint_store_rejects_tampering(tmp_path: Path) -> None:
 
     with pytest.raises(EvidenceContractError, match="logical hash"):
         store.load("20221106")
+
+
+def _solve(case_id: str, *, model_status: int = 1) -> SolveRecord:
+    return SolveRecord(
+        scenario=case_id,
+        model="vSPD_NMIR",
+        solve_type="MIP",
+        solver="SCIP",
+        solver_status_code=1,
+        solver_status="Normal Completion",
+        model_status_code=model_status,
+        model_status="Optimal" if model_status == 1 else "Integer Solution",
+        objective=1.0,
+    )
+
+
+def test_daily_completion_requires_exact_successful_optimal_population() -> None:
+    selected = (
+        ("51012022111800831", "06-NOV-2022 07:00"),
+        ("51012022111805834", "06-NOV-2022 07:05"),
+    )
+    progress = "\n".join(
+        f"The caseID: {case} ({date_time}) is 1st solved successfully."
+        for case, date_time in selected
+    )
+    listing = ListingResult(records=tuple(_solve(case) for case, _ in selected))
+
+    checkpoint = HistoricalDailyCompletionValidator().validate(
+        trading_date="20221106",
+        source_sha256="2" * 64,
+        patch_sha256="a" * 64,
+        solver_profile="historical-v5.0.2-scip-first-loop",
+        selected_cases=selected,
+        progress_text=progress,
+        listing=listing,
+        evidence_text=HEADER
+        + "51012022111800831|06-NOV-2022 07:00|WAI0111|1|4.5|4.5|1|1\n",
+    )
+
+    assert checkpoint.selected_case_count == 2
+    assert checkpoint.solved_case_count == 2
+
+
+@pytest.mark.parametrize("failure", ["missing", "non_optimal", "wrong_solver"])
+def test_daily_completion_fails_closed(failure: str) -> None:
+    selected = (("case_1", "06-NOV-2022 07:00"),)
+    progress = "The caseID: case_1 (06-NOV-2022 07:00) is 1st solved successfully."
+    record = _solve("case_1", model_status=8 if failure == "non_optimal" else 1)
+    if failure == "wrong_solver":
+        record = SolveRecord(**{**record.__dict__, "solver": "CPLEX"})
+    if failure == "missing":
+        progress = ""
+
+    with pytest.raises(EvidenceContractError, match="daily completion"):
+        HistoricalDailyCompletionValidator().validate(
+            trading_date="20221106",
+            source_sha256="2" * 64,
+            patch_sha256="a" * 64,
+            solver_profile="historical-v5.0.2-scip-first-loop",
+            selected_cases=selected,
+            progress_text=progress,
+            listing=ListingResult(records=(record,)),
+            evidence_text=HEADER,
+        )
