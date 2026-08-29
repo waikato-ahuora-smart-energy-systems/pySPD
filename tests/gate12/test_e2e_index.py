@@ -50,10 +50,13 @@ def test_gate12_index_accepts_complete_zero_discrepancy_evidence() -> None:
     expected_hashes = {f"2022{index:04d}": f"{index + 1:064x}" for index in range(139)}
     index = Gate12EvidenceIndex(
         affected_manifest_sha256="f" * 64,
+        code_sha256="1" * 64,
+        dependency_sha256="2" * 64,
+        portable_profile_evidence_sha256="3" * 64,
+        strict_profile_evidence_sha256="4" * 64,
+        discrepancy_register_sha256="5" * 64,
         cases=cases,
         representative_days=days,
-        portable_profile_executed=True,
-        strict_profile_executed=True,
         unresolved_material_count=0,
     )
 
@@ -73,7 +76,7 @@ def test_case_evidence_rejects_a_missing_surface() -> None:
 @pytest.mark.parametrize(
     "change,match",
     [
-        ({"strict_profile_executed": False}, "strict"),
+        ({"strict_profile_evidence_sha256": None}, "strict"),
         ({"unresolved_material_count": 1}, "discrep"),
         ({"representative_days": ()}, "day categories"),
     ],
@@ -84,13 +87,16 @@ def test_gate12_index_fails_closed_at_closure(
     cases = tuple(_case(index) for index in range(546))
     values: dict[str, object] = {
         "affected_manifest_sha256": "f" * 64,
+        "code_sha256": "1" * 64,
+        "dependency_sha256": "2" * 64,
+        "portable_profile_evidence_sha256": "3" * 64,
+        "strict_profile_evidence_sha256": "4" * 64,
+        "discrepancy_register_sha256": "5" * 64,
         "cases": cases,
         "representative_days": tuple(
             _day(category, index)
             for index, category in enumerate(sorted(REQUIRED_E2E_DAY_CATEGORIES))
         ),
-        "portable_profile_executed": True,
-        "strict_profile_executed": True,
         "unresolved_material_count": 0,
     }
     values.update(change)
