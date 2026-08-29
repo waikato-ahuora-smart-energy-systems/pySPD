@@ -18,7 +18,12 @@ from tools.gate12.evidence import (
 
 
 def _dates() -> tuple[str, ...]:
-    return tuple(f"2024{month:02d}{day:02d}" for month in range(1, 13) for day in range(1, 13))[:139]
+    values = (
+        f"2024{month:02d}{day:02d}"
+        for month in range(1, 13)
+        for day in range(1, 13)
+    )
+    return tuple(values)[:139]
 
 
 def _hashes() -> dict[str, str]:
