@@ -37,13 +37,13 @@ class FakeIndexLoader:
 
 class FakeGamsExecutor:
     def __init__(self) -> None:
-        self.commands: list[str] = []
+        self.commands: list[tuple[str, ...]] = []
 
     def execute(
         self, executable: Path, programs: Path, arguments: tuple[str, ...]
     ) -> None:
         del executable
-        self.commands.append(arguments[0])
+        self.commands.append(arguments)
         if arguments[0] == "vSPDsolve.gms":
             (programs / "ProgressReport.txt").write_text(
                 "The caseID: case_1 (06-NOV-2022 07:00) "
@@ -107,7 +107,12 @@ def test_population_runner_executes_and_resumes_by_checkpoint(tmp_path: Path) ->
 
     assert len(first) == len(second) == 1
     assert first[0].logical_sha256 == second[0].logical_sha256
-    assert executor.commands == ["vSPDmodel.gms", "vSPDperiod.gms", "vSPDsolve.gms"]
+    assert [command[0] for command in executor.commands] == [
+        "vSPDmodel.gms",
+        "vSPDperiod.gms",
+        "vSPDsolve.gms",
+    ]
+    assert all("lo=2" in command for command in executor.commands)
     assert (runner.programs.parent / "Input" / "Pricing_20221106.gdx").is_symlink()
     assert (runner.programs / "vSPDtpsToSolve.inc").read_text() == "/\nAll\n/\n"
 
