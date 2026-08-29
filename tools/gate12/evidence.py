@@ -136,10 +136,13 @@ class Gate12EvidenceIndex:
     """Fail-closed closure index across cases, days, profiles, and discrepancies."""
 
     affected_manifest_sha256: str
+    code_sha256: str
+    dependency_sha256: str
+    portable_profile_evidence_sha256: str | None
+    strict_profile_evidence_sha256: str | None
+    discrepancy_register_sha256: str
     cases: tuple[E2ECaseEvidence, ...]
     representative_days: tuple[E2EDayEvidence, ...]
-    portable_profile_executed: bool
-    strict_profile_executed: bool
     unresolved_material_count: int
 
     def validate(
@@ -148,9 +151,17 @@ class Gate12EvidenceIndex:
         expected_case_ids: set[str],
         expected_source_hashes: dict[str, str],
     ) -> None:
-        if not _SHA256.fullmatch(self.affected_manifest_sha256):
+        if any(
+            not _SHA256.fullmatch(value)
+            for value in (
+                self.affected_manifest_sha256,
+                self.code_sha256,
+                self.dependency_sha256,
+                self.discrepancy_register_sha256,
+            )
+        ):
             raise EvidenceContractError(
-                "REQ-G12-E2E: invalid affected-manifest hash"
+                "REQ-G12-E2E: invalid manifest, code, dependency, or discrepancy hash"
             )
         case_ids = [case.case_id for case in self.cases]
         if (
@@ -182,13 +193,17 @@ class Gate12EvidenceIndex:
             )
         for day in self.representative_days:
             day.validate()
-        if not self.portable_profile_executed:
+        if not isinstance(
+            self.portable_profile_evidence_sha256, str
+        ) or not _SHA256.fullmatch(self.portable_profile_evidence_sha256):
             raise EvidenceContractError(
-                "REQ-G12-E2E: portable profile was not executed"
+                "REQ-G12-E2E: portable profile evidence is missing"
             )
-        if not self.strict_profile_executed:
+        if not isinstance(
+            self.strict_profile_evidence_sha256, str
+        ) or not _SHA256.fullmatch(self.strict_profile_evidence_sha256):
             raise EvidenceContractError(
-                "REQ-G12-E2E: strict profile was not executed"
+                "REQ-G12-E2E: strict profile evidence is missing"
             )
         if self.unresolved_material_count != 0:
             raise EvidenceContractError(
