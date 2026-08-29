@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from tools.gate12.analytic_population import (
+    HistoricalAnalyticCandidatePolicy,
     HistoricalAnalyticCandidateSelector,
     HistoricalAnalyticDayEnumerator,
     HistoricalFirstLoopCase,
@@ -43,6 +44,13 @@ def test_first_loop_reconstruction_identifies_scaled_dead_node_shortfall() -> No
 
     assert result.required_load["DEAD"] == 4.591836734693878
     assert result.affected_shortfall_mw == {"DEAD": 4.591836734693878}
+
+
+def test_analytic_candidate_count_can_never_qualify_exact_population() -> None:
+    verdict = HistoricalAnalyticCandidatePolicy().assess(candidate_count=546)
+
+    assert verdict.qualifies_exact_population is False
+    assert verdict.declared_count_gap == 0
 
 
 def test_first_loop_reconstruction_applies_estimated_load_and_eligibility() -> None:
