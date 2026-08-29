@@ -87,12 +87,16 @@ class HvdcSolveOutcome:
     pricing_lp: SolveResult
     detected_issues: tuple[str, ...]
     fixed_discrete: Mapping[str, float]
+    fixed_sos_members: Mapping[str, float]
     primary_snapshot: SolutionSnapshot
     pricing_snapshot: SolutionSnapshot
 
     def __post_init__(self) -> None:
         object.__setattr__(
             self, "fixed_discrete", MappingProxyType(dict(self.fixed_discrete))
+        )
+        object.__setattr__(
+            self, "fixed_sos_members", MappingProxyType(dict(self.fixed_sos_members))
         )
 
 
@@ -132,8 +136,10 @@ class HvdcSolvePolicy(SolvePolicy):
         if not final_solve.solution_loaded:
             raise ValueError("primary solution was not loaded")
         fixed = _discrete_values(primary.model)
+        fixed_sos_members = _solvefinal_sos_member_values(primary)
         pricing = ModelAssembler().assemble(self._formulation(), primary.case_data)
         _fix_and_relax_discrete(pricing.model, fixed)
+        _fix_continuous_state(pricing.model, fixed_sos_members)
         _deactivate_sos(pricing.model)
         _assert_continuous_pricing_model(pricing.model)
         pricing_result = self._solve_highs(pricing)
@@ -145,6 +151,7 @@ class HvdcSolvePolicy(SolvePolicy):
             pricing_result,
             issues,
             fixed,
+            fixed_sos_members,
             _snapshot(primary),
             _snapshot(pricing),
         )
@@ -352,6 +359,32 @@ def _fix_and_relax_discrete(
     for variable in model.component_data_objects(pyo.Var, active=True):
         if variable.is_binary() or variable.is_integer():
             variable.domain = pyo.Reals
+
+
+def _solvefinal_sos_member_values(built: BuiltModel) -> dict[str, float]:
+    """Capture members GAMS treats as discrete state during ``solveFinal``."""
+
+    names = ("lambda_hvdc_energy", "lambda_hvdc_reserve")
+    return {
+        variable.name: _value(variable)
+        for name in names
+        if name in built.artifacts.values
+        for variable in built.artifacts[name].values()
+    }
+
+
+def _fix_continuous_state(
+    model: pyo.ConcreteModel, fixed: Mapping[str, float]
+) -> None:
+    by_name = {
+        variable.name: variable
+        for variable in model.component_data_objects(pyo.Var, active=True)
+    }
+    missing = set(fixed) - set(by_name)
+    if missing:
+        raise ValueError("pricing model does not contain every SOS member")
+    for name, value in fixed.items():
+        by_name[name].fix(value)
 
 
 def _deactivate_sos(model: pyo.ConcreteModel) -> None:
