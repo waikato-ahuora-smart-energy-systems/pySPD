@@ -78,10 +78,10 @@ interpretation, implementation target, test obligation, and reviewer decision.
 
 | Delta ID | v16 change | v5 compatibility treatment | Future PySPD treatment | Status |
 |---|---|---|---|---|
-| `V16D-001` | Equal-price offer-block tie-break | Do not backport | Replacement/new component selected by `Spd16Formulation` | Deferred |
-| `V16D-002` | Paired-BESS preprocessing and mutually exclusive operating mode | Do not backport | Battery preprocessor/component and discrete pricing audit | Deferred |
-| `V16D-003` | Reserve-price fallback when island cleared reserve is zero | Do not backport | `Spd16PricingEngine` policy | Deferred |
-| `V16D-004` | Minor formulation/software clarifications | Evaluate individually | Clause-level delta and impacted-gate analysis | Unclassified pending SME review |
+| `V16D-001` | Equal-price offer-block tie-break | Do not backport | Replacement component selected by `Spd16Formulation` | Gate 11 implemented; parity at Gate 12 |
+| `V16D-002` | Paired-BESS preprocessing and mutually exclusive operating mode | Do not backport | Battery preprocessor/component and discrete pricing audit | Gate 11 implemented; parity at Gate 12 |
+| `V16D-003` | Reserve-price fallback when island cleared reserve is zero | Do not backport | `Spd16PricingEngine` policy | Gate 11 implemented; parity at Gate 12 |
+| `V16D-004` | Reserve-risk, objective, bad-price, schema, and reporting clarifications | Do not backport | Separate v16 data/component/result contracts | Gate 11 implemented; see `../gate-11/delta-register.md` |
 
 Link Risk and AC Secondary Risk are v15 changes already present in the pinned v5
 source; they are not v16 deltas.

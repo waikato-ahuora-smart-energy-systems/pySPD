@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "gate": 11,
+  "captured_at": "2026-08-29T23:40:00+12:00",
+  "sources": [
+    {
+      "id": "spd-formulation-v16",
+      "authority": "Transpower New Zealand",
+      "title": "SPD Model Formulation v16.0",
+      "url": "https://static.transpower.co.nz/public/bulk-upload/documents/SPD_Model_Formulation_v16.0.pdf?VersionId=EnEG04rp0YdSazhUCjOYXic7BQWcXosF",
+      "sha256": "d3e3e0edfd1d19c218cccce2e43a489fba716545680416ae5eb155d72adb3adc",
+      "effective_date": "2026-06-23",
+      "role": "authoritative formulation intent"
+    },
+    {
+      "id": "vspd-v16-feature-source",
+      "authority": "Electricity Authority",
+      "repository": "https://github.com/ElectricityAuthority/vSPD",
+      "branch": "feature/tie-breaking-and-bess-dispatch",
+      "commit": "84ed3c99e76ee86fbeeef45250c950d5ffe13b5f",
+      "role": "readable executable oracle source; public feature branch, not a tagged release"
+    }
+  ],
+  "qualification_inputs": [
+    {
+      "mode": "RTD",
+      "name": "RTD_202607031455_31012026070255374_20260703145400.gdx",
+      "sha256": "bb4ca6367e8115b9b6d7f20d2050489ac2bd3206a1c6a39fb67deae18cb802cb",
+      "use": "schema, preprocessing, assembly, optimal solve, canonical matrix, and price validation"
+    },
+    {
+      "mode": "PRSS",
+      "name": "PRSS_202607030130_21302026071330120_20260703013303.gdx",
+      "sha256": "cbe4016b483a9b064727df762e18a32eefaf591b69c2125158869c0a6c44665b",
+      "use": "44-symbol schema and eight-interval selection characterization; full solve deferred to Gate 12"
+    },
+    {
+      "mode": "NRSS",
+      "name": "NRSS_202607030800_21322026072000232_20260703080302.gdx",
+      "sha256": "71bc01763426c8bc9dbd31c3cd6002c5751ba4a7aad87c5c3df054f948dd2578",
+      "use": "44-symbol schema characterization; orchestration profile not yet supported"
+    }
+  ],
+  "retention": {
+    "raw_inputs_committed": false,
+    "policy": "fetch or stage by recorded hash; do not redistribute through this repository",
+    "distribution_status": "held-by-gate-0-licensing-decisions"
+  }
+}
+

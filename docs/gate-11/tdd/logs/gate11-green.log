@@ -1,0 +1,11 @@
+Command: uv run pytest tests/v16 tests/oracle/test_vspd_runner.py -q
+Exit code: 0
+
+......................                                                   [100%]
+22 passed in 5.27s
+
+Cumulative verification:
+- uv run pytest -q: 257 passed, 1 skipped in 49.66s
+- uv run ruff check .: passed
+- uv run mypy src: passed (67 source files)
+

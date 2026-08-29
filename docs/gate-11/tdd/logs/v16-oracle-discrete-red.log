@@ -1,5 +1,6 @@
 Gate 11 discovered-defect RED phase
 Date: 2026-08-29 Pacific/Auckland
+Fingerprint: REQ-G11-V16-FIXED-DISCRETE: battery charging mode is absent from fix set
 
 The Authority v16 RTD case reached an optimal SCIP MIP, then the fixed HiGHS
 RMIP changed the objective by NZD 38.29 and the fail-closed oracle aborted.

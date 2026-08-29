@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G11-ORACLE-DISCRETE",
+  "requirement_ids": ["REQ-G11-V16-FIXED-DISCRETE-PRICING"],
+  "production_paths": ["tools/oracle/vspd.py"],
+  "parent_commit": "0f28d6cbb81c213b33fc3b743da3171b52f00478",
+  "implementation_commit": "9c8355dee95af945656a77f86b5d2b6b7ff30728",
+  "test_patch_sha256": "febcbf1689617dba1f0cd2e37b899eacde3e695a71429234a2455b836d8acafc",
+  "test_files": [
+    {"path": "tests/oracle/test_vspd_runner.py", "sha256": "4d1fa3230cf92a284110c5781170efb78f5c12d937317b3c05c1f34f93f49768"}
+  ],
+  "command": "uv run pytest tests/v16 tests/oracle/test_vspd_runner.py -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "df217cf4d8a60e9fe47070ee4db3ec2740f4e7539da5cd38d66fe566c6a387e4",
+  "red": {
+    "timestamp": "2026-08-29T23:09:00+12:00",
+    "exit_code": 1,
+    "output_sha256": "57b14894e9277d1b37752a351be6ac6586e7ffea426dfe59186f0edc287efc93",
+    "duration_seconds": 7.6,
+    "expected_failure_fingerprint": "REQ-G11-V16-FIXED-DISCRETE: battery charging mode is absent from fix set",
+    "log_uri": "docs/gate-11/tdd/logs/v16-oracle-discrete-red.log"
+  },
+  "green": {
+    "timestamp": "2026-08-29T23:35:00+12:00",
+    "exit_code": 0,
+    "output_sha256": "32a1b0dd9facdc645ab8751848b223a0a99d7b6b36dde4ee2204c6751841caa3",
+    "duration_seconds": 5.27,
+    "log_uri": "docs/gate-11/tdd/logs/gate11-green.log"
+  },
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed machine-evidence validator"},
+  "exception": null
+}

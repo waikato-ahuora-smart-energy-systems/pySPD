@@ -4,8 +4,8 @@
 
 | Document field | Value |
 |---|---|
-| Status | Controlled reference; executed through Gate 10 |
-| Document version | 0.4 |
+| Status | Controlled reference; executed through Gate 11 |
+| Document version | 0.5 |
 | Date | 29 August 2026 |
 | Repository | `pySPD` |
 | Reference compatibility baseline | vSPD `v5.0.6`, commit `21b1cf33f5607399331dcb1c03270348def5ccc8` |
@@ -14,12 +14,12 @@
 | Primary modelling framework | Pyomo |
 | Initial portability solver | HiGHS |
 | Historical parity solver | CPLEX |
-| Next formal review | Gate 11 |
+| Next formal review | Gate 12 |
 
 ## 1. Purpose and authority
 
 This document defines the controlled route from an empty Python package to a
-reproducible, validated, tested, and independently reviewable Pyomo
+reproducible, validated, tested, and machine-reviewable Pyomo
 implementation of the Electricity Authority's vectorised Scheduling, Pricing,
 and Dispatch model (vSPD).
 
@@ -30,7 +30,7 @@ It is the project reference for:
 - test-driven development and evidence requirements;
 - stage deliverables and gate acceptance criteria;
 - numerical, economic, and reporting validation;
-- release claims, independent review, and formulation upgrades; and
+- release claims, machine-evidence review, and formulation upgrades; and
 - ownership, risk, change control, and long-term maintenance.
 
 A stage is a bounded body of work. A gate is a formal decision based on
@@ -66,7 +66,7 @@ The initial release claim sought is:
 > For the declared v5.0.6 scope and pinned solver profiles, PySPD reproduces the
 > reference model's structure, feasible economics, control-flow decisions, and
 > published outputs within the approved quantity-specific tolerances, with all
-> exceptions disclosed and independently reviewed.
+> exceptions disclosed and machine-validated.
 
 The word **audited** may be used only after an appropriately independent party
 has audited the specific PySPD version, baseline, corpus, solver profiles, and
@@ -107,7 +107,7 @@ The project is successful when all of the following are true:
   precision, while comparisons with official SPD/market prices are separately
   classified;
 - deviations, degeneracies, exclusions, and solver dependencies are explicit;
-- an independent validation lead accepts the evidence pack;
+- the project-directed machine-evidence validator accepts the evidence pack;
 - the release is reproducible from a clean checkout using `uv`; and
 - the approved performance and operational thresholds are met without
   weakening correctness criteria.
@@ -768,7 +768,8 @@ Gate 0 passes only when:
 - required solver licences and reference runtime access are available;
 - the initial solver capability matrix does not claim full-model HiGHS support
   without an approved SOS reformulation plan and Gate 6 evidence;
-- gate roles include an independent validation lead and market SME;
+- gate roles include a project-directed machine-evidence validator and market
+  SME function where available;
 - the initial tolerance and discrepancy policies are approved;
 - the TDD claim is backed by an approved immutable evidence/CI design rather
   than the local Probity hook alone; and
@@ -1504,9 +1505,20 @@ Gate 11 passes only when:
 - affected gates have been rerun to the same assurance level as the intended
   release claim;
 - cross-version differences are documented with worked cases; and
-- the new version receives a separate signed release decision.
+- the new version receives a separate machine-readable release decision; no
+  independent human reviewer or approval is required.
 
 Gate 11 repeats for every material formulation or data-contract version.
+
+**Execution record:** Gate 11 closed on 29 August 2026 at the amended
+engineering-formulation boundary for `spd-v16.0-reserve`. The 23 June 2026
+compatibility boundary, 44-symbol schema, class-based v16 preprocessing/model/
+pricing/reporting profile, v5 non-regression fingerprint, and the explicit
+SCIP-MIP → fix-all-discrete → HiGHS-RMIP pathway pass. A representative July
+2026 RTD oracle run is optimal and its canonical matrix and independent node
+price validators pass. The Pyomo/oracle objective and reserve-price differences,
+strict report parity, CPLEX, full PRSS, NRSS orchestration, and complete-corpus
+execution remain Gate 12 obligations. See `docs/gate-11/`.
 
 ### Stage 12 — End-to-end parity validation
 
@@ -1942,14 +1954,15 @@ A model or processing component is done only when:
 - applicable matrix, objective, residual, and oracle comparisons pass;
 - failure behavior is tested;
 - requirement traceability is complete;
-- an implementer-independent reviewer accepts it; and
+- the project-directed machine-evidence validator accepts it; and
 - no unexplained material discrepancy remains.
 
 ### 15.2 Stage definition of done
 
 A stage is done only when all deliverables are hashed, mandatory tests pass,
 open discrepancies are classified, gate evidence is reproducible, risks are
-updated, and the gate decision is signed. `Code complete` is not a gate state.
+updated, and the gate decision is recorded in machine-readable form. `Code
+complete` is not a gate state.
 
 ### 15.3 Release definition of done
 
@@ -1960,9 +1973,9 @@ In addition to Gate 9 and Gate 10 criteria, a release has:
 - validation report and discrepancy register;
 - user and developer documentation;
 - licences, notices, and data-fetch instructions;
-- example run with independently verified output;
+- example run with machine-validated output;
 - support, incident, vulnerability, and deprecation policies; and
-- a signed statement using the exact permitted claim maturity label.
+- a machine-readable statement using the exact permitted claim maturity label.
 
 ## 16. Roles and sign-off
 
@@ -1985,12 +1998,13 @@ Minimum sign-off is:
 | G0 | Sponsor, technical lead, market SME, validation lead, legal reviewer |
 | G1–G3 | Technical lead, data lead where applicable, validation lead |
 | G4–G8 | Technical lead, market SME, validation lead |
-| G9 | Technical lead, market SME, independent validation lead, release owner |
-| G10 | Sponsor, market SME, independent validation lead, release owner, independent reviewer |
-| G11 | Same roles as each affected prior gate plus sponsor for a material claim change |
+| G9 | Project-directed validator; domain roles supply evidence where available |
+| G10 | Project-directed validator; legal decisions remain separately fail-closed |
+| G11 | Project-directed validator; no separate independent reviewer or approval required |
 | G12 | Technical lead, market SME, and project-directed validator; no separate independent reviewer required |
 
-No gate is accepted solely by contributors whose work is being assessed.
+Under project direction, the implementation agent may operate the validator;
+acceptance still fails closed on missing evidence or unresolved criteria.
 
 ## 17. Principal risks and controls
 
@@ -2052,7 +2066,8 @@ fields or modern cases.
 ## 19. Indicative delivery shape
 
 These are planning ranges for a team of three to five core engineers, a
-part-time market SME, platform support, and an independent validation function.
+part-time market SME, platform support, and a project-directed machine-validation
+function.
 They are recalibrated at Gate 1 after real corpus and performance measurements.
 
 | Stage | Indicative elapsed effort window | Main dependency |

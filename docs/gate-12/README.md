@@ -4,7 +4,7 @@
 |---|---|
 | Gate | G12 — E2E parity validated |
 | Status | **PLANNED — MANDATORY PARITY DEBT REGISTERED** |
-| Applicable baseline | vSPD v5.0.6 at `21b1cf33f5607399331dcb1c03270348def5ccc8` |
+| Applicable baselines | vSPD v5.0.6 at `21b1cf33…`; SPD v16 feature source at `84ed3c9…` |
 | Entry | After Gate 10 for v5.0.6; after applicable Gate 11 work for a new formulation |
 | Package manager | `uv` only |
 | Strict profile | Historical pinned-vSPD compatibility solver/profile |
@@ -28,6 +28,17 @@ physics, fixed-discrete pricing, price repair, publication, and reports.
 | Official reserve prices | Identity set exact; max difference `0.0746` NZD/MWh | Strict-profile parity or case-specific degeneracy certificate |
 | Reports | Stage 8 price/publication surfaces | Every Gate 9 in-scope report and field compared end to end |
 | Repeat/resume | Analytic checkpoint contract | Repeated and resumed whole-day equality |
+
+## Gate 11 v16 parity debt
+
+| Obligation | Gate 11 evidence | Gate 12 completion condition |
+|---|---|---|
+| Representative RTD objective | Pyomo exceeds feature oracle by approximately `7.8328185` | Explain and eliminate the algebraic difference, or reject the compatibility claim |
+| Reserve prices | Both pathways are optimal but published reserve prices differ | Strict comparison plus finite-difference/basis classification |
+| PRSS | Schema and eight-interval selection characterized | Full solve, performance, prices, and reports |
+| NRSS | Schema characterized; orchestration unsupported | Add and qualify an explicit profile if included in the declared scope |
+| CPLEX | Deferred by project direction | Execute the strict profile before a CPLEX-based claim |
+| Formulation/source safeguard | PDF battery ambiguity rule differs from demonstrable feature-source behavior | Record the governing decision and compare its observable effect |
 
 ## Required evidence pack
 

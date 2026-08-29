@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G11-SPD16",
+  "requirement_ids": [
+    "REQ-G11-COMPATIBILITY",
+    "REQ-G11-SCHEMA",
+    "REQ-G11-PREPROCESSING",
+    "REQ-G11-FORMULATION",
+    "REQ-G11-PRICING",
+    "REQ-G11-REPORTING",
+    "REQ-G11-V5-NON-REGRESSION",
+    "REQ-G11-UV-GAMS-RUNTIME"
+  ],
+  "production_paths": [
+    "src/pyspd/application.py",
+    "src/pyspd/core_energy/components.py",
+    "src/pyspd/data/catalog.py",
+    "src/pyspd/hvdc/components.py",
+    "src/pyspd/network/components.py",
+    "src/pyspd/orchestration/__init__.py",
+    "src/pyspd/orchestration/selection.py",
+    "src/pyspd/orchestration/solver.py",
+    "src/pyspd/reporting.py",
+    "src/pyspd/reserve/components.py",
+    "src/pyspd/reserve/data.py",
+    "src/pyspd/solver.py",
+    "src/pyspd/v16/__init__.py",
+    "src/pyspd/v16/compatibility.py",
+    "src/pyspd/v16/components.py",
+    "src/pyspd/v16/data.py",
+    "src/pyspd/v16/formulation.py",
+    "src/pyspd/v16/preprocess.py",
+    "src/pyspd/v16/preprocessing.py",
+    "src/pyspd/v16/validation.py"
+  ],
+  "parent_commit": "0f28d6cbb81c213b33fc3b743da3171b52f00478",
+  "implementation_commit": "9c8355dee95af945656a77f86b5d2b6b7ff30728",
+  "test_patch_sha256": "03cf934783cff5a8d85f76c8566eca89f8c6377d7de6684b656ad2569f7fff12",
+  "test_files": [
+    {"path": "tests/hvdc/test_scip_backend.py", "sha256": "5076df2ba62af9e0aacd867f3abd351baa837da98ef5ccdf03cf34b17442f608"},
+    {"path": "tests/v16/test_compatibility_and_schema.py", "sha256": "15e36721dc8327ef6191f14af4122aa68459a057a6d2943db639386315f99a66"},
+    {"path": "tests/v16/test_formulation.py", "sha256": "ca0f415f0d45a0e465eb299340a5f8dd5eddb0172e21e27ef7d16512ddf34494"},
+    {"path": "tests/v16/test_preprocessing.py", "sha256": "f24c4a96d506437457ca2e3b50ee59967380b09c23a404cb0b10942faff20b3a"},
+    {"path": "tests/v16/test_v5_non_regression.py", "sha256": "84a0499d59190f92c0c8383d59cdb8ffbc2ddb8a53a97951fc74d82aac34e031"}
+  ],
+  "command": "uv run pytest tests/v16 tests/oracle/test_vspd_runner.py -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "df217cf4d8a60e9fe47070ee4db3ec2740f4e7539da5cd38d66fe566c6a387e4",
+  "red": {
+    "timestamp": "2026-08-29T22:53:00+12:00",
+    "exit_code": 2,
+    "output_sha256": "b53236f5e306421c48768c277614fee073a4991ea9c97bfa2879c4e88d189757",
+    "duration_seconds": 0.17,
+    "expected_failure_fingerprint": "REQ-G11-SPD16: v16 compatibility and formulation behavior is absent",
+    "log_uri": "docs/gate-11/tdd/logs/formulation-v16-red.log"
+  },
+  "green": {
+    "timestamp": "2026-08-29T23:35:00+12:00",
+    "exit_code": 0,
+    "output_sha256": "32a1b0dd9facdc645ab8751848b223a0a99d7b6b36dde4ee2204c6751841caa3",
+    "duration_seconds": 5.27,
+    "log_uri": "docs/gate-11/tdd/logs/gate11-green.log"
+  },
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed machine-evidence validator"},
+  "exception": null
+}
+

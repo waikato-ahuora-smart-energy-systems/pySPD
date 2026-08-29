@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "gate": 11,
+  "decision": "pass-amended-engineering-formulation-boundary",
+  "formulation_id": "spd-v16.0-reserve",
+  "effective_date": "2026-06-23",
+  "platform": "macos-arm64",
+  "package_management": "uv-only",
+  "implementation_commit": "9c8355dee95af945656a77f86b5d2b6b7ff30728",
+  "reference": {
+    "commit": "84ed3c99e76ee86fbeeef45250c950d5ffe13b5f",
+    "input_sha256": "bb4ca6367e8115b9b6d7f20d2050489ac2bd3206a1c6a39fb67deae18cb802cb",
+    "case_id": "31012026070255374",
+    "case_datetime": "2026-07-03T14:55:00+12:00",
+    "oracle_evidence_sha256": "364f89feb90692d5827273b9b9a424d14af42ad5aa2c7a83bd83c4c87b8c9387"
+  },
+  "source_characterization": {
+    "symbol_count": 44,
+    "offers": 128,
+    "offer_blocks": 181,
+    "tie_break_pairs": 3,
+    "battery_pairs": 3,
+    "preprocessing_signature": "2415fb8dbe530694c737ac7f446e61e4f3a89eb1bc31816d24ed3a81a4e747cc"
+  },
+  "pyomo": {
+    "variable_count": 62848,
+    "constraint_count": 33729,
+    "tie_break_constraint_count": 3,
+    "battery_pair_count": 3,
+    "structural_signature": "c9dbb92a2d34b986a7bf9eab1a9e518fe7901cf1a76d2bfdea29334feb6d6be5",
+    "primary": {"solver": "SCIP", "status": "optimal", "objective": 224118723.3571185},
+    "pricing": {"solver": "HiGHS", "status": "optimal", "objective": 224118723.35711846},
+    "fixed_discrete_count": 127,
+    "pricing_audit_issues": [],
+    "independent_delta_validator": "passed"
+  },
+  "authority_oracle": {
+    "primary": {"solver": "SCIP", "status": "optimal", "objective": 224118715.5243},
+    "pricing": {"solver": "HiGHS", "status": "optimal", "objective": 224118715.5243},
+    "all_optimal": true,
+    "profile_matches": true,
+    "listing_sha256": "6ae51c703e1add0147e54c74ce5a7015497e47c2bd4c0dbefb184cce27d9bdde",
+    "matrix": {
+      "rows": 33601,
+      "columns": 62533,
+      "nonzeros": 116646,
+      "semantic_sha256": "aabe80fb982a0a806e94452081175597add8ab1f620fbe81efc6ec560d04aa21",
+      "validator": "passed"
+    },
+    "node_price_validator": {"passed": true, "price_count": 567, "transfer_count": 2},
+    "published_energy_logical_sha256": "22cda4f68fcb78827c4bae656f35e7016d661327391a8370bd59ffd7f9842594"
+  },
+  "non_regression": {
+    "v5_structural_fingerprint": "592a972925b1d4b44d3253d7dd8f1a7c1ccdfa857b48b7b3aabb844837c47801",
+    "focused_pytest": {"passed": 22, "failed": 0},
+    "full_pytest": {"passed": 257, "skipped": 1, "failed": 0},
+    "ruff": "passed",
+    "mypy": "passed"
+  },
+  "known_differences": {
+    "rtd_objective_delta_pyomo_minus_oracle": 7.8328185,
+    "reserve_price_parity": "unresolved",
+    "strict_parity": false
+  },
+  "deferred_to_gate_12": [
+    "resolve-rtd-objective-and-reserve-price-differences",
+    "strict-energy-reserve-and-report-parity",
+    "cplex-validation",
+    "prss-full-solve-and-performance",
+    "nrss-orchestration-profile",
+    "complete-day-and-complete-corpus-validation",
+    "linux-x86_64-ci-execution"
+  ],
+  "claim": {
+    "versioned_v16_engineering_profile_authorized": true,
+    "strict_e2e_parity": false,
+    "public_distribution_authorized": false
+  },
+  "passed": true
+}
+
