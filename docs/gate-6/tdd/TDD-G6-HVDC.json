@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G6-HVDC",
+  "requirement_ids": [
+    "REQ-G6-HVDC",
+    "REQ-G6-SOS",
+    "REQ-G6-DISCRETE",
+    "REQ-G6-SCIP-MIP",
+    "REQ-G6-FIXED-RMIP-PRICE",
+    "REQ-G6-DIAGNOSTICS",
+    "REQ-G6-MATRIX-PARITY"
+  ],
+  "production_paths": [
+    "src/pyspd/hvdc/__init__.py",
+    "src/pyspd/hvdc/components.py",
+    "src/pyspd/hvdc/data.py",
+    "src/pyspd/hvdc/diagnostics.py",
+    "src/pyspd/hvdc/formulation.py",
+    "src/pyspd/hvdc/validation.py",
+    "src/pyspd/network/components.py",
+    "src/pyspd/solver.py",
+    "tools/gate6/__init__.py",
+    "tools/gate6/oracle_matrix.py",
+    "tools/gate6/qualification.py"
+  ],
+  "parent_commit": "5815b643d37e7a7f72823ecac3d9baada2a198f2",
+  "implementation_commit": "098ecd4ca8a01a37495651275fe70304ac84976d",
+  "test_patch_sha256": "c0e0f7f46750ce49c01b4992b83a05095906290c99df95676a477efec5a52910",
+  "test_files": [
+    {"path": "tests/hvdc/conftest.py", "sha256": "cd7b6e19fd00d0dee6501e4eda02f4fe4ce2e2b295d7b82d4c5c28c57d9d4d53"},
+    {"path": "tests/hvdc/test_gate6_contract.py", "sha256": "0731e3afa21559765339cf9cb4ad3b0b5c99d47bb34fe4b45a6acefdb4666edc"},
+    {"path": "tests/hvdc/test_gate6_evidence.py", "sha256": "a66ec73a9b8181c863eac5e5e0f1d787d8bb9ddea3d5baf7c8452a014b3884be"},
+    {"path": "tests/hvdc/test_hvdc_formulation.py", "sha256": "453f4368231f82c0aea82785a72d0baf137b1dd9d763714672a0f4b867d67681"},
+    {"path": "tests/hvdc/test_scip_backend.py", "sha256": "422f5336f671f181e20b095c27bc5e720db79c7990f3ca783aff8063a4301ec6"}
+  ],
+  "command": "uv run pytest tests/hvdc -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "1d1f003d6d840cacd812b5f0e08a21e1dad232bf71640fd3131c584e66ce06da",
+  "red": {
+    "timestamp": "2026-08-29T22:30:00+12:00",
+    "exit_code": 1,
+    "output_sha256": "4859add3961e2f167390ffe14bdbc4669a07c42b98072e4195ed7f5ae61cf1c8",
+    "duration_seconds": 0.10,
+    "expected_failure_fingerprint": "REQ-G6-HVDC: class-based HVDC and MIP-pricing formulation is absent",
+    "log_uri": "docs/gate-6/tdd/logs/hvdc-red.log"
+  },
+  "green": {
+    "timestamp": "2026-08-29T23:30:00+12:00",
+    "exit_code": 0,
+    "output_sha256": "1e08491c54accac3d7bedd35e1206255fb1b16236caaff1e9e2a9e34994de598",
+    "duration_seconds": 30.25,
+    "log_uri": "docs/gate-6/tdd/logs/hvdc-green.log"
+  },
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}

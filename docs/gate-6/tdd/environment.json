@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "captured_date": "2026-08-29",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "python": "3.13.14",
+  "package_manager": "uv",
+  "uv_lock_sha256": "70fcf7f6d7130ba5b3a552a21e0cbc3709eaf130dccc705e5280aab917ad7b2f",
+  "packages": {
+    "highspy": "1.15.1",
+    "pyomo": "6.10.1",
+    "pytest": "9.1.1"
+  },
+  "gams_system": "54",
+  "mip_solver": "SCIP through the licensed GAMS 54 shell interface",
+  "qualification_profile": "macOS arm64 with GAMS-SCIP primary MIP and HiGHS fixed-RMIP pricing; CPLEX and Linux x86_64 deferred by ADR-0008 and ADR-0011",
+  "log_capture": "Retained focused behavioral red/green output; hashes bind the UTF-8 bytes."
+}
