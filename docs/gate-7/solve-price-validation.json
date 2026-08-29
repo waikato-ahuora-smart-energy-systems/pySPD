@@ -1,0 +1,133 @@
+{
+  "case": {
+    "case_id": "11012022110000479",
+    "date_time": "01-NOV-2022 13:00",
+    "trading_period": "TP27"
+  },
+  "economic_perturbations": {
+    "effective_shared_reserve_ce_ece": 3e-05,
+    "exact": true,
+    "rtd_generation_change": 0.0005,
+    "shared_nfr": 1e-05,
+    "shared_reserve": 2e-05
+  },
+  "energy_price_finite_difference": {
+    "absolute_error": 1.24733289146306e-05,
+    "dual_price_nzd_per_mwh": 7.071780606047306,
+    "finite_difference_price_nzd_per_mwh": 7.071793079376221,
+    "fixed_decisions_unchanged": true,
+    "node": [
+      "11012022110000479",
+      "01-NOV-2022 13:00",
+      "TWI2201"
+    ],
+    "passed": true,
+    "perturbation_mw": 0.0001,
+    "tolerance": 0.01
+  },
+  "independent_validation": {
+    "maximum_residual": 8.940696716308594e-08,
+    "passed": true,
+    "residual_count": 1211,
+    "tolerance": 1e-06
+  },
+  "model": {
+    "constraint_count_with_portable_sos2": 32254,
+    "native_sos_count": 0,
+    "oracle_projection_constraint_count": 32126,
+    "oracle_projection_variable_count": 56693,
+    "portable_sos2_binary_count": 108,
+    "portable_sos2_constraint_count": 128,
+    "structural_signature": "6ac42afee400a329204b73618d7d1e12da27431795712892e91ac97be8b67726",
+    "variable_count_with_portable_sos2": 56801
+  },
+  "passed": true,
+  "pricing_model_audit": {
+    "approved_algebra_unchanged": true,
+    "complete_fix_set": true,
+    "fixed_name_count": 124,
+    "passed": true,
+    "pricing_algebra_sha256": "964f8cd4d5b8d6625abfff61170248ead52fd4cd5917e925be6ac10f555f394a",
+    "pricing_discrete_count": 0,
+    "pricing_sos_count": 0,
+    "pricing_state_sha256": "7be11c4c3df723acbdd8b72c3f3f9718d8a731dcb2e530dc347e4c5af928e701",
+    "primary_algebra_sha256": "964f8cd4d5b8d6625abfff61170248ead52fd4cd5917e925be6ac10f555f394a",
+    "primary_discrete_count": 124,
+    "primary_sos_count": 0,
+    "primary_state_sha256": "da58f5dd2b509d7bef9bf2facca9fb762256be4b6f9e2d94a686f5ff6b4707b2"
+  },
+  "profile": "vspd-v5.0.6-reserve-stage7",
+  "reserve_price_finite_difference": {
+    "absolute_error": 3.0136108398470807e-06,
+    "dual_price": 0.09,
+    "finite_difference_price": 0.09000301361083984,
+    "key": [
+      "11012022110000479",
+      "01-NOV-2022 13:00",
+      "NI",
+      "SIR"
+    ],
+    "passed": true,
+    "perturbation_mw": 0.0001,
+    "tolerance": 1e-05
+  },
+  "risk_coverage": {
+    "analytic_binding_and_nonbinding_coverage": "tests/reserve/test_reserve_formulation.py",
+    "representative_case": {
+      "DCCE": {
+        "binding": 0,
+        "nonbinding": 4
+      },
+      "DCECE": {
+        "binding": 0,
+        "nonbinding": 4
+      },
+      "HVDCsecRisk": {
+        "binding": 0,
+        "nonbinding": 4
+      },
+      "HVDCsecRiskECE": {
+        "binding": 0,
+        "nonbinding": 4
+      },
+      "genRisk": {
+        "binding": 2,
+        "nonbinding": 2
+      },
+      "genRiskECE": {
+        "binding": 0,
+        "nonbinding": 4
+      },
+      "manual": {
+        "binding": 2,
+        "nonbinding": 2
+      },
+      "manualECE": {
+        "binding": 0,
+        "nonbinding": 4
+      }
+    }
+  },
+  "schema_version": 1,
+  "solution": {
+    "all_prices_finite": true,
+    "fixed_discrete_count": 124,
+    "node_price_count": 523,
+    "objective_absolute_difference": 8.940696716308594e-08,
+    "pricing_objective_nzd": 90147619.2549578,
+    "primary_objective_nzd": 90147619.25495788,
+    "reserve_price_count": 4
+  },
+  "source": {
+    "name": "RTD_202211011300_11012022110000479_20221101125901.gdx",
+    "sha256": "2e21665f55aaf9d8b7ef566c3ba436f8ae19ab355694caf52c7fc01e3f8f423b"
+  },
+  "state_machine": {
+    "detected_issues": [],
+    "elapsed_seconds": 14.77415941702202,
+    "pricing_backend": "highs",
+    "pricing_status": "optimal",
+    "primary_backend": "gams-scip",
+    "primary_status": "optimal"
+  }
+}

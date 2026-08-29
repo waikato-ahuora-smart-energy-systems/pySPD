@@ -1,0 +1,17 @@
+Command: uv run pytest tests/reserve/test_gate7_contract.py -q
+Exit: 1
+
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________ test_gate7_full_reserve_vertical_slice_exists _________________
+
+    def test_gate7_full_reserve_vertical_slice_exists() -> None:
+>       assert Path("src/pyspd/reserve/formulation.py").is_file(), (
+            "REQ-G7-RESERVE: class-based reserve/risk/NMIR formulation is absent"
+        )
+E       AssertionError: REQ-G7-RESERVE: class-based reserve/risk/NMIR formulation is absent
+
+tests/reserve/test_gate7_contract.py:5: AssertionError
+=========================== short test summary info ============================
+FAILED tests/reserve/test_gate7_contract.py::test_gate7_full_reserve_vertical_slice_exists
+1 failed in 0.10s

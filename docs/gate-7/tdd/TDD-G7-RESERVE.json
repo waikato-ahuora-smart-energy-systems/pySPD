@@ -1,0 +1,54 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G7-RESERVE",
+  "requirement_ids": [
+    "REQ-G7-RESERVE",
+    "REQ-G7-RISK",
+    "REQ-G7-NMIR",
+    "REQ-G7-SCARCITY",
+    "REQ-G7-SCIP-FIX-HIGHS",
+    "REQ-G7-PRICE",
+    "REQ-G7-MATRIX-PARITY"
+  ],
+  "production_paths": [
+    "src/pyspd/hvdc/components.py",
+    "src/pyspd/hvdc/formulation.py",
+    "src/pyspd/reserve/__init__.py",
+    "src/pyspd/reserve/components.py",
+    "src/pyspd/reserve/data.py",
+    "src/pyspd/reserve/formulation.py",
+    "src/pyspd/reserve/validation.py",
+    "tools/gate7/__init__.py",
+    "tools/gate7/oracle_matrix.py",
+    "tools/gate7/qualification.py"
+  ],
+  "parent_commit": "d9d396955f331b9aeb4c184b2c76710fa5809ad4",
+  "implementation_commit": "93d098a0803d66307de311c4df3f0f87d526afef",
+  "test_patch_sha256": "462f83d45d05dd5a53ac2bff5afa236fe5c0625729effcbebaf21ea346171a9b",
+  "test_files": [
+    {"path": "tests/reserve/conftest.py", "sha256": "df1b747e1a1b51404a2fa1146a5a4266ae66fb1570442440a504ababbb0d8387"},
+    {"path": "tests/reserve/test_gate7_contract.py", "sha256": "d4711e6ddf3c56f53344ac5506f4f93df81db7b49eeb04cd018fd4b7ebb6476a"},
+    {"path": "tests/reserve/test_reserve_formulation.py", "sha256": "905584d74bf77a383733217ff8922f688e4b2cb8dd60d5b7643cca26d891a9e4"}
+  ],
+  "command": "uv run pytest tests/reserve/test_gate7_contract.py tests/reserve/test_reserve_formulation.py -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "1d1f003d6d840cacd812b5f0e08a21e1dad232bf71640fd3131c584e66ce06da",
+  "red": {
+    "timestamp": "2026-08-29T18:51:23+12:00",
+    "exit_code": 1,
+    "output_sha256": "b657b58b6ff6e4244bf9b201383ca44b94607c49c026fbb5214a5908df8c3cba",
+    "duration_seconds": 0.10,
+    "expected_failure_fingerprint": "REQ-G7-RESERVE: class-based reserve/risk/NMIR formulation is absent",
+    "log_uri": "docs/gate-7/tdd/logs/reserve-red.log"
+  },
+  "green": {
+    "timestamp": "2026-08-29T19:29:00+12:00",
+    "exit_code": 0,
+    "output_sha256": "6d056ace5e446058d16b793c2148bbe67bf07e1b6d5ac8286a18a7264fcb646f",
+    "duration_seconds": 8.95,
+    "log_uri": "docs/gate-7/tdd/logs/reserve-green.log"
+  },
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}

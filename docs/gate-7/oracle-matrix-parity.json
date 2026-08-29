@@ -1,0 +1,54 @@
+{
+  "case": {
+    "case_id": "11012022110000479",
+    "date_time": "01-NOV-2022 13:00",
+    "trading_period": "TP27"
+  },
+  "differences": {
+    "column_mismatch_sample": {},
+    "column_mismatches": 0,
+    "column_mismatches_by_family": {},
+    "extra_columns": 0,
+    "extra_row_signature_sample": [],
+    "extra_rows": 0,
+    "missing_columns": 0,
+    "missing_row_signature_sample": [],
+    "missing_rows": 0,
+    "unmapped_pyomo_terms": 0
+  },
+  "gams": {
+    "column_count": 15381,
+    "column_sha256": "63ee72e73ae0641c9c297ec8ffc82f2f6930a0b8d141b2cfeb81d5d510b44c1e",
+    "row_count": 1403,
+    "row_sha256": "490df7c1e11343b15965f11b4982dc20755d755992131fcd502c5b88aab09b23"
+  },
+  "passed": true,
+  "profile": "vspd-v5.0.6-reserve-stage7",
+  "projection": {
+    "portable_sos2_columns_excluded": true,
+    "portable_sos2_rows_excluded": true,
+    "row_names_ignored": true,
+    "row_signature": "canonical bounds plus semantic column/coefficient multiset"
+  },
+  "python": {
+    "column_count": 15381,
+    "column_sha256": "63ee72e73ae0641c9c297ec8ffc82f2f6930a0b8d141b2cfeb81d5d510b44c1e",
+    "row_count": 1403,
+    "row_sha256": "490df7c1e11343b15965f11b4982dc20755d755992131fcd502c5b88aab09b23"
+  },
+  "schema_version": 1,
+  "sources": {
+    "dictionary_gdx": {
+      "name": "pyspd_solve_1_dict.gdx",
+      "sha256": "910f50e84fe2a74f7338e553f85f40b9d468058364bfa9c169d6038a6f9e8d7f"
+    },
+    "input_gdx": {
+      "name": "RTD_202211011300_11012022110000479_20221101125901.gdx",
+      "sha256": "2e21665f55aaf9d8b7ef566c3ba436f8ae19ab355694caf52c7fc01e3f8f423b"
+    },
+    "matrix_gdx": {
+      "name": "pyspd_solve_1_matrix.gdx",
+      "sha256": "cd2d0d9bca43a7071ce19e07b53932090a316b39e202aa8c079083a0686a40a1"
+    }
+  }
+}
