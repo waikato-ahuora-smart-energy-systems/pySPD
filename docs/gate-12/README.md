@@ -152,6 +152,10 @@ The command retries only the observed transient GAMS network-licence session
 error, by default up to six attempts separated by 300 seconds. Every other GAMS
 failure remains immediate and fail-closed; the retry does not relax optimality,
 case-order, artifact-hash, or checkpoint validation.
+The network entitlement also requires GAMS to allocate local IPC ports. A
+restricted sandbox that reports no available ports through `gamsprobe` produces
+the same top-level licence message but cannot be repaired by waiting; licensed
+enumeration must run in an execution context that permits that local IPC.
 
 `ApplicationConfiguration.case_ids` is the governed PySPD replay selector. The
 ordered identity list is included in the configuration hash; duplicates, blank
