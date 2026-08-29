@@ -2,7 +2,7 @@
 
 | ID | Exit criterion | Current evidence | Status |
 |---|---|---|---|
-| `G12-01` | Exactly 546 unique affected identities across all 139 Gate 1 hashes | All 139 hashes screened; 434 diagnostic candidates and a 112-count gap recorded without claiming membership; oracle corrected to the disclosed `dailymode = 1` profile | In progress |
+| `G12-01` | Exactly 546 unique affected identities across all 139 Gate 1 hashes | All 139 hashes screened; 434 diagnostic candidates and a 112-count gap recorded without claiming membership; corrected daily-mode benchmark completed 305/305 optimal broad-surface cases and is explicitly excluded; exact RTD-only shard execution is in progress | In progress |
 | `G12-02` | All 546 cases replayed through pinned GAMS and PySPD | Population must complete before replay | Pending |
 | `G12-03` | Complete normal, outage, high/negative-price, scarcity, islanding, 46-period, and 50-period days | Required categories enforced by `Gate12EvidenceIndex`; Gate 1 DST inputs are hash-bound | Pending execution |
 | `G12-04` | Identical selection, order, prior-dispatch initialization, and fallback path | Case-order and state-transition surfaces mandatory in each E2E case/day record | Pending execution |

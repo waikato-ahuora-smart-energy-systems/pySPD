@@ -102,6 +102,14 @@ qualifies that candidate calculation, but the run is explicitly rejected as
 evidence for the Authority-disclosed daily-mode population. A new workspace and
 profile are required for all accepted population checkpoints.
 
+A corrected `dailymode = 1` benchmark on `Pricing_20230510.gdx` completed all
+305 cases on the broad historical `All` surface with optimal primary and cleanup
+solves and found zero material transfers, agreeing with the diagnostic screen's
+zero candidates for that date. Its hash-bound result is retained in
+[`historical-dailymode1-benchmark.json`](historical-dailymode1-benchmark.json),
+but is excluded from population qualification because it predates the exact
+RTD-only execution profile (278 cases on that input).
+
 Run or resume the governed enumeration with `uv`:
 
 ```bash
