@@ -24,7 +24,7 @@ from tools.oracle.vspd import ListingResult, VspdListingParser
 MATERIAL_SHORTFALL_MW = 1e-6
 HISTORICAL_EXECUTION_PROFILE = (
     "historical-v5.0.2-dailymode1-scip-solvelink5-first-loop-rtd-only-"
-    "canonical-order"
+    "canonical-order-exact-positive"
 )
 HISTORICAL_COLUMNS = (
     "case_id",
@@ -380,7 +380,7 @@ class SubprocessHistoricalGamsExecutor:
 class HistoricalVspdSourcePatcher:
     """Apply the minimal, fail-closed v5.0.2 population-discovery overlay."""
 
-    profile = "historical-v5.0.2-dailymode1-scip-first-loop"
+    profile = "historical-v5.0.2-dailymode1-scip-first-loop-exact-positive"
 
     def apply(self, programs: Path) -> HistoricalPatchEvidence:
         settings = programs / "vSPDsettings.inc"
@@ -454,11 +454,6 @@ class HistoricalVspdSourcePatcher:
             solve_text,
             r"^(PotentialModellingInconsistency\(ca,dt,n\)\s*=\s*1\s*\$[^\n]*;)$",
             r"\1\nmaxSolveLoops(ca,dt) $ case2dt(ca,dt) = 1.5;",
-        )
-        solve_text = self._replace(
-            solve_text,
-            "EnergyShortfallMW(t,n) > 0",
-            "EnergyShortfallMW(t,n) > 0.000001",
         )
         solve_text = self._replace(
             solve_text,
@@ -582,9 +577,9 @@ class HistoricalShortfallEvidence:
             raise EvidenceContractError(
                 "REQ-G12-HISTORICAL: discovery must use the first solve loop"
             )
-        if energy <= MATERIAL_SHORTFALL_MW:
+        if energy < 0.0:
             raise EvidenceContractError(
-                "REQ-G12-HISTORICAL: expected a material shortfall"
+                "REQ-G12-HISTORICAL: expected a non-negative shortfall trigger"
             )
         if adjustment < energy:
             raise EvidenceContractError(

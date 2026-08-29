@@ -66,8 +66,8 @@ def test_historical_shortfall_evidence_accepts_optimal_first_loop_rows() -> None
             "first solve loop",
         ),
         (
-            "5101|06-NOV-2022 07:00|WAI0111|1|0.0000001|0.0002001|1|1\n",
-            "material shortfall",
+            "5101|06-NOV-2022 07:00|WAI0111|1|-0.0000001|0.0002001|1|1\n",
+            "non-negative shortfall",
         ),
         (
             "5101|06-NOV-2022 07:00|WAI0111|1|4.5|4.5002|8|1\n",
@@ -128,14 +128,17 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
     patcher = HistoricalVspdSourcePatcher()
     result = patcher.apply(programs)
 
-    assert result.profile == "historical-v5.0.2-dailymode1-scip-first-loop"
+    assert result.profile == (
+        "historical-v5.0.2-dailymode1-scip-first-loop-exact-positive"
+    )
     assert len(result.logical_sha256) == 64
     settings = (programs / "vSPDsettings.inc").read_text()
     solve = (programs / "vSPDsolve.gms").read_text()
     assert "Scalar dailymode                         / 1 / ;" in settings
     assert "option lp = HiGHS ;" in solve
     assert "option mip = SCIP ;" in solve
-    assert "EnergyShortfallMW(t,n) > 0.000001" in solve
+    assert "EnergyShortfallMW(t,n) > 0" in solve
+    assert "EnergyShortfallMW(t,n) > 0.000001" not in solve
     assert (
         "loop( (t,n) $ (abs(EnergyShortfallMW(t,n)) > 0.000001)," in solve
     )
@@ -143,6 +146,15 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
 
     with pytest.raises(EvidenceContractError, match="source drift"):
         patcher.apply(programs)
+
+
+def test_historical_evidence_retains_tiny_positive_or_eps_rendered_trigger() -> None:
+    evidence = HistoricalShortfallEvidence.parse(
+        HEADER + "case|date|node|1|0.0|0.0000001|1|1\n",
+        source_name="Pricing_20221106",
+    )
+
+    assert evidence.affected_cases == (("case", "date"),)
 
 
 def _checkpoint() -> HistoricalPopulationCheckpoint:

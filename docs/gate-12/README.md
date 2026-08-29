@@ -80,7 +80,10 @@ The population oracle is pinned to vSPD v5.0.2 commit
 `3360a91ebd48f2e3cbb52a5e6766d893011054be`. It retains `dailymode = 1`, because
 the Authority's 546-interval disclosure is specifically the daily-mode RTD
 defect, uses SCIP for the primary MIP, limits discovery to the first historical
-shortfall decision, and records only shortfalls above `1e-6 MW`.
+shortfall decision, and preserves the pinned model's exact strict-positive
+shortfall predicate. Evidence retains every eligible identity, including a GAMS
+EPS value that renders numerically as zero; the `1e-6 MW` threshold belongs only
+to the explicitly non-qualifying analytic candidate screen.
 The source overlay is fail-closed and hash-addressed; unexpected upstream text
 does not get silently patched.
 
@@ -111,6 +114,13 @@ zero candidates for that date. Its hash-bound result is retained in
 [`historical-dailymode1-benchmark.json`](historical-dailymode1-benchmark.json),
 but is excluded from population qualification because it predates the exact
 RTD-only execution profile (278 cases on that input).
+
+An initial exact-order production attempt was invalidated before population use
+after its first date exposed that the forensic overlay had applied the analytic
+`1e-6 MW` threshold to the historical model decision itself. No result from that
+profile is reusable. The corrected `exact-positive` profile leaves
+`EnergyShortfallMW > 0` unchanged and restricts the threshold only to progress
+logging.
 
 Run or resume the governed enumeration with `uv`:
 
