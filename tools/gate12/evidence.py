@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import math
 import re
 from dataclasses import dataclass
@@ -122,6 +124,98 @@ class DegeneracyCertificate:
             and self.candidate_value == actual.value
             and self.method.strip()
             and _SHA256.fullmatch(self.evidence_sha256)
+        )
+
+
+@dataclass(frozen=True)
+class TwoSidedDegeneracyEvidence:
+    """Prove that two reported prices are valid subgradients at one LP kink."""
+
+    case_id: str
+    observable_kind: str
+    identity: tuple[str, ...]
+    reference_value: float
+    candidate_value: float
+    negative_perturbation_derivative: float
+    positive_perturbation_derivative: float
+    derivative_tolerance: float
+    common_objective_absolute_error: float
+    common_objective_tolerance: float
+    reference_kkt_passed: bool
+    candidate_kkt_passed: bool
+
+    def certificate(self) -> DegeneracyCertificate:
+        numeric = (
+            self.reference_value,
+            self.candidate_value,
+            self.negative_perturbation_derivative,
+            self.positive_perturbation_derivative,
+            self.derivative_tolerance,
+            self.common_objective_absolute_error,
+            self.common_objective_tolerance,
+        )
+        if any(not math.isfinite(value) for value in numeric):
+            raise EvidenceContractError(
+                "REQ-G12-DEGENERACY: evidence values must be finite"
+            )
+        if self.derivative_tolerance < 0.0 or self.common_objective_tolerance < 0.0:
+            raise EvidenceContractError(
+                "REQ-G12-DEGENERACY: tolerances must be non-negative"
+            )
+        lower = min(
+            self.negative_perturbation_derivative,
+            self.positive_perturbation_derivative,
+        )
+        upper = max(
+            self.negative_perturbation_derivative,
+            self.positive_perturbation_derivative,
+        )
+        within_subgradient = all(
+            lower - self.derivative_tolerance
+            <= value
+            <= upper + self.derivative_tolerance
+            for value in (self.reference_value, self.candidate_value)
+        )
+        passed = bool(
+            within_subgradient
+            and self.common_objective_absolute_error
+            <= self.common_objective_tolerance
+            and self.reference_kkt_passed
+            and self.candidate_kkt_passed
+        )
+        payload = {
+            "case_id": self.case_id,
+            "observable_kind": self.observable_kind,
+            "identity": list(self.identity),
+            "reference_value": self.reference_value.hex(),
+            "candidate_value": self.candidate_value.hex(),
+            "negative_perturbation_derivative": (
+                self.negative_perturbation_derivative.hex()
+            ),
+            "positive_perturbation_derivative": (
+                self.positive_perturbation_derivative.hex()
+            ),
+            "derivative_tolerance": self.derivative_tolerance.hex(),
+            "common_objective_absolute_error": (
+                self.common_objective_absolute_error.hex()
+            ),
+            "common_objective_tolerance": self.common_objective_tolerance.hex(),
+            "reference_kkt_passed": self.reference_kkt_passed,
+            "candidate_kkt_passed": self.candidate_kkt_passed,
+            "passed": passed,
+        }
+        evidence_sha256 = hashlib.sha256(
+            json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+        return DegeneracyCertificate(
+            case_id=self.case_id,
+            observable_kind=self.observable_kind,
+            identity=self.identity,
+            reference_value=self.reference_value,
+            candidate_value=self.candidate_value,
+            method="common-optimal-face+kkt+two-sided-finite-difference",
+            evidence_sha256=evidence_sha256,
+            passed=passed,
         )
 
 
