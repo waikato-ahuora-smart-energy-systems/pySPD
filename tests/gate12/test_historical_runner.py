@@ -101,6 +101,7 @@ def _runner(tmp_path: Path) -> tuple[HistoricalPopulationRunner, FakeGamsExecuto
 
 
 def test_population_runner_executes_and_resumes_by_checkpoint(tmp_path: Path) -> None:
+    assert "rtd-only" in HISTORICAL_EXECUTION_PROFILE
     runner, executor = _runner(tmp_path)
 
     first = runner.run()
