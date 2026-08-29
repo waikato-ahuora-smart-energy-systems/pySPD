@@ -6,6 +6,10 @@
 | Date | 29 August 2026 |
 | Decider | Project owner direction recorded in the development task |
 
+> Amended 29 August 2026: exhaustive interval and E2E parity obligations are
+> assigned to Gate 12. Gate 8 accepts the bounded evidence described by its
+> amended closure decision.
+
 ## Context
 
 The vSPD v5.0.4 release identifies a corrected population of 546 RTD intervals
@@ -36,7 +40,7 @@ the following evidence exists:
    successfully under the accepted reference profile.
 
 Exact identification and replay of all 546 affected interval IDs is assigned
-to Stage 8 and remains a mandatory Gate 8 exit criterion. The T3 corpus retains
+to Stage 12 and remains a mandatory Gate 12 exit criterion. The T3 corpus retains
 the 546-interval/139-date scope. This decision changes the timing of exhaustive
 replay, not the population or the eventual equivalence claim.
 
@@ -50,8 +54,8 @@ remains deferred.
   the four date-level conditions above are met.
 - Gate 1 can close without claiming that all 546 intervals have already been
   replayed.
-- Stage 8 must identify or otherwise bind each of the 546 intervals and execute
-  its approved assertions before Gate 8 can pass.
+- Stage 12 must identify or otherwise bind each of the 546 intervals and execute
+  its approved assertions before Gate 12 can pass.
 - A missing, substituted, or hash-changed daily input reopens the Gate 1
   population qualification until the discrepancy is governed.
 - A relaxed LP screen cannot be used as evidence of interval membership.
@@ -62,12 +66,12 @@ remains deferred.
   SCIP solve produced a demonstrated false negative.
 - **Hold Gate 1 until the Authority publishes exact IDs.** Rejected because no
   such list is present in the public release and the complete daily inputs are
-  already immutable and available for Stage 8 replay.
+  already immutable and available for Gate 12 replay.
 - **Run exhaustive discrete enumeration in Gate 1.** Rejected as misplaced
   end-to-end orchestration validation; the obligation remains mandatory at
-  Gate 8.
+  Gate 12.
 - **Reduce the final population claim to representative fixtures.** Rejected;
-  all 546 intervals remain in Gate 8 and the T3 defect/history corpus.
+  all 546 intervals remain in Gate 12 and the T3 defect/history corpus.
 
 ## Verification
 
@@ -77,14 +81,14 @@ remains deferred.
   fixture and records the rejected relaxed selector.
 - `docs/gate-1/daylight-saving-characterization.json` binds successful 46- and
   50-period fixtures.
-- The Gate 1 checklist records date-level qualification and the Gate 8 plan
+- The Gate 1 checklist records date-level qualification and the Gate 12 plan
   retains the all-546 pass criterion.
 
 ## Revisit triggers
 
 - the Authority publishes an authoritative exact 546-case list;
 - a retained daily input changes hash or provenance;
-- exact Stage 8 replay finds an unrepresented reference branch that invalidates
+- exact Gate 12 replay finds an unrepresented reference branch that invalidates
   Gate 1 comparator or oracle assumptions; or
-- the release claim expands to assert all-546 replay before Gate 8 evidence
+- the release claim expands to assert all-546 replay before Gate 12 evidence
   exists.

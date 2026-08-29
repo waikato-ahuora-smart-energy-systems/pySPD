@@ -4,8 +4,8 @@
 
 | Document field | Value |
 |---|---|
-| Status | Controlled reference; Stage 8 implemented, Gate 8 held |
-| Document version | 0.2 |
+| Status | Controlled reference; executed through Gate 8 |
+| Document version | 0.3 |
 | Date | 29 August 2026 |
 | Repository | `pySPD` |
 | Reference compatibility baseline | vSPD `v5.0.6`, commit `21b1cf33f5607399331dcb1c03270348def5ccc8` |
@@ -14,7 +14,7 @@
 | Primary modelling framework | Pyomo |
 | Initial portability solver | HiGHS |
 | Historical parity solver | CPLEX |
-| Next formal review | Gate 8 |
+| Next formal review | Gate 9 |
 
 ## 1. Purpose and authority
 
@@ -671,6 +671,7 @@ branch, risk, objective, status, and price records corresponding to the source
 | Parity candidate | Required internal oracle tests pass on the declared candidate corpus |
 | Validated v5.0.6 implementation | Gate 9 full-corpus criteria and independent internal validation pass |
 | Independently verified release | Gate 10 external or organizationally independent review passes |
+| E2E parity validated | Gate 12 exact end-to-end parity criteria pass for the declared formulation/solver profile |
 | Audited release | A formally scoped audit explicitly certifies that PySPD release |
 
 ### 8.4 Stage entry rule
@@ -706,6 +707,7 @@ all affected downstream stages.
 | 9. Reporting and release qualification | Reports, API, full historical corpus, cross-solver checks, and performance pass | G9 Validated release candidate |
 | 10. Independent verification and release | Independent assurance, packaging, documentation, and operational readiness pass | G10 Release authorized |
 | 11. Formulation evolution | Each v16 or later delta repeats impact analysis and affected assurance | G11 New formulation authorized |
+| 12. End-to-end parity validation | Exact affected-interval, full-day, report, and price parity is proven for each declared compatibility profile | G12 E2E parity validated |
 
 ## 10. Detailed stages and gates
 
@@ -814,7 +816,7 @@ inspectable oracle before porting its behavior.
 - apply ADR-0010's Gate 1 qualification boundary: bind all 139 corrected daily
   inputs and execute representative exact optimal affected/control and 46/50-
   period fixtures here, while retaining exact identification and replay of all
-  546 intervals as a mandatory Gate 8 exit criterion;
+  546 intervals as a mandatory Gate 12 exit criterion;
 - recover and hash the Authority's archived 2023 parity outputs at commit
   `76408126e9d2fb29a0f28c1949331e4e9022e04e`, including NRSS, PRSS, RTD,
   price-transfer, shortfall-transfer, and co-optimization/discrete permutations;
@@ -889,7 +891,7 @@ For the 546-interval shortfall-transfer history, ADR-0010 defines the Gate 1
 population evidence as all 139 corrected daily inputs individually hash-bound,
 an exact optimal affected transfer/max-loop/cleanup fixture, ordinary corpus
 controls, and successful representative 46/50-period fixtures. This does not
-satisfy or weaken Gate 8's separate requirement that all 546 intervals pass.
+satisfy or weaken Gate 12's separate requirement that all 546 intervals pass.
 
 **Mandatory hold conditions:** golden files cannot be regenerated from their
 manifest, material source branches lack fixtures, or the same oracle input
@@ -1278,9 +1280,11 @@ mathematical model.
 
 **Required tests:** every state transition and bounded-loop exit; unpublished
 zero-duration cases; each supported case type; all override families; shortfall
-transfer including the 546-interval regression population; invalid/dead/
-disconnected price logic; duration weighting; interrupted/resumed run; and
-whole-day parity.
+transfer using the Gate 1 exact fixture and the immutable 427-interval
+dead-node population; invalid/dead/disconnected price logic; duration weighting;
+interrupted/resumed run; and representative single-case end-to-end execution.
+Exact enumeration/replay of all 546 affected intervals and whole-day parity are
+retained as mandatory Gate 12 validation.
 
 #### Gate 8 — End-to-end behavior equivalent
 
@@ -1297,18 +1301,22 @@ Gate 8 passes only when:
 - raw, repaired, and published prices are separately traceable;
 - publication weighting and rounding match the pinned reference, with official
   market-price differences reported separately;
-- all 546 identified shortfall-transfer regression intervals pass their approved
-  assertions, with an immutable interval-identity manifest linking every result
-  to one of the 139 Gate 1 input hashes; and
-- representative full-day runs have zero unexplained material mismatch.
+- all 139 corrected shortfall-transfer dates remain individually hash-bound;
+  the 427 statically identifiable dead-node intervals pass their approved
+  assertions; and the known exact affected fixture exercises transfer,
+  maximum-loop, and cleanup behavior; and
+- the 119 identities not recoverable from the public release, exhaustive
+  546-interval replay, representative full-day parity, and strict official
+  published-price parity are explicitly transferred to Gate 12 without being
+  represented as completed Gate 8 evidence.
 
-**Execution record:** Stage 8 was implemented on 29 August 2026 for the
-qualified macOS arm64/GAMS-SCIP/HiGHS profile. Component, state-machine,
-independent publication, representative-case, and cumulative tests pass. Gate
-8 remains held: 427 of the Authority-declared 546 affected interval identities
-have been recovered from corrected-input dead-node signatures, while 119
-active-node identities, their exhaustive replay, and representative full-day
-economic parity remain outstanding. See `docs/gate-8/`.
+**Execution record:** Gate 8 closed on 29 August 2026 for the amended current
+evidence boundary and qualified macOS arm64/GAMS-SCIP/HiGHS profile. Component,
+state-machine, override, independent publication, representative-case, and
+cumulative tests pass. All 139 corrected dates are hash-bound and 427 immutable
+dead-node interval identities are recovered. The 119 active-node identities,
+exhaustive 546-interval replay, representative full-day economics, and strict
+official-price parity remain declared Gate 12 obligations. See `docs/gate-8/`.
 
 ### Stage 9 — Reports, API, full-corpus qualification, and performance
 
@@ -1467,6 +1475,89 @@ Gate 11 passes only when:
 - the new version receives a separate signed release decision.
 
 Gate 11 repeats for every material formulation or data-contract version.
+
+### Stage 12 — End-to-end parity validation
+
+**Objective:** make the strongest end-to-end compatibility claim only after
+PySPD and the applicable pinned vSPD oracle have been compared from raw daily
+inputs through case selection, every solve/re-solve transition, prices, reports,
+and final published outputs over the complete declared parity population.
+
+Stage 12 is a validation overlay, not another formulation implementation stage.
+It may qualify v5.0.6 after Gate 10 without waiting for an optional Stage 11
+formulation change. When Stage 11 introduces a new formulation, that formulation
+receives its own Gate 12 profile and evidence pack.
+
+**Work:**
+
+- obtain the Authority's case-ID list or perform exact enumeration to recover
+  all 546 v5.0.4 shortfall-transfer interval identities across the 139 Gate 1
+  input hashes, retaining why each interval belongs in the population;
+- replay all 546 intervals through pinned GAMS and PySPD, including every
+  transfer, removal, scaling-disable, maximum-loop, cleanup, degraded, and
+  fallback transition;
+- run representative complete normal, outage, high/negative-price, scarcity,
+  islanding, 46-period, and 50-period days without replacing whole-day evidence
+  with isolated-case projections;
+- prove identical file/case/trading-period/publication selection and canonical
+  solve order, including prior accepted-dispatch initialization;
+- compare accepted primary physics and objectives, fixed-discrete pricing state,
+  raw bus prices, repaired bus prices, allocation-weighted node prices, reserve
+  prices, publication seconds, rounding, and every in-scope report field;
+- execute the strict historical CPLEX compatibility profile when available and
+  retain the approved SCIP/HiGHS profile as a separately named economic-parity
+  profile rather than implying basis-identical prices;
+- resolve the Gate 8 representative-case official-price differences through
+  common-optimal-face, fixed-decision, basis, finite-difference, and KKT evidence;
+- repeat runs to demonstrate deterministic manifests, paths, outputs, and
+  discrepancy classifications;
+- retain machine-readable per-case/per-field comparisons and a complete
+  discrepancy register; and
+- publish an E2E evidence index binding source, configuration, code, dependency,
+  solver, result, comparison, and report hashes.
+
+**Required tests:** exact population uniqueness/completeness; all 546 bounded
+state-machine replays; representative whole-day and daylight-saving parity;
+case-order/fallback equivalence; override-to-report deltas; raw/repaired/
+published energy and reserve prices; report field parity; interrupted/resumed
+whole-day equality; deterministic reruns; and deliberate comparator failures for
+missing cases, stale solve state, wrong weights, wrong rounding, and unexplained
+price differences.
+
+#### Gate 12 — E2E parity validated
+
+Gate 12 passes only when:
+
+- an immutable manifest contains exactly 546 unique affected case identities,
+  covers every one of the 139 declared trading dates, and links each identity to
+  its verified Gate 1 GDX hash;
+- all 546 intervals reproduce the approved reference state-machine assertions
+  with no false negatives, unbounded loop, stale accepted state, or unexplained
+  transfer/output mismatch;
+- representative full-day runs select and process the same cases in the same
+  order and finish with zero unexplained material physical, economic, price, or
+  report mismatch;
+- 46- and 50-period days prove publication-duration and temporal-boundary
+  behavior end to end;
+- the strict compatibility profile matches pinned-vSPD raw and published energy
+  and reserve prices at the approved precision, or a case-specific degeneracy
+  certificate proves the exact permitted alternative;
+- the SCIP/HiGHS profile reaches optimal primary and pricing solves, passes all
+  independent feasibility/economic/publication checks, and reports every
+  basis-sensitive difference separately from the strict profile;
+- every in-scope output/report identity and field is present, traced, and equal
+  under its approved comparator;
+- repeated and resumed executions reproduce the same manifest, accepted path,
+  quality classification, and published outputs;
+- the complete evidence pack is reproducible from a clean checkout using only
+  the committed `uv.lock`, manifests, fetch-by-hash inputs, and documented
+  licensed solver prerequisites; and
+- there are zero unresolved material discrepancies.
+
+Gate 12 does not require a separate independent human reviewer or approval
+under the recorded project direction. It does require machine-checkable
+evidence for every criterion; a solver deferral or missing public identity list
+cannot be counted as passing parity evidence.
 
 ## 11. Requirement and evidence traceability
 
@@ -1865,6 +1956,7 @@ Minimum sign-off is:
 | G9 | Technical lead, market SME, independent validation lead, release owner |
 | G10 | Sponsor, market SME, independent validation lead, release owner, independent reviewer |
 | G11 | Same roles as each affected prior gate plus sponsor for a material claim change |
+| G12 | Technical lead, market SME, and project-directed validator; no separate independent reviewer required |
 
 No gate is accepted solely by contributors whose work is being assessed.
 

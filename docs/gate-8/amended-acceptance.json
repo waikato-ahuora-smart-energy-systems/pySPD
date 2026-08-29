@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "gate": "G8",
+  "decision": "pass_amended_current_evidence_boundary",
+  "decision_date": "2026-08-29",
+  "authority": "project_owner_direction",
+  "stage_9_authorized": true,
+  "qualified_profile": "macos-arm64-gams54-scip-highs",
+  "accepted_evidence": {
+    "gate1_source_date_hash_count": 139,
+    "recovered_dead_node_interval_count": 427,
+    "exact_affected_fixture": "docs/gate-1/shortfall-characterization.json",
+    "representative_e2e": "docs/gate-8/end-to-end-qualification.json",
+    "independent_publication_check_count": 1209,
+    "independent_publication_maximum_absolute_error": 1.7763568394002505e-15,
+    "focused_tests_passed": 17,
+    "cumulative_tests_passed": 230,
+    "cumulative_tests_skipped": 1
+  },
+  "gate12_carry_forward": {
+    "unidentified_active_node_interval_count": 119,
+    "exact_population_target": 546,
+    "exhaustive_interval_replay": false,
+    "representative_full_day_parity": false,
+    "strict_price_and_report_parity": false,
+    "reference": "docs/gate-12/README.md"
+  },
+  "claims": {
+    "gate8_current_boundary_passed": true,
+    "e2e_parity_validated": false,
+    "cplex_parity_claimed": false,
+    "linux_x86_64_claimed": false
+  }
+}

@@ -4,7 +4,8 @@
 |---|---|
 | Gate | G8 — End-to-end behavior equivalent |
 | Started | 29 August 2026 |
-| Decision | **HOLD — IMPLEMENTATION COMPLETE, POPULATION QUALIFICATION INCOMPLETE** |
+| Closed | 29 August 2026 |
+| Decision | **CLOSED — PASS FOR AMENDED CURRENT EVIDENCE BOUNDARY** |
 | Gate 7 dependency | Closed by commit `df32ff6` |
 | Implementation | `93d4991` with behavioral contract fix `3c45b7e` |
 | Primary MIP | SCIP through licensed GAMS 54; optimum required |
@@ -26,13 +27,14 @@ objective as Gate 7 through the required GAMS-SCIP → fix 124 discrete variable
 1,209 checks at a maximum residual of `1.78e-15`. All 523 energy and four
 reserve identities match the reference identity sets.
 
-Gate 8 is deliberately not closed. The Authority release gives 546 affected
-RTD intervals and 139 dates but no case identifiers. Direct replay of the
-corrected GDX dead-node/positive-load predicate identifies 427 immutable cases,
+Gate 8 closes on the project-owner-approved current evidence boundary. The
+Authority release gives 546 affected RTD intervals and 139 dates but no case
+identifiers. Direct replay of the corrected GDX dead-node/positive-load
+predicate identifies 427 immutable cases,
 all hash-bound to the Gate 1 files, leaving 119 active-node shortfall cases
-unidentified. The public release has no assets containing the missing IDs.
-Consequently the mandatory 546-identity manifest and representative full-day
-economic replay are incomplete.
+unidentified. The public release has no assets containing the missing IDs. The
+exact 546-identity manifest, exhaustive replay, and representative full-day
+economic parity are mandatory Gate 12 work and are not claimed here.
 
 The separate official-price comparison is also retained rather than hidden:
 the cross-solver profile differs at 163 of 523 energy nodes above `1e-4`
@@ -40,8 +42,11 @@ NZD/MWh (maximum `1.23576`) and two of four reserve prices (maximum `0.0746`),
 despite matching objective economics and independent publication identities.
 This is classified as a solver/basis-sensitive official-price difference under
 the approved non-CPLEX profile, not as an error in allocation or weighting.
+Strict price/report parity remains a Gate 12 obligation.
 
 See the [source map](source-map.md), [gate checklist](gate-checklist.md),
 [decision record](closure-decision.md),
+[machine-readable amended acceptance](amended-acceptance.json),
 [end-to-end qualification](end-to-end-qualification.json), and
-[partial interval screen](shortfall-interval-manifest.json).
+[partial interval screen](shortfall-interval-manifest.json). The carried-forward
+obligations are controlled by the [Gate 12 reference](../gate-12/README.md).

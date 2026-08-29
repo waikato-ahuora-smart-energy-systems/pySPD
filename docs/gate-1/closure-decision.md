@@ -23,14 +23,15 @@ complete. All 139 corrected daily inputs are individually hash-bound; exact
 optimal evidence exercises shortfall transfer, the maximum-loop branch, and
 cleanup re-solves; and selected 46- and 50-period daylight-saving fixtures pass.
 ADR-0010 therefore satisfies the Gate 1 population criterion at date level and
-retains exact identification/replay of all 546 intervals as a mandatory Gate 8
-criterion. Stage 2 production work is authorized.
+retains exact identification/replay of all 546 intervals as a mandatory Gate 12
+criterion under the amended stage-and-gate plan. Stage 2 production work is
+authorized.
 
 ## Material blockers
 
 None. `G1-B01` is closed by the accepted qualification policy in ADR-0010 and
 its linked date-inventory, affected-path, control-corpus, and daylight-saving
-evidence. This closure does not mark the all-546 Gate 8 replay complete.
+evidence. This closure does not mark the all-546 Gate 12 replay complete.
 
 ## Evidence that is complete for the executed samples
 
@@ -72,7 +73,7 @@ evidence. This closure does not mark the all-546 Gate 8 replay complete.
 ## Reconsideration rule
 
 Reopen Gate 1 if immutable evidence cannot be regenerated, a retained input
-changes identity, or Stage 8 replay discovers an oracle/comparator inconsistency
+changes identity, or Gate 12 replay discovers an oracle/comparator inconsistency
 that invalidates this decision. ADR-0009 confirms that independent review is
 not required. CPLEX evidence is required only if the proposed claim is expanded
 to CPLEX-specific parity.

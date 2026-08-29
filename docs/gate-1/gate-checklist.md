@@ -27,4 +27,4 @@
 Gate 1 is closed with no mandatory hold or unexplained oracle
 self-inconsistency. The [closure decision](closure-decision.md) authorizes Stage
 2. Exact identification and replay of all 546 shortfall-transfer intervals is
-not waived; ADR-0010 assigns it to the existing mandatory Gate 8 criterion.
+not waived; amended ADR-0010 assigns it to the mandatory Gate 12 criterion.

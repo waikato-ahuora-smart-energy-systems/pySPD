@@ -10,9 +10,11 @@
 | Raw/repaired/published prices traceable | `PriceTrace`, publication tests | PASS |
 | Publication weighting and rounding | independent 1,209-check validation | PASS |
 | Official prices reported separately | 523/4 identities, full error distribution retained | PASS WITH CLASSIFIED PROFILE DIFFERENCE |
-| 546 immutable affected interval identities | 427 recovered; 119 unresolved | **HOLD** |
-| All 546 approved assertions replayed | cannot run without complete identities | **HOLD** |
-| Representative whole-day economic parity | not executed; per-case solve is about two minutes | **HOLD** |
+| 139 corrected input hashes | complete Gate 1 inventory retained | PASS |
+| Current affected-interval boundary | 427 immutable dead-node cases plus exact affected fixture | PASS |
+| Exact 546 immutable identities/replay | 119 unresolved; transferred unchanged | GATE 12 |
+| Representative whole-day economic parity | transferred unchanged | GATE 12 |
+| Strict raw/published price and report parity | transferred unchanged | GATE 12 |
 | Focused tests | 17 passed | PASS |
 | Cumulative repository tests | 230 passed, one intentional skip | PASS |
 | Ruff and mypy | clean | PASS |
@@ -20,5 +22,6 @@
 | CPLEX | deferred by ADR-0008 | NOT CLAIMED |
 | Linux x86_64 | deferred by ADR-0011 | NOT CLAIMED |
 
-Gate 8 remains held because three mandatory exit assertions are incomplete;
-feature completion and passing unit tests do not override the gate criteria.
+Gate 8 is closed for the amended evidence boundary approved by the project
+owner. Items marked `GATE 12` remain mandatory before an E2E parity claim and
+have not been counted as passing evidence here.
