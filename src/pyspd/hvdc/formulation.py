@@ -119,7 +119,7 @@ class HvdcSolvePolicy(SolvePolicy):
             case.hvdc.enforce_sos2 and case.hvdc.enforce_flow_direction
         ):
             enforced_case = replace(case, hvdc=case.hvdc.with_mip_enforcement())
-            primary = ModelAssembler().assemble(hvdc_formulation(), enforced_case)
+            primary = ModelAssembler().assemble(self._formulation(), enforced_case)
             primary_mip = self._solve_scip(primary)
             remaining = detect_nonphysical_hvdc(primary)
             if remaining:
@@ -132,7 +132,7 @@ class HvdcSolvePolicy(SolvePolicy):
         if not final_solve.solution_loaded:
             raise ValueError("primary solution was not loaded")
         fixed = _discrete_values(primary.model)
-        pricing = ModelAssembler().assemble(hvdc_formulation(), primary.case_data)
+        pricing = ModelAssembler().assemble(self._formulation(), primary.case_data)
         _fix_and_relax_discrete(pricing.model, fixed)
         _deactivate_sos(pricing.model)
         _assert_continuous_pricing_model(pricing.model)
@@ -148,6 +148,9 @@ class HvdcSolvePolicy(SolvePolicy):
             _snapshot(primary),
             _snapshot(pricing),
         )
+
+    def _formulation(self) -> Formulation:
+        return hvdc_formulation()
 
     @staticmethod
     def _solve_scip(built: BuiltModel) -> MipSolveResult:
@@ -325,7 +328,7 @@ def _discrete_values(model: pyo.ConcreteModel) -> dict[str, float]:
     return {
         variable.name: round(_value(variable))
         for variable in model.component_data_objects(pyo.Var, active=True)
-        if not variable.fixed and (variable.is_binary() or variable.is_integer())
+        if variable.is_binary() or variable.is_integer()
     }
 
 
@@ -342,6 +345,13 @@ def _fix_and_relax_discrete(
         variable = by_name[name]
         variable.fix(value)
         variable.domain = pyo.Reals
+    # Variables fixed by formulation preprocessing (for example unavailable
+    # NMIR zones) are not part of the incumbent fix map, but their discrete
+    # domains must also be relaxed or HiGHS still treats the pricing model as a
+    # MIP and cannot return RMIP duals.
+    for variable in model.component_data_objects(pyo.Var, active=True):
+        if variable.is_binary() or variable.is_integer():
+            variable.domain = pyo.Reals
 
 
 def _deactivate_sos(model: pyo.ConcreteModel) -> None:

@@ -24,7 +24,7 @@ from pyspd.network.data import NetworkData
 
 type Key = tuple[str, ...]
 
-_SUPPORTED = frozenset({HVDC_FORMULATION_ID})
+_SUPPORTED = frozenset({HVDC_FORMULATION_ID, "vspd-v5.0.6-reserve"})
 
 
 def _case(context: BuildContext) -> HvdcCase:
