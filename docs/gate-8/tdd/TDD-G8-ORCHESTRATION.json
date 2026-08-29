@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-G8-ORCHESTRATION",
+  "requirement_ids": [
+    "REQ-G8-ORCHESTRATION",
+    "REQ-G8-SELECTION",
+    "REQ-G8-OVERRIDES",
+    "REQ-G8-SHORTFALL",
+    "REQ-G8-PRICE-POSTPROCESSING",
+    "REQ-G8-PUBLICATION",
+    "REQ-G8-RESUME"
+  ],
+  "production_paths": [
+    "src/pyspd/orchestration/types.py"
+  ],
+  "parent_commit": "93d4991276d2140530fe2b9de5d2dab2748ed4e1",
+  "implementation_commit": "3c45b7e22798c56fd687152f98dd9bdf015cc658",
+  "test_patch_sha256": "f9909cf69fdb9964e83f6a3c37c493833b3e9ac66b85313cd21669e7bcefe553",
+  "test_files": [
+    {"path": "tests/orchestration/conftest.py", "sha256": "3f3347c4025f6a59613ff3c095a25325415836dabdf76be42cb46ee2c63575a2"},
+    {"path": "tests/orchestration/test_daily_runner.py", "sha256": "6e409a607120f4074cc0adb222dfebd5b251b820798c05837523f9637bb7f238"},
+    {"path": "tests/orchestration/test_gate8_contract.py", "sha256": "9c4978228c9d2356b9c81379592daf47ff8a95685e23fed29cd99c42b3b5db56"},
+    {"path": "tests/orchestration/test_pricing_publication.py", "sha256": "366729b5c7d6ff0d3eab08dc1c5f050702101efaaba233521b464f498cffc92f"},
+    {"path": "tests/orchestration/test_selection_overrides.py", "sha256": "8b952e94610c771cfca74b10845414dd5578e34ca35c9770809682fdbeafa860"}
+  ],
+  "command": "uv run pytest tests/orchestration -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "dfef9227b58ad5120d874ab4957ae17f35feb937c92a90e36ae39b33a3dc32f6",
+  "red": {
+    "timestamp": "2026-08-29T21:20:00+12:00",
+    "exit_code": 1,
+    "output_sha256": "26db20fd30ecda05383a76ef676488229e81ace03d542fa7f93814b92bf9c8ee",
+    "duration_seconds": 0.12,
+    "expected_failure_fingerprint": "REQ-G8-ORCHESTRATION: incompatible study mode and schedule type",
+    "log_uri": "docs/gate-8/tdd/logs/orchestration-red.log"
+  },
+  "green": {
+    "timestamp": "2026-08-29T21:22:00+12:00",
+    "exit_code": 0,
+    "output_sha256": "a2d54d36427313bf3c5f948b379bd477ad39051d863445bb8ed247dffcb55abc",
+    "duration_seconds": 0.10,
+    "log_uri": "docs/gate-8/tdd/logs/orchestration-green.log"
+  },
+  "author": {"name": "Codex", "role": "implementation agent"},
+  "reviewer": {"name": "Codex", "role": "project-directed validator"},
+  "exception": null
+}

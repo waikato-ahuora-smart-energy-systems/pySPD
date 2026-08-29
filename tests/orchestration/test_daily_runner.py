@@ -95,6 +95,21 @@ def test_override_audit_is_visible_before_solve() -> None:
     assert event.details == {"entry_count": 3, "symbols_changed": True}
 
 
+def test_unresolved_invalid_prices_make_case_quality_explicitly_degraded() -> None:
+    observation = make_observation(raw_prices=(0.0, 0.0), sos=True)
+    observation = replace(
+        observation,
+        connected_bus_flow=dict.fromkeys(observation.connected_bus_flow, 0.0),
+    )
+    result = DailyRunner(SequenceExecutor([observation])).run(
+        configuration(), (make_prepared(),)
+    )
+    case = result.cases[0]
+    assert case.status is CaseRunStatus.DEGRADED
+    assert case.prices is not None
+    assert case.prices.invalid_buses
+
+
 def test_prior_accepted_generation_initializes_zero_start_next_case() -> None:
     first = make_prepared(make_daily_case())
     second = make_prepared(make_daily_case("C2", "01-JAN-2024 00:05", ordinal=1))

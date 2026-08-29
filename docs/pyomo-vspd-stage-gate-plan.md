@@ -4,7 +4,7 @@
 
 | Document field | Value |
 |---|---|
-| Status | Controlled reference; executed through Gate 7 |
+| Status | Controlled reference; Stage 8 implemented, Gate 8 held |
 | Document version | 0.2 |
 | Date | 29 August 2026 |
 | Repository | `pySPD` |
@@ -1301,6 +1301,14 @@ Gate 8 passes only when:
   assertions, with an immutable interval-identity manifest linking every result
   to one of the 139 Gate 1 input hashes; and
 - representative full-day runs have zero unexplained material mismatch.
+
+**Execution record:** Stage 8 was implemented on 29 August 2026 for the
+qualified macOS arm64/GAMS-SCIP/HiGHS profile. Component, state-machine,
+independent publication, representative-case, and cumulative tests pass. Gate
+8 remains held: 427 of the Authority-declared 546 affected interval identities
+have been recovered from corrected-input dead-node signatures, while 119
+active-node identities, their exhaustive replay, and representative full-day
+economic parity remain outstanding. See `docs/gate-8/`.
 
 ### Stage 9 — Reports, API, full-corpus qualification, and performance
 

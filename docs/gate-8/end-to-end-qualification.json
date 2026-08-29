@@ -1,0 +1,83 @@
+{
+  "case": {
+    "case_id": "11012022110000479",
+    "date_time": "01-NOV-2022 13:00",
+    "publication_seconds": 1800.0,
+    "schedule_type": "RTD",
+    "trading_period": "TP27"
+  },
+  "elapsed_seconds": 124.96747249999316,
+  "independent_validation": {
+    "check_count": 1209,
+    "failures": [],
+    "maximum_absolute_error": 1.7763568394002505e-15,
+    "passed": true
+  },
+  "passed": false,
+  "profile": "macos-arm64-gams54-scip-highs",
+  "published_oracle_comparison": {
+    "energy_error_summary": {
+      "above_tolerance_count": 163,
+      "mean_absolute_error": 0.32552212237093686,
+      "median_absolute_error": 0.0,
+      "top_absolute_errors": [
+        {"absolute_error": 1.235759999999999, "identity": ["TP27", "HKK0661"]},
+        {"absolute_error": 1.2225000000000001, "identity": ["TP27", "APS0111"]},
+        {"absolute_error": 1.222010000000001, "identity": ["TP27", "APS0661"]},
+        {"absolute_error": 1.2196800000000003, "identity": ["TP27", "OTI0111"]},
+        {"absolute_error": 1.2188299999999987, "identity": ["TP27", "OTI0661"]},
+        {"absolute_error": 1.2044699999999988, "identity": ["TP27", "KUM0661"]},
+        {"absolute_error": 1.2044699999999988, "identity": ["TP27", "KUM0661 KUM0"]},
+        {"absolute_error": 1.17802, "identity": ["TP27", "GYM0661"]},
+        {"absolute_error": 1.1621400000000008, "identity": ["TP27", "DOB0331"]},
+        {"absolute_error": 1.1613699999999998, "identity": ["TP27", "DOB1102"]}
+      ]
+    },
+    "energy_price_count": 523,
+    "identity_sets_equal": true,
+    "maximum_energy_absolute_error": 1.235759999999999,
+    "maximum_reserve_absolute_error": 0.0746,
+    "reserve_error_summary": {
+      "above_tolerance_count": 2,
+      "mean_absolute_error": 0.019165,
+      "median_absolute_error": 0.0010299999999999997,
+      "top_absolute_errors": [
+        {"absolute_error": 0.0746, "identity": ["TP27", "SI", "SIR"]},
+        {"absolute_error": 0.0020599999999999993, "identity": ["TP27", "SI", "FIR"]},
+        {"absolute_error": 0.0, "identity": ["TP27", "NI", "FIR"]},
+        {"absolute_error": 0.0, "identity": ["TP27", "NI", "SIR"]}
+      ]
+    },
+    "reserve_price_count": 4,
+    "tolerance": 0.0001
+  },
+  "schema_version": 1,
+  "source": {
+    "name": "RTD_202211011300_11012022110000479_20221101125901.gdx",
+    "sha256": "2e21665f55aaf9d8b7ef566c3ba436f8ae19ab355694caf52c7fc01e3f8f423b"
+  },
+  "state_machine": {
+    "case_status": "complete",
+    "detected_issues": [],
+    "event_kinds": [
+      "case_selected",
+      "initialized",
+      "overrides_applied",
+      "solve_started",
+      "solve_accepted",
+      "prices_repaired",
+      "case_complete",
+      "prices_published"
+    ],
+    "fixed_discrete_count": 124,
+    "fixed_discrete_sha256": "eba8d08bfc576a80b5123f813e611b72092b1102b36ef2153be463dec2dabd25",
+    "pricing_backend": "highs",
+    "pricing_objective_nzd": 90147619.2549578,
+    "primary_backend": "gams-scip",
+    "primary_objective_nzd": 90147619.25495787,
+    "solve_count": 1,
+    "state": "complete",
+    "transfer_count": 0,
+    "untransferred_count": 0
+  }
+}

@@ -65,7 +65,7 @@ def derive(
                     "dead_node_positive_load_predicate_replayed": True,
                     "bounded_by_source_max_solve_loop": True,
                     "gate8_state_machine_regression": (
-                        "tests/orchestration/test_shortfall_population.py"
+                        "tests/orchestration/test_daily_runner.py"
                     ),
                 },
             }
@@ -91,9 +91,10 @@ def derive(
             ),
             "reference_source": "vSPDsolve.gms:1287-1291,1308-1318",
             "interpretation": (
-                "exact immutable affected identities derived from the corrected "
-                "daily GDX dead-node/positive-load signature and reconciled to "
-                "the Authority's independently declared count"
+                "immutable high-confidence affected candidates derived from the "
+                "corrected daily GDX dead-node/positive-load signature; the "
+                "screen is incomplete unless it reconciles to the Authority's "
+                "independently declared count"
             ),
         },
         "source_population": {
