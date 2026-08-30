@@ -26,6 +26,7 @@ from tools.gate12.pyspd_surfaces import (
     CanonicalCaseSurfaces,
     PyspdCaseSurfaceExporter,
 )
+from tools.gate12.streaming_pyspd import StreamingPyspdReplayRunner
 
 PYSPD_REPLAY_PROFILE = "pyspd-v5-portable-scip-mip-fixed-highs-rmip-v1"
 EXACT_CANONICAL_PARITY_PROFILE = "gams-pyspd-canonical-json-exact-v1"
@@ -329,6 +330,10 @@ class PyspdReplayBundleProducer:
         self.run_root = run_root
         self.application = application or PyspdApplication()
         self.exporter = exporter or PyspdCaseSurfaceExporter()
+        self.runner = StreamingPyspdReplayRunner(
+            application=self.application,
+            exporter=self.exporter,
+        )
 
     def produce(
         self,
@@ -347,10 +352,6 @@ class PyspdReplayBundleProducer:
                 )
             return bundle
         run_directory = self.run_root / work_item.trading_date
-        if run_directory.exists():
-            raise EvidenceContractError(
-                "REQ-G12-ARTIFACT: incomplete PySPD replay run already exists"
-            )
         configuration = ApplicationConfiguration(
             formulation_id=RESERVE_FORMULATION_ID,
             input_path=source,
@@ -362,14 +363,11 @@ class PyspdReplayBundleProducer:
             maximum_solve_loops=5,
             price_rounding_decimals=5,
         )
-        run = self.application.run(configuration)
-        exported = self.exporter.export(run, trading_date=work_item.trading_date)
-        by_id = {case.case_id: case for case in exported}
-        if not set(work_item.affected_case_ids).issubset(by_id):
-            raise EvidenceContractError(
-                "REQ-G12-ARTIFACT: PySPD replay omitted an affected case"
-            )
-        cases = tuple(by_id[case_id] for case_id in work_item.affected_case_ids)
+        cases = self.runner.run(
+            configuration=configuration,
+            work_item=work_item,
+            progress_root=self.run_root,
+        )
         bundle = CanonicalReplayBundle.create(
             engine_profile=self.profile,
             work_item=work_item,

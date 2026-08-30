@@ -6,6 +6,7 @@ from pyspd.orchestration import (
     CaseRunResult,
     CaseRunStatus,
     MarketPricePostProcessor,
+    PublishedPriceAccumulator,
     PublishedPriceAggregator,
 )
 from tests.orchestration.conftest import make_daily_case, make_observation
@@ -96,3 +97,37 @@ def test_publication_uses_seconds_skips_zero_and_rounds() -> None:
     )
     assert published.energy[("TP1", "N1")] == 16.66667
     assert published.total_seconds["TP1"] == 300.0
+
+
+def test_publication_accumulator_resumes_without_retaining_case_results() -> None:
+    first = make_daily_case(seconds=100.0)
+    second = make_daily_case("C2", "01-JAN-2024 00:05", ordinal=1, seconds=200.0)
+    processor = MarketPricePostProcessor()
+
+    def result(case: object, price: float) -> CaseRunResult:
+        selected = case
+        observation = make_observation(selected, raw_prices=(price, price))  # type: ignore[arg-type]
+        return CaseRunResult(
+            selected,  # type: ignore[arg-type]
+            CaseRunStatus.COMPLETE,
+            1,
+            observation,
+            processor.process(observation, price_transfer_enabled=False),
+            (),
+            {},
+            {},
+            frozenset(),
+        )
+
+    accumulator = PublishedPriceAccumulator()
+    accumulator.add(result(first, 10.0))
+    resumed = PublishedPriceAccumulator(
+        energy_numerator=accumulator.energy_numerator,
+        reserve_numerator=accumulator.reserve_numerator,
+        total_seconds=accumulator.total_seconds,
+    )
+    resumed.add(result(second, 20.0))
+
+    assert resumed.finish(decimals=5) == PublishedPriceAggregator().aggregate(
+        (result(first, 10.0), result(second, 20.0)), decimals=5
+    )

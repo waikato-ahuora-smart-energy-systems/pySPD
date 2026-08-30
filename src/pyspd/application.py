@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import platform
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from pyspd.data import SymbolCatalog
 from pyspd.data.gdx import GdxAdapter
 from pyspd.orchestration import (
     DailyCasePreparer,
+    DailyCaseRunner,
     DailyCaseSelector,
     DailyRunConfiguration,
     DailyRunner,
@@ -22,9 +24,12 @@ from pyspd.orchestration import (
     Spd16CaseExecutor,
 )
 from pyspd.orchestration.pricing import MarketPricePostProcessor
+from pyspd.orchestration.solver import CaseExecutor
+from pyspd.orchestration.types import PreparedCase
 from pyspd.reporting import (
     ArtifactProvenance,
     DailyReportRegistry,
+    ReportBundle,
     ReportManifest,
     daily_report_registry,
 )
@@ -147,7 +152,27 @@ class PyspdApplication:
             raise ConfigurationError(f"unknown formulation: {formulation_id}")
 
     def run(self, configuration: ApplicationConfiguration) -> ApplicationRun:
+        daily_configuration = self.daily_configuration(configuration)
+        prepared = tuple(self.iter_prepared_cases(configuration))
+        result = DailyRunner(
+            self.case_executor(configuration),
+            postprocessor=self.price_postprocessor(configuration),
+        ).run(daily_configuration, prepared)
+        bundle = self.render_report_bundle(configuration, result)
+        manifest = bundle.write(configuration.output_directory)
+        return ApplicationRun(result, manifest, configuration.output_directory)
+
+    def iter_prepared_cases(
+        self,
+        configuration: ApplicationConfiguration,
+        *,
+        start_ordinal: int = 0,
+    ) -> Iterator[PreparedCase]:
+        """Prepare selected cases lazily from a validated immutable GDX source."""
+
         self.validate_formulation(configuration.formulation_id)
+        if isinstance(start_ordinal, bool) or start_ordinal < 0:
+            raise ConfigurationError("start_ordinal must be a non-negative integer")
         symbols = GdxAdapter.read(
             configuration.input_path,
             system_directory=configuration.gams_system_directory,
@@ -167,22 +192,26 @@ class PyspdApplication:
         )
         selector = DailyCaseSelector()
         selected = selector.select(symbols, case_ids=configuration.case_ids)
-        prepared = []
-        for specification in selected:
+        if start_ordinal > len(selected):
+            raise ConfigurationError("start_ordinal exceeds selected case count")
+        for specification in selected[start_ordinal:]:
             case_data = selector.case_data(
                 symbols, specification, formulation_id=source_profile
             )
             case_data, audit = OverrideApplier().apply(case_data, ())
-            prepared.append(
-                DailyCasePreparer().prepare(
-                    case_data,
-                    specification,
-                    daily_mode=True,
-                    override_audit=audit,
-                    formulation_id=configuration.formulation_id,
-                )
+            yield DailyCasePreparer().prepare(
+                case_data,
+                specification,
+                daily_mode=True,
+                override_audit=audit,
+                formulation_id=configuration.formulation_id,
             )
-        daily_configuration = DailyRunConfiguration(
+
+    def daily_configuration(
+        self, configuration: ApplicationConfiguration
+    ) -> DailyRunConfiguration:
+        self.validate_formulation(configuration.formulation_id)
+        return DailyRunConfiguration(
             configuration.formulation_id,
             configuration.source_sha256,
             maximum_solve_loops=configuration.maximum_solve_loops,
@@ -192,19 +221,41 @@ class PyspdApplication:
             ),
             application_configuration_sha256=configuration.logical_sha256,
         )
-        executor = (
+
+    def case_executor(self, configuration: ApplicationConfiguration) -> CaseExecutor:
+        self.validate_formulation(configuration.formulation_id)
+        return (
             Spd16CaseExecutor()
             if configuration.formulation_id == SPD16_FORMULATION_ID
             else ReserveCaseExecutor()
         )
-        postprocessor = MarketPricePostProcessor(
+
+    def case_runner(self, configuration: ApplicationConfiguration) -> DailyCaseRunner:
+        return DailyCaseRunner(
+            self.case_executor(configuration),
+            postprocessor=self.price_postprocessor(configuration),
+        )
+
+    def price_postprocessor(
+        self, configuration: ApplicationConfiguration
+    ) -> MarketPricePostProcessor:
+        self.validate_formulation(configuration.formulation_id)
+        return MarketPricePostProcessor(
             bad_price_factor=(
                 3.0 if configuration.formulation_id == SPD16_FORMULATION_ID else 5.0
             )
         )
-        result = DailyRunner(executor, postprocessor=postprocessor).run(
-            daily_configuration, tuple(prepared)
-        )
+
+    def render_report_bundle(
+        self,
+        configuration: ApplicationConfiguration,
+        result: DailyRunResult,
+    ) -> ReportBundle:
+        """Render deterministic reports without requiring an eager application run."""
+
+        daily_configuration = self.daily_configuration(configuration)
+        if result.configuration_sha256 != daily_configuration.logical_sha256:
+            raise ConfigurationError("result configuration hash mismatch")
         lock_path = Path(__file__).resolve().parents[2] / "uv.lock"
         provenance = ArtifactProvenance(
             configuration.formulation_id,
@@ -216,8 +267,6 @@ class PyspdApplication:
             daily_configuration.environment_fingerprint,
         )
         profile = self._reports.resolve(configuration.formulation_id)
-        bundle = profile.report_renderer().render(
+        return profile.report_renderer().render(
             profile.result_schema().collect(result, provenance)
         )
-        manifest = bundle.write(configuration.output_directory)
-        return ApplicationRun(result, manifest, configuration.output_directory)

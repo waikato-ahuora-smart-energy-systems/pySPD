@@ -36,6 +36,15 @@ Process Gate 12 as a checkpoint-driven pipeline:
 9. aggregate the date-level checkpoints only after the full 546-case population
    has independently passed its existing gate.
 
+Within a PySPD date, preparation and execution are streamed in canonical case
+order. Each completed case atomically records the exact continuation state:
+predecessor generation, event sequence, unrounded publication accumulators,
+case ordinal, and configuration/work-item hashes. An affected case additionally
+records eleven canonical surfaces before its solved Pyomo model is released.
+Only the rounded published-output surface and published-price report rows are
+deferred until the prefix is complete. The twelve-surface date bundle is still
+published atomically and is never inferred from a partial checkpoint.
+
 The PySPD producer uses the explicit
 `scip-mip-fixed-highs-rmip` application profile. GAMS reference production
 remains independently identifiable and may be serialized with discovery when
@@ -61,6 +70,8 @@ declared tolerance to both absolute and scale-relative objective agreement.
 - A missing earlier checkpoint prevents later dates from being processed, so
   predecessor order cannot be silently bypassed.
 - Existing successful date-level parity work survives interruption and restart.
+- Completed cases within a long date also survive interruption without retaining
+  every solved Pyomo model in memory.
 - Exact canonical-byte comparison is a deliberately strict initial processor.
   Any later tolerance or degeneracy-aware processor requires a new profile and
   case-specific evidence; it cannot silently reinterpret earlier checkpoints.
@@ -83,5 +94,6 @@ declared tolerance to both absolute and scale-relative objective agreement.
 
 Probity tests cover canonical prefix derivation, ordered availability, source
 and checkpoint drift, atomic bundle and checkpoint writes, all twelve surface
-hashes, missing or tampered artifacts, idempotent restart, processor-profile
+hashes, exact continuation-float round trips, within-date interruption and
+resume, missing or tampered artifacts, idempotent restart, processor-profile
 separation, and persisted comparison failure.

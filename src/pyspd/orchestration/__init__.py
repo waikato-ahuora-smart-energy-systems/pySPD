@@ -10,9 +10,10 @@ from pyspd.orchestration.overrides import (
 )
 from pyspd.orchestration.pricing import (
     MarketPricePostProcessor,
+    PublishedPriceAccumulator,
     PublishedPriceAggregator,
 )
-from pyspd.orchestration.runner import DailyRunner
+from pyspd.orchestration.runner import DailyCaseExecution, DailyCaseRunner, DailyRunner
 from pyspd.orchestration.selection import DailyCasePreparer, DailyCaseSelector
 from pyspd.orchestration.solver import (
     CaseExecutor,
@@ -49,7 +50,9 @@ __all__ = [
     "CaseRunResult",
     "CaseRunStatus",
     "DailyCase",
+    "DailyCaseExecution",
     "DailyCasePreparer",
+    "DailyCaseRunner",
     "DailyCaseSelector",
     "DailyRunCheckpoint",
     "DailyRunConfiguration",
@@ -68,6 +71,7 @@ __all__ = [
     "PreparedCase",
     "PriceTrace",
     "PublicationValidation",
+    "PublishedPriceAccumulator",
     "PublishedPriceAggregator",
     "PublishedPrices",
     "ReserveCaseExecutor",

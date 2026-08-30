@@ -229,36 +229,58 @@ class MarketPricePostProcessor:
                 break
 
 
+class PublishedPriceAccumulator:
+    """Incrementally aggregate authoritative publication weights across a day."""
+
+    def __init__(
+        self,
+        *,
+        energy_numerator: Mapping[tuple[str, str], float] | None = None,
+        reserve_numerator: Mapping[tuple[str, str, str], float] | None = None,
+        total_seconds: Mapping[str, float] | None = None,
+    ) -> None:
+        self.energy_numerator: dict[tuple[str, str], float] = defaultdict(float)
+        self.energy_numerator.update(energy_numerator or {})
+        self.reserve_numerator: dict[tuple[str, str, str], float] = defaultdict(float)
+        self.reserve_numerator.update(reserve_numerator or {})
+        self.total_seconds: dict[str, float] = defaultdict(float)
+        self.total_seconds.update(total_seconds or {})
+
+    def add(self, result: CaseRunResult) -> None:
+        seconds = result.specification.publication_seconds
+        if seconds <= 0.0 or result.prices is None:
+            return
+        period = result.specification.trading_period
+        self.total_seconds[period] += seconds
+        for node, price in result.prices.node.items():
+            self.energy_numerator[(period, node[2])] += price * seconds
+        for key, price in result.prices.reserve.items():
+            self.reserve_numerator[(period, key[2], key[3])] += price * seconds
+
+    def finish(self, *, decimals: int) -> PublishedPrices:
+        energy = {
+            key: round(value / self.total_seconds[key[0]], decimals)
+            for key, value in self.energy_numerator.items()
+            if self.total_seconds[key[0]] > 0.0
+        }
+        reserve = {
+            key: round(value / self.total_seconds[key[0]], decimals)
+            for key, value in self.reserve_numerator.items()
+            if self.total_seconds[key[0]] > 0.0
+        }
+        return PublishedPrices(energy, reserve, self.total_seconds)
+
+
 class PublishedPriceAggregator:
     """Aggregate case prices using authoritative per-case publication seconds."""
 
     def aggregate(
         self, cases: tuple[CaseRunResult, ...], *, decimals: int
     ) -> PublishedPrices:
-        energy_numerator: dict[tuple[str, str], float] = defaultdict(float)
-        reserve_numerator: dict[tuple[str, str, str], float] = defaultdict(float)
-        totals: dict[str, float] = defaultdict(float)
+        accumulator = PublishedPriceAccumulator()
         for result in cases:
-            seconds = result.specification.publication_seconds
-            if seconds <= 0.0 or result.prices is None:
-                continue
-            period = result.specification.trading_period
-            totals[period] += seconds
-            for node, price in result.prices.node.items():
-                energy_numerator[(period, node[2])] += price * seconds
-            for key, price in result.prices.reserve.items():
-                reserve_numerator[(period, key[2], key[3])] += price * seconds
-        energy = {
-            key: round(value / totals[key[0]], decimals)
-            for key, value in energy_numerator.items()
-            if totals[key[0]] > 0.0
-        }
-        reserve = {
-            key: round(value / totals[key[0]], decimals)
-            for key, value in reserve_numerator.items()
-            if totals[key[0]] > 0.0
-        }
-        return PublishedPrices(energy, reserve, totals)
+            accumulator.add(result)
+        return accumulator.finish(decimals=decimals)
 
 
 def _zero(value: float, tolerance: float) -> bool:

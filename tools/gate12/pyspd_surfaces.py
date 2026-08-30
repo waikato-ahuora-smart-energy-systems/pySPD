@@ -13,10 +13,12 @@ from types import MappingProxyType
 from typing import Any
 
 from pyspd.application import ApplicationRun
+from pyspd.orchestration import CaseRunResult, PublishedPrices
 from pyspd.reporting import ReportBundle, ReportError
 from tools.gate12.evidence import REQUIRED_E2E_SURFACES, EvidenceContractError
 
 _TRADING_DATE = re.compile(r"[0-9]{8}")
+PARTIAL_E2E_SURFACES = frozenset(REQUIRED_E2E_SURFACES) - {"rounded-published-output"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +50,37 @@ class CanonicalCaseSurfaces:
         }
 
 
+@dataclass(frozen=True, slots=True)
+class CanonicalPartialCaseSurfaces:
+    """Canonical case evidence captured while its solved model is still live."""
+
+    case_id: str
+    trading_date: str
+    trading_period: str
+    surfaces: Mapping[str, bytes]
+
+    def __post_init__(self) -> None:
+        normalized = dict(self.surfaces)
+        if (
+            not self.case_id.strip()
+            or not _TRADING_DATE.fullmatch(self.trading_date)
+            or not self.trading_period.strip()
+            or set(normalized) != PARTIAL_E2E_SURFACES
+            or any(not isinstance(payload, bytes) for payload in normalized.values())
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-PYSPD-SURFACE: incomplete partial case surfaces"
+            )
+        object.__setattr__(self, "surfaces", MappingProxyType(normalized))
+
+    @property
+    def surface_sha256(self) -> dict[str, str]:
+        return {
+            name: hashlib.sha256(payload).hexdigest()
+            for name, payload in sorted(self.surfaces.items())
+        }
+
+
 class PyspdCaseSurfaceExporter:
     """Project a completed application run onto the twelve Gate 12 surfaces."""
 
@@ -66,7 +99,10 @@ class PyspdCaseSurfaceExporter:
                 "REQ-G12-PYSPD-SURFACE: report evidence is unreadable"
             ) from error
         exported = tuple(
-            self._case_surfaces(run, case, reports, trading_date=trading_date)
+            self.complete(
+                self.export_partial(case, reports, trading_date=trading_date),
+                result.published,
+            )
             for case in result.cases
         )
         case_ids = [item.case_id for item in exported]
@@ -76,18 +112,18 @@ class PyspdCaseSurfaceExporter:
             )
         return exported
 
-    def _case_surfaces(
+    def export_partial(
         self,
-        run: ApplicationRun,
-        case: Any,
+        case: CaseRunResult,
         reports: ReportBundle,
         *,
         trading_date: str,
-    ) -> CanonicalCaseSurfaces:
+    ) -> CanonicalPartialCaseSurfaces:
+        """Capture every surface that does not depend on end-of-day publication."""
+
         accepted = case.accepted
         prices = case.prices
-        published = run.result.published
-        if accepted is None or prices is None or published is None:
+        if accepted is None or prices is None:
             raise EvidenceContractError(
                 "REQ-G12-PYSPD-SURFACE: completed case lacks accepted output"
             )
@@ -141,9 +177,7 @@ class PyspdCaseSurfaceExporter:
                     "structural_signature": getattr(
                         primary_snapshot, "structural_signature", None
                     ),
-                    "variables": _mapping(
-                        getattr(primary_snapshot, "variables", {})
-                    ),
+                    "variables": _mapping(getattr(primary_snapshot, "variables", {})),
                 }
             ),
             "primary-objective": _json_bytes(
@@ -171,34 +205,56 @@ class PyspdCaseSurfaceExporter:
                     "seconds": _number(selected.publication_seconds),
                 }
             ),
-            "rounded-published-output": _json_bytes(
-                {
-                    "energy": _mapping(
-                        {
-                            key: value
-                            for key, value in published.energy.items()
-                            if key[0] == selected.trading_period
-                        }
-                    ),
-                    "reserve": _mapping(
-                        {
-                            key: value
-                            for key, value in published.reserve.items()
-                            if key[0] == selected.trading_period
-                        }
-                    ),
-                    "total_seconds": _number(
-                        published.total_seconds.get(selected.trading_period, 0.0)
-                    ),
-                }
-            ),
             "report-field": self._report_surface(
                 reports,
                 case_id=selected.case_id,
                 trading_period=selected.trading_period,
             ),
         }
-        return CanonicalCaseSurfaces(selected.case_id, trading_date, surfaces)
+        return CanonicalPartialCaseSurfaces(
+            selected.case_id,
+            trading_date,
+            selected.trading_period,
+            surfaces,
+        )
+
+    def complete(
+        self,
+        partial: CanonicalPartialCaseSurfaces,
+        published: PublishedPrices,
+    ) -> CanonicalCaseSurfaces:
+        """Attach end-of-day published prices to durable per-case evidence."""
+
+        period = partial.trading_period
+        surfaces = dict(partial.surfaces)
+        surfaces["rounded-published-output"] = _json_bytes(
+            {
+                "energy": _mapping(
+                    {
+                        key: value
+                        for key, value in published.energy.items()
+                        if key[0] == period
+                    }
+                ),
+                "reserve": _mapping(
+                    {
+                        key: value
+                        for key, value in published.reserve.items()
+                        if key[0] == period
+                    }
+                ),
+                "total_seconds": _number(published.total_seconds.get(period, 0.0)),
+            }
+        )
+        try:
+            report = json.loads(surfaces["report-field"])
+            report["published_price"]["rows"] = _published_rows(published, period)
+        except (json.JSONDecodeError, KeyError, TypeError) as error:
+            raise EvidenceContractError(
+                "REQ-G12-PYSPD-SURFACE: partial report field is invalid"
+            ) from error
+        surfaces["report-field"] = _json_bytes(report)
+        return CanonicalCaseSurfaces(partial.case_id, partial.trading_date, surfaces)
 
     @staticmethod
     def _report_surface(
@@ -233,7 +289,9 @@ def _mapping(values: Mapping[Any, Any]) -> list[dict[str, object]]:
     rows = []
     for key, value in values.items():
         identity = key if isinstance(key, tuple) else (key,)
-        rows.append({"identity": [str(item) for item in identity], "value": _value(value)})
+        rows.append(
+            {"identity": [str(item) for item in identity], "value": _value(value)}
+        )
     return sorted(
         rows,
         key=lambda row: json.dumps(row["identity"], separators=(",", ":")),
@@ -247,6 +305,42 @@ def _number(value: float) -> str:
             "REQ-G12-PYSPD-SURFACE: non-finite numeric evidence"
         )
     return number.hex()
+
+
+def _published_rows(published: PublishedPrices, period: str) -> list[dict[str, str]]:
+    seconds = _report_number(published.total_seconds.get(period, 0.0))
+    rows = [
+        {
+            "trading_period": item_period,
+            "location": node,
+            "product": "energy",
+            "price_nzd_per_mwh": _report_number(value),
+            "publication_seconds": seconds,
+        }
+        for (item_period, node), value in sorted(published.energy.items())
+        if item_period == period
+    ]
+    rows.extend(
+        {
+            "trading_period": item_period,
+            "location": island,
+            "product": reserve_class,
+            "price_nzd_per_mwh": _report_number(value),
+            "publication_seconds": seconds,
+        }
+        for (item_period, island, reserve_class), value in sorted(
+            published.reserve.items()
+        )
+        if item_period == period
+    )
+    return rows
+
+
+def _report_number(value: float) -> str:
+    number = float(value)
+    if not math.isfinite(number):
+        raise EvidenceContractError("REQ-G12-PYSPD-SURFACE: non-finite report evidence")
+    return format(number, ".17g")
 
 
 def _value(value: Any) -> object:

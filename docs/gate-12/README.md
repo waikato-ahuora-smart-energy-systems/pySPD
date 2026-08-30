@@ -228,7 +228,18 @@ uv run --group gdx python -m tools.gate12.materialize_incremental_pyspd \
 semantics. Each candidate bundle contains exactly the twelve required surfaces
 for the affected cases, plus source, discovery-checkpoint, work-item, engine,
 and per-surface hashes. A complete existing bundle is verified and reused; an
-incomplete run directory fails closed.
+incomplete run resumes after its last hash-verified case checkpoint.
+
+PySPD prepares and solves the prefix lazily, one case at a time. After every
+accepted case it atomically checkpoints the exact predecessor generation,
+event sequence, and unrounded publication numerators and seconds. For affected
+cases it also renders and hash-addresses the eleven surfaces that do not depend
+on end-of-day publication while the Pyomo model is still live. The solved model
+is then released. At prefix completion, the accumulator produces the rounded
+published prices and completes the twelfth surface plus the corresponding
+report rows. The final date bundle remains atomic. Resume rejects a changed
+source, work item, application configuration, case prefix, or any missing or
+modified partial surface; uncheckpointed work is repeated rather than inferred.
 
 The first live candidate-prefix rehearsal failed closed at historical case
 `51012022111105693`, exposing a native SCIP LP error under an over-tightened

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import dataclass, replace
 
 from .pricing import MarketPricePostProcessor, PublishedPriceAggregator
 from .solver import CaseExecutor, ShortfallLoop
@@ -20,6 +20,138 @@ from .types import (
 )
 
 
+@dataclass(frozen=True, slots=True)
+class DailyCaseExecution:
+    """One completed case plus the state required by its canonical successor."""
+
+    result: CaseRunResult
+    previous_generation: dict[str, float]
+    next_event_sequence: int
+
+
+class DailyCaseRunner:
+    """Execute one prepared case without losing daily predecessor state."""
+
+    def __init__(
+        self,
+        executor: CaseExecutor,
+        *,
+        postprocessor: MarketPricePostProcessor | None = None,
+    ) -> None:
+        self.executor = executor
+        self.postprocessor = postprocessor or MarketPricePostProcessor()
+
+    def execute(
+        self,
+        configuration: DailyRunConfiguration,
+        prepared: PreparedCase,
+        *,
+        previous_generation: dict[str, float],
+        event_sequence: int,
+        events: list[RunEvent] | None = None,
+    ) -> DailyCaseExecution:
+        case_events: list[RunEvent] = []
+        sink = _EventSink(
+            events if events is not None else [],
+            case_events,
+            event_sequence,
+            prepared.specification.case_id,
+        )
+        emit = sink.emit
+
+        emit(RunEventKind.CASE_SELECTED)
+        generation_start = dict(prepared.generation_start)
+        used_fallback = False
+        if not any(generation_start.values()) and previous_generation:
+            generation_start.update(previous_generation)
+            prepared = replace(prepared, generation_start=generation_start)
+            used_fallback = True
+        emit(
+            RunEventKind.INITIALIZED,
+            details={"prior_period_fallback": used_fallback},
+        )
+        emit(
+            RunEventKind.OVERRIDES_APPLIED,
+            details={
+                "entry_count": prepared.override_entry_count,
+                "symbols_changed": (
+                    prepared.override_input_sha256 != prepared.override_output_sha256
+                ),
+            },
+        )
+        emit(RunEventKind.SOLVE_STARTED, solve_loop=1)
+        try:
+            loop = ShortfallLoop(
+                self.executor, tolerance=configuration.residual_tolerance
+            ).run(prepared, maximum_loops=configuration.maximum_solve_loops)
+        except Exception as error:
+            raise OrchestrationError(
+                f"case {prepared.specification.case_id} solve failed: {error}"
+            ) from error
+        for transition in loop.transitions:
+            if transition.transfers or transition.untransferred:
+                emit(
+                    RunEventKind.SHORTFALL_TRANSFERRED,
+                    solve_loop=transition.solve_loop,
+                    details={
+                        "transfer_count": len(transition.transfers),
+                        "untransferred_count": len(transition.untransferred),
+                    },
+                )
+            if transition.scaling_disabled:
+                emit(
+                    RunEventKind.SHORTFALL_SCALING_DISABLED,
+                    solve_loop=transition.solve_loop,
+                    details={"node_count": len(transition.scaling_disabled)},
+                )
+            emit(
+                RunEventKind.SOLVE_STARTED,
+                solve_loop=transition.solve_loop + 1,
+            )
+        emit(
+            RunEventKind.SOLVE_ACCEPTED,
+            solve_loop=loop.solve_count,
+            details={"objective": loop.accepted.objective},
+        )
+        prices = self.postprocessor.process(
+            loop.accepted,
+            price_transfer_enabled=prepared.price_transfer_enabled,
+        )
+        emit(
+            RunEventKind.PRICES_REPAIRED,
+            details={
+                "invalid_bus_count": len(prices.invalid_buses),
+                "dead_node_count": len(prices.dead_nodes),
+            },
+        )
+        degraded = bool(
+            loop.limit_reached or loop.accepted.degraded_reasons or prices.invalid_buses
+        )
+        if loop.limit_reached:
+            emit(
+                RunEventKind.LOOP_LIMIT_REACHED,
+                solve_loop=loop.solve_count,
+            )
+        status = CaseRunStatus.DEGRADED if degraded else CaseRunStatus.COMPLETE
+        emit(RunEventKind.CASE_COMPLETE, details={"status": status.value})
+        result = CaseRunResult(
+            prepared.specification,
+            status,
+            loop.solve_count,
+            loop.accepted,
+            prices,
+            tuple(case_events),
+            loop.prepared.required_load,
+            loop.transfers,
+            loop.untransferred,
+        )
+        return DailyCaseExecution(
+            result=result,
+            previous_generation=dict(loop.accepted.generation),
+            next_event_sequence=sink.sequence,
+        )
+
+
 class DailyRunner:
     """Run selected cases in order without hiding re-solves or degraded states."""
 
@@ -30,8 +162,7 @@ class DailyRunner:
         postprocessor: MarketPricePostProcessor | None = None,
         publisher: PublishedPriceAggregator | None = None,
     ) -> None:
-        self.executor = executor
-        self.postprocessor = postprocessor or MarketPricePostProcessor()
+        self.case_runner = DailyCaseRunner(executor, postprocessor=postprocessor)
         self.publisher = publisher or PublishedPriceAggregator()
 
     def run(
@@ -74,105 +205,17 @@ class DailyRunner:
             )
             sequence += 1
         for processed_this_call, prepared in enumerate(cases[next_ordinal:], start=1):
-            case_events: list[RunEvent] = []
-            sink = _EventSink(
-                events, case_events, sequence, prepared.specification.case_id
+            execution = self.case_runner.execute(
+                configuration,
+                prepared,
+                previous_generation=previous_generation,
+                event_sequence=sequence,
+                events=events,
             )
-            emit = sink.emit
-
-            emit(RunEventKind.CASE_SELECTED)
-            generation_start = dict(prepared.generation_start)
-            used_fallback = False
-            if not any(generation_start.values()) and previous_generation:
-                generation_start.update(previous_generation)
-                prepared = replace(prepared, generation_start=generation_start)
-                used_fallback = True
-            emit(
-                RunEventKind.INITIALIZED,
-                details={"prior_period_fallback": used_fallback},
-            )
-            emit(
-                RunEventKind.OVERRIDES_APPLIED,
-                details={
-                    "entry_count": prepared.override_entry_count,
-                    "symbols_changed": (
-                        prepared.override_input_sha256
-                        != prepared.override_output_sha256
-                    ),
-                },
-            )
-            emit(RunEventKind.SOLVE_STARTED, solve_loop=1)
-            try:
-                loop = ShortfallLoop(
-                    self.executor, tolerance=configuration.residual_tolerance
-                ).run(prepared, maximum_loops=configuration.maximum_solve_loops)
-            except Exception as error:
-                raise OrchestrationError(
-                    f"case {prepared.specification.case_id} solve failed: {error}"
-                ) from error
-            for transition in loop.transitions:
-                if transition.transfers or transition.untransferred:
-                    emit(
-                        RunEventKind.SHORTFALL_TRANSFERRED,
-                        solve_loop=transition.solve_loop,
-                        details={
-                            "transfer_count": len(transition.transfers),
-                            "untransferred_count": len(transition.untransferred),
-                        },
-                    )
-                if transition.scaling_disabled:
-                    emit(
-                        RunEventKind.SHORTFALL_SCALING_DISABLED,
-                        solve_loop=transition.solve_loop,
-                        details={"node_count": len(transition.scaling_disabled)},
-                    )
-                emit(
-                    RunEventKind.SOLVE_STARTED,
-                    solve_loop=transition.solve_loop + 1,
-                )
-            emit(
-                RunEventKind.SOLVE_ACCEPTED,
-                solve_loop=loop.solve_count,
-                details={"objective": loop.accepted.objective},
-            )
-            prices = self.postprocessor.process(
-                loop.accepted,
-                price_transfer_enabled=prepared.price_transfer_enabled,
-            )
-            emit(
-                RunEventKind.PRICES_REPAIRED,
-                details={
-                    "invalid_bus_count": len(prices.invalid_buses),
-                    "dead_node_count": len(prices.dead_nodes),
-                },
-            )
-            degraded = bool(
-                loop.limit_reached
-                or loop.accepted.degraded_reasons
-                or prices.invalid_buses
-            )
-            if loop.limit_reached:
-                emit(
-                    RunEventKind.LOOP_LIMIT_REACHED,
-                    solve_loop=loop.solve_count,
-                )
-            status = CaseRunStatus.DEGRADED if degraded else CaseRunStatus.COMPLETE
-            emit(RunEventKind.CASE_COMPLETE, details={"status": status.value})
-            result = CaseRunResult(
-                prepared.specification,
-                status,
-                loop.solve_count,
-                loop.accepted,
-                prices,
-                tuple(case_events),
-                loop.prepared.required_load,
-                loop.transfers,
-                loop.untransferred,
-            )
-            completed.append(result)
-            previous_generation = dict(loop.accepted.generation)
+            completed.append(execution.result)
+            previous_generation = execution.previous_generation
             next_ordinal += 1
-            sequence = sink.sequence
+            sequence = execution.next_event_sequence
             if (
                 stop_after is not None
                 and processed_this_call >= stop_after

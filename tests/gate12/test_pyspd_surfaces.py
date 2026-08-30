@@ -6,14 +6,17 @@ import pytest
 
 from pyspd.application import ApplicationRun
 from pyspd.orchestration import DailyRunConfiguration, DailyRunner
-from pyspd.reporting import ArtifactProvenance, daily_report_registry
+from pyspd.reporting import ArtifactProvenance, ReportBundle, daily_report_registry
 from tests.orchestration.conftest import (
     SequenceExecutor,
     make_observation,
     make_prepared,
 )
 from tools.gate12.evidence import REQUIRED_E2E_SURFACES
-from tools.gate12.pyspd_surfaces import PyspdCaseSurfaceExporter
+from tools.gate12.pyspd_surfaces import (
+    PARTIAL_E2E_SURFACES,
+    PyspdCaseSurfaceExporter,
+)
 
 FORMULATION = "vspd-v5.0.6-reserve"
 
@@ -65,12 +68,30 @@ def test_exporter_keeps_price_layers_independently_hashable(tmp_path) -> None:
         _run(tmp_path, raw_prices=(51.0, 60.0)), trading_date="20240101"
     )[0]
 
-    assert baseline.surface_sha256["case-selection"] == changed.surface_sha256[
-        "case-selection"
-    ]
-    assert baseline.surface_sha256["raw-bus-price"] != changed.surface_sha256[
-        "raw-bus-price"
-    ]
-    assert baseline.surface_sha256["report-field"] != changed.surface_sha256[
-        "report-field"
-    ]
+    assert (
+        baseline.surface_sha256["case-selection"]
+        == changed.surface_sha256["case-selection"]
+    )
+    assert (
+        baseline.surface_sha256["raw-bus-price"]
+        != changed.surface_sha256["raw-bus-price"]
+    )
+    assert (
+        baseline.surface_sha256["report-field"]
+        != changed.surface_sha256["report-field"]
+    )
+
+
+def test_partial_export_can_be_completed_after_model_release(tmp_path) -> None:
+    run = _run(tmp_path)
+    exporter = PyspdCaseSurfaceExporter()
+    reports = ReportBundle.read(run.output_directory)
+
+    partial = exporter.export_partial(
+        run.result.cases[0], reports, trading_date="20240101"
+    )
+    assert run.result.published is not None
+    completed = exporter.complete(partial, run.result.published)
+
+    assert set(partial.surfaces) == PARTIAL_E2E_SURFACES
+    assert completed == exporter.export(run, trading_date="20240101")[0]
