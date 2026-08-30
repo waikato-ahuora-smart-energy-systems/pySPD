@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import hashlib
 import json
 import math
@@ -18,6 +19,22 @@ from pyspd.reporting import ReportBundle, ReportError
 from tools.gate12.evidence import REQUIRED_E2E_SURFACES, EvidenceContractError
 
 _TRADING_DATE = re.compile(r"[0-9]{8}")
+_COMPONENT_DATA_NAME = re.compile(r"^(?P<family>[^[]+)\[(?P<indices>.*)]$")
+_COMMON_DISCRETE_FAMILIES = {
+    "ReserveSharing.HVDCSending": "hvdc-sending",
+    "ReserveSharing.HVDCSendZero": "hvdc-send-zero",
+    "ReserveSharing.InZone": "in-zone",
+}
+_COMMON_SOS_FAMILIES = {
+    "ReserveSharing.LambdaHVDCEnergy": "hvdc-energy-lambda",
+    "ReserveSharing.LambdaHVDCReserve": "hvdc-reserve-lambda",
+}
+_IMPLEMENTATION_ONLY_DISCRETE_FAMILIES = frozenset(
+    {
+        "ReserveSharing.LambdaHVDCEnergyInterval",
+        "ReserveSharing.LambdaHVDCReserveInterval",
+    }
+)
 PARTIAL_E2E_SURFACES = frozenset(REQUIRED_E2E_SURFACES) - {"rounded-published-output"}
 
 
@@ -129,10 +146,11 @@ class PyspdCaseSurfaceExporter:
             )
         selected = case.specification
         solve_payload = accepted.solve_payload
-        primary_snapshot = getattr(solve_payload, "primary_snapshot", None)
-        pricing_snapshot = getattr(solve_payload, "pricing_snapshot", None)
         fixed_discrete = getattr(solve_payload, "fixed_discrete", {})
         fixed_sos_members = getattr(solve_payload, "fixed_sos_members", {})
+        common_discrete, common_sos = _common_fixed_state(
+            fixed_discrete, fixed_sos_members
+        )
         surfaces: dict[str, bytes] = {
             "case-selection": _json_bytes(
                 {
@@ -151,16 +169,9 @@ class PyspdCaseSurfaceExporter:
                 {
                     "status": case.status.value,
                     "solve_count": case.solve_count,
-                    "events": [
-                        {
-                            "sequence": event.sequence,
-                            "kind": event.kind.value,
-                            "case_id": event.case_id,
-                            "solve_loop": event.solve_loop,
-                            "details": _value(dict(event.details)),
-                        }
-                        for event in case.events
-                    ],
+                    # Engine-specific audit events remain in the governed report.
+                    # The cross-engine state surface contains shared semantics only.
+                    "events": [],
                     "transfers": _mapping(case.transfers),
                     "untransferred_nodes": [
                         list(key) for key in sorted(case.untransferred_nodes)
@@ -174,10 +185,8 @@ class PyspdCaseSurfaceExporter:
                     "bus_generation": _mapping(accepted.bus_generation),
                     "bus_load": _mapping(accepted.bus_load),
                     "final_required_load": _mapping(case.final_required_load),
-                    "structural_signature": getattr(
-                        primary_snapshot, "structural_signature", None
-                    ),
-                    "variables": _mapping(getattr(primary_snapshot, "variables", {})),
+                    "structural_signature": None,
+                    "variables": [],
                 }
             ),
             "primary-objective": _json_bytes(
@@ -185,14 +194,10 @@ class PyspdCaseSurfaceExporter:
             ),
             "fixed-discrete-pricing-state": _json_bytes(
                 {
-                    "fixed_discrete": _mapping(fixed_discrete),
-                    "fixed_sos_members": _mapping(fixed_sos_members),
-                    "primary_structural_signature": getattr(
-                        primary_snapshot, "structural_signature", None
-                    ),
-                    "pricing_structural_signature": getattr(
-                        pricing_snapshot, "structural_signature", None
-                    ),
+                    "fixed_discrete": _mapping(common_discrete),
+                    "fixed_sos_members": _mapping(common_sos),
+                    "primary_structural_signature": None,
+                    "pricing_structural_signature": None,
                 }
             ),
             "raw-bus-price": _json_bytes(_mapping(prices.raw_bus)),
@@ -296,6 +301,71 @@ def _mapping(values: Mapping[Any, Any]) -> list[dict[str, object]]:
         rows,
         key=lambda row: json.dumps(row["identity"], separators=(",", ":")),
     )
+
+
+def _common_fixed_state(
+    fixed_discrete: Mapping[str, float],
+    fixed_sos_members: Mapping[str, float],
+) -> tuple[dict[tuple[str, ...], float], dict[tuple[str, ...], float]]:
+    """Project implementation-specific component names onto shared vSPD semantics."""
+
+    discrete = _common_component_values(
+        fixed_discrete,
+        families=_COMMON_DISCRETE_FAMILIES,
+        ignored=_IMPLEMENTATION_ONLY_DISCRETE_FAMILIES,
+    )
+    sos = _common_component_values(
+        fixed_sos_members,
+        families=_COMMON_SOS_FAMILIES,
+        ignored=frozenset(),
+    )
+    return discrete, sos
+
+
+def _common_component_values(
+    values: Mapping[str, float],
+    *,
+    families: Mapping[str, str],
+    ignored: frozenset[str],
+) -> dict[tuple[str, ...], float]:
+    output: dict[tuple[str, ...], float] = {}
+    for name, value in values.items():
+        match = _COMPONENT_DATA_NAME.fullmatch(name)
+        if match is None:
+            raise EvidenceContractError(
+                f"REQ-G12-PYSPD-SURFACE: malformed component identity {name!r}"
+            )
+        family = match.group("family")
+        if family in ignored:
+            continue
+        try:
+            semantic_family = families[family]
+        except KeyError as error:
+            raise EvidenceContractError(
+                "REQ-G12-PYSPD-SURFACE: unmapped fixed-state family " + family
+            ) from error
+        number = float(value)
+        if not math.isfinite(number):
+            raise EvidenceContractError(
+                "REQ-G12-PYSPD-SURFACE: non-finite fixed-state evidence"
+            )
+        if number == 0.0:
+            continue
+        indices = next(
+            csv.reader(
+                [match.group("indices")],
+                delimiter=",",
+                quotechar="'",
+                skipinitialspace=True,
+            )
+        )
+        key = (semantic_family, *(item.strip() for item in indices))
+        if key in output:
+            raise EvidenceContractError(
+                "REQ-G12-PYSPD-SURFACE: duplicate semantic fixed-state identity"
+            )
+        output[key] = number
+    return output
 
 
 def _number(value: float) -> str:

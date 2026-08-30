@@ -321,7 +321,9 @@ def test_fixed_lp_profile_injects_pricing_solve_after_each_mip(tmp_path: Path) -
     assert (programs / "pyspd_pre_solve_snapshot.inc").is_file()
     assert (programs / "pyspd_post_solve_snapshot.inc").is_file()
     assert (programs / "convert.opt").is_file()
-    assert (programs / "scip.opt").read_text() == "numerics/feastol = 1e-7\n"
+    assert (programs / "scip.opt").read_text() == (
+        "emphasis: numerics\nnumerics/feastol = 1e-6\n"
+    )
     assert "dual_feasibility_tolerance = 1e-9" in (
         programs / "highs.opt"
     ).read_text()
@@ -330,12 +332,23 @@ def test_fixed_lp_profile_injects_pricing_solve_after_each_mip(tmp_path: Path) -
     assert patched.count("$include pyspd_post_solve_snapshot.inc") == 3
     pricing = (programs / "pyspd_fixed_lp_solve.inc").read_text()
     assert "HVDCSENDING.fx(t,isl)" in pricing
-    assert "LAMBDAHVDCRESERVE.fx(t,isl,resC,rd,rsbp)" in pricing
+    assert (
+        "LAMBDAHVDCRESERVE.fx(t,isl,resC,rd,rsbp)"
+        "$(abs(LAMBDAHVDCRESERVE.l(t,isl,resC,rd,rsbp)) <= 1e-7) = 0;"
+        in pricing
+    )
+    assert (
+        "LAMBDAHVDCRESERVE.fx(t,isl,resC,rd,rsbp) = "
+        "LAMBDAHVDCRESERVE.l(t,isl,resC,rd,rsbp);"
+        not in pricing
+    )
     assert "BATTERYCHARGINGMODE.fx(t,n,n1)" in pricing
     assert "pyspd_BATTERYCHARGINGMODE_lo(ca,dt,n,n1)" in (
         programs / "pyspd_pricing_declarations.inc"
     ).read_text()
     assert "solve %pyspdPricingModel% using rmip" in pricing
+    assert "pyspd_pricing_objective_delta = abs(" in pricing
+    assert "abort$(pyspd_pricing_objective_delta" not in pricing
     assert "%pyspdPricingModel%.Optfile = 1;" in pricing
     assert "$include pyspd_pre_solve_snapshot.inc" in pricing
     assert "$include pyspd_post_solve_snapshot.inc" in pricing

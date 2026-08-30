@@ -1446,10 +1446,6 @@ class ReserveEconomicsComponent(HVDCEconomicsComponent):
             - block.SystemPenalty
             - block.ScarcityCost
             - sum(share_penalty[key] for key in case.periods)
-            + sum(
-                case.scarcity_limit[key] * case.scarcity_price[key]
-                for key in case.scarcity_blocks
-            )
         )
         block.Objective = pyo.Objective(expr=block.NetBenefit, sense=pyo.maximize)
         artifacts.update(

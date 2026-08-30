@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from pyspd.application import ApplicationRun
@@ -16,6 +18,7 @@ from tools.gate12.evidence import REQUIRED_E2E_SURFACES
 from tools.gate12.pyspd_surfaces import (
     PARTIAL_E2E_SURFACES,
     PyspdCaseSurfaceExporter,
+    _common_fixed_state,
 )
 
 FORMULATION = "vspd-v5.0.6-reserve"
@@ -95,3 +98,52 @@ def test_partial_export_can_be_completed_after_model_release(tmp_path) -> None:
 
     assert set(partial.surfaces) == PARTIAL_E2E_SURFACES
     assert completed == exporter.export(run, trading_date="20240101")[0]
+
+
+def test_common_surface_removes_python_only_structure_and_events(tmp_path) -> None:
+    surface = PyspdCaseSurfaceExporter().export(
+        _run(tmp_path), trading_date="20240101"
+    )[0]
+
+    physics = json.loads(surface.surfaces["primary-physics"])
+    transition = json.loads(surface.surfaces["state-transition"])
+    fixed = json.loads(surface.surfaces["fixed-discrete-pricing-state"])
+    assert physics["structural_signature"] is None
+    assert physics["variables"] == []
+    assert transition["events"] == []
+    assert fixed["primary_structural_signature"] is None
+    assert fixed["pricing_structural_signature"] is None
+
+
+def test_common_fixed_state_maps_shared_semantics_and_drops_encoding_binaries() -> None:
+    case_id = "C1"
+    date_time = "01-JAN-2024 00:00"
+    discrete, sos = _common_fixed_state(
+        {
+            f"ReserveSharing.HVDCSending['{case_id}','{date_time}',NI]": 1.0,
+            f"ReserveSharing.HVDCSendZero['{case_id}','{date_time}',NI]": 0.0,
+            f"ReserveSharing.InZone['{case_id}','{date_time}',NI,FIR,NR]": 1.0,
+            f"ReserveSharing.LambdaHVDCEnergyInterval['{case_id}','{date_time}',NI,ls1]": 1.0,
+        },
+        {
+            f"ReserveSharing.LambdaHVDCEnergy['{case_id}','{date_time}',NI,ls1]": 1.0,
+            f"ReserveSharing.LambdaHVDCReserve['{case_id}','{date_time}',NI,FIR,forward,ls1]": 1.0,
+        },
+    )
+
+    assert discrete == {
+        ("hvdc-sending", case_id, date_time, "NI"): 1.0,
+        ("in-zone", case_id, date_time, "NI", "FIR", "NR"): 1.0,
+    }
+    assert sos == {
+        ("hvdc-energy-lambda", case_id, date_time, "NI", "ls1"): 1.0,
+        (
+            "hvdc-reserve-lambda",
+            case_id,
+            date_time,
+            "NI",
+            "FIR",
+            "forward",
+            "ls1",
+        ): 1.0,
+    }

@@ -130,6 +130,50 @@ def test_exact_reserve_share_perturbation_coefficients() -> None:
     assert abs(coefficients["ReserveShareEffectiveECE"]) == pytest.approx(3e-5)
 
 
+def test_net_benefit_excludes_the_vspd_commented_scarcity_constant() -> None:
+    """The model objective must match vSPD's active ObjectiveFunction algebra."""
+
+    base = make_reserve_case()
+    scarcity_block = (*next(iter(base.nodes)), "t1")
+    case = replace(
+        base,
+        scarcity_blocks=frozenset({scarcity_block}),
+        scarcity_limit={scarcity_block: 100.0},
+        scarcity_price={scarcity_block: 1_000.0},
+        scarcity_enabled={period: 1.0 for period in base.periods},
+    )
+    built = ModelAssembler().assemble(reserve_formulation(), case)
+    share_penalty = built.artifacts["reserve_share_penalty"]
+    expected = (
+        built.artifacts["system_benefit"]
+        - built.artifacts["system_cost"]
+        - built.artifacts["system_penalty"]
+        - built.artifacts["scarcity_cost"]
+        - sum(share_penalty[key] for key in case.periods)
+    )
+    actual_repn = generate_standard_repn(
+        built.artifacts["net_benefit"], compute_values=True
+    )
+    expected_repn = generate_standard_repn(expected, compute_values=True)
+
+    assert float(actual_repn.constant or 0.0) == pytest.approx(
+        float(expected_repn.constant or 0.0)
+    )
+    assert {
+        variable.name: float(coefficient)
+        for variable, coefficient in zip(
+            actual_repn.linear_vars, actual_repn.linear_coefs, strict=True
+        )
+    } == pytest.approx(
+        {
+            variable.name: float(coefficient)
+            for variable, coefficient in zip(
+                expected_repn.linear_vars, expected_repn.linear_coefs, strict=True
+            )
+        }
+    )
+
+
 def test_scip_mip_to_fixed_highs_rmip_and_independent_validation() -> None:
     built = build()
     outcome = ReserveSolvePolicy().solve(built)

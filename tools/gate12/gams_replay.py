@@ -9,7 +9,7 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from pyspd.data import SymbolCatalog
 from pyspd.data.gdx import GdxAdapter
@@ -131,6 +131,7 @@ class Gate12GamsSourcePatcher(VspdSourcePatcher):
                 "REQ-G12-GAMS: affected cases are absent from the replay prefix"
             )
         self.base.apply(programs, profile, configuration)
+        self._normalise_portable_paths(programs)
         solve = programs / "vSPDsolve.gms"
         self._replace_gate12_exact(
             solve,
@@ -172,6 +173,63 @@ class Gate12GamsSourcePatcher(VspdSourcePatcher):
             _FINAL_UNLOAD + "* 9. Write results to CSV report files and GDX files",
         )
 
+    def _normalise_portable_paths(self, programs: Path) -> None:
+        """Replace pinned Windows separators at the GAMS preprocessor boundary."""
+
+        settings = programs / "vSPDsettings.inc"
+        period = programs / "vSPDperiod.gms"
+        solve = programs / "vSPDsolve.gms"
+        self._replace_gate12_exact(
+            settings,
+            "'%system.fp%..\\Input\\'",
+            "'%system.fp%../Input/'",
+        )
+        self._replace_gate12_exact(
+            settings,
+            "'%system.fp%..\\Output\\'",
+            "'%system.fp%../Output/'",
+        )
+        self._replace_gate12_exact(
+            settings,
+            "'%system.fp%..\\Override\\'",
+            "'%system.fp%../Override/'",
+        )
+        self._replace_gate12_all(
+            period,
+            "%inputPath%\\%GDXname%.gdx",
+            "%inputPath%/%GDXname%.gdx",
+            expected_count=2,
+        )
+        self._replace_gate12_exact(
+            period,
+            "%programPath%\\vSPDperiod.gdx",
+            "%programPath%/vSPDperiod.gdx",
+        )
+        self._replace_gate12_all(
+            solve,
+            "%inputPath%\\%GDXname%.gdx",
+            "%inputPath%/%GDXname%.gdx",
+            expected_count=4,
+        )
+        self._replace_gate12_exact(
+            solve,
+            "unsolvedDT(ca,dt) = yes $ case2dt(ca,dt) ;",
+            "pyspd_gate12_transfer_mw(ca,dt,n,n1) = 0;\n"
+            "unsolvedDT(ca,dt) = yes $ case2dt(ca,dt) ;",
+        )
+        self._replace_gate12_all(
+            programs / "vSPDreportSetup.gms",
+            "%outputPath%\\%runName%\\",
+            "%outputPath%%runName%/",
+            expected_count=19,
+        )
+        self._replace_gate12_all(
+            programs / "vSPDreport.gms",
+            "%outputPath%\\%runName%\\",
+            "%outputPath%%runName%/",
+            expected_count=22,
+        )
+
     @staticmethod
     def _replace_gate12_exact(path: Path, old: str, new: str) -> None:
         text = path.read_text(encoding="utf-8")
@@ -180,6 +238,23 @@ class Gate12GamsSourcePatcher(VspdSourcePatcher):
             raise EvidenceContractError(
                 f"REQ-G12-GAMS: {path.name} contained {count} instrumentation "
                 f"targets for {old!r}; expected one"
+            )
+        path.write_text(text.replace(old, new), encoding="utf-8")
+
+    @staticmethod
+    def _replace_gate12_all(
+        path: Path,
+        old: str,
+        new: str,
+        *,
+        expected_count: int,
+    ) -> None:
+        text = path.read_text(encoding="utf-8")
+        count = text.count(old)
+        if count != expected_count:
+            raise EvidenceContractError(
+                f"REQ-G12-GAMS: {path.name} contained {count} portability "
+                f"targets for {old!r}; expected {expected_count}"
             )
         path.write_text(text.replace(old, new), encoding="utf-8")
 
@@ -196,21 +271,15 @@ class GamsReplayArtifacts:
 class GamsReplaySurfaceExporter:
     """Project instrumented pinned-GAMS results onto all Gate 12 surfaces."""
 
-    _discrete_symbols = (
-        "pyspd_gate12_HVDCSENDING",
-        "pyspd_gate12_INZONE",
-        "pyspd_gate12_HVDCSENTINSEGMENT",
-        "pyspd_gate12_PURCHASEBLOCKBINARY",
-        "pyspd_gate12_HVDCSENDZERO",
-        "pyspd_gate12_ACBRANCHFLOWDIRECTED_INTEGER",
-        "pyspd_gate12_HVDCLINKFLOWDIRECTED_INTEGER",
-        "pyspd_gate12_HVDCPOLEFLOW_INTEGER",
-        "pyspd_gate12_LAMBDAINTEGER",
-    )
-    _sos_symbols = (
-        "pyspd_gate12_LAMBDAHVDCENERGY",
-        "pyspd_gate12_LAMBDAHVDCRESERVE",
-    )
+    _discrete_symbols: ClassVar[Mapping[str, str]] = {
+        "pyspd_gate12_HVDCSENDING": "hvdc-sending",
+        "pyspd_gate12_INZONE": "in-zone",
+        "pyspd_gate12_HVDCSENDZERO": "hvdc-send-zero",
+    }
+    _sos_symbols: ClassVar[Mapping[str, str]] = {
+        "pyspd_gate12_LAMBDAHVDCENERGY": "hvdc-energy-lambda",
+        "pyspd_gate12_LAMBDAHVDCRESERVE": "hvdc-reserve-lambda",
+    }
 
     def export(
         self,
@@ -264,7 +333,9 @@ class GamsReplaySurfaceExporter:
         offers = evidence.members("offer", prefix=prefix)
         buses = evidence.members("bus", prefix=prefix)
         nodes = evidence.members("node", prefix=prefix)
-        generation = {key: evidence.value("o_offerEnergy_TP", key) for key in offers}
+        generation = {
+            key[2:]: evidence.value("o_offerEnergy_TP", key) for key in offers
+        }
         bus_generation = {
             key: evidence.value("o_busGeneration_TP", key) for key in buses
         }
@@ -386,14 +457,13 @@ class GamsReplaySurfaceExporter:
     def _fixed_state(
         evidence: _GamsParameterStore,
         prefix: tuple[str, str],
-        names: tuple[str, ...],
-    ) -> dict[str, float]:
-        output = {}
-        for name in names:
-            family = name.removeprefix("pyspd_gate12_")
+        names: Mapping[str, str],
+    ) -> dict[tuple[str, ...], float]:
+        output: dict[tuple[str, ...], float] = {}
+        for name, family in names.items():
             for key, value in evidence.numeric(name).items():
-                if key[:2] == prefix:
-                    output[f"{family}[{','.join(key)}]"] = value
+                if key[:2] == prefix and value != 0.0:
+                    output[(family, *key)] = value
         return output
 
     @staticmethod

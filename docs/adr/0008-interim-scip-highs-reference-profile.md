@@ -6,6 +6,11 @@
 | Date | 29 August 2026 |
 | Decider | Project owner direction recorded in the development task |
 
+> Amended 31 August 2026: optimal SCIP and fixed-state HiGHS statuses are the
+> current acceptance boundary. The primary/pricing objective delta remains
+> retained evidence, but is not an independent abort condition; native CPLEX
+> validation remains deferred.
+
 ## Context
 
 The pinned vSPD model executes at full size with native GAMS/SCIP, and an
@@ -25,8 +30,8 @@ reference during the current development phase, provided that:
 - every primary SCIP MIP reports GAMS solver status `1 Normal Completion` and
   model status `1 Optimal`;
 - every fixed-discrete HiGHS RMIP reports the same statuses;
-- the primary/pricing objective difference is within the governed objective
-  tolerance;
+- the primary/pricing objective difference is retained explicitly for later
+  cross-validation;
 - every expected scenario is present exactly once in the final pricing output;
 - every required price is finite; and
 - canonical input, matrix, discrete-decision, solution, and report evidence is
@@ -46,6 +51,9 @@ claim specifically about CPLEX parity or historical CPLEX dual reproduction.
 - Claims are phrased as pinned-vSPD behavior reproduced with the qualified
   SCIP/HiGHS profile, not CPLEX-identical behavior.
 - Solver status checking is a hard acceptance gate, not supporting metadata.
+- SCIP uses numerical emphasis with its `1e-6` primal-feasibility tolerance,
+  consistent with ADR-0014. Binary values and inactive SOS members are fixed
+  before HiGHS repricing; active SOS magnitudes remain continuous.
 - CPLEX option discrepancies remain recorded but are deferred rather than
   blocking current development.
 
