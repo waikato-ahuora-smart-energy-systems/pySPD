@@ -299,6 +299,23 @@ tolerance or degeneracy-aware comparator must use a separately named processor
 profile and retain its case-specific evidence. Incremental success does not
 relax the final requirement for exactly 546 identities across all 139 dates.
 
+For every paired date, preserve a quantified path-level diff alongside the
+exact parity checkpoint:
+
+```bash
+uv run --group gdx python -m tools.gate12.quantify_canonical_replay \
+  --reference-bundle-root /path/to/incremental/gams-bundles \
+  --candidate-bundle-root /path/to/incremental/pyspd-bundles \
+  --trading-date 20221106 \
+  --output /path/to/incremental/quantified-diffs/20221106.json
+```
+
+This immutable artifact retains every missing, extra, and changed canonical
+JSON leaf with its path and both values. Hexadecimal floating-point leaves are
+also compared numerically, with per-surface and per-date maximum absolute
+errors. It is diagnostic evidence: it does not apply a tolerance, certify a
+solver-sensitive alternative, or convert a discrepancy into a pass.
+
 For isolated partial inventories, pass `--execution-scope shard`. A complete
 shard then exits successfully and records `shard_complete: true`, while
 `population_passed` remains false and no interval manifest can be emitted.

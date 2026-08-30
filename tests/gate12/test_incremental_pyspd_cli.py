@@ -11,6 +11,9 @@ from tools.gate12.materialize_incremental_gams import (
     build_parser as gams_parser,
 )
 from tools.gate12.materialize_incremental_pyspd import build_parser
+from tools.gate12.quantify_canonical_replay import (
+    build_parser as quantify_parser,
+)
 
 
 def test_incremental_pyspd_cli_requires_provenance_and_output_roots() -> None:
@@ -106,3 +109,26 @@ def test_incremental_gams_cli_requires_pinned_source_and_executable() -> None:
     assert str(arguments.source_tree) == "/pinned-vspd"
     assert str(arguments.gams_executable) == "/gams/gams"
     assert str(arguments.bundle_root) == "/reference"
+
+
+def test_quantified_diff_cli_requires_a_paired_date_and_output() -> None:
+    parser = quantify_parser()
+
+    with pytest.raises(SystemExit):
+        parser.parse_args([])
+
+    arguments = parser.parse_args(
+        [
+            "--reference-bundle-root",
+            "/reference",
+            "--candidate-bundle-root",
+            "/candidate",
+            "--trading-date",
+            "20221106",
+            "--output",
+            "/diffs/20221106.json",
+        ]
+    )
+
+    assert arguments.trading_date == "20221106"
+    assert str(arguments.output) == "/diffs/20221106.json"
