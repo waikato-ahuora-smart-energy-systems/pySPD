@@ -505,6 +505,7 @@ class IncrementalParityCheckpointStore:
         *,
         work_item: IncrementalReplayWorkItem,
         processor_profile: str,
+        accept_failed: bool = False,
     ) -> bool:
         checkpoint = self.load(work_item.trading_date)
         return bool(
@@ -514,8 +515,10 @@ class IncrementalParityCheckpointStore:
             == work_item.discovery_checkpoint_sha256
             and checkpoint.work_item_sha256 == work_item.logical_sha256
             and checkpoint.processor_profile == processor_profile
-            and checkpoint.passed
-            and checkpoint.unresolved_material_count == 0
+            and (
+                accept_failed
+                or (checkpoint.passed and checkpoint.unresolved_material_count == 0)
+            )
         )
 
     def _path(self, trading_date: str) -> Path:
@@ -535,6 +538,7 @@ class IncrementalParityRunSummary:
     processed_date_count: int
     affected_case_count: int
     unresolved_material_count: int
+    failed_date_count: int
     waiting_for_trading_date: str | None
 
 
@@ -552,6 +556,7 @@ class IncrementalGate12Coordinator:
         index_loader: HistoricalCaseIndexLoader,
         processor: IncrementalDateParityProcessor,
         planner: HistoricalCheckpointReplayPlanner | None = None,
+        stop_on_discrepancy: bool = True,
     ) -> None:
         self.feed = IncrementalDiscoveryFeed(
             inventory=inventory,
@@ -569,16 +574,26 @@ class IncrementalGate12Coordinator:
         self.index_loader = self.feed.index_loader
         self.processor = processor
         self.planner = self.feed.planner
+        self.stop_on_discrepancy = stop_on_discrepancy
 
     def run_available(self) -> IncrementalParityRunSummary:
-        processed = affected = unresolved = 0
+        processed = affected = unresolved = failed = 0
         available_work, waiting = self.feed.scan()
         for available in available_work:
             work_item = available.work_item
             affected += len(work_item.affected_case_ids)
             if self.parity_store.reusable(
-                work_item=work_item, processor_profile=self.processor.profile
+                work_item=work_item,
+                processor_profile=self.processor.profile,
+                accept_failed=not self.stop_on_discrepancy,
             ):
+                existing = self.parity_store.load(work_item.trading_date)
+                if existing is None:
+                    raise EvidenceContractError(
+                        "REQ-G12-INCREMENTAL: reusable parity evidence disappeared"
+                    )
+                unresolved += existing.unresolved_material_count
+                failed += int(not existing.passed)
                 continue
             result = self.processor.process(
                 work_item=work_item,
@@ -595,7 +610,8 @@ class IncrementalGate12Coordinator:
             self.parity_store.write(parity_checkpoint)
             processed += 1
             unresolved += parity_checkpoint.unresolved_material_count
-            if not parity_checkpoint.passed:
+            failed += int(not parity_checkpoint.passed)
+            if not parity_checkpoint.passed and self.stop_on_discrepancy:
                 raise EvidenceContractError(
                     "REQ-G12-INCREMENTAL: daily parity comparison failed for "
                     f"{work_item.trading_date}"
@@ -610,5 +626,6 @@ class IncrementalGate12Coordinator:
             processed_date_count=processed,
             affected_case_count=affected,
             unresolved_material_count=unresolved,
+            failed_date_count=failed,
             waiting_for_trading_date=waiting,
         )

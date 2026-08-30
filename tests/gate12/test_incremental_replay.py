@@ -142,6 +142,7 @@ def _coordinator(
     tmp_path: Path,
     *,
     processor: FakeProcessor,
+    stop_on_discrepancy: bool = True,
 ) -> tuple[IncrementalGate12Coordinator, HistoricalPopulationCheckpointStore]:
     inventory, indices, discovery = _fixture(tmp_path)
     coordinator = IncrementalGate12Coordinator(
@@ -152,6 +153,7 @@ def _coordinator(
         parity_store=IncrementalParityCheckpointStore(tmp_path / "parity"),
         index_loader=FakeIndexLoader(indices),
         processor=processor,
+        stop_on_discrepancy=stop_on_discrepancy,
     )
     return coordinator, discovery
 
@@ -240,6 +242,27 @@ def test_coordinator_persists_failed_parity_and_stops(tmp_path: Path) -> None:
     assert first is not None and first.passed
     assert failed is not None and not failed.passed
     assert failed.unresolved_material_count == 2
+
+
+def test_observation_mode_records_later_dates_and_reuses_failed_evidence(
+    tmp_path: Path,
+) -> None:
+    processor = FakeProcessor(fail_date="20221106")
+    coordinator, _ = _coordinator(
+        tmp_path, processor=processor, stop_on_discrepancy=False
+    )
+
+    first = coordinator.run_available()
+    second = coordinator.run_available()
+
+    assert processor.processed == ["20221106", "20221107"]
+    assert first.processed_date_count == 2
+    assert first.failed_date_count == 1
+    assert first.unresolved_material_count == 2
+    assert first.parity_checkpoint_count == 2
+    assert second.processed_date_count == 0
+    assert second.failed_date_count == 1
+    assert second.unresolved_material_count == 2
 
 
 def test_coordinator_rejects_source_drift_before_replay(tmp_path: Path) -> None:

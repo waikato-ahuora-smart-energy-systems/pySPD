@@ -49,9 +49,10 @@ def main(arguments: list[str] | None = None) -> int:
             reference_root=args.reference_bundle_root.resolve(),
             candidate_root=args.candidate_bundle_root.resolve(),
         ),
+        stop_on_discrepancy=False,
     ).run_available()
     print(json.dumps(asdict(summary), sort_keys=True))
-    return 0
+    return int(summary.failed_date_count != 0)
 
 
 if __name__ == "__main__":

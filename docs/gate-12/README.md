@@ -294,10 +294,14 @@ uv run --group gdx python -m tools.gate12.compare_incremental_replays \
 ```
 
 The initial comparator is exact canonical JSON byte parity. It is intentionally
-strict: every changed surface becomes an unresolved discrepancy. A later
-tolerance or degeneracy-aware comparator must use a separately named processor
-profile and retain its case-specific evidence. Incremental success does not
-relax the final requirement for exactly 546 identities across all 139 dates.
+strict: every changed surface becomes an unresolved discrepancy. Its
+observation mode checkpoints every currently paired date instead of stopping at
+the first mismatch, then exits nonzero when any date failed. An unchanged
+failed checkpoint is reusable as failed evidence so later dates can continue to
+be compared; it is never reusable as a pass. A later tolerance or
+degeneracy-aware comparator must use a separately named processor profile and
+retain its case-specific evidence. Incremental success does not relax the final
+requirement for exactly 546 identities across all 139 dates.
 
 For every paired date, preserve a quantified path-level diff alongside the
 exact parity checkpoint:
