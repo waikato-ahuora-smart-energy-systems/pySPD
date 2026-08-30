@@ -39,6 +39,9 @@ class CoreDomainsComponent(ModelComponent):
         block.Period = pyo.Set(dimen=2, ordered=True, initialize=sorted(data.periods))
         block.Region = pyo.Set(dimen=3, ordered=True, initialize=sorted(data.regions))
         block.Offer = pyo.Set(dimen=3, ordered=True, initialize=sorted(data.offers))
+        block.GenerationOffer = pyo.Set(
+            dimen=3, ordered=True, initialize=sorted(data.generation_offers)
+        )
         block.OfferBlock = pyo.Set(
             dimen=4, ordered=True, initialize=sorted(data.offer_blocks)
         )
@@ -69,6 +72,15 @@ class CoreDomainsComponent(ModelComponent):
                 if data.study_mode[offer[:2]] in {101.0, 201.0}
             ),
         )
+        block.RtdGenerationOffer = pyo.Set(
+            dimen=3,
+            ordered=True,
+            initialize=sorted(
+                offer
+                for offer in data.generation_offers
+                if data.study_mode[offer[:2]] in {101.0, 201.0}
+            ),
+        )
         context.model.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT)
         return {"core_data": data, "domains": block}
 
@@ -95,12 +107,14 @@ class EnergyOffersComponent(ModelComponent):
             ),
         )
         block.Generation = pyo.Var(
-            domains.Offer,
+            domains.GenerationOffer,
             domain=pyo.NonNegativeReals,
             bounds=lambda _b, ca, dt, offer: (
                 0.0,
                 (
-                    data.generation_maximum.get((ca, dt, offer))
+                    None
+                    if (ca, dt, offer) not in data.offers
+                    else data.generation_maximum.get((ca, dt, offer))
                     if any(
                         key[:3] == (ca, dt, offer) for key in data.offer_blocks
                     )
@@ -299,15 +313,17 @@ class GenerationRampingComponent(ModelComponent):
         generation = context.artifacts["generation"]
         block = pyo.Block(concrete=True)
         context.model.add_component("GenerationRamping", block)
-        block.GenerationUpDelta = pyo.Var(domains.Offer, domain=pyo.NonNegativeReals)
+        block.GenerationUpDelta = pyo.Var(
+            domains.GenerationOffer, domain=pyo.NonNegativeReals
+        )
         block.GenerationDownDelta = pyo.Var(
-            domains.Offer, domain=pyo.NonNegativeReals
+            domains.GenerationOffer, domain=pyo.NonNegativeReals
         )
         block.DeficitRampRate = pyo.Var(domains.Offer, domain=pyo.NonNegativeReals)
         block.SurplusRampRate = pyo.Var(domains.Offer, domain=pyo.NonNegativeReals)
 
         block.GenerationChange = pyo.Constraint(
-            domains.RtdOffer,
+            domains.RtdGenerationOffer,
             rule=lambda _b, ca, dt, offer: (
                 _b.GenerationUpDelta[ca, dt, offer]
                 - _b.GenerationDownDelta[ca, dt, offer]
@@ -461,7 +477,7 @@ class CoreEconomicsComponent(ModelComponent):
                 + data.movement_penalty
                 * sum(
                     up_delta[key] + down_delta[key]
-                    for key in domains.RtdOffer
+                    for key in domains.RtdGenerationOffer
                     if key[:2] == (ca, dt)
                 )
             ),
@@ -503,7 +519,10 @@ class CoreEconomicsComponent(ModelComponent):
         )
         block.MovementCost = pyo.Expression(
             expr=data.movement_penalty
-            * sum(up_delta[key] + down_delta[key] for key in domains.RtdOffer)
+            * sum(
+                up_delta[key] + down_delta[key]
+                for key in domains.RtdGenerationOffer
+            )
         )
         block.ScarcityCost = pyo.Expression(
             expr=sum(block.ScarcityCostByPeriod[key] for key in domains.Period)

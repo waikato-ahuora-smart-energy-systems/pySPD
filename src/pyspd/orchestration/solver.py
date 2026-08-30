@@ -264,7 +264,9 @@ class ReserveCaseExecutor:
                     cleared[bus_key] = max(cleared[bus_key], case.offer_price[block])
         reserve_prices = {key: value for key, value in prices.reserve.items()}
         return SolveObservation(
-            generation={key[2]: value for key, value in generation.items()},
+            generation={
+                key[2]: value for key, value in generation.items() if key in case.offers
+            },
             energy_shortfall=scarcity,
             bus_generation=bus_generation,
             bus_load=bus_load,

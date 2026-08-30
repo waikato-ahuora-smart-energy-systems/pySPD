@@ -257,6 +257,40 @@ def test_market_node_bid_factor_is_present_with_exact_sign() -> None:
     assert bid_coefficient == -1.5
 
 
+def test_market_node_constraint_retains_positive_offer_outside_valid_grid() -> None:
+    case = make_network_case(market_constraints=(("ORPHAN_FACTOR", -1.0, 100.0, 1.0),))
+    assert case.network is not None
+    orphan = ("C1", "T1", "ORPHAN")
+    case = replace(
+        case,
+        generation_offers=case.generation_offers | {orphan},
+        generation_start={**case.generation_start, orphan: 0.0},
+        network=replace(
+            case.network,
+            positive_offers=case.network.positive_offers | {orphan},
+            market_node_energy_offer_factor={
+                **case.network.market_node_energy_offer_factor,
+                (*orphan[:2], "ORPHAN_FACTOR", orphan[2]): -2.0,
+            },
+        ),
+    )
+
+    built = ModelAssembler().assemble(ac_network_formulation(), case)
+
+    generation = built.artifacts["generation"]
+    assert orphan in generation
+    assert generation[orphan].ub is None
+    assert orphan not in built.artifacts["generation_definition"]
+    constraint = built.artifacts["market_node_security_le"]["C1", "T1", "ORPHAN_FACTOR"]
+    repn = generate_standard_repn(constraint.body)
+    coefficient = next(
+        float(value)
+        for variable, value in zip(repn.linear_vars, repn.linear_coefs, strict=True)
+        if variable.index() == orphan
+    )
+    assert coefficient == -2.0
+
+
 def test_nodal_price_matches_independent_objective_perturbation() -> None:
     check = validate_nodal_price_finite_difference(
         make_network_case(), ("C1", "T1", "N2")

@@ -41,6 +41,7 @@ class CoreEnergyCase:
     regions: frozenset[Region]
     offers: frozenset[Offer]
     offer_blocks: frozenset[OfferBlock]
+    generation_offers: frozenset[Offer] = frozenset()
     bids: frozenset[Bid] = frozenset()
     bid_blocks: frozenset[BidBlock] = frozenset()
     primary_offers: frozenset[Offer] = frozenset()
@@ -81,6 +82,7 @@ class CoreEnergyCase:
             "regions",
             "offers",
             "offer_blocks",
+            "generation_offers",
             "bids",
             "bid_blocks",
             "primary_offers",
@@ -90,6 +92,8 @@ class CoreEnergyCase:
         )
         for name in set_fields:
             object.__setattr__(self, name, frozenset(getattr(self, name)))
+        if not self.generation_offers:
+            object.__setattr__(self, "generation_offers", self.offers)
         map_fields = (
             "offer_region",
             "bid_region",
@@ -138,6 +142,10 @@ class CoreEnergyCase:
             raise CoreEnergyDataError("node maps outside the region domain")
         if {key[:3] for key in self.offer_blocks} - set(self.offers):
             raise CoreEnergyDataError("offer block has no parent offer")
+        if not self.offers <= self.generation_offers:
+            raise CoreEnergyDataError(
+                "valid offers must be included in the generation domain"
+            )
         if {key[:3] for key in self.bid_blocks} - set(self.bids):
             raise CoreEnergyDataError("bid block has no parent bid")
         if not self.primary_offers <= self.offers:
@@ -157,7 +165,7 @@ class CoreEnergyCase:
             "offer_price": (self.offer_price, self.offer_blocks),
             "bid_limit": (self.bid_limit, self.bid_blocks),
             "bid_price": (self.bid_price, self.bid_blocks),
-            "generation_start": (self.generation_start, self.offers),
+            "generation_start": (self.generation_start, self.generation_offers),
             "ramp_rate_up": (self.ramp_rate_up, self.offers),
             "ramp_rate_down": (self.ramp_rate_down, self.offers),
             "interval_minutes": (self.interval_minutes, self.periods),
@@ -242,6 +250,7 @@ class CoreEnergyCase:
             regions=regions,
             offers=offers,
             offer_blocks=offer_blocks,
+            generation_offers=(offers | result.set("positive_energy_offer").members),
             bids=bids,
             bid_blocks=bid_blocks,
             primary_offers=result.set("primary_offer").members,
@@ -272,7 +281,8 @@ class CoreEnergyCase:
                 for key in bid_blocks
             },
             generation_start={
-                key: result.parameter("generation_start").get(key) for key in offers
+                key: result.parameter("generation_start").get(key)
+                for key in offers | result.set("positive_energy_offer").members
             },
             ramp_rate_up={
                 key: result.parameter("ramp_rate_up").get(key) for key in offers
