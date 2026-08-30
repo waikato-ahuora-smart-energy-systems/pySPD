@@ -51,6 +51,7 @@ def _write_bundle(root, profile: str, changed: bytes | None = None) -> None:
     )
     bundle = CanonicalReplayBundle.create(
         engine_profile=profile,
+        execution_sha256="e" * 64,
         work_item=_work_item(),
         cases=cases,
     )

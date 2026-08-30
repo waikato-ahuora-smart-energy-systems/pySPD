@@ -20,6 +20,7 @@ from pyspd.orchestration import (
     PublishedPriceAccumulator,
 )
 from tools.gate12.evidence import EvidenceContractError
+from tools.gate12.execution_provenance import python_execution_sha256
 from tools.gate12.incremental_replay import IncrementalReplayWorkItem
 from tools.gate12.pyspd_surfaces import (
     PARTIAL_E2E_SURFACES,
@@ -96,6 +97,7 @@ class PyspdReplayProgress:
 
     work_item_sha256: str
     application_configuration_sha256: str
+    execution_source_sha256: str
     next_case_ordinal: int
     last_completed_case_id: str | None
     previous_generation: Mapping[str, float]
@@ -144,6 +146,7 @@ class PyspdReplayProgress:
         *,
         work_item_sha256: str,
         application_configuration_sha256: str,
+        execution_source_sha256: str,
         next_case_ordinal: int = 0,
         last_completed_case_id: str | None = None,
         previous_generation: Mapping[str, float] | None = None,
@@ -155,9 +158,10 @@ class PyspdReplayProgress:
         partial_trading_period: Mapping[str, str] | None = None,
     ) -> PyspdReplayProgress:
         unsigned = {
-            "schema_version": 1,
+            "schema_version": 2,
             "work_item_sha256": work_item_sha256,
             "application_configuration_sha256": application_configuration_sha256,
+            "execution_source_sha256": execution_source_sha256,
             "next_case_ordinal": next_case_ordinal,
             "last_completed_case_id": last_completed_case_id,
             "previous_generation": {
@@ -182,6 +186,7 @@ class PyspdReplayProgress:
         return cls(
             work_item_sha256=work_item_sha256,
             application_configuration_sha256=application_configuration_sha256,
+            execution_source_sha256=execution_source_sha256,
             next_case_ordinal=next_case_ordinal,
             last_completed_case_id=last_completed_case_id,
             previous_generation=previous_generation or {},
@@ -200,6 +205,7 @@ class PyspdReplayProgress:
             "schema_version",
             "work_item_sha256",
             "application_configuration_sha256",
+            "execution_source_sha256",
             "next_case_ordinal",
             "last_completed_case_id",
             "previous_generation",
@@ -211,7 +217,7 @@ class PyspdReplayProgress:
             "partial_trading_period",
             "logical_sha256",
         }
-        if set(payload) != expected or payload.get("schema_version") != 1:
+        if set(payload) != expected or payload.get("schema_version") != 2:
             raise EvidenceContractError("REQ-G12-STREAM: unexpected progress schema")
         previous = payload["previous_generation"]
         seconds = payload["total_seconds"]
@@ -226,6 +232,7 @@ class PyspdReplayProgress:
             application_configuration_sha256=str(
                 payload["application_configuration_sha256"]
             ),
+            execution_source_sha256=str(payload["execution_source_sha256"]),
             next_case_ordinal=payload["next_case_ordinal"],
             last_completed_case_id=payload["last_completed_case_id"],
             previous_generation={
@@ -258,12 +265,16 @@ class PyspdReplayProgress:
         self,
         work_item: IncrementalReplayWorkItem,
         configuration: ApplicationConfiguration,
+        *,
+        execution_source_sha256: str,
     ) -> None:
         if (
             not _SHA256.fullmatch(self.work_item_sha256)
             or not _SHA256.fullmatch(self.application_configuration_sha256)
+            or not _SHA256.fullmatch(self.execution_source_sha256)
             or self.work_item_sha256 != work_item.logical_sha256
             or self.application_configuration_sha256 != configuration.logical_sha256
+            or self.execution_source_sha256 != execution_source_sha256
             or isinstance(self.next_case_ordinal, bool)
             or not 0 <= self.next_case_ordinal <= len(work_item.case_ids)
             or isinstance(self.event_sequence, bool)
@@ -296,9 +307,10 @@ class PyspdReplayProgress:
 
     def to_dict(self, *, include_hash: bool = True) -> dict[str, object]:
         payload: dict[str, object] = {
-            "schema_version": 1,
+            "schema_version": 2,
             "work_item_sha256": self.work_item_sha256,
             "application_configuration_sha256": self.application_configuration_sha256,
+            "execution_source_sha256": self.execution_source_sha256,
             "next_case_ordinal": self.next_case_ordinal,
             "last_completed_case_id": self.last_completed_case_id,
             "previous_generation": {
@@ -334,6 +346,8 @@ class PyspdReplayProgressStore:
         self,
         work_item: IncrementalReplayWorkItem,
         configuration: ApplicationConfiguration,
+        *,
+        execution_source_sha256: str,
     ) -> PyspdReplayProgress | None:
         if not self.checkpoint_path.exists():
             return None
@@ -346,7 +360,11 @@ class PyspdReplayProgressStore:
         if not isinstance(payload, dict):
             raise EvidenceContractError("REQ-G12-STREAM: progress must be an object")
         progress = PyspdReplayProgress.from_dict(payload)
-        progress.validate_for(work_item, configuration)
+        progress.validate_for(
+            work_item,
+            configuration,
+            execution_source_sha256=execution_source_sha256,
+        )
         for case_id, hashes in progress.partial_surface_sha256.items():
             self._verify_case(case_id, hashes)
         return progress
@@ -439,12 +457,22 @@ class StreamingPyspdReplayRunner:
         progress_root: Path,
     ) -> tuple[CanonicalCaseSurfaces, ...]:
         daily = self.application.daily_configuration(configuration)
+        execution_source_sha256 = python_execution_sha256()
         store = PyspdReplayProgressStore(progress_root, work_item.trading_date)
-        progress = store.load(work_item, configuration) or PyspdReplayProgress.create(
+        progress = store.load(
+            work_item,
+            configuration,
+            execution_source_sha256=execution_source_sha256,
+        ) or PyspdReplayProgress.create(
             work_item_sha256=work_item.logical_sha256,
             application_configuration_sha256=configuration.logical_sha256,
+            execution_source_sha256=execution_source_sha256,
         )
-        progress.validate_for(work_item, configuration)
+        progress.validate_for(
+            work_item,
+            configuration,
+            execution_source_sha256=execution_source_sha256,
+        )
         accumulator = PublishedPriceAccumulator(
             energy_numerator=progress.energy_numerator,
             reserve_numerator=progress.reserve_numerator,
@@ -504,6 +532,7 @@ class StreamingPyspdReplayRunner:
             progress = PyspdReplayProgress.create(
                 work_item_sha256=work_item.logical_sha256,
                 application_configuration_sha256=configuration.logical_sha256,
+                execution_source_sha256=execution_source_sha256,
                 next_case_ordinal=ordinal + 1,
                 last_completed_case_id=actual_id,
                 previous_generation=previous_generation,
@@ -514,7 +543,11 @@ class StreamingPyspdReplayRunner:
                 partial_surface_sha256=partial_hashes,
                 partial_trading_period=partial_periods,
             )
-            progress.validate_for(work_item, configuration)
+            progress.validate_for(
+                work_item,
+                configuration,
+                execution_source_sha256=execution_source_sha256,
+            )
             store.write_checkpoint(progress)
             print(
                 f"PySPD {work_item.trading_date} case {ordinal + 1}/"

@@ -227,8 +227,9 @@ uv run --group gdx python -m tools.gate12.materialize_incremental_pyspd \
 `--maximum-new-dates N` bounds work per pass without changing checkpoint
 semantics. Each candidate bundle contains exactly the twelve required surfaces
 for the affected cases, plus source, discovery-checkpoint, work-item, engine,
-and per-surface hashes. A complete existing bundle is verified and reused; an
-incomplete run resumes after its last hash-verified case checkpoint.
+execution-source, and per-surface hashes. A complete existing bundle is
+verified and reused; an incomplete run resumes after its last hash-verified
+case checkpoint.
 
 PySPD prepares and solves the prefix lazily, one case at a time. After every
 accepted case it atomically checkpoints the exact predecessor generation,
@@ -238,8 +239,12 @@ on end-of-day publication while the Pyomo model is still live. The solved model
 is then released. At prefix completion, the accumulator produces the rounded
 published prices and completes the twelfth surface plus the corresponding
 report rows. The final date bundle remains atomic. Resume rejects a changed
-source, work item, application configuration, case prefix, or any missing or
-modified partial surface; uncheckpointed work is repeated rather than inferred.
+source, work item, application configuration, execution source, case prefix,
+or any missing or modified partial surface; uncheckpointed work is repeated
+rather than inferred. The candidate execution fingerprint covers
+`pyproject.toml`, `uv.lock`, and every Python file under `src/pyspd`,
+`tools/gate12`, and `tools/oracle`. The reference fingerprint additionally
+covers the pinned GAMS source programs and GAMS executable bytes.
 
 The first live candidate-prefix rehearsal failed closed at historical case
 `51012022111105693`, exposing a native SCIP LP error under an over-tightened

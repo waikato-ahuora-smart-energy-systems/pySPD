@@ -16,6 +16,10 @@ from pyspd.application import (
 )
 from pyspd.reserve.data import RESERVE_FORMULATION_ID
 from tools.gate12.evidence import REQUIRED_E2E_SURFACES, EvidenceContractError
+from tools.gate12.execution_provenance import (
+    gams_execution_sha256,
+    python_execution_sha256,
+)
 from tools.gate12.gams_replay import (
     GAMS_GATE12_REPLAY_PROFILE,
     GamsReplayArtifacts,
@@ -57,6 +61,7 @@ class CanonicalReplayBundle:
     """Hash index for one engine's twelve affected-case replay surfaces."""
 
     engine_profile: str
+    execution_sha256: str
     trading_date: str
     source_sha256: str
     work_item_sha256: str
@@ -69,6 +74,7 @@ class CanonicalReplayBundle:
         cls,
         *,
         engine_profile: str,
+        execution_sha256: str,
         work_item: IncrementalReplayWorkItem,
         cases: tuple[CanonicalCaseSurfaces, ...],
     ) -> CanonicalReplayBundle:
@@ -81,6 +87,7 @@ class CanonicalReplayBundle:
         unsigned = {
             "schema_version": 1,
             "engine_profile": engine_profile,
+            "execution_sha256": execution_sha256,
             "trading_date": work_item.trading_date,
             "source_sha256": work_item.source_sha256,
             "work_item_sha256": work_item.logical_sha256,
@@ -89,6 +96,7 @@ class CanonicalReplayBundle:
         }
         bundle = cls(
             engine_profile=engine_profile,
+            execution_sha256=execution_sha256,
             trading_date=work_item.trading_date,
             source_sha256=work_item.source_sha256,
             work_item_sha256=work_item.logical_sha256,
@@ -104,6 +112,7 @@ class CanonicalReplayBundle:
         expected = {
             "schema_version",
             "engine_profile",
+            "execution_sha256",
             "trading_date",
             "source_sha256",
             "work_item_sha256",
@@ -118,6 +127,7 @@ class CanonicalReplayBundle:
         try:
             bundle = cls(
                 engine_profile=payload["engine_profile"],
+                execution_sha256=payload["execution_sha256"],
                 trading_date=payload["trading_date"],
                 source_sha256=payload["source_sha256"],
                 work_item_sha256=payload["work_item_sha256"],
@@ -135,6 +145,7 @@ class CanonicalReplayBundle:
     def validate(self) -> None:
         if (
             not self.engine_profile.strip()
+            or not _SHA256.fullmatch(self.execution_sha256)
             or not re.fullmatch(r"[0-9]{8}", self.trading_date)
             or not _SHA256.fullmatch(self.source_sha256)
             or not _SHA256.fullmatch(self.work_item_sha256)
@@ -178,6 +189,7 @@ class CanonicalReplayBundle:
         payload: dict[str, object] = {
             "schema_version": 1,
             "engine_profile": self.engine_profile,
+            "execution_sha256": self.execution_sha256,
             "trading_date": self.trading_date,
             "source_sha256": self.source_sha256,
             "work_item_sha256": self.work_item_sha256,
@@ -382,6 +394,7 @@ class PyspdReplayBundleProducer:
         )
         bundle = CanonicalReplayBundle.create(
             engine_profile=self.profile,
+            execution_sha256=python_execution_sha256(),
             work_item=work_item,
             cases=cases,
         )
@@ -467,6 +480,9 @@ class GamsReplayBundleProducer:
         )
         bundle = CanonicalReplayBundle.create(
             engine_profile=self.profile,
+            execution_sha256=gams_execution_sha256(
+                self.source_tree, self.gams_executable
+            ),
             work_item=work_item,
             cases=cases,
         )

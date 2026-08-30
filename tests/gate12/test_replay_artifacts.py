@@ -57,6 +57,7 @@ def _write(root, profile: str, cases) -> CanonicalReplayBundle:
     work_item = _work_item()
     bundle = CanonicalReplayBundle.create(
         engine_profile=profile,
+        execution_sha256="e" * 64,
         work_item=work_item,
         cases=cases,
     )
@@ -132,6 +133,7 @@ def test_bundle_rejects_case_order_or_work_item_drift(tmp_path) -> None:
     with pytest.raises(EvidenceContractError, match="case order"):
         CanonicalReplayBundle.create(
             engine_profile="test-engine-v1",
+            execution_sha256="e" * 64,
             work_item=_work_item(),
             cases=cases,
         )
@@ -215,6 +217,7 @@ class FakeBundleProducer:
         )
         bundle = CanonicalReplayBundle.create(
             engine_profile=self.profile,
+            execution_sha256="e" * 64,
             work_item=work_item,
             cases=cases,
         )

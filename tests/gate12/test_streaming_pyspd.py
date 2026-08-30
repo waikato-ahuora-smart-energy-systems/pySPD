@@ -18,6 +18,7 @@ from tests.orchestration.conftest import (
     make_prepared,
 )
 from tools.gate12.evidence import REQUIRED_E2E_SURFACES, EvidenceContractError
+from tools.gate12.execution_provenance import python_execution_sha256
 from tools.gate12.incremental_replay import IncrementalReplayWorkItem
 from tools.gate12.pyspd_surfaces import (
     PARTIAL_E2E_SURFACES,
@@ -28,6 +29,8 @@ from tools.gate12.streaming_pyspd import (
     PyspdReplayProgressStore,
     StreamingPyspdReplayRunner,
 )
+
+EXECUTION_SHA256 = "e" * 64
 
 
 def _configuration(tmp_path) -> ApplicationConfiguration:
@@ -72,6 +75,7 @@ def test_progress_round_trips_exact_continuation_state(tmp_path) -> None:
     progress = PyspdReplayProgress.create(
         work_item_sha256=work_item.logical_sha256,
         application_configuration_sha256=configuration.logical_sha256,
+        execution_source_sha256=EXECUTION_SHA256,
         next_case_ordinal=1,
         last_completed_case_id="warmup",
         previous_generation={"G1": 12.5},
@@ -83,7 +87,9 @@ def test_progress_round_trips_exact_continuation_state(tmp_path) -> None:
     store = PyspdReplayProgressStore(tmp_path / "progress", "20221106")
 
     store.write_checkpoint(progress)
-    loaded = store.load(work_item, configuration)
+    loaded = store.load(
+        work_item, configuration, execution_source_sha256=EXECUTION_SHA256
+    )
 
     assert loaded == progress
     assert loaded is not None
@@ -96,6 +102,7 @@ def test_progress_rejects_work_item_drift(tmp_path) -> None:
     progress = PyspdReplayProgress.create(
         work_item_sha256=work_item.logical_sha256,
         application_configuration_sha256=configuration.logical_sha256,
+        execution_source_sha256=EXECUTION_SHA256,
     )
     store = PyspdReplayProgressStore(tmp_path / "progress", "20221106")
     store.write_checkpoint(progress)
@@ -108,7 +115,22 @@ def test_progress_rejects_work_item_drift(tmp_path) -> None:
     )
 
     with pytest.raises(EvidenceContractError, match="provenance or position"):
-        store.load(changed, configuration)
+        store.load(changed, configuration, execution_source_sha256=EXECUTION_SHA256)
+
+
+def test_progress_rejects_execution_source_drift(tmp_path) -> None:
+    configuration = _configuration(tmp_path)
+    work_item = _work_item(configuration)
+    progress = PyspdReplayProgress.create(
+        work_item_sha256=work_item.logical_sha256,
+        application_configuration_sha256=configuration.logical_sha256,
+        execution_source_sha256=EXECUTION_SHA256,
+    )
+    store = PyspdReplayProgressStore(tmp_path / "progress", "20221106")
+    store.write_checkpoint(progress)
+
+    with pytest.raises(EvidenceContractError, match="provenance or position"):
+        store.load(work_item, configuration, execution_source_sha256="f" * 64)
 
 
 def test_progress_load_rejects_tampered_partial_case_evidence(tmp_path) -> None:
@@ -120,6 +142,7 @@ def test_progress_load_rejects_tampered_partial_case_evidence(tmp_path) -> None:
     progress = PyspdReplayProgress.create(
         work_item_sha256=work_item.logical_sha256,
         application_configuration_sha256=configuration.logical_sha256,
+        execution_source_sha256=EXECUTION_SHA256,
         next_case_ordinal=2,
         last_completed_case_id="affected",
         partial_surface_sha256={"affected": partial.surface_sha256},
@@ -132,7 +155,7 @@ def test_progress_load_rejects_tampered_partial_case_evidence(tmp_path) -> None:
     tampered.write_bytes(b"tampered\n")
 
     with pytest.raises(EvidenceContractError, match="evidence hash mismatch"):
-        store.load(work_item, configuration)
+        store.load(work_item, configuration, execution_source_sha256=EXECUTION_SHA256)
 
 
 class _InterruptingCaseRunner:
@@ -230,7 +253,9 @@ def test_streaming_runner_resumes_after_last_durable_case(tmp_path) -> None:
     assert tuple(case.case_id for case in cases) == ("affected",)
     assert set(cases[0].surfaces) == set(REQUIRED_E2E_SURFACES)
     progress = PyspdReplayProgressStore(progress_root, "20221106").load(
-        work_item, configuration
+        work_item,
+        configuration,
+        execution_source_sha256=python_execution_sha256(),
     )
     assert progress is not None
     assert progress.next_case_ordinal == 2
