@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "status": "candidate-complete-reference-pending",
+  "trading_date": "20221106",
+  "runtime_source_commit": "3799b80f661db91bb2c5363fc8ca7de36b014911",
+  "engine_profile": "pyspd-v5-portable-scip-mip-fixed-highs-rmip-v1",
+  "execution_source_sha256": "7c5d71af57be4afa0daeaabaa9994636c0e5fd6d00645374298335eca7732607",
+  "source_gdx_sha256": "282ac2abeaa2f0c7c6e26b967e2ba90289c0ba5a9e696b99069d11350d3037b8",
+  "discovery_checkpoint_logical_sha256": "a9b5a3b692b3163710851c824021c5d90edc96fe73fe76471e96e123dbdc14d2",
+  "work_item_sha256": "660f0e53a089fde3226618e5dd6f7c6effd15453891301f17022e532faaca6de",
+  "application_configuration_sha256": "b5b290fabd85c953ace13a92bfb847551ae5dfbb162f9513864e45b151afb592",
+  "prefix_case_count": 196,
+  "affected_case_ids": [
+    "51012022111800831",
+    "51012022111805834",
+    "51012022111810835",
+    "61012022110425024"
+  ],
+  "surface_count_per_case": 12,
+  "surface_file_count": 48,
+  "bundle": {
+    "logical_sha256": "e577d8f3e07614e560ac5291fa89965369aaf8a84d9f3dda3e381c0a91aca131",
+    "manifest_file_sha256": "45bf295673b8c6ea37dde068dfc5fc657a351adb682b8a254b1c4ed69693b361",
+    "directory_size_kib": 83404
+  },
+  "streaming_checkpoint": {
+    "schema_version": 2,
+    "next_case_ordinal": 196,
+    "last_completed_case_id": "61012022110425024",
+    "logical_sha256": "f4857c57298cfc272ab56c27d7f976055ddd2ccc92cb5b01435f4977be21582d",
+    "file_sha256": "663c4ceb767064f965b2f8a3a3cf3a64dc38e01be22f2f9a4c53a6a8d6e8503d"
+  },
+  "verification": {
+    "canonical_bundle_store_load": "passed",
+    "affected_case_order": "passed",
+    "required_surface_set": "passed",
+    "surface_hashes": "passed",
+    "bundle_execution_matches_current_source": true
+  },
+  "reference_parity": {
+    "status": "pending",
+    "reason": "The independent historical population enumeration still owns the single GAMS network-licence node."
+  }
+}

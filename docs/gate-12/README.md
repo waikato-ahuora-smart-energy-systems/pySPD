@@ -44,6 +44,24 @@ physics, fixed-discrete pricing, price repair, publication, and reports.
 
 ## Current execution evidence
 
+The first governed historical PySPD candidate prefix is complete. For
+2022-11-06, all 196 canonical predecessor and affected cases completed under
+the explicit SCIP-MIP → fixed-discrete → HiGHS-RMIP profile. The atomic
+bundle contains the four affected identities in canonical order and all twelve
+required surfaces for each identity (48 hash-verified surface files). Loading
+the completed bundle through `CanonicalReplayBundleStore` reverified every
+surface hash, and the bundle execution fingerprint exactly matched the frozen
+runtime source at commit `3799b80`. The compact durable evidence index is
+[`pyspd-replay-20221106.json`](pyspd-replay-20221106.json). This is candidate
+execution evidence only; it becomes parity evidence after the corresponding
+pinned-GAMS bundle is produced and compared.
+
+The 2022-11-07 candidate prefix is now executing from the same frozen source.
+Its governed plan contains 210 cases through the last of six affected
+identities. The independent GAMS reference replay remains queued while the
+historical population enumeration owns the single available GAMS network
+licence node.
+
 The representative v16 RTD portable-profile run is recorded in
 [`v16-representative-parity.json`](v16-representative-parity.json). Both the
 SCIP primary solve and the fixed-discrete HiGHS pricing solve report optimal,
