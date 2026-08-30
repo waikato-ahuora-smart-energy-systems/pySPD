@@ -194,13 +194,36 @@ class HvdcPricingEngine(PricingEngine):
     def price(
         self, built_model: BuiltModel, solve_result: HvdcSolveOutcome
     ) -> NetworkPrices:
-        if solve_result.primary_model is not built_model and (
-            solve_result.primary_model.case_data != built_model.case_data
+        if not pricing_model_belongs_to_request(
+            built_model, solve_result.primary_model
         ):
             raise ValueError("pricing outcome does not belong to the requested case")
         return NetworkPricingEngine().price(
             solve_result.pricing_model, solve_result.pricing_lp
         )
+
+
+def pricing_model_belongs_to_request(
+    requested_model: BuiltModel, primary_model: BuiltModel
+) -> bool:
+    """Accept the requested case or its exact automatic MIP-enforcement form."""
+
+    if primary_model is requested_model:
+        return True
+    requested = requested_model.case_data
+    primary = primary_model.case_data
+    if primary == requested:
+        return True
+    if (
+        not isinstance(requested, HvdcCase)
+        or not isinstance(primary, HvdcCase)
+        or requested.hvdc is None
+    ):
+        return False
+    return primary == replace(
+        requested,
+        hvdc=requested.hvdc.with_mip_enforcement(),
+    )
 
 
 @dataclass(frozen=True, slots=True)

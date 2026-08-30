@@ -31,7 +31,11 @@ from pyspd.hvdc.components import (
     HVDCDomainsComponent,
     HVDCTransmissionComponent,
 )
-from pyspd.hvdc.formulation import HvdcSolveOutcome, HvdcSolvePolicy
+from pyspd.hvdc.formulation import (
+    HvdcSolveOutcome,
+    HvdcSolvePolicy,
+    pricing_model_belongs_to_request,
+)
 from pyspd.network.components import NetworkDomainsComponent
 from pyspd.network.formulation import NetworkPrices, NetworkPricingEngine
 from pyspd.preprocess import PreprocessingSettings, Vspd506Preprocessor
@@ -80,8 +84,8 @@ class ReservePricingEngine(PricingEngine):
     def price(
         self, built_model: BuiltModel, solve_result: HvdcSolveOutcome
     ) -> ReservePrices:
-        if solve_result.primary_model is not built_model and (
-            solve_result.primary_model.case_data != built_model.case_data
+        if not pricing_model_belongs_to_request(
+            built_model, solve_result.primary_model
         ):
             raise ValueError("pricing outcome does not belong to the requested case")
         pricing = solve_result.pricing_model

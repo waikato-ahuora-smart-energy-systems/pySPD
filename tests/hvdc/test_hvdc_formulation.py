@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pyomo.environ as pyo
 import pytest
 
@@ -18,6 +20,7 @@ from pyspd.hvdc import (
     validate_fixed_mip_price_finite_difference,
 )
 from pyspd.hvdc.diagnostics import DiagnosticCapabilityError
+from pyspd.hvdc.formulation import pricing_model_belongs_to_request
 from tests.hvdc.conftest import make_hvdc_case
 
 
@@ -164,6 +167,18 @@ def test_circulation_detector_flags_opposing_positive_links() -> None:
     for link in built.artifacts["hvdc_flow"]:
         built.artifacts["hvdc_flow"][link].set_value(10.0)
     assert detect_nonphysical_hvdc(built) == ("circulation:('C1', 'T1')",)
+
+
+def test_pricing_provenance_accepts_only_the_enforced_equivalent_case() -> None:
+    case = make_hvdc_case(enforce=False)
+    assert case.hvdc is not None
+    requested = build(case)
+    enforced = build(replace(case, hvdc=case.hvdc.with_mip_enforcement()))
+    unrelated = build(make_hvdc_case(load=41.0, enforce=True))
+
+    assert pricing_model_belongs_to_request(requested, requested)
+    assert pricing_model_belongs_to_request(requested, enforced)
+    assert not pricing_model_belongs_to_request(requested, unrelated)
 
 
 def test_lp_mps_diagnostics_and_iis_capability_are_explicit(tmp_path) -> None:
