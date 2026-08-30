@@ -102,9 +102,14 @@ class DailyRunner:
                 },
             )
             emit(RunEventKind.SOLVE_STARTED, solve_loop=1)
-            loop = ShortfallLoop(
-                self.executor, tolerance=configuration.residual_tolerance
-            ).run(prepared, maximum_loops=configuration.maximum_solve_loops)
+            try:
+                loop = ShortfallLoop(
+                    self.executor, tolerance=configuration.residual_tolerance
+                ).run(prepared, maximum_loops=configuration.maximum_solve_loops)
+            except Exception as error:
+                raise OrchestrationError(
+                    f"case {prepared.specification.case_id} solve failed: {error}"
+                ) from error
             for transition in loop.transitions:
                 if transition.transfers or transition.untransferred:
                     emit(

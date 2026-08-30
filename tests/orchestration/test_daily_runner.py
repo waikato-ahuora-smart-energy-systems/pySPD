@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import pytest
+
 from pyspd.orchestration import (
     CaseRunStatus,
     DailyRunConfiguration,
@@ -16,6 +18,12 @@ from tests.orchestration.conftest import (
     make_observation,
     make_prepared,
 )
+
+
+class FailingExecutor:
+    def solve(self, prepared):
+        del prepared
+        raise RuntimeError("synthetic solver failure")
 
 
 def configuration() -> DailyRunConfiguration:
@@ -150,3 +158,13 @@ def test_interrupted_run_resumes_exact_prefix_and_rejects_environment_mix() -> N
         assert "configuration/environment mismatch" in str(error)
     else:  # pragma: no cover - assertion guard
         raise AssertionError("unsafe resume was accepted")
+
+
+def test_solver_failure_retains_the_exact_case_identity() -> None:
+    prepared = make_prepared(make_daily_case("case-failed"))
+
+    with pytest.raises(
+        OrchestrationError,
+        match="case case-failed solve failed: synthetic solver failure",
+    ):
+        DailyRunner(FailingExecutor()).run(configuration(), (prepared,))

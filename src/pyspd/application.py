@@ -188,7 +188,7 @@ class PyspdApplication:
             maximum_solve_loops=configuration.maximum_solve_loops,
             price_rounding_decimals=configuration.price_rounding_decimals,
             environment_fingerprint=(
-                f"{platform.system()}-{platform.machine()}-gams-scip-highs"
+                f"{platform.system()}-{platform.machine()}-native-scip-highs"
             ),
             application_configuration_sha256=configuration.logical_sha256,
         )

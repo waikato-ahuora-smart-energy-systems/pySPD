@@ -45,9 +45,9 @@ def test_gate7_is_class_composed_and_extensible() -> None:
 def test_fir_sir_and_plro_twro_ilro_are_explicit() -> None:
     built = build()
     reserve = built.artifacts["reserve"]
-    assert {
-        (key[-2], key[-1]) for key in reserve
-    } == set(product(RESERVE_CLASSES, RESERVE_TYPES))
+    assert {(key[-2], key[-1]) for key in reserve} == set(
+        product(RESERVE_CLASSES, RESERVE_TYPES)
+    )
     assert len(built.artifacts["plsr_maximum"]) == 2
     assert len(built.artifacts["energy_reserve_maximum"]) == 2
 
@@ -70,7 +70,9 @@ def test_risk_group_ignores_mapping_to_offer_outside_active_domain() -> None:
         risk_group_offer=case.reserve.risk_group_offer
         | {("C1", "T1", "G1", "INACTIVE", "genRisk")},
     )
-    built = ModelAssembler().assemble(reserve_formulation(), replace(case, reserve=reserve))
+    built = ModelAssembler().assemble(
+        reserve_formulation(), replace(case, reserve=reserve)
+    )
     assert len(built.artifacts["group_island_risk"]) == 2
 
 
@@ -100,9 +102,7 @@ def test_nmir_uses_portable_adjacent_interval_mip_not_native_sos() -> None:
     built = build()
     assert len(built.artifacts["lambda_hvdc_energy_interval"]) == 12
     assert len(built.artifacts["lambda_hvdc_reserve_interval"]) == 96
-    assert not tuple(
-        built.model.component_data_objects(pyo.SOSConstraint, active=True)
-    )
+    assert not tuple(built.model.component_data_objects(pyo.SOSConstraint, active=True))
 
 
 def test_exact_reserve_share_perturbation_coefficients() -> None:
@@ -112,7 +112,10 @@ def test_exact_reserve_share_perturbation_coefficients() -> None:
     row = next(
         constraint
         for constraint in definition.values()
-        if any(variable.parent_component() is penalty for variable in generate_standard_repn(constraint.body).linear_vars)
+        if any(
+            variable.parent_component() is penalty
+            for variable in generate_standard_repn(constraint.body).linear_vars
+        )
     )
     repn = generate_standard_repn(row.body, compute_values=True)
     coefficients = {
@@ -131,10 +134,11 @@ def test_scip_mip_to_fixed_highs_rmip_and_independent_validation() -> None:
     built = build()
     outcome = ReserveSolvePolicy().solve(built)
     assert outcome.primary_mip is not None
-    assert outcome.primary_mip.solve.backend == "gams-scip"
+    assert outcome.primary_mip.solve.backend == "native-scip"
     assert outcome.primary_mip.solve.status.value == "optimal"
     assert outcome.pricing_lp.backend == "highs"
     assert outcome.pricing_lp.status.value == "optimal"
+    assert all(value >= 0.0 for value in outcome.fixed_sos_members.values())
     audit = audit_pricing_model(outcome)
     assert audit.passed, audit
     assert audit.fixed_name_count > 0

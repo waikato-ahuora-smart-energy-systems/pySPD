@@ -105,7 +105,7 @@ def test_v16_assembles_and_runs_scip_then_fixed_highs_rmip() -> None:
     assert built.artifacts.owners["reserve_requirement"] == "reserve_requirement"
     outcome = Spd16SolvePolicy().solve(built)
     assert outcome.primary_mip is not None
-    assert outcome.primary_mip.solve.backend == "gams-scip"
+    assert outcome.primary_mip.solve.backend == "native-scip"
     assert outcome.primary_mip.solve.status.value == "optimal"
     assert outcome.pricing_lp.backend == "highs"
     assert outcome.pricing_lp.status.value == "optimal"

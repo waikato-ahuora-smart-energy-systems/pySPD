@@ -8,7 +8,7 @@
 | Entry | After Gate 10 for v5.0.6; after applicable Gate 11 work for a new formulation |
 | Package manager | `uv` only |
 | Strict profile | Historical pinned-vSPD compatibility solver/profile |
-| Portable profile | GAMS-SCIP primary MIP → fix all discrete → HiGHS RMIP |
+| Portable PySPD profile | Native PySCIPOpt SCIP MIP → fix all discrete/SOS state → HiGHS RMIP |
 | Human approval | No separate independent reviewer required under project direction |
 
 The live criterion register is in [`gate-checklist.md`](gate-checklist.md).
@@ -200,6 +200,62 @@ uv run --group gdx python -m tools.gate12.plan_affected_replays \
 The command rechecks every source size and SHA-256 before loading canonical GDX
 case order, then atomically writes the logical replay plan, 139 per-date PySPD
 configurations, and a configuration-file hash index.
+
+### Incremental replay and parity
+
+Gate 12 no longer waits for the final population manifest before beginning
+replay work. Under [ADR-0014](../adr/0014-incremental-gate-12-replay-parity.md),
+`IncrementalDiscoveryFeed` consumes only the contiguous inventory-ordered
+prefix of complete population checkpoints. Each checkpoint is re-bound to its
+source GDX and converted into the canonical same-day prefix through the last
+affected case.
+
+Materialize currently available PySPD bundles once, or keep watching for new
+discovery checkpoints:
+
+```bash
+uv run --group gdx python -m tools.gate12.materialize_incremental_pyspd \
+  --discovery-checkpoints /path/to/gate12-work/checkpoints \
+  --inventory docs/gate-1/shortfall-input-inventory.json \
+  --input-root /path/to/hash-bound/inputs \
+  --system-directory /path/to/gams-system-directory \
+  --bundle-root /path/to/incremental/pyspd-bundles \
+  --run-root /path/to/incremental/pyspd-runs \
+  --watch
+```
+
+`--maximum-new-dates N` bounds work per pass without changing checkpoint
+semantics. Each candidate bundle contains exactly the twelve required surfaces
+for the affected cases, plus source, discovery-checkpoint, work-item, engine,
+and per-surface hashes. A complete existing bundle is verified and reused; an
+incomplete run directory fails closed.
+
+The first live candidate-prefix rehearsal failed closed at historical case
+`51012022111105693`, exposing a native SCIP LP error under an over-tightened
+`1e-9` feasibility setting. The same isolated case completes with SCIP's
+explicit `1e-6` setting. The portable profile separately projects only SOS
+members within `1e-5` of zero or one to their exact boundary before fixing the
+HiGHS RMIP; the complete unit and probity suite validates this state transfer.
+
+When the independently produced pinned-GAMS canonical bundle for a date is
+available, compare and checkpoint all available dates with:
+
+```bash
+uv run --group gdx python -m tools.gate12.compare_incremental_replays \
+  --discovery-checkpoints /path/to/gate12-work/checkpoints \
+  --inventory docs/gate-1/shortfall-input-inventory.json \
+  --input-root /path/to/hash-bound/inputs \
+  --system-directory /path/to/gams-system-directory \
+  --reference-bundle-root /path/to/incremental/gams-bundles \
+  --candidate-bundle-root /path/to/incremental/pyspd-bundles \
+  --parity-checkpoints /path/to/incremental/parity-checkpoints
+```
+
+The initial comparator is exact canonical JSON byte parity. It is intentionally
+strict: every changed surface becomes an unresolved discrepancy. A later
+tolerance or degeneracy-aware comparator must use a separately named processor
+profile and retain its case-specific evidence. Incremental success does not
+relax the final requirement for exactly 546 identities across all 139 dates.
 
 For isolated partial inventories, pass `--execution-scope shard`. A complete
 shard then exits successfully and records `shard_complete: true`, while

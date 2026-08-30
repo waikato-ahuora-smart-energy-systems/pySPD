@@ -41,9 +41,9 @@ from pyspd.network.components import NetworkDomainsComponent
 from pyspd.network.formulation import NetworkPrices, NetworkPricingEngine
 from pyspd.preprocess import PreprocessingSettings, Vspd506Preprocessor
 from pyspd.solver import (
-    GamsScipBackend,
     HighsBackend,
     MipSolveResult,
+    NativeScipBackend,
     SolverConfiguration,
     SolveResult,
 )
@@ -51,6 +51,7 @@ from pyspd.solver import (
 type Key = tuple[str, ...]
 
 _SUPPORTED = frozenset({HVDC_FORMULATION_ID})
+_SOS_STATE_CANONICALIZATION_TOLERANCE = 1e-5
 
 
 class HvdcPreprocessor(PreprocessorStep):
@@ -119,17 +120,14 @@ class HvdcSolvePolicy(SolvePolicy):
         primary_mip: MipSolveResult | None = (
             initial if isinstance(initial, MipSolveResult) else None
         )
-        if issues and not (
-            case.hvdc.enforce_sos2 and case.hvdc.enforce_flow_direction
-        ):
+        if issues and not (case.hvdc.enforce_sos2 and case.hvdc.enforce_flow_direction):
             enforced_case = replace(case, hvdc=case.hvdc.with_mip_enforcement())
             primary = ModelAssembler().assemble(self._formulation(), enforced_case)
             primary_mip = self._solve_scip(primary)
             remaining = detect_nonphysical_hvdc(primary)
             if remaining:
                 raise ValueError(
-                    "HVDC MIP enforcement did not eliminate: "
-                    + ", ".join(remaining)
+                    "HVDC MIP enforcement did not eliminate: " + ", ".join(remaining)
                 )
         final_solve = primary_mip.solve if primary_mip is not None else initial
         assert isinstance(final_solve, SolveResult)
@@ -137,6 +135,7 @@ class HvdcSolvePolicy(SolvePolicy):
             raise ValueError("primary solution was not loaded")
         fixed = _discrete_values(primary.model)
         fixed_sos_members = _solvefinal_sos_member_values(primary)
+        _set_continuous_state(primary.model, fixed_sos_members)
         pricing = ModelAssembler().assemble(self._formulation(), primary.case_data)
         _fix_and_relax_discrete(pricing.model, fixed)
         _fix_continuous_state(pricing.model, fixed_sos_members)
@@ -161,13 +160,14 @@ class HvdcSolvePolicy(SolvePolicy):
 
     @staticmethod
     def _solve_scip(built: BuiltModel) -> MipSolveResult:
-        return GamsScipBackend().solve_mip(
+        return NativeScipBackend().solve_mip(
             built.model,
             SolverConfiguration(
                 {
                     "time_limit_seconds": 300.0,
                     "relative_gap": 0.0,
                     "threads": 1,
+                    "numerics/feastol": 1e-6,
                 }
             ),
         )
@@ -313,11 +313,11 @@ def detect_nonphysical_hvdc(built_model: BuiltModel) -> tuple[str, ...]:
         active_orders = sorted(
             data.breakpoint_order[key]
             for key in data.breakpoints
-            if key[:3] == link and _value(lambdas[key]) > data.nonphysical_loss_tolerance
+            if key[:3] == link
+            and _value(lambdas[key]) > data.nonphysical_loss_tolerance
         )
         if len(active_orders) > 1 and any(
-            right - left > 1.0
-            for left, right in pairwise(active_orders)
+            right - left > 1.0 for left, right in pairwise(active_orders)
         ):
             issues.append(f"nonadjacent-lambda:{link}")
     return tuple(issues)
@@ -366,16 +366,26 @@ def _solvefinal_sos_member_values(built: BuiltModel) -> dict[str, float]:
 
     names = ("lambda_hvdc_energy", "lambda_hvdc_reserve")
     return {
-        variable.name: _value(variable)
+        variable.name: _canonical_sos_value(_value(variable))
         for name in names
         if name in built.artifacts.values
         for variable in built.artifacts[name].values()
     }
 
 
-def _fix_continuous_state(
-    model: pyo.ConcreteModel, fixed: Mapping[str, float]
-) -> None:
+def _canonical_sos_value(
+    value: float, *, tolerance: float = _SOS_STATE_CANONICALIZATION_TOLERANCE
+) -> float:
+    """Remove solver-feasibility residue before fixing SOS state in the RMIP."""
+
+    if abs(value) <= tolerance:
+        return 0.0
+    if abs(value - 1.0) <= tolerance:
+        return 1.0
+    return value
+
+
+def _fix_continuous_state(model: pyo.ConcreteModel, fixed: Mapping[str, float]) -> None:
     by_name = {
         variable.name: variable
         for variable in model.component_data_objects(pyo.Var, active=True)
@@ -385,6 +395,22 @@ def _fix_continuous_state(
         raise ValueError("pricing model does not contain every SOS member")
     for name, value in fixed.items():
         by_name[name].fix(value)
+
+
+def _set_continuous_state(
+    model: pyo.ConcreteModel, values: Mapping[str, float]
+) -> None:
+    """Write canonical solve-final values back to the primary evidence model."""
+
+    by_name = {
+        variable.name: variable
+        for variable in model.component_data_objects(pyo.Var, active=True)
+    }
+    missing = set(values) - set(by_name)
+    if missing:
+        raise ValueError("primary model does not contain every SOS member")
+    for name, value in values.items():
+        by_name[name].set_value(value)
 
 
 def _deactivate_sos(model: pyo.ConcreteModel) -> None:

@@ -795,12 +795,28 @@ wheels = [
 ]
 
 [[package]]
+name = "pyscipopt"
+version = "5.7.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7c/c3/159aed5bc4e3c2f190932d467cdfb149cf8c5b8613b0184457398b7daeda/pyscipopt-5.7.1.tar.gz", hash = "sha256:93167a3b4ee9378fa3df02fe49b917a230233693ed8c2902585d71907f7627fe", size = 1471027, upload-time = "2025-11-17T13:58:44.343Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/85/f8/5dd2204a989a2d7c64eb89bfdbf3f38eeb935a3315fd48ce1e90506d74e6/pyscipopt-5.7.1-cp313-cp313-macosx_14_0_arm64.whl", hash = "sha256:8f45741eb7b53b59873895980fc31fdf257e260bb7d73cc32498b97cea06de1e", size = 7075443, upload-time = "2025-11-17T13:57:54.267Z" },
+    { url = "https://files.pythonhosted.org/packages/54/99/7af9e87e58323b4ecca9f23c9ffddda9b1716b1a98849df4ed9f2d6b708e/pyscipopt-5.7.1-cp313-cp313-macosx_14_0_x86_64.whl", hash = "sha256:40b8a1a762443008dba99c8c13867ea276e2dda3286836175abfdd981fff93fd", size = 10401737, upload-time = "2025-11-17T13:57:56.249Z" },
+    { url = "https://files.pythonhosted.org/packages/ac/f8/c4529d3483f0f0015ecaae0fecd8cdea45b18129281cad11309e9856ef84/pyscipopt-5.7.1-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:ab5171937a84e55f5af3cf0266be1461bd0766304d4c6da2e322239161ca65dc", size = 15834008, upload-time = "2025-11-17T13:57:58.119Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/2f/48771176d1482c8a90ca77c0c57631bc6e34df245d2ae642faeab3a3c983/pyscipopt-5.7.1-cp313-cp313-win_amd64.whl", hash = "sha256:abfe0867f18e06e3fd672738ef21b2ccd7ec519fca60eeccd7ebfbe947898e70", size = 47163441, upload-time = "2025-11-17T13:58:03.101Z" },
+]
+
+[[package]]
 name = "pyspd"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "pyarrow" },
     { name = "pyomo" },
+    { name = "pyscipopt" },
 ]
 
 [package.dev-dependencies]
@@ -840,6 +856,7 @@ oracle = [
 requires-dist = [
     { name = "pyarrow", specifier = ">=18,<23" },
     { name = "pyomo", specifier = ">=6.9,<7" },
+    { name = "pyscipopt", specifier = ">=5.5,<6" },
 ]
 
 [package.metadata.requires-dev]

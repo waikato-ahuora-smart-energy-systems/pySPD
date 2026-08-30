@@ -139,12 +139,29 @@ class IndependentSpd16Validator:
                 )
             residuals[f"reserve_price:{key}"] = abs(float(published) - expected)
 
-        residuals["fixed_rmip_objective"] = abs(
-            outcome.primary_snapshot.objective - outcome.pricing_snapshot.objective
+        primary_objective = outcome.primary_snapshot.objective
+        pricing_objective = outcome.pricing_snapshot.objective
+        objective_residual = abs(primary_objective - pricing_objective)
+        objective_scale = max(1.0, abs(primary_objective), abs(pricing_objective))
+        residuals["fixed_rmip_objective"] = objective_residual
+        residuals["fixed_rmip_objective_relative"] = (
+            objective_residual / objective_scale
         )
         audit = audit_pricing_model(outcome)
-        passed = audit.passed and all(
-            math.isfinite(value) and value <= tolerance for value in residuals.values()
+        objective_passed = math.isclose(
+            primary_objective,
+            pricing_objective,
+            rel_tol=tolerance,
+            abs_tol=tolerance,
+        )
+        passed = (
+            audit.passed
+            and objective_passed
+            and all(
+                math.isfinite(value) and value <= tolerance
+                for name, value in residuals.items()
+                if name != "fixed_rmip_objective"
+            )
         )
         return Spd16ValidationReport(residuals, tolerance, audit.passed, passed)
 

@@ -45,9 +45,7 @@ def test_hvdc_forward_flow_loss_and_bus_prices() -> None:
 
 
 def test_hvdc_reversal_uses_reverse_link_orientation() -> None:
-    _built, outcome, _prices = solve(
-        make_hvdc_case(generation_bus="B2", load_bus="B1")
-    )
+    _built, outcome, _prices = solve(make_hvdc_case(generation_bus="B2", load_bus="B1"))
     assert pyo.value(
         outcome.primary_model.artifacts["hvdc_flow"]["C1", "T1", "H1"]
     ) == pytest.approx(41.6666666667)
@@ -86,9 +84,11 @@ def test_nonadjacent_lambda_detection_triggers_real_scip_then_fixed_highs() -> N
     )
     built = build(case)
     outcome = HvdcSolvePolicy().solve(built)
-    assert any(issue.startswith("nonadjacent-lambda") for issue in outcome.detected_issues)
+    assert any(
+        issue.startswith("nonadjacent-lambda") for issue in outcome.detected_issues
+    )
     assert outcome.primary_mip is not None
-    assert outcome.primary_mip.solve.backend == "gams-scip"
+    assert outcome.primary_mip.solve.backend == "native-scip"
     assert outcome.primary_mip.solve.status.value == "optimal"
     assert outcome.pricing_lp.backend == "highs"
     assert active_discrete_count(outcome.pricing_model.model) == 0
@@ -174,7 +174,9 @@ def test_lp_mps_diagnostics_and_iis_capability_are_explicit(tmp_path) -> None:
     assert all(path.is_file() for path in bundle.files.values())
     assert all(len(digest) == 64 for digest in bundle.sha256.values())
     assert bundle.iis_supported is False
-    with pytest.raises(DiagnosticCapabilityError, match="IIS extraction is unavailable"):
+    with pytest.raises(
+        DiagnosticCapabilityError, match="IIS extraction is unavailable"
+    ):
         exporter.require_iis("gams-scip")
 
 

@@ -14,6 +14,14 @@ from types import MappingProxyType
 from typing import Any
 
 import pyomo.environ as pyo
+from pyomo.contrib.solver.common.base import Availability
+from pyomo.contrib.solver.common.results import (
+    SolutionStatus as DirectSolutionStatus,
+)
+from pyomo.contrib.solver.common.results import (
+    TerminationCondition as DirectTerminationCondition,
+)
+from pyomo.contrib.solver.solvers.scip.scip_direct import ScipDirect
 from pyomo.opt import SolverStatus as PyomoSolverStatus
 from pyomo.opt import TerminationCondition
 
@@ -325,6 +333,145 @@ class GamsScipBackend(SolverBackend):
                 f"option threads={int(configuration.options['threads'])};"
             )
         return statements
+
+
+class NativeScipBackend(SolverBackend):
+    """Native PySCIPOpt primary-MIP backend with no GAMS licence dependency."""
+
+    name = "native-scip"
+    interface = "pyomo.contrib.solver.solvers.scip.scip_direct"
+
+    def __init__(self, solver_factory: Callable[[], Any] | None = None) -> None:
+        self._solver_factory = solver_factory or ScipDirect
+
+    def solve_mip(
+        self,
+        model: pyo.ConcreteModel,
+        configuration: SolverConfiguration = DEFAULT_SOLVER_CONFIGURATION,
+        *,
+        load_solution: bool = True,
+        accept_nonoptimal_incumbent: bool = False,
+    ) -> MipSolveResult:
+        discrete_count = sum(
+            variable.is_binary() or variable.is_integer()
+            for variable in model.component_data_objects(pyo.Var, active=True)
+            if not variable.fixed
+        )
+        solver = self._solver_factory()
+        availability = solver.available()
+        if availability is Availability.NotFound or not bool(availability):
+            raise SolverExecutionError(
+                "native SCIP is unavailable; install PySCIPOpt with uv"
+            )
+        options = dict(configuration.options)
+        known = {"time_limit_seconds", "relative_gap", "absolute_gap", "threads"}
+        solve_options: dict[str, Any] = {
+            "load_solutions": False,
+            "solver_options": {
+                name: value for name, value in options.items() if name not in known
+            },
+        }
+        if "time_limit_seconds" in options:
+            solve_options["time_limit"] = float(options["time_limit_seconds"])
+        if "relative_gap" in options:
+            solve_options["rel_gap"] = float(options["relative_gap"])
+        if "absolute_gap" in options:
+            solve_options["abs_gap"] = float(options["absolute_gap"])
+        if "threads" in options:
+            solve_options["threads"] = int(options["threads"])
+        try:
+            raw_results = solver.solve(model, **solve_options)
+        except Exception as error:
+            raise SolverExecutionError(
+                f"native SCIP execution error: {error}"
+            ) from error
+        status = self._normalize_status(
+            raw_results.termination_condition,
+            raw_results.solution_status,
+        )
+        has_incumbent = raw_results.solution_status in {
+            DirectSolutionStatus.optimal,
+            DirectSolutionStatus.feasible,
+        }
+        accepted = (status is SolveStatus.OPTIMAL and has_incumbent) or (
+            accept_nonoptimal_incumbent and has_incumbent
+        )
+        loaded = False
+        if accepted and load_solution:
+            raw_results.solution_loader.load_vars()
+            loaded = True
+        elif not accepted:
+            raise SolverExecutionError(
+                "native SCIP returned a rejected state: "
+                f"status={raw_results.solution_status}, "
+                f"termination={raw_results.termination_condition}, "
+                f"incumbent={has_incumbent}"
+            )
+        incumbent = _finite_or_none(raw_results.incumbent_objective)
+        bound = _finite_or_none(raw_results.objective_bound)
+        gap = None
+        if incumbent is not None and bound is not None:
+            gap = abs(incumbent - bound) / max(1.0, abs(incumbent))
+        result = SolveResult(
+            backend=self.name,
+            interface=self.interface,
+            version=tuple(int(part) for part in solver.version()),
+            status=status,
+            raw_solver_status=str(raw_results.solution_status),
+            raw_termination_condition=str(raw_results.termination_condition),
+            options=configuration.options,
+            solution_loaded=loaded,
+            raw_results=raw_results,
+        )
+        return MipSolveResult(
+            result,
+            has_incumbent,
+            incumbent,
+            bound,
+            gap,
+            discrete_count,
+        )
+
+    def solve(
+        self,
+        model: pyo.ConcreteModel,
+        configuration: SolverConfiguration = DEFAULT_SOLVER_CONFIGURATION,
+        *,
+        load_solution: bool = True,
+        accept_nonoptimal: bool = False,
+    ) -> SolveResult:
+        return self.solve_mip(
+            model,
+            configuration,
+            load_solution=load_solution,
+            accept_nonoptimal_incumbent=accept_nonoptimal,
+        ).solve
+
+    @staticmethod
+    def _normalize_status(
+        termination: Any,
+        solution_status: Any,
+    ) -> SolveStatus:
+        if (
+            termination is DirectTerminationCondition.convergenceCriteriaSatisfied
+            and solution_status is DirectSolutionStatus.optimal
+        ):
+            return SolveStatus.OPTIMAL
+        if termination is DirectTerminationCondition.provenInfeasible:
+            return SolveStatus.INFEASIBLE
+        if termination is DirectTerminationCondition.unbounded:
+            return SolveStatus.UNBOUNDED
+        if termination is DirectTerminationCondition.infeasibleOrUnbounded:
+            return SolveStatus.INFEASIBLE_OR_UNBOUNDED
+        if termination in {
+            DirectTerminationCondition.maxTimeLimit,
+            DirectTerminationCondition.iterationLimit,
+            DirectTerminationCondition.interrupted,
+        }:
+            return SolveStatus.LIMIT
+        if solution_status is DirectSolutionStatus.noSolution:
+            return SolveStatus.NO_SOLUTION
+        return SolveStatus.UNKNOWN
 
 
 def _finite_or_none(value: Any) -> float | None:
