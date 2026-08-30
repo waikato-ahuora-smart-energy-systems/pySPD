@@ -18,6 +18,7 @@ from tools.gate12.replay_artifacts import (
     ExactCanonicalDirectoryParityProcessor,
     GamsReplayBundleProducer,
     IncrementalReplayBundleCoordinator,
+    PyspdReplayBundleProducer,
 )
 
 
@@ -175,6 +176,31 @@ def test_gams_producer_retains_failed_attempts_separately(tmp_path) -> None:
     assert producer._next_attempt_directory("20221106").name == "attempt-001"
     (tmp_path / "runs" / "20221106" / "attempt-001").mkdir(parents=True)
     assert producer._next_attempt_directory("20221106").name == "attempt-002"
+
+
+def test_completed_bundle_reuse_rejects_execution_source_drift(
+    tmp_path, monkeypatch
+) -> None:
+    _write(
+        tmp_path / "candidate",
+        PyspdReplayBundleProducer.profile,
+        _cases(),
+    )
+    producer = PyspdReplayBundleProducer(
+        bundle_root=tmp_path / "candidate",
+        run_root=tmp_path / "runs",
+    )
+    monkeypatch.setattr(
+        "tools.gate12.replay_artifacts.python_execution_sha256",
+        lambda: "f" * 64,
+    )
+
+    with pytest.raises(EvidenceContractError, match="execution fingerprint"):
+        producer.produce(
+            work_item=_work_item(),
+            source=tmp_path / "input.gdx",
+            system_directory=tmp_path / "gams",
+        )
 
 
 class FakeFeed:

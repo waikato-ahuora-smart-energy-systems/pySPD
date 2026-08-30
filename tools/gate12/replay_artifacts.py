@@ -366,13 +366,17 @@ class PyspdReplayBundleProducer:
         source: Path,
         system_directory: Path,
     ) -> CanonicalReplayBundle:
+        execution_sha256 = python_execution_sha256()
         target = self.store.root / work_item.trading_date
         if target.is_dir():
             bundle, _ = self.store.load(work_item.trading_date)
             bundle.validate_for(work_item)
-            if bundle.engine_profile != self.profile:
+            if (
+                bundle.engine_profile != self.profile
+                or bundle.execution_sha256 != execution_sha256
+            ):
                 raise EvidenceContractError(
-                    "REQ-G12-ARTIFACT: PySPD replay profile mismatch"
+                    "REQ-G12-ARTIFACT: PySPD replay profile or execution fingerprint mismatch"
                 )
             return bundle
         run_directory = self.run_root / work_item.trading_date
@@ -394,7 +398,7 @@ class PyspdReplayBundleProducer:
         )
         bundle = CanonicalReplayBundle.create(
             engine_profile=self.profile,
-            execution_sha256=python_execution_sha256(),
+            execution_sha256=execution_sha256,
             work_item=work_item,
             cases=cases,
         )
@@ -429,13 +433,17 @@ class GamsReplayBundleProducer:
         source: Path,
         system_directory: Path,
     ) -> CanonicalReplayBundle:
+        execution_sha256 = gams_execution_sha256(self.source_tree, self.gams_executable)
         target = self.store.root / work_item.trading_date
         if target.is_dir():
             bundle, _ = self.store.load(work_item.trading_date)
             bundle.validate_for(work_item)
-            if bundle.engine_profile != self.profile:
+            if (
+                bundle.engine_profile != self.profile
+                or bundle.execution_sha256 != execution_sha256
+            ):
                 raise EvidenceContractError(
-                    "REQ-G12-ARTIFACT: GAMS replay profile mismatch"
+                    "REQ-G12-ARTIFACT: GAMS replay profile or execution fingerprint mismatch"
                 )
             return bundle
         run_name = f"gate12_ref_{work_item.trading_date}"
@@ -480,9 +488,7 @@ class GamsReplayBundleProducer:
         )
         bundle = CanonicalReplayBundle.create(
             engine_profile=self.profile,
-            execution_sha256=gams_execution_sha256(
-                self.source_tree, self.gams_executable
-            ),
+            execution_sha256=execution_sha256,
             work_item=work_item,
             cases=cases,
         )
