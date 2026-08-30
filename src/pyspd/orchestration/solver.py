@@ -201,56 +201,67 @@ class ReserveCaseExecutor:
         scarcity = _values(primary.artifacts["energy_scarcity_node"])
         network = case.network
         assert network is not None
+        allocations_by_node: dict[Key, list[tuple[str, float]]] = defaultdict(list)
+        for key, weight in network.node_bus_allocation.items():
+            allocations_by_node[key[:3]].append((key[3], weight))
+        buses_by_node: dict[Key, set[str]] = defaultdict(set)
+        for key in network.node_bus:
+            buses_by_node[key[:3]].add(key[3])
+        nodes_by_offer: dict[Key, set[str]] = defaultdict(set)
+        for ca, dt, offer, node in network.offer_node:
+            nodes_by_offer[(ca, dt, offer)].add(node)
         bus_generation: dict[Key, float] = defaultdict(float)
         for ca, dt, offer, node in network.offer_node:
-            for key, weight in network.node_bus_allocation.items():
-                if key[:3] == (ca, dt, node):
-                    bus_generation[(ca, dt, key[3])] += weight * generation.get(
-                        (ca, dt, offer), 0.0
-                    )
+            for bus, weight in allocations_by_node[(ca, dt, node)]:
+                bus_generation[(ca, dt, bus)] += weight * generation.get(
+                    (ca, dt, offer), 0.0
+                )
         bus_load: dict[Key, float] = defaultdict(float)
         for key, weight in network.node_bus_allocation.items():
             bus_load[(key[0], key[1], key[3])] += weight * network.node_load[key[:3]]
         node_island = {
             node: min(
                 (
-                    network.bus_electrical_island.get((*node[:2], key[3]), 0.0)
-                    for key in network.node_bus
-                    if key[:3] == node
+                    network.bus_electrical_island.get((*node[:2], bus), 0.0)
+                    for bus in buses_by_node[node]
                 ),
                 default=0.0,
             )
             for node in case.nodes
         }
+        from_buses: dict[Key, set[str]] = defaultdict(set)
+        to_buses: dict[Key, set[str]] = defaultdict(set)
+        for key in network.branch_from_bus:
+            from_buses[key[:3]].add(key[3])
+        for key in network.branch_to_bus:
+            to_buses[key[:3]].add(key[3])
         adjacency = frozenset(
             ((*branch[:2], left), (*branch[:2], right))
             for branch in network.branches
-            for *prefix, left in network.branch_from_bus
-            for *other_prefix, right in network.branch_to_bus
-            if tuple(prefix) == branch and tuple(other_prefix) == branch
+            for left in from_buses[branch]
+            for right in to_buses[branch]
         )
         flow = _values(primary.artifacts["directed_branch_flow"])
+        flow_by_branch: dict[Key, float] = defaultdict(float)
+        for key, value in flow.items():
+            flow_by_branch[key[:3]] += value
+        buses_by_branch: dict[Key, set[str]] = defaultdict(set)
+        for key in network.branch_bus_connect:
+            buses_by_branch[key[:3]].add(key[3])
         connected_flow: dict[Key, float] = defaultdict(float)
         for branch in network.ac_branches:
-            buses = [key[3] for key in network.branch_bus_connect if key[:3] == branch]
-            amount = sum(value for key, value in flow.items() if key[:3] == branch)
-            for bus in buses:
-                connected_flow[(*branch[:2], bus)] += amount
+            for bus in buses_by_branch[branch]:
+                connected_flow[(*branch[:2], bus)] += flow_by_branch[branch]
         generation_block = _values(primary.artifacts["generation_block"])
         cleared: dict[Key, float] = defaultdict(float)
         for block, amount in generation_block.items():
             if amount <= 0.0:
                 continue
             offer_key = block[:3]
-            for ca, dt, mapped_offer, node in network.offer_node:
-                if (ca, dt, mapped_offer) != offer_key:
-                    continue
-                for key in network.node_bus:
-                    if key[:3] == (ca, dt, node):
-                        bus_key = (ca, dt, key[3])
-                        cleared[bus_key] = max(
-                            cleared[bus_key], case.offer_price[block]
-                        )
+            for node in nodes_by_offer[offer_key]:
+                for bus in buses_by_node[(*offer_key[:2], node)]:
+                    bus_key = (*offer_key[:2], bus)
+                    cleared[bus_key] = max(cleared[bus_key], case.offer_price[block])
         reserve_prices = {key: value for key, value in prices.reserve.items()}
         return SolveObservation(
             generation={key[2]: value for key, value in generation.items()},
@@ -262,9 +273,7 @@ class ReserveCaseExecutor:
             node_bus_allocation=network.node_bus_allocation,
             bus_electrical_island=network.bus_electrical_island,
             node_electrical_island=node_island,
-            node_market_island={
-                node: case.node_region[node][2] for node in case.nodes
-            },
+            node_market_island={node: case.node_region[node][2] for node in case.nodes},
             node_transfer=prepared.node_transfer,
             bus_adjacency=adjacency,
             connected_bus_flow=connected_flow,

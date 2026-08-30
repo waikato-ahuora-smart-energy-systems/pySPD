@@ -236,6 +236,11 @@ The first live candidate-prefix rehearsal failed closed at historical case
 explicit `1e-6` setting. The portable profile separately projects only SOS
 members within `1e-5` of zero or one to their exact boundary before fixing the
 HiGHS RMIP; the complete unit and probity suite validates this state transfer.
+The first bounded prefix rehearsal also exposed a quadratic branch-endpoint
+scan in post-solve observation projection. That projection now builds indexed
+node, offer, bus, branch, and flow maps once per case; the formerly failing
+historical case completes end to end in 65.69 seconds on the qualification
+host with the indexed path.
 
 When the independently produced pinned-GAMS canonical bundle for a date is
 available, compare and checkpoint all available dates with:
