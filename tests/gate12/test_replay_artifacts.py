@@ -16,6 +16,7 @@ from tools.gate12.replay_artifacts import (
     CanonicalReplayBundle,
     CanonicalReplayBundleStore,
     ExactCanonicalDirectoryParityProcessor,
+    GamsReplayBundleProducer,
     IncrementalReplayBundleCoordinator,
 )
 
@@ -159,6 +160,19 @@ def test_bundle_store_rejects_missing_surface(tmp_path) -> None:
 
     with pytest.raises(EvidenceContractError, match="surface is unavailable"):
         CanonicalReplayBundleStore(tmp_path / "bundles").load("20221106")
+
+
+def test_gams_producer_retains_failed_attempts_separately(tmp_path) -> None:
+    producer = GamsReplayBundleProducer(
+        bundle_root=tmp_path / "bundles",
+        run_root=tmp_path / "runs",
+        source_tree=tmp_path / "source",
+        gams_executable=tmp_path / "gams",
+    )
+
+    assert producer._next_attempt_directory("20221106").name == "attempt-001"
+    (tmp_path / "runs" / "20221106" / "attempt-001").mkdir(parents=True)
+    assert producer._next_attempt_directory("20221106").name == "attempt-002"
 
 
 class FakeFeed:

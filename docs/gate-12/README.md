@@ -253,8 +253,34 @@ node, offer, bus, branch, and flow maps once per case; the formerly failing
 historical case completes end to end in 65.69 seconds on the qualification
 host with the indexed path.
 
-When the independently produced pinned-GAMS canonical bundle for a date is
-available, compare and checkpoint all available dates with:
+Materialize the independent pinned-GAMS bundles with the same discovery feed:
+
+```bash
+uv run --group gdx python -m tools.gate12.materialize_incremental_gams \
+  --discovery-checkpoints /path/to/gate12-work/checkpoints \
+  --inventory docs/gate-1/shortfall-input-inventory.json \
+  --input-root /path/to/hash-bound/inputs \
+  --system-directory /path/to/gams-system-directory \
+  --source-tree /path/to/pinned/vspd-v5.0.2 \
+  --gams-executable /path/to/gams \
+  --bundle-root /path/to/incremental/gams-bundles \
+  --run-root /path/to/incremental/gams-runs \
+  --maximum-new-dates 1
+```
+
+The reference overlay retains each failed attempt separately, requires daily
+mode and the exact same-day prefix, and uses the qualified GAMS SCIP MIP to
+fixed-discrete HiGHS RMIP profile. Its observational cumulative GDX captures
+raw and repaired bus prices separately, accepted physics and objectives,
+shortfall transitions, solve counts, native discrete/SOS state, publication
+weights and outputs, and the ordinary vSPD CSV reports. A bundle is emitted
+only after every operational solve is optimal and the existing independent
+matrix/price checks pass. With the observed single-node network entitlement,
+this command must wait while historical population enumeration owns the GAMS
+session.
+
+When both canonical bundles for a date are available, compare and checkpoint
+all available dates with:
 
 ```bash
 uv run --group gdx python -m tools.gate12.compare_incremental_replays \

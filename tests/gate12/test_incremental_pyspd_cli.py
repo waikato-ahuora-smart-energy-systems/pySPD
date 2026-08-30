@@ -7,6 +7,9 @@ import pytest
 from tools.gate12.compare_incremental_replays import (
     build_parser as compare_parser,
 )
+from tools.gate12.materialize_incremental_gams import (
+    build_parser as gams_parser,
+)
 from tools.gate12.materialize_incremental_pyspd import build_parser
 
 
@@ -71,3 +74,35 @@ def test_incremental_compare_cli_requires_both_bundle_roots() -> None:
     assert str(arguments.reference_bundle_root) == "/reference"
     assert str(arguments.candidate_bundle_root) == "/candidate"
     assert str(arguments.parity_checkpoints) == "/parity"
+
+
+def test_incremental_gams_cli_requires_pinned_source_and_executable() -> None:
+    parser = gams_parser()
+
+    with pytest.raises(SystemExit):
+        parser.parse_args([])
+
+    arguments = parser.parse_args(
+        [
+            "--discovery-checkpoints",
+            "/discovery",
+            "--inventory",
+            "/inventory.json",
+            "--input-root",
+            "/inputs",
+            "--system-directory",
+            "/gams",
+            "--source-tree",
+            "/pinned-vspd",
+            "--gams-executable",
+            "/gams/gams",
+            "--bundle-root",
+            "/reference",
+            "--run-root",
+            "/runs",
+        ]
+    )
+
+    assert str(arguments.source_tree) == "/pinned-vspd"
+    assert str(arguments.gams_executable) == "/gams/gams"
+    assert str(arguments.bundle_root) == "/reference"

@@ -16,6 +16,12 @@ from pyspd.application import (
 )
 from pyspd.reserve.data import RESERVE_FORMULATION_ID
 from tools.gate12.evidence import REQUIRED_E2E_SURFACES, EvidenceContractError
+from tools.gate12.gams_replay import (
+    GAMS_GATE12_REPLAY_PROFILE,
+    GamsReplayArtifacts,
+    GamsReplaySurfaceExporter,
+    Gate12GamsSourcePatcher,
+)
 from tools.gate12.incremental_replay import (
     IncrementalCaseParity,
     IncrementalDateParityResult,
@@ -27,6 +33,12 @@ from tools.gate12.pyspd_surfaces import (
     PyspdCaseSurfaceExporter,
 )
 from tools.gate12.streaming_pyspd import StreamingPyspdReplayRunner
+from tools.oracle.vspd import (
+    ScipHighsPricingProfile,
+    VspdCase,
+    VspdRunConfiguration,
+    VspdRunner,
+)
 
 PYSPD_REPLAY_PROFILE = "pyspd-v5-portable-scip-mip-fixed-highs-rmip-v1"
 EXACT_CANONICAL_PARITY_PROFILE = "gams-pyspd-canonical-json-exact-v1"
@@ -375,6 +387,104 @@ class PyspdReplayBundleProducer:
         )
         self.store.write(bundle=bundle, cases=cases)
         return bundle
+
+
+class GamsReplayBundleProducer:
+    """Run the independent pinned GAMS prefix and export canonical surfaces."""
+
+    profile = GAMS_GATE12_REPLAY_PROFILE
+
+    def __init__(
+        self,
+        *,
+        bundle_root: Path,
+        run_root: Path,
+        source_tree: Path,
+        gams_executable: Path,
+        exporter: GamsReplaySurfaceExporter | None = None,
+    ) -> None:
+        self.store = CanonicalReplayBundleStore(bundle_root)
+        self.run_root = run_root
+        self.source_tree = source_tree
+        self.gams_executable = gams_executable
+        self.exporter = exporter or GamsReplaySurfaceExporter()
+
+    def produce(
+        self,
+        *,
+        work_item: IncrementalReplayWorkItem,
+        source: Path,
+        system_directory: Path,
+    ) -> CanonicalReplayBundle:
+        target = self.store.root / work_item.trading_date
+        if target.is_dir():
+            bundle, _ = self.store.load(work_item.trading_date)
+            bundle.validate_for(work_item)
+            if bundle.engine_profile != self.profile:
+                raise EvidenceContractError(
+                    "REQ-G12-ARTIFACT: GAMS replay profile mismatch"
+                )
+            return bundle
+        run_name = f"gate12_ref_{work_item.trading_date}"
+        work_directory = self._next_attempt_directory(work_item.trading_date)
+        configuration = VspdRunConfiguration(
+            run_name=run_name,
+            operation_mode="SPD",
+            daily_mode=1,
+            case_ids=work_item.case_ids,
+        )
+        solver_profile = ScipHighsPricingProfile(capture_state_evidence=False)
+        runner = VspdRunner(
+            patcher=Gate12GamsSourcePatcher(
+                affected_case_ids=work_item.affected_case_ids
+            )
+        )
+        result = runner.run(
+            VspdCase(
+                source_tree=self.source_tree,
+                input_gdx=source,
+                work_directory=work_directory,
+                gams_executable=self.gams_executable,
+                profile=solver_profile,
+                configuration=configuration,
+            )
+        )
+        if not result.qualified or not result.parsed.matches_profile(solver_profile):
+            raise EvidenceContractError(
+                "REQ-G12-ARTIFACT: pinned GAMS replay did not qualify"
+            )
+        cases = self.exporter.export(
+            work_item=work_item,
+            source=source,
+            system_directory=system_directory,
+            artifacts=GamsReplayArtifacts(
+                result_gdx=result.stage_directory
+                / "Programs"
+                / "pyspd_gate12_results.gdx",
+                report_directory=result.stage_directory / "Output" / run_name,
+                all_solves_optimal=result.parsed.all_optimal,
+            ),
+        )
+        bundle = CanonicalReplayBundle.create(
+            engine_profile=self.profile,
+            work_item=work_item,
+            cases=cases,
+        )
+        self.store.write(bundle=bundle, cases=cases)
+        return bundle
+
+    def _next_attempt_directory(self, trading_date: str) -> Path:
+        date_root = self.run_root / trading_date
+        attempts = {
+            path.name
+            for path in date_root.glob("attempt-*")
+            if path.is_dir() and re.fullmatch(r"attempt-[0-9]{3}", path.name)
+        }
+        for ordinal in range(1, 1000):
+            name = f"attempt-{ordinal:03d}"
+            if name not in attempts:
+                return date_root / name
+        raise EvidenceContractError("REQ-G12-ARTIFACT: GAMS attempt space exhausted")
 
 
 class IncrementalReplayBundleProducer(Protocol):
