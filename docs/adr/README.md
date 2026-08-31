@@ -20,6 +20,7 @@ replaces; accepted history is not rewritten.
 | [ADR-0013](0013-gate-12-shortfall-population-discovery.md) | Discover the 546-case population with recomputed first-loop RTD load and material actual-transfer evidence | Accepted by project direction |
 | [ADR-0014](0014-incremental-gate-12-replay-parity.md) | Replay and compare each completed Gate 12 date incrementally | Accepted by project direction |
 | [ADR-0015](0015-gate-12-targeted-historical-recovery.md) | Recover named pathological discovery cases without widening the general oracle | Accepted for bounded Gate 12 recovery evidence |
+| [ADR-0016](0016-gate-12-residue-only-loop-guard.md) | Skip historical transfer loops only when no material evidence can be emitted | Accepted for bounded Gate 12 discovery evidence |
 
 ## Status values
 

@@ -760,6 +760,43 @@ class HistoricalTargetedScipPatcher(HistoricalVspdSourcePatcher):
         return self._replace_all(text, statement, targeted, expected)
 
 
+class HistoricalResidueGuardPatcher(HistoricalVspdSourcePatcher):
+    """Clear evidence-ineligible residues before the discovery transfer loop."""
+
+    profile = (
+        "historical-v5.0.2-dailymode0-scip-first-loop-material-transfer-"
+        "subthreshold-residue-threshold1e-6"
+    )
+
+    def apply(self, programs: Path) -> HistoricalPatchEvidence:
+        super().apply(programs)
+        solve = programs / "vSPDsolve.gms"
+        solve_text = solve.read_text(encoding="utf-8")
+        loop_statement = "        while( sum[n, ShortfallAdjustmentMW(ca,dt,n)],"
+        guarded_loop = (
+            "        ShortfallAdjustmentMW(t,n)\n"
+            "            $ (abs(EnergyShortfallMW(t,n)) <= 0.000001) = 0;\n"
+            f"{loop_statement}"
+        )
+        solve.write_text(
+            self._replace_all(solve_text, loop_statement, guarded_loop, 1),
+            encoding="utf-8",
+        )
+        patched = (
+            programs / "vSPDsettings.inc",
+            programs / "vSPDperiod.gms",
+            solve,
+        )
+        hashes = {
+            path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in patched
+        }
+        logical = hashlib.sha256(
+            json.dumps(hashes, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+        return HistoricalPatchEvidence(self.profile, logical, hashes)
+
+
 @dataclass(frozen=True)
 class HistoricalShortfallRecord:
     """One node-level v5.0.2 shortfall-removal decision."""

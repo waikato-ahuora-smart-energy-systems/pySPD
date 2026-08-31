@@ -21,6 +21,7 @@ from tools.gate12.historical_population import (
     HistoricalPopulationCheckpointStore,
     HistoricalPopulationRunner,
     HistoricalPopulationWorkspace,
+    HistoricalResidueGuardPatcher,
     HistoricalTargetedScipPatcher,
     HistoricalVspdSourcePatcher,
     SubprocessHistoricalGamsExecutor,
@@ -129,9 +130,9 @@ def build_parser() -> argparse.ArgumentParser:
         "--suppress-residue-only-shortfall-loops",
         action="store_true",
         help=(
-            "Before the transfer loop, clear all adjustments only when no "
-            "absolute shortfall exceeds the 1e-6 MW evidence threshold. "
-            "Requires --tight-scip-case-id."
+            "Before the discovery transfer loop, clear each adjustment whose "
+            "underlying absolute shortfall is at or below the 1e-6 MW evidence "
+            "threshold. Material adjustments remain unchanged."
         ),
     )
     parser.add_argument(
@@ -161,28 +162,29 @@ def _verify_reference(source_tree: Path) -> None:
 
 def main(arguments: list[str] | None = None) -> int:
     args = build_parser().parse_args(arguments)
-    if (
-        args.material_only_shortfall_case_id
-        or args.suppress_residue_only_shortfall_loops
-        or args.tight_scip_checkfeastolfac
-    ) and not args.tight_scip_case_id:
+    if args.tight_scip_checkfeastolfac and not args.tight_scip_case_id:
         raise EvidenceContractError(
-            "REQ-G12-HISTORICAL: residue recovery requires a targeted SCIP case"
+            "REQ-G12-HISTORICAL: targeted recovery requires a targeted SCIP case"
+        )
+    if args.material_only_shortfall_case_id and not args.tight_scip_case_id:
+        raise EvidenceContractError(
+            "REQ-G12-HISTORICAL: material-only recovery requires a targeted SCIP case"
         )
     source_tree = args.source_tree.resolve()
     work_directory = args.work_directory.resolve()
     _verify_reference(source_tree)
-    patcher = (
-        HistoricalTargetedScipPatcher(
+    if args.tight_scip_case_id:
+        patcher: HistoricalVspdSourcePatcher = HistoricalTargetedScipPatcher(
             args.tight_scip_case_id,
             args.tight_scip_feastol,
             tuple(args.material_only_shortfall_case_id),
             args.suppress_residue_only_shortfall_loops,
             args.tight_scip_checkfeastolfac,
         )
-        if args.tight_scip_case_id
-        else HistoricalVspdSourcePatcher()
-    )
+    elif args.suppress_residue_only_shortfall_loops:
+        patcher = HistoricalResidueGuardPatcher()
+    else:
+        patcher = HistoricalVspdSourcePatcher()
     metadata = work_directory / "patch-evidence.json"
     workspace = (
         HistoricalPopulationWorkspace.open(work_directory)

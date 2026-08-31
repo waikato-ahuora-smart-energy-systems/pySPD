@@ -193,6 +193,20 @@ the final population builder, but the shard does not make the 139-date or
 546-identity population claim and does not rewrite the five default-profile
 checkpoints.
 
+The next chronological date demonstrated that subthreshold removal margins
+are a recurrent discovery-liveness issue, including as companions to material
+transfers. ADR-0016 therefore permits a separate three-file overlay that clears
+only adjustments whose own source shortfall is at or below `1e-6 MW`
+immediately before the discovery transfer loop. It does not create a SCIP
+option file and retains every material adjustment. The 2022-11-25 shard passed
+282/282 exact optimal selected cases and preserved five affected identities;
+its checkpoint logical hash is
+`a9c993352f8ddef9f47933d0276ff7414cb922e26a0acd393ca82e7553deb8c7`.
+The compact record is
+[`historical-residue-recovery-20221125.json`](historical-residue-recovery-20221125.json).
+Run this profile with `--suppress-residue-only-shortfall-loops` and no targeted
+SCIP arguments.
+
 `HistoricalPopulationRunner` verifies every Gate 1 source size and SHA-256,
 reads the GDX run-mode surface, selects exactly RTD modes 101 and 201, and
 accepts a daily checkpoint only when the progress identities are exact, every

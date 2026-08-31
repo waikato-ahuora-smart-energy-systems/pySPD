@@ -16,6 +16,7 @@ from tools.gate12.historical_population import (
     HistoricalInputInventory,
     HistoricalPopulationCheckpoint,
     HistoricalPopulationCheckpointStore,
+    HistoricalResidueGuardPatcher,
     HistoricalShortfallEvidence,
     HistoricalTargetedScipPatcher,
     HistoricalVspdSourcePatcher,
@@ -106,6 +107,41 @@ def test_targeted_recovery_checkpoint_is_exact_hash_bound_and_nonpopulation() ->
         item["node"] == "ABY0111" and item["target_node"] == "TIM1101"
         for item in evidence["identities"]
     )
+    assert evidence["shard_complete"] is True
+    assert evidence["population_passed"] is False
+    hashes = (
+        evidence["patch_logical_sha256"],
+        evidence["patch_metadata_file_sha256"],
+        evidence["checkpoint_logical_sha256"],
+        evidence["checkpoint_file_sha256"],
+        evidence["population_summary_file_sha256"],
+        *evidence["patch_file_sha256"].values(),
+        *evidence["artifact_sha256"].values(),
+    )
+    assert all(len(value) == 64 for value in hashes)
+
+
+def test_residue_guard_checkpoint_is_exact_hash_bound_and_nonpopulation() -> None:
+    root = Path(__file__).resolve().parents[2]
+    evidence = json.loads(
+        (root / "docs/gate-12/historical-residue-recovery-20221125.json").read_text()
+    )
+
+    assert evidence["classification"] == (
+        "qualifying-subthreshold-residue-guard-shard-checkpoint"
+    )
+    assert evidence["selected_case_count"] == evidence["solved_case_count"] == 282
+    assert evidence["all_solves_optimal"] is True
+    assert evidence["affected_identity_count"] == len(evidence["identities"]) == 5
+    assert {item["case_id"] for item in evidence["identities"]} == {
+        "241012022111645848",
+        "241012022111650849",
+        "241012022111655850",
+        "241012022112030932",
+        "241012022112035936",
+    }
+    assert all(abs(item["energy_shortfall_mw"]) > 1e-6 for item in evidence["identities"])
+    assert evidence["guard_contract"]["solver_options_changed"] is False
     assert evidence["shard_complete"] is True
     assert evidence["population_passed"] is False
     hashes = (
@@ -219,6 +255,8 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
     shutil.copytree(programs, tighter_programs)
     guarded_programs = tmp_path / "targeted-guarded"
     shutil.copytree(programs, guarded_programs)
+    residue_programs = tmp_path / "residue-guarded"
+    shutil.copytree(programs, residue_programs)
 
     patcher = HistoricalVspdSourcePatcher()
     result = patcher.apply(programs)
@@ -297,6 +335,17 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
     assert guarded.logical_sha256 not in {
         targeted.logical_sha256,
         tighter.logical_sha256,
+    }
+
+    residue_guarded = HistoricalResidueGuardPatcher().apply(residue_programs)
+    residue_solve = (residue_programs / "vSPDsolve.gms").read_text()
+    assert residue_guarded.profile.endswith("subthreshold-residue-threshold1e-6")
+    assert "abs(EnergyShortfallMW(t,n)) <= 0.000001" in residue_solve
+    assert "sameas(ca" not in residue_solve
+    assert "scip.opt" not in residue_guarded.file_sha256
+    assert residue_guarded.logical_sha256 not in {
+        result.logical_sha256,
+        guarded.logical_sha256,
     }
 
     with pytest.raises(EvidenceContractError, match="must be numeric"):
