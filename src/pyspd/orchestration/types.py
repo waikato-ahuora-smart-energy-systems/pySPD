@@ -158,6 +158,7 @@ class PreparedCase:
     potential_inconsistency_nodes: frozenset[Key] = frozenset()
     node_transfer: tuple[tuple[Key, Key], ...] = ()
     use_actual_load: bool = True
+    rtd_load_reconstruction_enabled: bool = True
     scaling_disabled_nodes: frozenset[Key] = frozenset()
     transfer_enabled: bool = True
     price_transfer_enabled: bool = True

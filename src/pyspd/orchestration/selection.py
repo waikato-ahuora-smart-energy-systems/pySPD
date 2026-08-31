@@ -220,6 +220,7 @@ class DailyCasePreparer:
             potential_inconsistency_nodes=inconsistent,
             node_transfer=transfer_map,
             use_actual_load=nonzero(dt_parameter.get((*period, "useActualLoad"), 0.0)),
+            rtd_load_reconstruction_enabled=not daily_mode,
             transfer_enabled=nonzero(
                 dt_parameter.get((*period, "enrgShortfallTransfer"), 0.0)
             ),

@@ -85,6 +85,24 @@ def test_ineligible_shortfall_disables_scaling_once_then_accepts() -> None:
     )
 
 
+def test_daily_mode_does_not_resolve_for_scaling_disable_only() -> None:
+    prepared = replace(
+        make_prepared(),
+        load_bad_nodes=frozenset(),
+        potential_inconsistency_nodes=frozenset(),
+        rtd_load_reconstruction_enabled=False,
+    )
+    executor = SequenceExecutor([make_observation(shortfall=1.0)])
+
+    result = DailyRunner(executor).run(configuration(), (prepared,))
+
+    assert result.cases[0].solve_count == 1
+    assert len(executor.calls) == 1
+    assert RunEventKind.SHORTFALL_SCALING_DISABLED not in {
+        event.kind for event in result.cases[0].events
+    }
+
+
 def test_override_audit_is_visible_before_solve() -> None:
     prepared = replace(
         make_prepared(),

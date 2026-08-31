@@ -284,7 +284,9 @@ was applying RTD required-load reconstruction in daily mode, while pinned
 four false PySPD shortfall transfers and second solves on 2022-11-06. Daily
 preparation now retains source demand, matching the pinned control flow; the
 non-daily reconstruction remains enabled for population discovery and its
-direct qualification tests.
+direct qualification tests. A scaling-disable-only shortfall check likewise
+does not trigger a daily re-solve, because the disabled RTD scaling calculation
+is absent from daily mode.
 
 Materialize the independent pinned-GAMS bundles with the same discovery feed:
 

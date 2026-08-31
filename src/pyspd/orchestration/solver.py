@@ -116,6 +116,10 @@ class ShortfallLoop:
             }
             ineligible = set(shortfall) - eligible
             newly_disabled = ineligible - set(current.scaling_disabled_nodes)
+            if not current.rtd_load_reconstruction_enabled:
+                # Pinned daily mode does not run RTD load reconstruction, so a
+                # scaling-disable flag cannot change the next model instance.
+                newly_disabled = set()
             if not adjustments and not newly_disabled:
                 return self._result(
                     current,

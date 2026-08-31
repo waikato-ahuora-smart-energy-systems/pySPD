@@ -109,6 +109,7 @@ def test_daily_preparer_keeps_source_demand_for_rtd_daily_mode() -> None:
     # Pinned vSPD guards its RTD load reconstruction with dailymode = 0.
     assert prepared.required_load[("C1", "D1", "N1")] == 25.0
     assert prepared.required_load[("C1", "D1", "N2")] == 0.0
+    assert not prepared.rtd_load_reconstruction_enabled
 
 
 def test_all_override_families_apply_and_are_audited() -> None:

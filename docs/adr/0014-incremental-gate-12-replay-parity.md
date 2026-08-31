@@ -69,9 +69,11 @@ The preprocessing mode is also part of the replay contract. Pinned
 Consequently, canonical daily replay retains the source demand and does not run
 the non-daily RTD reconstruction before the first solve. The shortfall loop may
 still transfer load and re-solve when the daily solve itself exposes an eligible
-shortfall. This distinction is covered by Probity TDD because applying the
-non-daily reconstruction in PySPD created false daily transfers and changed
-accepted load, objective, and prices.
+shortfall. It does not re-solve merely to disable RTD load scaling, because that
+flag cannot change a daily-mode model instance. These distinctions are covered
+by Probity TDD because applying the non-daily reconstruction, or its
+scaling-disable re-solve, in PySPD created false daily transitions and changed
+accepted load, dispatch, objective, and prices.
 
 ## Consequences
 
