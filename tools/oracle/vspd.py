@@ -1215,7 +1215,7 @@ class VspdSourcePatcher:
         (programs / "convert.opt").write_text(_CONVERT_OPTIONS)
         if mip_solver == "SCIP":
             (programs / "scip.opt").write_text(
-                "emphasis: numerics\nnumerics/feastol = 1e-9\n"
+                "emphasis: numerics\nnumerics/feastol = 1e-8\n"
             )
         if pricing_solver == "HiGHS":
             (programs / "highs.opt").write_text("\n".join(lp_options) + "\n")

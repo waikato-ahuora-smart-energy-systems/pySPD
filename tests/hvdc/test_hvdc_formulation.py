@@ -53,8 +53,8 @@ def test_primary_scip_tolerance_bounds_amplified_penalty_error(monkeypatch) -> N
 
     assert HvdcSolvePolicy._solve_scip(build(make_hvdc_case(enforce=True))) is sentinel
     feasibility_tolerance = captured["numerics/feastol"]
-    assert feasibility_tolerance == 1e-9
-    assert 1_000_000.0 * feasibility_tolerance <= 0.001
+    assert feasibility_tolerance == 1e-8
+    assert 1_000_000.0 * feasibility_tolerance <= 0.01
 
 
 def test_fixed_rmip_preserves_sos_support_without_fixing_active_weights() -> None:

@@ -52,7 +52,7 @@ type Key = tuple[str, ...]
 
 _SUPPORTED = frozenset({HVDC_FORMULATION_ID})
 _SOS_STATE_CANONICALIZATION_TOLERANCE = 1e-5
-_SCIP_PRIMAL_FEASIBILITY_TOLERANCE = 1e-9
+_SCIP_PRIMAL_FEASIBILITY_TOLERANCE = 1e-8
 
 
 class HvdcPreprocessor(PreprocessorStep):

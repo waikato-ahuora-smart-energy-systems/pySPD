@@ -294,7 +294,9 @@ violation about `1.6e-7 MW` below zero. With vSPD's `1,000,000 NZD/MW` penalty,
 that physically tiny bound residue moved the primary objective by about
 `0.16 NZD`, and repeated SCIP runs could select different residues within the
 same tolerance. The governed portable and pinned-GAMS SCIP profiles now use
-`numerics/feastol = 1e-9`, bounding this penalty amplification at `0.001 NZD`.
+`numerics/feastol = 1e-8`, bounding this penalty amplification at `0.01 NZD`.
+The initially tested `1e-9` setting was rejected because SCIP's internal LP
+solver failed on the second case of the governed first-date replay.
 The original exact failed checkpoint is retained; evidence produced with the
 tighter profile must use new bundle and checkpoint roots.
 
