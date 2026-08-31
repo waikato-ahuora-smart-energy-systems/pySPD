@@ -1,6 +1,7 @@
 """Probity tests for pinned-v5.0.2 affected-interval evidence."""
 
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -16,6 +17,7 @@ from tools.gate12.historical_population import (
     HistoricalPopulationCheckpoint,
     HistoricalPopulationCheckpointStore,
     HistoricalShortfallEvidence,
+    HistoricalTargetedScipPatcher,
     HistoricalVspdSourcePatcher,
 )
 from tools.oracle.vspd import ListingResult, SolveRecord
@@ -158,8 +160,12 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
         'File rep "Write to a report" /"ProgressReport.txt"/;\n'
         "option lp = %Solver% ;\n"
         "option mip = %Solver% ;\n"
-        + ".Optfile = 1 ;\n"
-        * 3
+        "vSPD_NMIR.Optfile = 1 ;\n"
+        "solve vSPD_NMIR using mip maximizing NETBENEFIT ;\n"
+        "vSPD_BranchFlowMIP.Optfile = 1 ;\n"
+        "solve vSPD_BranchFlowMIP using mip maximizing NETBENEFIT ;\n"
+        "vSPD_NMIR.Optfile = 1 ;\n"
+        "solve vSPD_NMIR using mip maximizing NETBENEFIT ;\n"
         + '$if not exist "%inputPath%\\%GDXname%.gdx" $goto nextInput\n'
         '$gdxin "%inputPath%\\%GDXname%.gdx"\n'
         "PotentialModellingInconsistency(ca,dt,n)= 1 $ outage(ca,dt,n) ;\n"
@@ -172,6 +178,8 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
         '$if not exist "%inputPath%\\%GDXname%.gdx" putclose rep "missing";\n'
         '$gdxin "%inputPath%\\%GDXname%.gdx"\n'
     )
+    targeted_programs = tmp_path / "TargetedPrograms"
+    shutil.copytree(programs, targeted_programs)
 
     patcher = HistoricalVspdSourcePatcher()
     result = patcher.apply(programs)
@@ -196,6 +204,22 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
     assert "loop( (t,n) $ (abs(EnergyShortfallMW(t,n)) > 0.000001)," in solve
     assert "gate12_%GDXname%_shortfall.txt" in solve
     assert "n1.tl:0" in solve
+
+    target = "241012022111000704"
+    targeted = HistoricalTargetedScipPatcher(target).apply(targeted_programs)
+    targeted_solve = (targeted_programs / "vSPDsolve.gms").read_text()
+    assert targeted.profile.endswith(f"target-{target}-feastol1e-10")
+    assert targeted_solve.count(f"if(sameas(ca,'{target}'),") == 3
+    assert targeted_solve.count("vSPD_NMIR.Optfile = 1 ;") == 2
+    assert targeted_solve.count("vSPD_BranchFlowMIP.Optfile = 1 ;") == 1
+    assert (targeted_programs / "scip.opt").read_text() == (
+        "emphasis: numerics\n"
+        "numerics/feastol = 1e-10\n"
+    )
+    assert "scip.opt" in targeted.file_sha256
+
+    with pytest.raises(EvidenceContractError, match="must be numeric"):
+        HistoricalTargetedScipPatcher("bad-case")
 
     with pytest.raises(EvidenceContractError, match="source drift"):
         patcher.apply(programs)

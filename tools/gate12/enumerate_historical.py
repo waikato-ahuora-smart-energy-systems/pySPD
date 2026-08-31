@@ -21,6 +21,7 @@ from tools.gate12.historical_population import (
     HistoricalPopulationCheckpointStore,
     HistoricalPopulationRunner,
     HistoricalPopulationWorkspace,
+    HistoricalTargetedScipPatcher,
     HistoricalVspdSourcePatcher,
     SubprocessHistoricalGamsExecutor,
 )
@@ -91,6 +92,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Delay between transient GAMS network-licence attempts.",
     )
     parser.add_argument(
+        "--tight-scip-case-id",
+        help=(
+            "Load the separately hash-addressed SCIP feastol 1e-10 option "
+            "file for this numeric case ID only."
+        ),
+    )
+    parser.add_argument(
         "--execution-scope",
         choices=("population", "shard"),
         default="population",
@@ -120,6 +128,11 @@ def main(arguments: list[str] | None = None) -> int:
     source_tree = args.source_tree.resolve()
     work_directory = args.work_directory.resolve()
     _verify_reference(source_tree)
+    patcher = (
+        HistoricalTargetedScipPatcher(args.tight_scip_case_id)
+        if args.tight_scip_case_id
+        else HistoricalVspdSourcePatcher()
+    )
     metadata = work_directory / "patch-evidence.json"
     workspace = (
         HistoricalPopulationWorkspace.open(work_directory)
@@ -127,9 +140,13 @@ def main(arguments: list[str] | None = None) -> int:
         else HistoricalPopulationWorkspace.prepare(
             source_tree=source_tree,
             root=work_directory,
-            patcher=HistoricalVspdSourcePatcher(),
+            patcher=patcher,
         )
     )
+    if workspace.patch_evidence.profile != patcher.profile:
+        raise EvidenceContractError(
+            "REQ-G12-HISTORICAL: workspace patch profile does not match CLI"
+        )
     inventory = HistoricalInputInventory.load(args.inventory.resolve())
     runner = HistoricalPopulationRunner(
         programs=workspace.programs,

@@ -575,6 +575,78 @@ class HistoricalVspdSourcePatcher:
         return result
 
 
+class HistoricalTargetedScipPatcher(HistoricalVspdSourcePatcher):
+    """Load strict SCIP numerics for one identified pathological case only."""
+
+    def __init__(self, case_id: str) -> None:
+        if not re.fullmatch(r"[0-9]+", case_id):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: targeted SCIP case ID must be numeric"
+            )
+        self.case_id = case_id
+        self.profile = (
+            "historical-v5.0.2-dailymode0-scip-first-loop-material-transfer-"
+            f"target-{case_id}-feastol1e-10"
+        )
+
+    def apply(self, programs: Path) -> HistoricalPatchEvidence:
+        super().apply(programs)
+        solve = programs / "vSPDsolve.gms"
+        solve_text = solve.read_text(encoding="utf-8")
+        solve_text = self._target_solve(
+            solve_text,
+            model="vSPD_NMIR",
+            statement="solve vSPD_NMIR using mip maximizing NETBENEFIT ;",
+            expected=2,
+        )
+        solve_text = self._target_solve(
+            solve_text,
+            model="vSPD_BranchFlowMIP",
+            statement=(
+                "solve vSPD_BranchFlowMIP using mip maximizing NETBENEFIT ;"
+            ),
+            expected=1,
+        )
+        solve.write_text(solve_text, encoding="utf-8")
+        scip_options = programs / "scip.opt"
+        scip_options.write_text(
+            "emphasis: numerics\n"
+            "numerics/feastol = 1e-10\n",
+            encoding="utf-8",
+        )
+        patched = (
+            programs / "vSPDsettings.inc",
+            programs / "vSPDperiod.gms",
+            solve,
+            scip_options,
+        )
+        hashes = {
+            path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in patched
+        }
+        logical = hashlib.sha256(
+            json.dumps(hashes, sort_keys=True, separators=(",", ":")).encode()
+        ).hexdigest()
+        return HistoricalPatchEvidence(self.profile, logical, hashes)
+
+    def _target_solve(
+        self,
+        text: str,
+        *,
+        model: str,
+        statement: str,
+        expected: int,
+    ) -> str:
+        targeted = (
+            f"{model}.Optfile = 0 ;\n"
+            f"if(sameas(ca,'{self.case_id}'),\n"
+            f"  {model}.Optfile = 1 ;\n"
+            ");\n"
+            f"{statement}"
+        )
+        return self._replace_all(text, statement, targeted, expected)
+
+
 @dataclass(frozen=True)
 class HistoricalShortfallRecord:
     """One node-level v5.0.2 shortfall-removal decision."""

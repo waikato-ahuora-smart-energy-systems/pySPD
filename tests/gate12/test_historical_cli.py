@@ -35,6 +35,7 @@ def test_historical_cli_requires_all_reproducibility_inputs() -> None:
     assert arguments.execution_scope == "population"
     assert arguments.network_license_attempts == 6
     assert arguments.network_license_retry_seconds == 300.0
+    assert arguments.tight_scip_case_id is None
 
 
 def test_historical_cli_has_explicit_non_qualifying_shard_scope() -> None:
@@ -56,10 +57,13 @@ def test_historical_cli_has_explicit_non_qualifying_shard_scope() -> None:
             "/gams",
             "--execution-scope",
             "shard",
+            "--tight-scip-case-id",
+            "241012022111000704",
         ]
     )
 
     assert arguments.execution_scope == "shard"
+    assert arguments.tight_scip_case_id == "241012022111000704"
 
 
 def test_complete_shard_succeeds_without_claiming_population_parity() -> None:

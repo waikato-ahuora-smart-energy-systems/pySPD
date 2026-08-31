@@ -157,6 +157,27 @@ nonqualifying: both still produced GAMS-rejected original-model residuals
 (about `1.22e-7` and `1.26e-7`), while `1e-10` was too slow for population use.
 The 2022-11-24 recovery must therefore be a narrow, separately hash-addressed
 fallback that preserves the existing optimality and evidence validators.
+The active trial applies `numerics/feastol = 1e-10` only to case
+`241012022111000704`; every other case retains the qualified default SCIP
+profile. Its source overlay and `scip.opt` are included in a distinct patch
+hash, and the one-date run uses nonqualifying shard scope until all selected
+cases, progress identities, statuses, and evidence pass. Run that isolated
+trial with:
+
+```bash
+uv run --group gdx python -m tools.gate12.enumerate_historical \
+  --source-tree /path/to/clean/vspd-v5.0.2 \
+  --work-directory /path/to/targeted-20221124-work \
+  --input-root /path/to/hash-bound/inputs \
+  --inventory /path/to/one-date-20221124-inventory.json \
+  --gams-executable /path/to/gams \
+  --system-directory /path/to/gams-system-directory \
+  --execution-scope shard \
+  --tight-scip-case-id 241012022111000704
+```
+
+This command does not make a population claim and does not import or rewrite
+the five default-profile checkpoints.
 
 `HistoricalPopulationRunner` verifies every Gate 1 source size and SHA-256,
 reads the GDX run-mode surface, selects exactly RTD modes 101 and 201, and
