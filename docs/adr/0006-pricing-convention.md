@@ -44,12 +44,21 @@ If it is fixed-MIP pricing, PySPD:
 
 LP prices require accepted optimal termination, canonical signs/units, and
 finite-difference validation. Price-bearing ranged rows are mapped explicitly.
+At the nondifferentiable zero-flow point of a lossy AC branch, a passive leaf
+bus uses the one-sided `+1 MW load` sensitivity required by the stated pricing
+convention. This is calculated from the parent-bus dual, receiving-end loss
+share, and inward first-segment loss factor. All differentiable bus prices
+remain direct fixed-RMIP marginals. This removes solver-basis dependence
+without changing dispatch, the fixed-RMIP objective, or prices away from the
+loss kink.
 
 ## Consequences
 
 - MIP pricing implementation waits until Gate 1 evidence exists.
 - Primary and pricing snapshots must be stored separately.
 - Strict historical prices may require a pinned solver method/basis profile.
+- Passive zero-flow AC-loss leaves have an explicit, solver-independent
+  one-sided load-derivative rule.
 - Stage 7 repeats the complete pricing audit after NMIR/reserve binaries arrive.
 
 ## Rejected alternatives

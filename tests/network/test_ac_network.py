@@ -103,6 +103,39 @@ def test_piecewise_losses_and_fixed_loss_allocation() -> None:
     assert prices.bus[("C1", "T1", "B2")] > prices.bus[("C1", "T1", "B1")]
 
 
+@pytest.mark.parametrize(
+    ("active_bus", "passive_leaf"), (("B1", "B2"), ("B2", "B1"))
+)
+def test_zero_flow_loss_branch_uses_gams_load_subgradient(
+    active_bus: str, passive_leaf: str
+) -> None:
+    case = make_network_case(
+        generation_bus=active_bus,
+        load_bus=active_bus,
+        loss_segments=(("ls1", 100.0, 0.001),),
+    )
+    built, prices, _report = solve(case)
+
+    domains = built.artifacts["network_domains"]
+    assert list(domains.DirectedACBranch) == [
+        ("C1", "T1", "L1", "forward"),
+        ("C1", "T1", "L1", "backward"),
+    ]
+    assert list(domains.ACLossSegment) == [
+        ("C1", "T1", "L1", "ls1", "forward"),
+        ("C1", "T1", "L1", "ls1", "backward"),
+    ]
+    assert prices.bus[("C1", "T1", active_bus)] == pytest.approx(10.0)
+    assert prices.bus[("C1", "T1", passive_leaf)] == pytest.approx(10.0 / 0.999)
+    assert prices.raw_bus_duals[("C1", "T1", passive_leaf)] == pytest.approx(
+        10.0 / 0.999
+    )
+    leaf_node = ("C1", "T1", f"N{passive_leaf[-1]}")
+    assert validate_nodal_price_finite_difference(
+        case, leaf_node, tolerance=1e-6
+    ).passed
+
+
 def test_loss_segment_boundary_and_reverse_direction_are_exact() -> None:
     segments = (("ls1", 20.0, 0.05), ("ls2", 100.0, 0.10))
     forward, _prices, _report = solve(

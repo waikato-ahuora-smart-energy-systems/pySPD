@@ -57,16 +57,22 @@ class NetworkDomainsComponent(ModelComponent):
         block.DirectedACBranch = pyo.Set(
             dimen=4,
             ordered=True,
-            initialize=sorted(
+            initialize=tuple(
                 (*branch, direction)
-                for branch in data.ac_branches
+                for branch in sorted(data.ac_branches)
                 for direction in ("forward", "backward")
             ),
         )
         block.ACLossSegment = pyo.Set(
             dimen=5,
             ordered=True,
-            initialize=sorted(data.valid_ac_loss_segments),
+            initialize=sorted(
+                data.valid_ac_loss_segments,
+                key=lambda item: (
+                    *item[:-1],
+                    {"forward": 0, "backward": 1}[item[-1]],
+                ),
+            ),
         )
         block.BranchConstraint = pyo.Set(
             dimen=3,

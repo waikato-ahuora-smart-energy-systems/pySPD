@@ -55,6 +55,23 @@ def test_primary_scip_uses_corpus_stable_feasibility_tolerance(monkeypatch) -> N
     assert captured["numerics/feastol"] == 1e-6
 
 
+def test_fixed_rmip_uses_gams_highs_tolerances(monkeypatch) -> None:
+    captured = {}
+    sentinel = object()
+
+    def capture(_backend, _model, configuration):
+        captured.update(configuration.options)
+        return sentinel
+
+    monkeypatch.setattr("pyspd.hvdc.formulation.HighsBackend.solve", capture)
+
+    assert HvdcSolvePolicy._solve_highs(build(make_hvdc_case())) is sentinel
+    assert captured["primal_feasibility_tolerance"] == 1e-9
+    assert captured["dual_feasibility_tolerance"] == 1e-9
+    assert captured["primal_residual_tolerance"] == 1e-9
+    assert captured["dual_residual_tolerance"] == 1e-9
+
+
 def test_fixed_rmip_preserves_sos_support_without_fixing_active_weights() -> None:
     model = pyo.ConcreteModel()
     model.members = pyo.Var(("inactive", "left", "right"), bounds=(0.0, 1.0))

@@ -184,8 +184,10 @@ class HvdcSolvePolicy(SolvePolicy):
             SolverConfiguration(
                 {
                     "solver": "simplex",
-                    "primal_feasibility_tolerance": 1e-8,
-                    "dual_feasibility_tolerance": 1e-8,
+                    "primal_feasibility_tolerance": 1e-9,
+                    "dual_feasibility_tolerance": 1e-9,
+                    "primal_residual_tolerance": 1e-9,
+                    "dual_residual_tolerance": 1e-9,
                     "random_seed": 0,
                     "threads": 1,
                 }

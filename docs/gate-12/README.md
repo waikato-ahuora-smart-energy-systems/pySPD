@@ -547,6 +547,17 @@ node `WPT1101`, and its `TP35` rolling publication. Risk and summary remain
 unimplemented row projections in each case. The compact evidence index is
 [`report-row-parity-20221106.json`](report-row-parity-20221106.json).
 
+The bus 816/820 and `WPT1101` differences in that immutable pre-correction
+artifact have since been diagnosed and eliminated in the production pricing
+path. They were opposite subgradient choices at passive, zero-flow AC-loss
+leaf buses. A target-case replay now matches the GAMS bus/node values within
+`7.8e-14 NZD/MWh` while matching the fixed-RMIP objective within `2.4e-11
+NZD`. See
+[`wpt1101-zero-flow-price.md`](wpt1101-zero-flow-price.md). The full-day bundle
+has not yet been regenerated, so the rolling `TP35` publication remains an
+open refreshed-evidence item rather than being inferred from the targeted
+run.
+
 The branch identity failures exposed a candidate reporting omission. Two of
 the missing rows per case are nonzero HVDC links (`BEN_HAY1.1` and
 `BEN_HAY2.1`); the report renderer exported `branch_flow` but not the separately

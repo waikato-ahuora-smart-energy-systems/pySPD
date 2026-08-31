@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
@@ -102,6 +103,93 @@ class NetworkPrices:
 class NetworkPricingEngine(PricingEngine):
     supported_formulations = _SUPPORTED
 
+    @staticmethod
+    def _canonical_zero_flow_leaf_prices(
+        built_model: BuiltModel,
+        case: NetworkCase,
+        prices: dict[Key, float],
+        *,
+        tolerance: float = 1e-9,
+    ) -> None:
+        """Select vSPD's +load derivative at a zero-flow loss kink.
+
+        A zero-injection leaf on a lossy branch has two valid LP duals: the
+        derivative for an incremental export and the derivative for an
+        incremental load.  GAMS/HiGHS reports the latter.  HighsPy can select
+        the former from the same optimal face, so normalize that otherwise
+        solver-order-dependent dual to the exact one-sided load sensitivity.
+        """
+
+        network = case.network
+        assert network is not None
+        incident: dict[Key, list[Key]] = defaultdict(list)
+        for branch in network.ac_branches:
+            for key in network.branch_bus_connect:
+                if key[:3] == branch:
+                    incident[(*branch[:2], key[3])].append(branch)
+
+        branch_flow = built_model.artifacts["branch_flow"]
+        directed_flow = built_model.artifacts["directed_branch_flow"]
+        receiving_share = network.receiving_end_loss_proportion
+        for leaf, branches in sorted(incident.items()):
+            if len(branches) != 1:
+                continue
+            if network.bus_electrical_island.get(leaf, 0.0) == 0.0:
+                continue
+            leaf_nodes = {
+                (*leaf[:2], key[2])
+                for key in network.node_bus
+                if (*key[:2], key[3]) == leaf
+            }
+            if any(
+                abs(network.node_load.get(node, 0.0)) > tolerance
+                for node in leaf_nodes
+            ) or any(
+                (*key[:2], key[3]) in leaf_nodes
+                for key in (*network.offer_node, *network.bid_node)
+            ):
+                continue
+            branch = branches[0]
+            if abs(float(pyo.value(branch_flow[branch]))) > tolerance:
+                continue
+            if any(
+                abs(float(pyo.value(directed_flow[*branch, direction])))
+                > tolerance
+                for direction in ("forward", "backward")
+            ):
+                continue
+
+            from_bus = next(
+                key[3] for key in network.branch_from_bus if key[:3] == branch
+            )
+            to_bus = next(
+                key[3] for key in network.branch_to_bus if key[:3] == branch
+            )
+            if leaf[2] == to_bus:
+                parent = (*branch[:2], from_bus)
+                inward_direction = "forward"
+            elif leaf[2] == from_bus:
+                parent = (*branch[:2], to_bus)
+                inward_direction = "backward"
+            else:  # pragma: no cover - guarded by the network-data contract
+                continue
+            factors = [
+                factor
+                for key, factor in network.ac_loss_segment_factor.items()
+                if key[:3] == branch and key[4] == inward_direction
+            ]
+            if not factors:
+                continue
+            first_factor = min(factors)
+            if first_factor <= 0.0:
+                continue
+            denominator = 1.0 - receiving_share * first_factor
+            if denominator <= 0.0:
+                raise ValueError("AC loss factor makes incremental delivery invalid")
+            prices[leaf] = prices[parent] * (
+                1.0 + (1.0 - receiving_share) * first_factor
+            ) / denominator
+
     def price(self, built_model: BuiltModel, solve_result: SolveResult) -> NetworkPrices:
         if not solve_result.solution_loaded:
             raise ValueError("pricing requires an optimal loaded LP solution")
@@ -113,6 +201,7 @@ class NetworkPricingEngine(PricingEngine):
             tuple(index): float(built_model.model.dual[constraints[index]])
             for index in constraints
         }
+        self._canonical_zero_flow_leaf_prices(built_model, case, raw)
         # In ACnodeNetInjectionDefinition2, required load appears with a
         # negative coefficient on the right-hand side.  The equality marginal
         # therefore already has the positive market-price sign used by vSPD.
