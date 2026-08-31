@@ -17,7 +17,7 @@ from tools.gate12.report_crosswalk import (
     ReportSchemaCrosswalkValidator,
 )
 
-REPORT_ROW_PARITY_PROFILE = "authority-pyspd-mapped-report-row-parity-v1"
+REPORT_ROW_PARITY_PROFILE = "authority-pyspd-mapped-report-row-parity-v2"
 _MAX_EXAMPLES = 20
 
 
@@ -45,6 +45,9 @@ class _Projection:
     reference_value: str
     candidate_value: str
     candidate_filter: tuple[str, str] | None = None
+    candidate_filter_prefix: tuple[str, str] | None = None
+    candidate_support_fields: tuple[str, ...] = ()
+    candidate_value_resolver: Callable[[dict[str, str]], str] | None = None
     candidate_identity_normalizer: Callable[[str], str] = _identity
 
 
@@ -58,6 +61,9 @@ def _projection(
     candidate_value: str,
     *,
     candidate_filter: tuple[str, str] | None = None,
+    candidate_filter_prefix: tuple[str, str] | None = None,
+    candidate_support_fields: tuple[str, ...] = (),
+    candidate_value_resolver: Callable[[dict[str, str]], str] | None = None,
     candidate_identity_normalizer: Callable[[str], str] = _identity,
 ) -> _Projection:
     return _Projection(
@@ -69,8 +75,39 @@ def _projection(
         reference_value,
         candidate_value,
         candidate_filter,
+        candidate_filter_prefix,
+        candidate_support_fields,
+        candidate_value_resolver,
         candidate_identity_normalizer,
     )
+
+
+def _active_bound(row: dict[str, str]) -> str:
+    lower = row.get("lower", "")
+    upper = row.get("upper", "")
+    if lower and upper:
+        if Decimal(lower) != Decimal(upper):
+            raise EvidenceContractError(
+                "REQ-G12-REPORT-ROW: ranged constraint has no single RHS"
+            )
+        return lower
+    if lower:
+        return lower
+    if upper:
+        return upper
+    raise EvidenceContractError("REQ-G12-REPORT-ROW: constraint has no finite RHS")
+
+
+def _constraint_sense(row: dict[str, str]) -> str:
+    lower = bool(row.get("lower", ""))
+    upper = bool(row.get("upper", ""))
+    if lower and upper:
+        return "0"
+    if lower:
+        return "1"
+    if upper:
+        return "-1"
+    raise EvidenceContractError("REQ-G12-REPORT-ROW: constraint has no finite sense")
 
 
 _CASE_TIME = ("CaseID", "DateTime")
@@ -84,6 +121,52 @@ _PROJECTIONS = (
         (*_CASE_TIME_CANDIDATE, "bid"),
         "Cleared Bid (MW)",
         "purchase_mw",
+    ),
+    _projection(
+        "BrConstraintResults_TP",
+        "constraint",
+        "branch-constraint-lhs",
+        (*_CASE_TIME, "BranchConstraint"),
+        (*_CASE_TIME_CANDIDATE, "index"),
+        "LHS (MW)",
+        "body",
+        candidate_filter_prefix=(
+            "constraint",
+            "NetworkSecurity.BranchSecurityConstraint",
+        ),
+        candidate_identity_normalizer=_pipe_tail,
+    ),
+    _projection(
+        "BrConstraintResults_TP",
+        "constraint",
+        "branch-constraint-rhs",
+        (*_CASE_TIME, "BranchConstraint"),
+        (*_CASE_TIME_CANDIDATE, "index"),
+        "RHS (MW)",
+        "lower",
+        candidate_filter_prefix=(
+            "constraint",
+            "NetworkSecurity.BranchSecurityConstraint",
+        ),
+        candidate_support_fields=("upper",),
+        candidate_value_resolver=_active_bound,
+        candidate_identity_normalizer=_pipe_tail,
+    ),
+    _projection(
+        "BrConstraintResults_TP",
+        "constraint",
+        "branch-constraint-sense",
+        (*_CASE_TIME, "BranchConstraint"),
+        (*_CASE_TIME_CANDIDATE, "index"),
+        "Sense (-1:<=, 0:=, 1:>=)",
+        "lower",
+        candidate_filter_prefix=(
+            "constraint",
+            "NetworkSecurity.BranchSecurityConstraint",
+        ),
+        candidate_support_fields=("upper",),
+        candidate_value_resolver=_constraint_sense,
+        candidate_identity_normalizer=_pipe_tail,
     ),
     _projection(
         "BranchResults_TP",
@@ -123,6 +206,52 @@ _PROJECTIONS = (
         "SIR Price ($/MWh)",
         "price_nzd_per_mwh",
         candidate_filter=("reserve_class", "SIR"),
+    ),
+    _projection(
+        "MNodeConstraintResults_TP",
+        "constraint",
+        "market-node-constraint-lhs",
+        (*_CASE_TIME, "MNodeConstraint"),
+        (*_CASE_TIME_CANDIDATE, "index"),
+        "LHS (MW)",
+        "body",
+        candidate_filter_prefix=(
+            "constraint",
+            "NetworkSecurity.MNodeSecurityConstraint",
+        ),
+        candidate_identity_normalizer=_pipe_tail,
+    ),
+    _projection(
+        "MNodeConstraintResults_TP",
+        "constraint",
+        "market-node-constraint-rhs",
+        (*_CASE_TIME, "MNodeConstraint"),
+        (*_CASE_TIME_CANDIDATE, "index"),
+        "RHS (MW)",
+        "lower",
+        candidate_filter_prefix=(
+            "constraint",
+            "NetworkSecurity.MNodeSecurityConstraint",
+        ),
+        candidate_support_fields=("upper",),
+        candidate_value_resolver=_active_bound,
+        candidate_identity_normalizer=_pipe_tail,
+    ),
+    _projection(
+        "MNodeConstraintResults_TP",
+        "constraint",
+        "market-node-constraint-sense",
+        (*_CASE_TIME, "MNodeConstraint"),
+        (*_CASE_TIME_CANDIDATE, "index"),
+        "Sense (-1:<=, 0:=, 1:>=)",
+        "lower",
+        candidate_filter_prefix=(
+            "constraint",
+            "NetworkSecurity.MNodeSecurityConstraint",
+        ),
+        candidate_support_fields=("upper",),
+        candidate_value_resolver=_constraint_sense,
+        candidate_identity_normalizer=_pipe_tail,
     ),
     _projection(
         "NodeResults_TP",
@@ -359,9 +488,12 @@ class ReportRowParityValidator:
     @staticmethod
     def _admitted(projection: _Projection, mappings: dict[str, Any]) -> bool:
         value_mapping = mappings.get(projection.reference_value)
-        if (
-            value_mapping is None
-            or projection.candidate_value not in value_mapping.candidate_fields
+        required_value_fields = {
+            projection.candidate_value,
+            *projection.candidate_support_fields,
+        }
+        if value_mapping is None or not required_value_fields.issubset(
+            value_mapping.candidate_fields
         ):
             return False
         for reference_field, candidate_field in zip(
@@ -461,9 +593,17 @@ class ReportRowParityValidator:
                 filter_field, filter_value = projection.candidate_filter
                 if row.get(filter_field) != filter_value:
                     continue
+            if not reference and projection.candidate_filter_prefix is not None:
+                filter_field, filter_prefix = projection.candidate_filter_prefix
+                if not row.get(filter_field, "").startswith(filter_prefix):
+                    continue
             try:
                 identity = tuple(row[field] for field in fields)
-                value = row[value_field]
+                value = (
+                    projection.candidate_value_resolver(row)
+                    if not reference and projection.candidate_value_resolver is not None
+                    else row[value_field]
+                )
             except KeyError as error:
                 raise EvidenceContractError(
                     "REQ-G12-REPORT-ROW: projected row field is unavailable"

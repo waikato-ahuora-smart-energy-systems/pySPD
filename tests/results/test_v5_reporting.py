@@ -100,7 +100,7 @@ def test_formulation_registry_rejects_unknown_or_duplicate_profiles() -> None:
         raise AssertionError("unknown report profile was accepted")
 
 
-def test_model_rows_include_ac_and_hvdc_branch_flows() -> None:
+def test_model_rows_use_fixed_pricing_state_and_complete_branch_domain() -> None:
     model = pyo.ConcreteModel()
     model.ac_flow = pyo.Var([("case", "time", "AC.1")], initialize=12.5)
     model.hvdc_flow = pyo.Var([("case", "time", "HVDC.1")], initialize=25.0)
@@ -120,6 +120,12 @@ def test_model_rows_include_ac_and_hvdc_branch_flows() -> None:
             }
         ),
     )
+    raw_model = pyo.ConcreteModel()
+    raw_model.ac_flow = pyo.Var([("case", "time", "AC.1")], initialize=999.0)
+    raw_primary = SimpleNamespace(
+        model=raw_model,
+        artifacts=SimpleNamespace(values={"branch_flow": raw_model.ac_flow}),
+    )
     rows: dict[str, list[dict[str, str]]] = {
         "bid": [],
         "risk": [],
@@ -129,7 +135,7 @@ def test_model_rows_include_ac_and_hvdc_branch_flows() -> None:
 
     reporting._model_rows(
         rows,
-        SimpleNamespace(primary_model=primary),
+        SimpleNamespace(primary_model=raw_primary, pricing_model=primary),
         {"case_id": "case", "date_time": "time"},
     )
 

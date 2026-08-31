@@ -237,3 +237,69 @@ def test_row_runner_rejects_tampered_schema_crosswalk(tmp_path: Path) -> None:
 
     with pytest.raises(EvidenceContractError, match="hash/profile mismatch"):
         ReportRowParityRunner._load_crosswalk(path)
+
+
+def test_constraint_rows_derive_rhs_and_sense_from_pyomo_bounds() -> None:
+    reference = _json(
+        {
+            "prefix_BrConstraintResults_TP": {
+                "fields": [
+                    "CaseID",
+                    "DateTime",
+                    "BranchConstraint",
+                    "LHS (MW)",
+                    "Sense (-1:<=, 0:=, 1:>=)",
+                    "RHS (MW)",
+                ],
+                "rows": [
+                    {
+                        "CaseID": "case",
+                        "DateTime": "time",
+                        "BranchConstraint": "LIMIT",
+                        "LHS (MW)": "10.00000",
+                        "Sense (-1:<=, 0:=, 1:>=)": "-1.00000",
+                        "RHS (MW)": "20.00000",
+                    }
+                ],
+            }
+        }
+    )
+    candidate = _json(
+        {
+            "constraint": {
+                "field_order": [
+                    "case_id",
+                    "date_time",
+                    "constraint",
+                    "index",
+                    "body",
+                    "lower",
+                    "upper",
+                ],
+                "fields": [],
+                "rows": [
+                    {
+                        "case_id": "case",
+                        "date_time": "time",
+                        "constraint": "NetworkSecurity.BranchSecurityConstraintLE",
+                        "index": "case|time|LIMIT",
+                        "body": "10.000004",
+                        "lower": "",
+                        "upper": "20",
+                    }
+                ],
+            }
+        }
+    )
+
+    result = ReportRowParityValidator().compare(
+        case_id="case", reference=reference, candidate=candidate
+    )
+
+    assert result.passed
+    assert result.tables[0].compared_value_count == 3
+    assert result.tables[0].observables == (
+        "branch-constraint-lhs",
+        "branch-constraint-rhs",
+        "branch-constraint-sense",
+    )

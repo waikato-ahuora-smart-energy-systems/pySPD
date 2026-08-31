@@ -539,10 +539,12 @@ def _component_values(component: Any) -> list[tuple[str, float]]:
 def _model_rows(
     rows: dict[str, list[dict[str, str]]], solve_payload: Any, base: Mapping[str, str]
 ) -> None:
-    primary = getattr(solve_payload, "primary_model", None)
-    if primary is None:
+    solved = getattr(solve_payload, "pricing_model", None)
+    if solved is None:
+        solved = getattr(solve_payload, "primary_model", None)
+    if solved is None:
         return
-    artifacts = primary.artifacts.values
+    artifacts = solved.artifacts.values
     for artifact, report, identity, quantity in (
         ("purchase", "bid", "bid", "purchase_mw"),
         ("island_risk", "risk", "risk", "quantity_mw"),
@@ -560,7 +562,7 @@ def _model_rows(
         identity = "|".join(str(part) for part in branch)
         if identity not in reported_branch_identities:
             rows["branch"].append({**base, "branch": identity, "flow_mw": "0"})
-    for component in primary.model.component_objects(
+    for component in solved.model.component_objects(
         pyo.Constraint, active=True, descend_into=True
     ):
         for index in component:

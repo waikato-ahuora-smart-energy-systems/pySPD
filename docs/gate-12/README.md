@@ -490,6 +490,15 @@ its scarcity-limit-by-price constant to the summary value even though that
 constant is omitted from the solved objective, and the current PySPD summary
 has no equivalent derived field.
 
+The expanded `authority-pyspd-mapped-report-row-parity-v2` projector also
+reconstructs branch and market-node constraint RHS/sense from Pyomo lower and
+upper bounds. On the old bundle, all 348 constraint observables have exact
+identity coverage and 20 LHS values expose the same raw-SCIP versus fixed-RMIP
+report-state issue. Report extraction now explicitly prefers `pricing_model`
+and falls back to `primary_model` only for profiles without a separate pricing
+model. The replacement replay will determine the fixed-state row result; the
+old v1 evidence remains unchanged.
+
 Create case-specific bus-dual evidence from the independently loaded GDX
 allocation matrix with:
 

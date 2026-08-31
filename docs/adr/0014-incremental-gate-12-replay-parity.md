@@ -114,8 +114,8 @@ accepted load, dispatch, objective, and prices.
   until identity-strict row projection also proves cardinality, units,
   precision, and values. Unknown, duplicate, missing, candidate-only, and
   unsupported schema material remains fail-closed.
-- The mapped-row processor uses the separately named
-  `authority-pyspd-mapped-report-row-parity-v1` profile. It accepts only field
+- The mapped-row processor uses the separately named and versioned
+  `authority-pyspd-mapped-report-row-parity-v2` profile. It accepts only field
   mappings reproduced exactly from a hash-verified crosswalk, compares
   identity sets without sparse-zero filling, and applies half of each
   Authority field's displayed unit as the numeric report threshold. Missing,
