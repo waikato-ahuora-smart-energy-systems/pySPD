@@ -34,9 +34,8 @@ Use a separately named population-discovery profile with all of these rules:
 2. set `dailymode = 0` only for identity discovery so the pinned RTD load is
    recomputed;
 3. select only canonical RTD modes 101 and 201 in GDX order;
-4. solve the first historical shortfall decision with SCIP, require an
-   optimal result, and load the hash-bound `scip.opt` numerical profile with
-   `emphasis: numerics` and `numerics/feastol = 1e-10`;
+4. solve the first historical shortfall decision with SCIP and require an
+   optimal result;
 5. leave the historical `EnergyShortfallMW > 0` branch unchanged;
 6. emit evidence only after `ShortfallTransferFromTo` selects an actual target
    and only when source shortfall exceeds `1e-6 MW`;
@@ -60,17 +59,17 @@ prefix.
   omitted.
 - Enumeration remains compute-intensive and resumable across the 139
   hash-bound inputs.
-- The stricter SCIP feasibility tolerance is an accuracy requirement, not an
-  acceptance relaxation. It was introduced after the default `1e-6` profile
-  repeatedly reported an optimum whose unscaled `OAM_T1.T1` branch-block row
-  violated the original GAMS model by `0.00034560206410994 MW`, leaving GAMS
-  indefinitely in post-solve processing on 2022-11-24 23:00.
-- A calibration run at `1e-9` reduced a separate original-model residual to
-  `1.21887253409279e-7`, but GAMS still rejected it. The governed setting is
-  therefore one further decade tighter at `1e-10`.
-- Checkpoints from the default-tolerance predecessor profile remain forensic
-  evidence only. They bind a different patch hash and cannot be imported into
-  or relabelled as strict-profile checkpoints.
+- Five completed default-profile checkpoints remain valid for their exact
+  dates. The next date, 2022-11-24, exposed a reproducible SCIP optimum whose
+  unscaled `OAM_T1.T1` branch-block row violated the original GAMS model by
+  `0.00034560206410994 MW`, leaving GAMS indefinitely in post-solve processing.
+- Global `numerics/feastol` trials at `1e-9` and `1e-10` are rejected as the
+  population profile. Both still produced GAMS-rejected original-model
+  residuals (about `1.22e-7` and `1.26e-7` respectively), and the latter made
+  population execution impractically slow. Their workspaces are calibration
+  evidence only and produced no accepted checkpoints.
+- Recovery for 2022-11-24 must be narrowly targeted and separately
+  hash-addressed; it cannot relabel or alter the five completed checkpoints.
 - Gate 12 remains open until the resulting manifest contains exactly 546 cases
   and all separate E2E criteria pass.
 
@@ -91,8 +90,6 @@ prefix.
 - Probity tests require exact source patch points and reject schema drift,
   missing target nodes, EPS-scale records, later-loop records, non-optimal
   solves, noncanonical order, source/hash drift, and population overrun.
-- Probity tests also require all three pinned model solves to retain option-file
-  loading and require the exact `scip.opt` contents and hash in patch evidence.
 - `historical-exact-positive-invalidation.json` binds the three-date overrun
   that rejected the predecessor selector.
 - The canonical 2022-11-06 qualification must reproduce the four cases already

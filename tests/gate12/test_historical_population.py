@@ -177,8 +177,7 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
     result = patcher.apply(programs)
 
     assert result.profile == (
-        "historical-v5.0.2-dailymode0-scip-feastol1e-10-"
-        "first-loop-material-transfer"
+        "historical-v5.0.2-dailymode0-scip-first-loop-material-transfer"
     )
     assert len(result.logical_sha256) == 64
     settings = (programs / "vSPDsettings.inc").read_text()
@@ -186,13 +185,8 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
     assert "Scalar dailymode                         / 0 / ;" in settings
     assert "option lp = HiGHS ;" in solve
     assert "option mip = SCIP ;" in solve
-    assert solve.count(".Optfile = 1 ;") == 3
-    assert (programs / "scip.opt").read_text() == (
-        "emphasis: numerics\n"
-        "numerics/feastol = 1e-10\n"
-    )
+    assert solve.count(".Optfile = 0 ;") == 3
     assert set(result.file_sha256) == {
-        "scip.opt",
         "vSPDperiod.gms",
         "vSPDsettings.inc",
         "vSPDsolve.gms",
