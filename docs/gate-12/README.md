@@ -278,6 +278,14 @@ node, offer, bus, branch, and flow maps once per case; the formerly failing
 historical case completes end to end in 65.69 seconds on the qualification
 host with the indexed path.
 
+The first paired daily comparison then exposed a mode-boundary defect: PySPD
+was applying RTD required-load reconstruction in daily mode, while pinned
+`vSPDsolve.gms` applies that calculation only when `dailymode = 0`. This caused
+four false PySPD shortfall transfers and second solves on 2022-11-06. Daily
+preparation now retains source demand, matching the pinned control flow; the
+non-daily reconstruction remains enabled for population discovery and its
+direct qualification tests.
+
 Materialize the independent pinned-GAMS bundles with the same discovery feed:
 
 ```bash

@@ -150,7 +150,9 @@ class DailyCasePreparer:
             raise OrchestrationError("case data does not match selected case")
         settings = PreprocessingSettings(
             daily_mode=daily_mode,
-            apply_rtd_load_reconstruction=True,
+            # vSPDsolve.gms performs the RTD required-load calculation only
+            # when dailymode = 0.  Daily replay must retain source demand.
+            apply_rtd_load_reconstruction=not daily_mode,
         )
         if formulation_id == RESERVE_FORMULATION_ID:
             if case_data.formulation_id != _BASE_FORMULATION:

@@ -5,6 +5,7 @@ from dataclasses import replace
 from pyspd.contracts import CaseData
 from pyspd.data import RawRecord, RawSymbol, RawSymbols, ScalarValue, SymbolType
 from pyspd.orchestration import (
+    DailyCasePreparer,
     DailyCaseSelector,
     OverrideApplier,
     OverrideFamily,
@@ -33,6 +34,26 @@ def _with_publication(case: CaseData, seconds: float = 300.0) -> CaseData:
         (*case.symbols.symbols, symbol),
     )
     return replace(case, symbols=symbols)
+
+
+def _with_empty_node_transfer(case: CaseData) -> CaseData:
+    symbol = RawSymbol(
+        "i_dateTimeNodetoNode",
+        SymbolType.SET,
+        4,
+        ("ca", "dt", "n", "n1"),
+        "node transfer map",
+        ((), (), (), ()),
+        (),
+    )
+    return replace(
+        case,
+        symbols=RawSymbols(
+            case.symbols.source_name,
+            case.symbols.source_sha256,
+            (*case.symbols.symbols, symbol),
+        ),
+    )
 
 
 def test_daily_selector_preserves_source_order_and_filters_zero_duration() -> None:
@@ -72,6 +93,22 @@ def test_case_selector_isolates_every_case_scoped_symbol() -> None:
         if symbol.domains and symbol.domains[0] == "ca"
         for record in symbol.records
     )
+
+
+def test_daily_preparer_keeps_source_demand_for_rtd_daily_mode() -> None:
+    case = _with_empty_node_transfer(_with_publication(make_case()))
+    selector = DailyCaseSelector()
+    selected = selector.select(case.symbols)[0]
+
+    prepared = DailyCasePreparer().prepare(
+        selector.case_data(case.symbols, selected),
+        selected,
+        daily_mode=True,
+    )
+
+    # Pinned vSPD guards its RTD load reconstruction with dailymode = 0.
+    assert prepared.required_load[("C1", "D1", "N1")] == 25.0
+    assert prepared.required_load[("C1", "D1", "N2")] == 0.0
 
 
 def test_all_override_families_apply_and_are_audited() -> None:

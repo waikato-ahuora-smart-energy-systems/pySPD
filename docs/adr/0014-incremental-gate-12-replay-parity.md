@@ -64,6 +64,15 @@ over-constraining the RMIP. The independent objective validator retains the
 absolute residual as evidence and applies the declared tolerance to both
 absolute and scale-relative objective agreement.
 
+The preprocessing mode is also part of the replay contract. Pinned
+`vSPDsolve.gms` guards RTD required-load reconstruction with `dailymode = 0`.
+Consequently, canonical daily replay retains the source demand and does not run
+the non-daily RTD reconstruction before the first solve. The shortfall loop may
+still transfer load and re-solve when the daily solve itself exposes an eligible
+shortfall. This distinction is covered by Probity TDD because applying the
+non-daily reconstruction in PySPD created false daily transfers and changed
+accepted load, objective, and prices.
+
 ## Consequences
 
 - Replay defects become visible on the first completed date instead of after
