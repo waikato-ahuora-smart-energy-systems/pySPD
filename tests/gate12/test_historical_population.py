@@ -86,6 +86,40 @@ def test_material_transfer_population_method_is_hash_bound_and_qualified() -> No
     assert all(len(value) == 64 for value in evidence["artifact_sha256"].values())
 
 
+def test_targeted_recovery_checkpoint_is_exact_hash_bound_and_nonpopulation() -> None:
+    root = Path(__file__).resolve().parents[2]
+    evidence = json.loads(
+        (root / "docs/gate-12/historical-targeted-recovery-20221124.json").read_text()
+    )
+
+    assert evidence["classification"] == (
+        "qualifying-targeted-historical-shard-checkpoint"
+    )
+    assert evidence["selected_case_count"] == evidence["solved_case_count"] == 261
+    assert evidence["all_solves_optimal"] is True
+    assert evidence["affected_identity_count"] == len(evidence["identities"]) == 2
+    assert {item["case_id"] for item in evidence["identities"]} == {
+        "241012022111000704",
+        "241012022111005708",
+    }
+    assert all(
+        item["node"] == "ABY0111" and item["target_node"] == "TIM1101"
+        for item in evidence["identities"]
+    )
+    assert evidence["shard_complete"] is True
+    assert evidence["population_passed"] is False
+    hashes = (
+        evidence["patch_logical_sha256"],
+        evidence["patch_metadata_file_sha256"],
+        evidence["checkpoint_logical_sha256"],
+        evidence["checkpoint_file_sha256"],
+        evidence["population_summary_file_sha256"],
+        *evidence["patch_file_sha256"].values(),
+        *evidence["artifact_sha256"].values(),
+    )
+    assert all(len(value) == 64 for value in hashes)
+
+
 def test_historical_shortfall_evidence_accepts_optimal_material_transfer_rows() -> None:
     text = HEADER + (
         "51012022111800831|06-NOV-2022 07:00|WAI0111|WAI0501|1|4.5969|4.5971|1|1\n"
@@ -234,16 +268,25 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
     material_case = "241012022111005708"
     guarded = HistoricalTargetedScipPatcher(
         target,
-        "1e-12",
-        material_case,
+        "1e-10",
+        (target, material_case),
         True,
+        "1e-4",
     ).apply(guarded_programs)
     guarded_solve = (guarded_programs / "vSPDsolve.gms").read_text()
     assert guarded.profile.endswith(
-        f"target-{target}-feastol1e-12-material-only-{material_case}-threshold1e-6"
+        f"target-{target}-feastol1e-10-checkfeastolfac1e-4-"
+        f"material-only-{target}_{material_case}-threshold1e-6"
         "-residue-only-threshold1e-6"
     )
-    assert guarded_solve.count(f"if(sameas(ca,'{material_case}'),") == 1
+    assert (
+        f"if(sameas(ca,'{target}') or sameas(ca,'{material_case}'),"
+        in guarded_solve
+    )
+    assert (guarded_programs / "scip.opt").read_text() == (
+        "numerics/feastol = 1e-10\n"
+        "numerics/checkfeastolfac = 1e-4\n"
+    )
     assert (
         "$ (abs(EnergyShortfallMW(t,n)) <= 0.000001) = 0;" in guarded_solve
     )
@@ -263,7 +306,17 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
         HistoricalTargetedScipPatcher(target, "1e-18")
 
     with pytest.raises(EvidenceContractError, match="material-only.*numeric"):
-        HistoricalTargetedScipPatcher(target, material_only_case_id="bad-case")
+        HistoricalTargetedScipPatcher(
+            target, material_only_case_ids=("bad-case",)
+        )
+
+    with pytest.raises(EvidenceContractError, match="must be unique"):
+        HistoricalTargetedScipPatcher(
+            target, material_only_case_ids=(material_case, material_case)
+        )
+
+    with pytest.raises(EvidenceContractError, match="checkfeastolfac must be in"):
+        HistoricalTargetedScipPatcher(target, checkfeastolfac="0")
 
     with pytest.raises(EvidenceContractError, match="source drift"):
         patcher.apply(programs)

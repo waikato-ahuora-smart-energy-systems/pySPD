@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "status": "candidate-complete-reference-pending",
+  "status": "candidate-and-reference-compared-accepted-evidence-boundary",
   "trading_date": "20221106",
-  "runtime_source_commit": "3799b80f661db91bb2c5363fc8ca7de36b014911",
+  "runtime_source_commit": "12ba3e8a7aab91ca392d46423b76e875b645d522",
   "engine_profile": "pyspd-v5-portable-scip-mip-fixed-highs-rmip-v1",
-  "execution_source_sha256": "7c5d71af57be4afa0daeaabaa9994636c0e5fd6d00645374298335eca7732607",
+  "execution_source_sha256": "6493941fa599d984ae1bf4e4eec1a3a0c63a4670260995ceb695bc360c86f574",
   "source_gdx_sha256": "282ac2abeaa2f0c7c6e26b967e2ba90289c0ba5a9e696b99069d11350d3037b8",
   "discovery_checkpoint_logical_sha256": "a9b5a3b692b3163710851c824021c5d90edc96fe73fe76471e96e123dbdc14d2",
   "work_item_sha256": "660f0e53a089fde3226618e5dd6f7c6effd15453891301f17022e532faaca6de",
@@ -19,16 +19,16 @@
   "surface_count_per_case": 12,
   "surface_file_count": 48,
   "bundle": {
-    "logical_sha256": "e577d8f3e07614e560ac5291fa89965369aaf8a84d9f3dda3e381c0a91aca131",
-    "manifest_file_sha256": "45bf295673b8c6ea37dde068dfc5fc657a351adb682b8a254b1c4ed69693b361",
-    "directory_size_kib": 83404
+    "logical_sha256": "d2501a55e7def658e09eb466d4e5e28457d15208a5835138d1af4ba4213db69e",
+    "manifest_file_sha256": "aa329c4fc4bfe97fb5c3d6e816f5bc226c031cc6b544b8e9920442f70e5a12ee",
+    "directory_size_kib": 44308
   },
   "streaming_checkpoint": {
     "schema_version": 2,
     "next_case_ordinal": 196,
     "last_completed_case_id": "61012022110425024",
-    "logical_sha256": "f4857c57298cfc272ab56c27d7f976055ddd2ccc92cb5b01435f4977be21582d",
-    "file_sha256": "663c4ceb767064f965b2f8a3a3cf3a64dc38e01be22f2f9a4c53a6a8d6e8503d"
+    "logical_sha256": "26b942dceb2a40642612ef4c3e6d2d193f049339ad0a9f2db288b54522e1fdfb",
+    "file_sha256": "65476df63591c187d5b5a10c0d69ab8a4f74601e39a2a5de605a6b479b8e1c0c"
   },
   "verification": {
     "canonical_bundle_store_load": "passed",
@@ -38,7 +38,10 @@
     "bundle_execution_matches_current_source": true
   },
   "reference_parity": {
-    "status": "pending",
-    "reason": "The independent historical population enumeration still owns the single GAMS network-licence node."
+    "status": "compared-failed-accepted-evidence-boundary",
+    "reference_bundle_sha256": "a12456cf42be4eca390082dc7ea7b65d4ecbcc233a703f456068e9f85605d77d",
+    "semantic_logical_sha256": "b65260efdd40391242f0a914035b140b1b9cf7d561b6270d91139c95b8ad7204",
+    "report_row_logical_sha256": "df60420cfa7dda2539e9271cf7e0b20fb18196e29248f4de83815869c284ba40",
+    "reason": "Ten semantic leaves remain unresolved; mapped report rows have four above-precision values and two unimplemented tables per case."
   }
 }

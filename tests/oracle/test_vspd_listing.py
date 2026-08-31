@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 import pytest
@@ -133,6 +134,26 @@ def test_profile_match_rejects_wrong_pricing_solver() -> None:
 def test_parser_rejects_listing_without_solution_reports() -> None:
     with pytest.raises(ListingParseError, match="no GAMS solution reports"):
         VspdListingParser().parse_text("normal completion without a solve")
+
+
+def test_parser_keeps_no_solution_report_separate_from_following_solve() -> None:
+    failed = LISTING.split("Solution Report", maxsplit=1)[1]
+    failed = "Solution Report" + failed.split("Solution Report", maxsplit=1)[0]
+    failed = failed.replace(
+        "**** SOLVER STATUS     1 Normal Completion",
+        "**** SOLVER STATUS     10 Solver Failure",
+    ).replace(
+        "**** MODEL STATUS      1 Optimal",
+        "**** MODEL STATUS      13 Error No Solution",
+    ).replace("**** OBJECTIVE VALUE         100.0000", "**** OBJECTIVE VALUE NA")
+
+    result = VspdListingParser().parse_text(failed + LISTING)
+
+    assert len(result.records) == 6
+    assert result.records[0].solver_status_code == 10
+    assert result.records[0].model_status_code == 13
+    assert math.isnan(result.records[0].objective)
+    assert result.records[1].objective == pytest.approx(100.0)
 
 
 def test_baseline_comparison_reports_worst_delta(tmp_path: Path) -> None:

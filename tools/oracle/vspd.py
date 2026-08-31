@@ -437,7 +437,7 @@ class VspdListingParser:
         r"(?P<solver_status>[^\n]+).*?"
         r"\*\*\*\* MODEL STATUS\s+(?P<model_code>\d+)\s+"
         r"(?P<model_status>[^\n]+).*?"
-        r"\*\*\*\* OBJECTIVE VALUE\s+(?P<objective>[-+0-9.Ee]+)",
+        r"\*\*\*\* OBJECTIVE VALUE\s+(?P<objective>NA|[-+0-9.Ee]+)",
         re.DOTALL,
     )
     _resource_usage = re.compile(r"RESOURCE USAGE, LIMIT\s+(?P<seconds>[-+0-9.Ee]+)")
@@ -468,7 +468,11 @@ class VspdListingParser:
                     solver_status=report.group("solver_status").strip(),
                     model_status_code=int(report.group("model_code")),
                     model_status=report.group("model_status").strip(),
-                    objective=float(report.group("objective")),
+                    objective=(
+                        float(report.group("objective"))
+                        if report.group("objective") != "NA"
+                        else math.nan
+                    ),
                     resource_usage_seconds=(
                         float(resource.group("seconds"))
                         if resource is not None

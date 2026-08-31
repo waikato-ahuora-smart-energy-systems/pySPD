@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "classification": "qualifying-targeted-historical-shard-checkpoint",
+  "trading_date": "20221124",
+  "reference_commit": "3360a91ebd48f2e3cbb52a5e6766d893011054be",
+  "source_sha256": "37f5e7a62a58df0b427d5205377f435d8fb16fa1d15a44c6c608d5a84adce7c9",
+  "execution_scope": "shard",
+  "execution_profile": "historical-v5.0.2-dailymode0-scip-solvelink5-first-loop-rtd-only-canonical-order-material-transfer",
+  "patch_profile": "historical-v5.0.2-dailymode0-scip-first-loop-material-transfer-target-241012022111000704-feastol1e-10-checkfeastolfac1e-4-material-only-241012022111000704_241012022111005708-threshold1e-6-residue-only-threshold1e-6",
+  "patch_logical_sha256": "3e0aa3a3ca8488392e19a4bfab00a338433edd07370a29748ee787d8593946e5",
+  "patch_metadata_file_sha256": "49622ab3c21f0e5e6826999632de06313d59d6ee2c1351f99d8e93aa3b5002f2",
+  "patch_file_sha256": {
+    "scip.opt": "98ecbe6c008211382514aca276f957bd29b913098d578f98614b22a26c468664",
+    "vSPDperiod.gms": "89dc70d3b794e27aac1d96680c4bbd26eb418f169e8bba6494077f3412bb7db4",
+    "vSPDsettings.inc": "fcf4b90c1ba75abe6dbf7c7327da9ef491bc8b05f5ee7880dd28d695791198e2",
+    "vSPDsolve.gms": "41935f98ba969066f3dd4b6a7e5688b54eff22a632db815fb7b4eccfe370396e"
+  },
+  "selected_case_count": 261,
+  "solved_case_count": 261,
+  "all_solves_optimal": true,
+  "checkpoint_logical_sha256": "fa975ac86c2e32a8bde72d904fb8b0d016ebe7811cb67795d7dd1dc939c323ed",
+  "checkpoint_file_sha256": "24cc714c46bf003d252f7eb5fd937f31d3741d27136b1a449fde4a372f8521fa",
+  "population_summary_file_sha256": "27d7fa314562b805628f8e8dbc6f7521a86b5269fcbd421ea10add3c430e5f14",
+  "artifact_sha256": {
+    "evidence": "73f0538bfa9c53ecf0d6337e2ff64e26f6050f81a79c173884875983b495c574",
+    "listing": "bd847907e515c339c84f7e6af5ce562005bbb8e3c8c019ddb44c689c569c4dee",
+    "progress": "b4f5a2777bb6773f6acfaaaa2fa77b6b431c505899582872cdf5306c73caafe8"
+  },
+  "affected_identity_count": 2,
+  "identities": [
+    {
+      "case_id": "241012022111000704",
+      "date_time": "24-NOV-2022 23:00",
+      "node": "ABY0111",
+      "target_node": "TIM1101",
+      "energy_shortfall_mw": 2.259244594868,
+      "adjustment_mw": 2.259244594868,
+      "solve_loop": 1,
+      "model_status": 1,
+      "solver_status": 1
+    },
+    {
+      "case_id": "241012022111005708",
+      "date_time": "24-NOV-2022 23:05",
+      "node": "ABY0111",
+      "target_node": "TIM1101",
+      "energy_shortfall_mw": 0.204906717115,
+      "adjustment_mw": 0.204906717115,
+      "solve_loop": 1,
+      "model_status": 1,
+      "solver_status": 1
+    }
+  ],
+  "calibration_history": [
+    {
+      "setting": "global feastol 1e-9 and 1e-10",
+      "outcome": "rejected original-model residuals near 1.22e-7 and 1.26e-7; no checkpoint"
+    },
+    {
+      "setting": "target-only feastol 1e-10 with numerics emphasis",
+      "outcome": "rejected original-model residual 3.9538568300155e-8; no checkpoint"
+    },
+    {
+      "setting": "target-only feastol 1e-11 or 1e-12 with numerics emphasis",
+      "outcome": "SCIP unresolved LP numerical troubles and solver status 10; no checkpoint"
+    },
+    {
+      "setting": "target-only feastol 1e-12 with SCIP HiGHS LP engine",
+      "outcome": "SCIP unresolved LP numerical troubles; no checkpoint"
+    },
+    {
+      "setting": "target-only feastol 1e-10 and checkfeastolfac 1e-4, plus two named mixed-residue guards",
+      "outcome": "261/261 exact optimal solves and atomic checkpoint"
+    }
+  ],
+  "shard_complete": true,
+  "population_passed": false,
+  "admissibility": "May contribute its two identities to the final 139-date population; does not by itself satisfy the 546-identity population gate or daily-mode parity."
+}

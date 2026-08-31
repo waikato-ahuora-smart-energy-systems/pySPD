@@ -1,5 +1,5 @@
 {
-  "candidate_bundle_sha256": "1f7b5878f287f25c03ee34d7ddde69d603b32cfc1b80cd00899a05e5d4204def",
+  "candidate_bundle_sha256": "d2501a55e7def658e09eb466d4e5e28457d15208a5835138d1af4ba4213db69e",
   "case_count": 4,
   "case_ids": [
     "51012022111800831",
@@ -7,7 +7,7 @@
     "51012022111810835",
     "61012022110425024"
   ],
-  "logical_sha256": "bae738b5954fccd79b50d6ebb617b4906623cecc42f7eb3425c0f76273a4d8fc",
+  "logical_sha256": "cb4169dba59e411313ac49bbb0a7352db157433cb6c8b2ac5812ae353027e49a",
   "mapped_authority_fields_per_case": 65,
   "passed": false,
   "profile": "authority-pyspd-report-schema-crosswalk-v1",

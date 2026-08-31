@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "profile": "gams-pyspd-semantic-tolerance-v2",
+  "trading_date": "20221106",
+  "source_sha256": "282ac2abeaa2f0c7c6e26b967e2ba90289c0ba5a9e696b99069d11350d3037b8",
+  "work_item_sha256": "660f0e53a089fde3226618e5dd6f7c6effd15453891301f17022e532faaca6de",
+  "reference_bundle_sha256": "a12456cf42be4eca390082dc7ea7b65d4ecbcc233a703f456068e9f85605d77d",
+  "candidate_bundle_sha256": "d2501a55e7def658e09eb466d4e5e28457d15208a5835138d1af4ba4213db69e",
+  "logical_sha256": "b65260efdd40391242f0a914035b140b1b9cf7d561b6270d91139c95b8ad7204",
+  "passed": false,
+  "case_count": 4,
+  "failed_surface_count": 8,
+  "unresolved_difference_count": 10,
+  "unresolved_by_surface": {
+    "report-field": 4,
+    "node-price": 1,
+    "raw-bus-price": 2,
+    "repaired-bus-price": 2,
+    "rounded-published-output": 1
+  },
+  "accepted_reason_counts": {
+    "equivalent-sos-support": 36,
+    "qualified-primary-mip-diagnostic": 4,
+    "raw-sentinel-normalized": 1,
+    "sparse-zero": 4525,
+    "within-tolerance": 7554
+  },
+  "policy": {
+    "policy_id": "portable-semantic-policy-v2",
+    "price_tolerance": "0x1.a36e2eb1c432dp-14",
+    "objective_tolerance": "0x1.a36e2eb1c432dp-14",
+    "physics_tolerance": "0x1.5798ee2308c3ap-27",
+    "fixed_state_tolerance": "0x1.5798ee2308c3ap-27",
+    "zero_sparsity_tolerance": "0x1.19799812dea11p-40",
+    "raw_price_sentinel": "0x1.e848000000000p+18",
+    "primary_mip_objective_disposition": "qualified-diagnostic",
+    "fixed_sos_disposition": "compare-active-support-not-weight",
+    "report_field_disposition": "crosswalk-required"
+  }
+}

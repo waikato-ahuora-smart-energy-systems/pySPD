@@ -70,10 +70,11 @@ prefix.
   evidence only and produced no accepted checkpoints.
 - Recovery for 2022-11-24 must be narrowly targeted and separately
   hash-addressed; it cannot relabel or alter the five completed checkpoints.
-  The governed trial leaves option files disabled for every ordinary solve and
-  loads `emphasis: numerics` plus `numerics/feastol = 1e-10` only when the loop
-  case ID is `241012022111000704`. The entire one-date shard must still pass;
-  a successful target solve alone is not a checkpoint.
+  The initial `1e-10` target trial remained GAMS-infeasible and `1e-11`/`1e-12`
+  trials were numerically unstable. ADR-0015 governs the later explicit
+  incumbent-check and material-residue-loop recovery exception. The entire
+  one-date shard still had to pass; a successful target solve alone was not a
+  checkpoint.
 - Gate 12 remains open until the resulting manifest contains exactly 546 cases
   and all separate E2E criteria pass.
 

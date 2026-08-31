@@ -108,11 +108,21 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--material-only-shortfall-case-id",
+        action="append",
+        default=[],
         help=(
-            "For this numeric case only, clear sub-1e-6 MW shortfall "
+            "For each named numeric case, clear sub-1e-6 MW shortfall "
             "adjustments before the transfer loop. Requires "
             "--tight-scip-case-id so the combined recovery remains one "
-            "hash-addressed profile."
+            "hash-addressed profile. Repeat the option for multiple cases."
+        ),
+    )
+    parser.add_argument(
+        "--tight-scip-checkfeastolfac",
+        help=(
+            "Optional target-case SCIP incumbent feasibility-check factor in "
+            "(0, 1]. When supplied, it replaces broad numerics emphasis with "
+            "the explicit feastol/checkfeastolfac pair."
         ),
     )
     parser.add_argument(
@@ -154,6 +164,7 @@ def main(arguments: list[str] | None = None) -> int:
     if (
         args.material_only_shortfall_case_id
         or args.suppress_residue_only_shortfall_loops
+        or args.tight_scip_checkfeastolfac
     ) and not args.tight_scip_case_id:
         raise EvidenceContractError(
             "REQ-G12-HISTORICAL: residue recovery requires a targeted SCIP case"
@@ -165,8 +176,9 @@ def main(arguments: list[str] | None = None) -> int:
         HistoricalTargetedScipPatcher(
             args.tight_scip_case_id,
             args.tight_scip_feastol,
-            args.material_only_shortfall_case_id,
+            tuple(args.material_only_shortfall_case_id),
             args.suppress_residue_only_shortfall_loops,
+            args.tight_scip_checkfeastolfac,
         )
         if args.tight_scip_case_id
         else HistoricalVspdSourcePatcher()

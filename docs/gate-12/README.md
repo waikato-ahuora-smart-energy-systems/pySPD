@@ -45,39 +45,37 @@ physics, fixed-discrete pricing, price repair, publication, and reports.
 ## Current execution evidence
 
 The first governed historical PySPD candidate prefix and paired GAMS reference
-are complete. For
-2022-11-06, all 196 canonical predecessor and affected cases completed under
-the explicit SCIP-MIP → fixed-discrete → HiGHS-RMIP profile. The atomic
-bundle contains the four affected identities in canonical order and all twelve
-required surfaces for each identity (48 hash-verified surface files). Loading
-the completed bundle through `CanonicalReplayBundleStore` reverified every
-surface hash, and the bundle execution fingerprint exactly matched the frozen
-runtime source at commit `4043012`. The compact durable evidence index is
-[`pyspd-replay-20221106.json`](pyspd-replay-20221106.json). This is candidate
-execution evidence; the paired bundles have now also been compared by both the
-exact canonical-byte processor and the separately named semantic processor.
+are complete. For 2022-11-06, all 196 canonical predecessor and affected cases
+completed under the explicit SCIP-MIP → fixed-discrete → HiGHS-RMIP profile.
+The current replacement bundle contains the four affected identities in
+canonical order and all twelve required surfaces per identity. It is bound to
+candidate hash
+`d2501a55e7def658e09eb466d4e5e28457d15208a5835138d1af4ba4213db69e`
+and governed two-objective GAMS bundle hash
+`a12456cf42be4eca390082dc7ea7b65d4ecbcc233a703f456068e9f85605d77d`.
+Superseded bundles and validator outputs remain immutable diagnostic evidence;
+they are not rewritten.
 
-The exact processor reports 36 changed surfaces and 1,119,607 changed paths.
-That result remains immutable evidence, but most paths are sparse-zero or
-report-schema representation differences. The semantic
-`gams-pyspd-semantic-tolerance-v1` processor applies the established `1e-4`
-price/objective tolerance, `1e-8` physics/fixed-state tolerance, explicit
-sparse-zero handling, and raw-price sentinel normalization only when the same
-bus's repaired economics agree. It treats the qualified SCIP primary MIP
-objective as diagnostic and still requires the fixed-discrete HiGHS RMIP
-objective to pass. Without a degeneracy certificate this reduces the first-date
-result to 13 unresolved paths across nine surfaces. Selection, transition state,
-publication seconds,
-fixed-discrete pricing state, accepted physics, fixed-RMIP objective, all 1,811
-changed node-price leaves, and all seven changed reserve-price leaves pass the
-declared policy. An independent certificate then projects both bus-price vectors
-through the hash-bound source node-allocation matrix. All four cases pass: the
-largest repaired-bus difference is `0.126457185714337 NZD/MWh`, while its
-maximum node projection is only `9.592326932761353e-14 NZD/MWh`; one differing
-raw `-500000` sentinel is normalized only after its corresponding repaired bus
-matches. The certified semantic profile therefore has five unresolved paths:
-four report surfaces and the `TP35/WPT1101` published energy difference of
-`0.00101 NZD/MWh`.
+The current exact processor reports 36 changed surfaces and 1,120,628 changed
+paths. Most are sparse-zero or report-schema representation differences. The
+semantic `gams-pyspd-semantic-tolerance-v2` processor compares active SOS
+support, applies the established `1e-4` price/objective tolerance and `1e-8`
+physics/fixed-state tolerance, and retains the SCIP primary objective as a
+named diagnostic while requiring the fixed-HiGHS objective to pass. It leaves
+ten unresolved paths across eight surfaces: four report-schema surfaces plus,
+in case `61012022110425024`, one node price, two raw bus prices, two repaired
+bus prices, and one rounded published energy price. All non-report surfaces in
+the first three affected cases pass.
+
+The compact semantic evidence index is
+[`semantic-parity-20221106.json`](semantic-parity-20221106.json).
+
+The independent source-matrix certificate passes the first three cases but
+correctly rejects the final case: its remaining bus differences project to the
+same `WPT1101` node-price difference and therefore are not a bus-dual
+null-space alternative. The two repaired-bus errors are
+`0.010653407965453` and `0.009368422764978 NZD/MWh`; the node error is
+`0.010253407965453 NZD/MWh`.
 
 The separately governed Authority-to-PySPD schema crosswalk now resolves the
 structure of those four report surfaces without weakening `report-field`.
@@ -88,13 +86,11 @@ occurrences remain unmatched and the PySPD audit table is candidate-only. The
 artifact therefore fails, correctly, and makes no row-value parity claim. Its
 compact evidence index is
 [`report-crosswalk-20221106.json`](report-crosswalk-20221106.json). Gate 12
-remains open.
+remains open at the accepted evidence boundary.
 
-The 2022-11-07 candidate prefix is now executing from the same frozen source.
-Its governed plan contains 210 cases through the last of six affected
-identities. The independent GAMS reference replay remains queued while the
-historical population enumeration owns the single available GAMS network
-licence node.
+Later-date replay remains gated by completion of the exact historical
+population enumeration. Candidate execution never promotes an analytic lower
+bound into an affected identity.
 
 The representative v16 RTD portable-profile run is recorded in
 [`v16-representative-parity.json`](v16-representative-parity.json). Both the
@@ -151,18 +147,29 @@ on 2022-11-24 23:00 it repeatedly returned a SCIP optimum whose scaled solution
 violated the original `OAM_T1.T1` branch-block row by
 `0.00034560206410994 MW`. GAMS rejected that solution and remained in
 post-solve processing. The five completed checkpoints remain qualifying and
-immutable for their dates; the incomplete 2022-11-24 attempt contributes no
-checkpoint. Global `numerics/feastol` calibrations at `1e-9` and `1e-10` are
+immutable for their dates; that failed 2022-11-24 attempt contributed no
+checkpoint and was superseded by the separately hashed successful recovery
+below. Global `numerics/feastol` calibrations at `1e-9` and `1e-10` are
 nonqualifying: both still produced GAMS-rejected original-model residuals
 (about `1.22e-7` and `1.26e-7`), while `1e-10` was too slow for population use.
-The 2022-11-24 recovery must therefore be a narrow, separately hash-addressed
-fallback that preserves the existing optimality and evidence validators.
-The active trial applies `numerics/feastol = 1e-10` only to case
-`241012022111000704`; every other case retains the qualified default SCIP
-profile. Its source overlay and `scip.opt` are included in a distinct patch
-hash, and the one-date run uses nonqualifying shard scope until all selected
-cases, progress identities, statuses, and evidence pass. Run that isolated
-trial with:
+The 2022-11-24 recovery is therefore narrow and separately hash-addressed. A
+case-only `1e-10` trial reduced the rejected residual to
+`3.9538568300155e-8` but did not clear GAMS. `1e-11` and `1e-12` trials could
+instead terminate with SCIP LP numerical failure. The qualifying recovery
+keeps the stable target-only `1e-10` constraint tolerance and sets
+`numerics/checkfeastolfac = 1e-4`, without broad numerical emphasis. It clears
+only sub-`1e-6 MW` adjustments in the two named mixed material/residue cases
+and skips residue-only loops when no material evidence could be emitted.
+
+The complete atomic shard passed: 261/261 selected cases were exact and
+optimal. It discovered two first-loop transfers, both `ABY0111 -> TIM1101`:
+`2.259244594868 MW` at 23:00 and `0.204906717115 MW` at 23:05. The checkpoint
+logical hash is
+`fa975ac86c2e32a8bde72d904fb8b0d016ebe7811cb67795d7dd1dc939c323ed`;
+the compact durable record is
+[`historical-targeted-recovery-20221124.json`](historical-targeted-recovery-20221124.json).
+All other cases retain the qualified default SCIP profile. Run the isolated
+recovery with:
 
 ```bash
 uv run --group gdx python -m tools.gate12.enumerate_historical \
@@ -173,11 +180,18 @@ uv run --group gdx python -m tools.gate12.enumerate_historical \
   --gams-executable /path/to/gams \
   --system-directory /path/to/gams-system-directory \
   --execution-scope shard \
-  --tight-scip-case-id 241012022111000704
+  --tight-scip-case-id 241012022111000704 \
+  --tight-scip-feastol 1e-10 \
+  --tight-scip-checkfeastolfac 1e-4 \
+  --material-only-shortfall-case-id 241012022111000704 \
+  --material-only-shortfall-case-id 241012022111005708 \
+  --suppress-residue-only-shortfall-loops
 ```
 
-This command does not make a population claim and does not import or rewrite
-the five default-profile checkpoints.
+This command makes only a one-date shard claim. The two identities may enter
+the final population builder, but the shard does not make the 139-date or
+546-identity population claim and does not rewrite the five default-profile
+checkpoints.
 
 `HistoricalPopulationRunner` verifies every Gate 1 source size and SHA-256,
 reads the GDX run-mode surface, selects exactly RTD modes 101 and 201, and
@@ -498,14 +512,13 @@ uv run python -m tools.gate12.project_report_rows \
 The runner re-hashes the crosswalk, verifies that every embedded case mapping
 exactly recomputes from the paired report surfaces, and compares numeric values
 against half of the Authority field's displayed unit. It never treats a
-missing zero row as present. On the first paired date it compared 12,619 mapped
-values. All 2,092 node prices, 395 offer quantities, 16 reserve-result prices,
-16 island-result reserve prices, and 16 published reserve prices pass; 2,091 of
-2,092 published energy prices pass. The unresolved mapped-row evidence is 166
-missing branch identities, 22 branch-flow precision differences, 11 bus-price
-differences, and the known `TP35/WPT1101` publication difference. Branch and
-market-node constraints, risk, and summary remain unimplemented row
-projections in each case. The compact evidence index is
+missing zero row as present. The current first-date artifact compares 13,133
+mapped values with zero missing or extra identities. All 4,368 branch flows,
+252 branch-constraint values, 96 market-node-constraint values, 395 offer
+quantities, and all reserve price surfaces pass. Only four values exceed
+Authority display precision, all in case `61012022110425024`: bus 816, bus 820,
+node `WPT1101`, and its `TP35` rolling publication. Risk and summary remain
+unimplemented row projections in each case. The compact evidence index is
 [`report-row-parity-20221106.json`](report-row-parity-20221106.json).
 
 The branch identity failures exposed a candidate reporting omission. Two of
@@ -516,21 +529,21 @@ Authority retains with zero flow while preprocessing correctly excludes them
 from the optimization domain. The normalized network now carries a separate
 full report-only branch domain; the renderer emits AC and HVDC solved values
 and explicit zeros only for report-domain identities absent from both solved
-components. Probity tests cover both paths. This changes candidate report
-evidence and therefore requires a new governed PySPD replay; old bundles are
-not rewritten. `SystemOFV` is also intentionally unsupported: pinned vSPD adds
+components. Probity tests cover both paths. The replacement replay proves zero
+missing branch identities. Dead-node bus reporting now also follows pinned
+vSPD by transferring the dead node's price through its allocation factor; this
+removed all eight false zero-price differences without rewriting old bundles.
+`SystemOFV` is intentionally unsupported: pinned vSPD adds
 its scarcity-limit-by-price constant to the summary value even though that
 constant is omitted from the solved objective, and the current PySPD summary
 has no equivalent derived field.
 
 The expanded `authority-pyspd-mapped-report-row-parity-v2` projector also
 reconstructs branch and market-node constraint RHS/sense from Pyomo lower and
-upper bounds. On the old bundle, all 348 constraint observables have exact
-identity coverage and 20 LHS values expose the same raw-SCIP versus fixed-RMIP
-report-state issue. Report extraction now explicitly prefers `pricing_model`
-and falls back to `primary_model` only for profiles without a separate pricing
-model. The replacement replay will determine the fixed-state row result; the
-old v1 evidence remains unchanged.
+upper bounds. All 348 constraint observables now have exact identity coverage
+and pass at Authority display precision. Report extraction explicitly prefers
+`pricing_model` and falls back to `primary_model` only for profiles without a
+separate pricing model. The old v1 evidence remains unchanged.
 
 After recreating the independently loaded source-matrix certificate for the
 exact replacement bundle, pass it to `project_report_rows` with
@@ -584,8 +597,10 @@ manifest and execution source. The first formal 2022-11-06 attempt correctly
 failed: its optimal no-fallback result was `13.18042 NZD/MWh`, `0.00161` from
 the GAMS `13.18203`. A prior diagnostic optimal run produced `13.18202`, but
 the favorable observation is not selected after the fact as passing evidence.
-The variable outcomes establish a solver-sensitive surface; a reproducible
-bounded envelope or stronger common-optimal-face certificate is still needed.
+On the current bundle the governed result is `13.18148`; its separately bound
+alternative returned `13.17947`, so the validator again fails. The variable
+outcomes establish a solver-sensitive surface; a reproducible bounded envelope
+or stronger common-optimal-face certificate is still needed.
 
 For isolated partial inventories, pass `--execution-scope shard`. A complete
 shard then exits successfully and records `shard_complete: true`, while

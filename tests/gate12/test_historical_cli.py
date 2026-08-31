@@ -60,7 +60,11 @@ def test_historical_cli_has_explicit_non_qualifying_shard_scope() -> None:
             "--tight-scip-case-id",
             "241012022111000704",
             "--tight-scip-feastol",
-            "1e-12",
+            "1e-10",
+            "--tight-scip-checkfeastolfac",
+            "1e-4",
+            "--material-only-shortfall-case-id",
+            "241012022111000704",
             "--material-only-shortfall-case-id",
             "241012022111005708",
             "--suppress-residue-only-shortfall-loops",
@@ -69,8 +73,12 @@ def test_historical_cli_has_explicit_non_qualifying_shard_scope() -> None:
 
     assert arguments.execution_scope == "shard"
     assert arguments.tight_scip_case_id == "241012022111000704"
-    assert arguments.tight_scip_feastol == "1e-12"
-    assert arguments.material_only_shortfall_case_id == "241012022111005708"
+    assert arguments.tight_scip_feastol == "1e-10"
+    assert arguments.tight_scip_checkfeastolfac == "1e-4"
+    assert arguments.material_only_shortfall_case_id == [
+        "241012022111000704",
+        "241012022111005708",
+    ]
     assert arguments.suppress_residue_only_shortfall_loops
 
 

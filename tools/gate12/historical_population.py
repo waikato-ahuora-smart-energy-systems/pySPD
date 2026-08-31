@@ -583,8 +583,9 @@ class HistoricalTargetedScipPatcher(HistoricalVspdSourcePatcher):
         self,
         case_id: str,
         feastol: str = "1e-10",
-        material_only_case_id: str | None = None,
+        material_only_case_ids: tuple[str, ...] = (),
         suppress_residue_only_cases: bool = False,
+        checkfeastolfac: str | None = None,
     ) -> None:
         if not re.fullmatch(r"[0-9]+", case_id):
             raise EvidenceContractError(
@@ -604,25 +605,57 @@ class HistoricalTargetedScipPatcher(HistoricalVspdSourcePatcher):
             )
         self.case_id = case_id
         self.feastol = format(tolerance.normalize(), "e")
-        if material_only_case_id is not None and not re.fullmatch(
-            r"[0-9]+", material_only_case_id
+        if not isinstance(material_only_case_ids, tuple) or any(
+            not re.fullmatch(r"[0-9]+", value)
+            for value in material_only_case_ids
         ):
             raise EvidenceContractError(
-                "REQ-G12-HISTORICAL: material-only case ID must be numeric"
+                "REQ-G12-HISTORICAL: material-only case IDs must be a numeric tuple"
             )
-        self.material_only_case_id = material_only_case_id
+        if len(set(material_only_case_ids)) != len(material_only_case_ids):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: material-only case IDs must be unique"
+            )
+        self.material_only_case_ids = material_only_case_ids
         self.suppress_residue_only_cases = suppress_residue_only_cases
+        try:
+            check_tolerance = (
+                Decimal(checkfeastolfac) if checkfeastolfac is not None else None
+            )
+        except InvalidOperation as error:
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: targeted SCIP checkfeastolfac must be numeric"
+            ) from error
+        if check_tolerance is not None and (
+            not check_tolerance.is_finite()
+            or not Decimal(0) < check_tolerance <= Decimal(1)
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: targeted SCIP checkfeastolfac must be in (0, 1]"
+            )
+        self.checkfeastolfac = (
+            format(check_tolerance.normalize(), "e")
+            if check_tolerance is not None
+            else None
+        )
         material_profile = (
             ""
-            if material_only_case_id is None
-            else f"-material-only-{material_only_case_id}-threshold1e-6"
+            if not material_only_case_ids
+            else "-material-only-"
+            + "_".join(material_only_case_ids)
+            + "-threshold1e-6"
+        )
+        check_profile = (
+            ""
+            if self.checkfeastolfac is None
+            else f"-checkfeastolfac{self.checkfeastolfac}"
         )
         residue_profile = (
             "-residue-only-threshold1e-6" if suppress_residue_only_cases else ""
         )
         self.profile = (
             "historical-v5.0.2-dailymode0-scip-first-loop-material-transfer-"
-            f"target-{case_id}-feastol{self.feastol}{material_profile}"
+            f"target-{case_id}-feastol{self.feastol}{check_profile}{material_profile}"
             f"{residue_profile}"
         )
 
@@ -630,12 +663,16 @@ class HistoricalTargetedScipPatcher(HistoricalVspdSourcePatcher):
         super().apply(programs)
         solve = programs / "vSPDsolve.gms"
         solve_text = solve.read_text(encoding="utf-8")
-        if self.material_only_case_id is not None:
+        if self.material_only_case_ids:
             loop_statement = (
                 "        while( sum[n, ShortfallAdjustmentMW(ca,dt,n)],"
             )
+            condition = " or ".join(
+                f"sameas(ca,'{case_id}')"
+                for case_id in self.material_only_case_ids
+            )
             guarded_loop = (
-                f"        if(sameas(ca,'{self.material_only_case_id}'),\n"
+                f"        if({condition},\n"
                 "            ShortfallAdjustmentMW(t,n)\n"
                 "                $ (abs(EnergyShortfallMW(t,n)) <= 0.000001) = 0;\n"
                 "        );\n"
@@ -679,11 +716,17 @@ class HistoricalTargetedScipPatcher(HistoricalVspdSourcePatcher):
         )
         solve.write_text(solve_text, encoding="utf-8")
         scip_options = programs / "scip.opt"
-        scip_options.write_text(
-            "emphasis: numerics\n"
-            f"numerics/feastol = {self.feastol}\n",
-            encoding="utf-8",
+        option_lines = (
+            ["emphasis: numerics"]
+            if self.checkfeastolfac is None
+            else []
         )
+        option_lines.append(f"numerics/feastol = {self.feastol}")
+        if self.checkfeastolfac is not None:
+            option_lines.append(
+                f"numerics/checkfeastolfac = {self.checkfeastolfac}"
+            )
+        scip_options.write_text("\n".join(option_lines) + "\n", encoding="utf-8")
         patched = (
             programs / "vSPDsettings.inc",
             programs / "vSPDperiod.gms",
