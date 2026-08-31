@@ -36,7 +36,7 @@ Use a separately named population-discovery profile with all of these rules:
 3. select only canonical RTD modes 101 and 201 in GDX order;
 4. solve the first historical shortfall decision with SCIP, require an
    optimal result, and load the hash-bound `scip.opt` numerical profile with
-   `emphasis: numerics` and `numerics/feastol = 1e-9`;
+   `emphasis: numerics` and `numerics/feastol = 1e-10`;
 5. leave the historical `EnergyShortfallMW > 0` branch unchanged;
 6. emit evidence only after `ShortfallTransferFromTo` selects an actual target
    and only when source shortfall exceeds `1e-6 MW`;
@@ -65,6 +65,9 @@ prefix.
   repeatedly reported an optimum whose unscaled `OAM_T1.T1` branch-block row
   violated the original GAMS model by `0.00034560206410994 MW`, leaving GAMS
   indefinitely in post-solve processing on 2022-11-24 23:00.
+- A calibration run at `1e-9` reduced a separate original-model residual to
+  `1.21887253409279e-7`, but GAMS still rejected it. The governed setting is
+  therefore one further decade tighter at `1e-10`.
 - Checkpoints from the default-tolerance predecessor profile remain forensic
   evidence only. They bind a different patch hash and cannot be imported into
   or relabelled as strict-profile checkpoints.

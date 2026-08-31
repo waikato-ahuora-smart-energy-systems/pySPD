@@ -143,7 +143,7 @@ source `EnergyShortfallMW` exceeds `1e-6 MW`. The threshold controls evidence
 emission only; it does not alter the historical branch or the optimization.
 The current profile retains the three pinned option-file loads and binds an
 exact `scip.opt` containing `emphasis: numerics` and
-`numerics/feastol = 1e-9`. This tightens SCIP's constraint accuracy; it does
+`numerics/feastol = 1e-10`. This tightens SCIP's constraint accuracy; it does
 not loosen GAMS feasibility checks or the optimal-status contract.
 The separation between discovery and daily-mode replay is governed by
 [ADR-0013](../adr/0013-gate-12-shortfall-population-discovery.md).
@@ -159,6 +159,10 @@ patch hash and are not qualifying inputs to the strict-numerics population.
 The replacement enumeration uses a fresh workspace and patch hash; it must
 reproduce the qualified 2022-11-06 population before progressing through all
 139 dates.
+The intermediate `1e-9` calibration is also nonqualifying: it reduced an
+original-model residual to `1.21887253409279e-7`, but GAMS still rejected the
+loaded solution. The additional decade is selected from this observed bound,
+not by relaxing any validator.
 
 `HistoricalPopulationRunner` verifies every Gate 1 source size and SHA-256,
 reads the GDX run-mode surface, selects exactly RTD modes 101 and 201, and

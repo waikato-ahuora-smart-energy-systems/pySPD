@@ -26,7 +26,7 @@ from tools.oracle.vspd import ListingResult, VspdListingParser
 
 MATERIAL_SHORTFALL_MW = 1e-6
 HISTORICAL_EXECUTION_PROFILE = (
-    "historical-v5.0.2-dailymode0-scip-feastol1e-9-solvelink5-"
+    "historical-v5.0.2-dailymode0-scip-feastol1e-10-solvelink5-"
     "first-loop-rtd-only-canonical-order-material-transfer"
 )
 HISTORICAL_COLUMNS = (
@@ -439,7 +439,7 @@ class HistoricalVspdSourcePatcher:
     """Apply the minimal, fail-closed v5.0.2 population-discovery overlay."""
 
     profile = (
-        "historical-v5.0.2-dailymode0-scip-feastol1e-9-"
+        "historical-v5.0.2-dailymode0-scip-feastol1e-10-"
         "first-loop-material-transfer"
     )
 
@@ -545,7 +545,7 @@ class HistoricalVspdSourcePatcher:
         scip_options = programs / "scip.opt"
         scip_options.write_text(
             "emphasis: numerics\n"
-            "numerics/feastol = 1e-9\n",
+            "numerics/feastol = 1e-10\n",
             encoding="utf-8",
         )
         hashes = {

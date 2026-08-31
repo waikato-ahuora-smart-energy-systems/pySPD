@@ -177,7 +177,7 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
     result = patcher.apply(programs)
 
     assert result.profile == (
-        "historical-v5.0.2-dailymode0-scip-feastol1e-9-"
+        "historical-v5.0.2-dailymode0-scip-feastol1e-10-"
         "first-loop-material-transfer"
     )
     assert len(result.logical_sha256) == 64
@@ -189,7 +189,7 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
     assert solve.count(".Optfile = 1 ;") == 3
     assert (programs / "scip.opt").read_text() == (
         "emphasis: numerics\n"
-        "numerics/feastol = 1e-9\n"
+        "numerics/feastol = 1e-10\n"
     )
     assert set(result.file_sha256) == {
         "scip.opt",
