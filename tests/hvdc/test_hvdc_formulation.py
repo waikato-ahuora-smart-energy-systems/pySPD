@@ -24,6 +24,7 @@ from pyspd.hvdc.formulation import (
     _fix_continuous_state,
     pricing_model_belongs_to_request,
 )
+from pyspd.solver import NativeScipBackend
 from tests.hvdc.conftest import make_hvdc_case
 
 
@@ -38,6 +39,22 @@ def solve(case):
     report = IndependentHvdcValidator().validate(outcome, tolerance=1e-6)
     assert report.passed, report.residuals
     return built, outcome, prices
+
+
+def test_primary_scip_tolerance_bounds_amplified_penalty_error(monkeypatch) -> None:
+    captured = {}
+    sentinel = object()
+
+    def capture(_backend, _model, configuration):
+        captured.update(configuration.options)
+        return sentinel
+
+    monkeypatch.setattr(NativeScipBackend, "solve_mip", capture)
+
+    assert HvdcSolvePolicy._solve_scip(build(make_hvdc_case(enforce=True))) is sentinel
+    feasibility_tolerance = captured["numerics/feastol"]
+    assert feasibility_tolerance == 1e-9
+    assert 1_000_000.0 * feasibility_tolerance <= 0.001
 
 
 def test_fixed_rmip_preserves_sos_support_without_fixing_active_weights() -> None:

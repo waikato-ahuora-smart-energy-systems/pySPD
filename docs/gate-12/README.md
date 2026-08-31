@@ -288,6 +288,16 @@ direct qualification tests. A scaling-disable-only shortfall check likewise
 does not trigger a daily re-solve, because the disabled RTD scaling calculation
 is absent from daily mode.
 
+The corrected first-date comparison also exposed a solver-tolerance artifact in
+the final affected interval. SCIP could return a nominally nonnegative balance
+violation about `1.6e-7 MW` below zero. With vSPD's `1,000,000 NZD/MW` penalty,
+that physically tiny bound residue moved the primary objective by about
+`0.16 NZD`, and repeated SCIP runs could select different residues within the
+same tolerance. The governed portable and pinned-GAMS SCIP profiles now use
+`numerics/feastol = 1e-9`, bounding this penalty amplification at `0.001 NZD`.
+The original exact failed checkpoint is retained; evidence produced with the
+tighter profile must use new bundle and checkpoint roots.
+
 Materialize the independent pinned-GAMS bundles with the same discovery feed:
 
 ```bash

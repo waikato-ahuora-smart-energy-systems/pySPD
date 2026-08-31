@@ -52,6 +52,7 @@ type Key = tuple[str, ...]
 
 _SUPPORTED = frozenset({HVDC_FORMULATION_ID})
 _SOS_STATE_CANONICALIZATION_TOLERANCE = 1e-5
+_SCIP_PRIMAL_FEASIBILITY_TOLERANCE = 1e-9
 
 
 class HvdcPreprocessor(PreprocessorStep):
@@ -167,7 +168,10 @@ class HvdcSolvePolicy(SolvePolicy):
                     "time_limit_seconds": 300.0,
                     "relative_gap": 0.0,
                     "threads": 1,
-                    "numerics/feastol": 1e-6,
+                    # vSPD penalties reach NZD 1,000,000/MW. SCIP's default
+                    # feasibility tolerance can therefore manufacture a
+                    # material objective gain from a tiny negative violation.
+                    "numerics/feastol": _SCIP_PRIMAL_FEASIBILITY_TOLERANCE,
                 }
             ),
         )
