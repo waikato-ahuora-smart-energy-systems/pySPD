@@ -26,8 +26,8 @@ from tools.oracle.vspd import ListingResult, VspdListingParser
 
 MATERIAL_SHORTFALL_MW = 1e-6
 HISTORICAL_EXECUTION_PROFILE = (
-    "historical-v5.0.2-dailymode0-scip-solvelink5-first-loop-rtd-only-"
-    "canonical-order-material-transfer"
+    "historical-v5.0.2-dailymode0-scip-feastol1e-9-solvelink5-"
+    "first-loop-rtd-only-canonical-order-material-transfer"
 )
 HISTORICAL_COLUMNS = (
     "case_id",
@@ -438,7 +438,10 @@ class SubprocessHistoricalGamsExecutor:
 class HistoricalVspdSourcePatcher:
     """Apply the minimal, fail-closed v5.0.2 population-discovery overlay."""
 
-    profile = "historical-v5.0.2-dailymode0-scip-first-loop-material-transfer"
+    profile = (
+        "historical-v5.0.2-dailymode0-scip-feastol1e-9-"
+        "first-loop-material-transfer"
+    )
 
     def apply(self, programs: Path) -> HistoricalPatchEvidence:
         settings = programs / "vSPDsettings.inc"
@@ -496,9 +499,7 @@ class HistoricalVspdSourcePatcher:
             "option mip = %Solver% ;",
             "option rmip = HiGHS ;\noption mip = SCIP ;",
         )
-        solve_text = self._replace_all(
-            solve_text, ".Optfile = 1 ;", ".Optfile = 0 ;", 3
-        )
+        self._require_count(solve_text, ".Optfile = 1 ;", 3)
         solve_text = self._replace_all(
             solve_text, "%inputPath%\\%GDXname%.gdx", "%inputPath%/%GDXname%.gdx", 4
         )
@@ -541,9 +542,15 @@ class HistoricalVspdSourcePatcher:
         settings.write_text(settings_text, encoding="utf-8")
         period.write_text(period_text, encoding="utf-8")
         solve.write_text(solve_text, encoding="utf-8")
+        scip_options = programs / "scip.opt"
+        scip_options.write_text(
+            "emphasis: numerics\n"
+            "numerics/feastol = 1e-9\n",
+            encoding="utf-8",
+        )
         hashes = {
             path.name: hashlib.sha256(path.read_bytes()).hexdigest()
-            for path in (settings, period, solve)
+            for path in (settings, period, solve, scip_options)
         }
         logical = hashlib.sha256(
             json.dumps(hashes, sort_keys=True, separators=(",", ":")).encode()
@@ -563,6 +570,15 @@ class HistoricalVspdSourcePatcher:
                 f"for {old!r}; expected {expected}, found {count}"
             )
         return text.replace(old, new)
+
+    @staticmethod
+    def _require_count(text: str, value: str, expected: int) -> None:
+        count = text.count(value)
+        if count != expected:
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: pinned source drift "
+                f"for {value!r}; expected {expected}, found {count}"
+            )
 
     @staticmethod
     def _sub(text: str, pattern: str, replacement: str) -> str:

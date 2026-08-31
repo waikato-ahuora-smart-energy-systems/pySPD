@@ -34,8 +34,9 @@ Use a separately named population-discovery profile with all of these rules:
 2. set `dailymode = 0` only for identity discovery so the pinned RTD load is
    recomputed;
 3. select only canonical RTD modes 101 and 201 in GDX order;
-4. solve the first historical shortfall decision with SCIP and require an
-   optimal result;
+4. solve the first historical shortfall decision with SCIP, require an
+   optimal result, and load the hash-bound `scip.opt` numerical profile with
+   `emphasis: numerics` and `numerics/feastol = 1e-9`;
 5. leave the historical `EnergyShortfallMW > 0` branch unchanged;
 6. emit evidence only after `ShortfallTransferFromTo` selects an actual target
    and only when source shortfall exceeds `1e-6 MW`;
@@ -59,6 +60,14 @@ prefix.
   omitted.
 - Enumeration remains compute-intensive and resumable across the 139
   hash-bound inputs.
+- The stricter SCIP feasibility tolerance is an accuracy requirement, not an
+  acceptance relaxation. It was introduced after the default `1e-6` profile
+  repeatedly reported an optimum whose unscaled `OAM_T1.T1` branch-block row
+  violated the original GAMS model by `0.00034560206410994 MW`, leaving GAMS
+  indefinitely in post-solve processing on 2022-11-24 23:00.
+- Checkpoints from the default-tolerance predecessor profile remain forensic
+  evidence only. They bind a different patch hash and cannot be imported into
+  or relabelled as strict-profile checkpoints.
 - Gate 12 remains open until the resulting manifest contains exactly 546 cases
   and all separate E2E criteria pass.
 
@@ -79,6 +88,8 @@ prefix.
 - Probity tests require exact source patch points and reject schema drift,
   missing target nodes, EPS-scale records, later-loop records, non-optimal
   solves, noncanonical order, source/hash drift, and population overrun.
+- Probity tests also require all three pinned model solves to retain option-file
+  loading and require the exact `scip.opt` contents and hash in patch evidence.
 - `historical-exact-positive-invalidation.json` binds the three-date overrun
   that rejected the predecessor selector.
 - The canonical 2022-11-06 qualification must reproduce the four cases already

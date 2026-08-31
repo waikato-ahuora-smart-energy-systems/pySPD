@@ -141,10 +141,24 @@ first historical shortfall decision, preserves the pinned model's exact
 strict-positive branch, and records only a selected node-to-node transfer whose
 source `EnergyShortfallMW` exceeds `1e-6 MW`. The threshold controls evidence
 emission only; it does not alter the historical branch or the optimization.
+The current profile retains the three pinned option-file loads and binds an
+exact `scip.opt` containing `emphasis: numerics` and
+`numerics/feastol = 1e-9`. This tightens SCIP's constraint accuracy; it does
+not loosen GAMS feasibility checks or the optimal-status contract.
 The separation between discovery and daily-mode replay is governed by
 [ADR-0013](../adr/0013-gate-12-shortfall-population-discovery.md).
 The source overlay is fail-closed and hash-addressed; unexpected upstream text
 does not get silently patched.
+
+The predecessor default-tolerance enumeration completed five atomic dates, but
+on 2022-11-24 23:00 it repeatedly returned a SCIP optimum whose scaled solution
+violated the original `OAM_T1.T1` branch-block row by
+`0.00034560206410994 MW`. GAMS rejected that solution and remained in
+post-solve processing. Those five checkpoints remain bound to their original
+patch hash and are not qualifying inputs to the strict-numerics population.
+The replacement enumeration uses a fresh workspace and patch hash; it must
+reproduce the qualified 2022-11-06 population before progressing through all
+139 dates.
 
 `HistoricalPopulationRunner` verifies every Gate 1 source size and SHA-256,
 reads the GDX run-mode surface, selects exactly RTD modes 101 and 201, and
