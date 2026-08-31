@@ -200,9 +200,13 @@ class ReserveCaseExecutor:
         built = ModelAssembler().assemble(self.formulation(), case)
         outcome = built.formulation.solve_policy().solve(built)
         prices = self.pricing_engine().price(built, outcome)
-        primary = outcome.primary_model
-        generation = _values(primary.artifacts["generation"])
-        scarcity = _values(primary.artifacts["energy_scarcity_node"])
+        # Pinned vSPD reports the levels left by solveFinal: the primary MIP
+        # selects discrete/SOS state, then the fixed RMIP refines continuous
+        # physics and supplies marginals. Keep the raw SCIP snapshot in
+        # ``solve_payload`` but use the fixed-HiGHS state for accepted output.
+        accepted_model = outcome.pricing_model
+        generation = _values(accepted_model.artifacts["generation"])
+        scarcity = _values(accepted_model.artifacts["energy_scarcity_node"])
         network = case.network
         assert network is not None
         allocations_by_node: dict[Key, list[tuple[str, float]]] = defaultdict(list)
@@ -245,7 +249,7 @@ class ReserveCaseExecutor:
             for left in from_buses[branch]
             for right in to_buses[branch]
         )
-        flow = _values(primary.artifacts["directed_branch_flow"])
+        flow = _values(accepted_model.artifacts["directed_branch_flow"])
         flow_by_branch: dict[Key, float] = defaultdict(float)
         for key, value in flow.items():
             flow_by_branch[key[:3]] += value
@@ -256,7 +260,7 @@ class ReserveCaseExecutor:
         for branch in network.ac_branches:
             for bus in buses_by_branch[branch]:
                 connected_flow[(*branch[:2], bus)] += flow_by_branch[branch]
-        generation_block = _values(primary.artifacts["generation_block"])
+        generation_block = _values(accepted_model.artifacts["generation_block"])
         cleared: dict[Key, float] = defaultdict(float)
         for block, amount in generation_block.items():
             if amount <= 0.0:
@@ -285,7 +289,7 @@ class ReserveCaseExecutor:
             connected_bus_flow=connected_flow,
             cleared_offer_price=cleared,
             sos_price_repair_required=bool(outcome.detected_issues),
-            objective=outcome.primary_snapshot.objective,
+            objective=outcome.pricing_snapshot.objective,
             solve_payload=outcome,
         )
 

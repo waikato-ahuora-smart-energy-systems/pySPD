@@ -9,6 +9,12 @@ from pyomo.repn.standard_repn import generate_standard_repn
 
 from pyspd.architecture import ModelAssembler
 from pyspd.hvdc import audit_pricing_model
+from pyspd.orchestration import (
+    DailyCase,
+    PreparedCase,
+    ReserveCaseExecutor,
+    ScheduleType,
+)
 from pyspd.reserve import (
     IndependentReserveValidator,
     ReservePricingEngine,
@@ -30,6 +36,35 @@ def build(*, secondary: bool = False):
     return ModelAssembler().assemble(
         reserve_formulation(), make_reserve_case(secondary=secondary)
     )
+
+
+def test_accepted_output_uses_fixed_rmip_continuous_state() -> None:
+    case = make_reserve_case()
+    assert case.network is not None
+    prepared = PreparedCase(
+        DailyCase(
+            "C1",
+            "T1",
+            "TP1",
+            101,
+            ScheduleType.RTD,
+            5.0,
+            300.0,
+            0,
+            "0" * 64,
+        ),
+        case,
+        case.network.node_load,
+    )
+
+    observation = ReserveCaseExecutor().solve(prepared)
+    outcome = observation.solve_payload
+    pricing_generation = outcome.pricing_model.artifacts["generation"]
+
+    assert observation.objective == outcome.pricing_snapshot.objective
+    assert observation.generation == {
+        key[2]: pyo.value(pricing_generation[key]) for key in case.offers
+    }
 
 
 def test_gate7_is_class_composed_and_extensible() -> None:

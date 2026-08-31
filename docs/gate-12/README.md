@@ -299,6 +299,10 @@ SCIP's internal LP solver failed on cases 2 and 68 respectively. The stable
 the raw SCIP MIP objective and the fixed-discrete HiGHS RMIP objective as
 separate values; the latter is the feasibility-refined economic parity value,
 while the former remains diagnostic evidence and is never silently replaced.
+Accepted dispatch, shortfall, flow-derived reporting, and daily predecessor
+state likewise come from the fixed RMIP, matching the levels pinned vSPD leaves
+after `solveFinal`; the raw SCIP primal snapshot remains immutable in the solve
+payload for diagnostics.
 The original exact failed checkpoint and both tighter-tolerance failed progress
 roots are retained.
 

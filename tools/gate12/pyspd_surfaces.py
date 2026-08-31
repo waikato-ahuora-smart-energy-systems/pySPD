@@ -149,6 +149,10 @@ class PyspdCaseSurfaceExporter:
         fixed_discrete = getattr(solve_payload, "fixed_discrete", {})
         fixed_sos_members = getattr(solve_payload, "fixed_sos_members", {})
         pricing_snapshot = getattr(solve_payload, "pricing_snapshot", None)
+        primary_snapshot = getattr(solve_payload, "primary_snapshot", None)
+        primary_mip_objective = getattr(
+            primary_snapshot, "objective", accepted.objective
+        )
         fixed_rmip_objective = getattr(
             pricing_snapshot, "objective", accepted.objective
         )
@@ -195,7 +199,7 @@ class PyspdCaseSurfaceExporter:
             ),
             "primary-objective": _json_bytes(
                 {
-                    "primary_mip_objective_nzd": _number(accepted.objective),
+                    "primary_mip_objective_nzd": _number(primary_mip_objective),
                     "fixed_rmip_objective_nzd": _number(fixed_rmip_objective),
                 }
             ),
