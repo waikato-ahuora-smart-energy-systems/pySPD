@@ -93,6 +93,33 @@ def test_semantic_comparator_rejects_material_numeric_difference() -> None:
     assert result.unresolved_examples[0].path[-1] == "value"
 
 
+def test_fixed_sos_weights_compare_support_not_continuous_magnitude() -> None:
+    identity = ["hvdc-energy-lambda", "case", "date", "SI", "ls3"]
+    comparator = SemanticCaseComparator(SemanticParityPolicy())
+    accepted = comparator.compare_surface(
+        surface="fixed-discrete-pricing-state",
+        reference=_json(
+            {"fixed_sos_members": [{"identity": identity, "value": 0.8.hex()}]}
+        ),
+        candidate=_json(
+            {"fixed_sos_members": [{"identity": identity, "value": 0.2.hex()}]}
+        ),
+    )
+    rejected = comparator.compare_surface(
+        surface="fixed-discrete-pricing-state",
+        reference=_json(
+            {"fixed_sos_members": [{"identity": identity, "value": 0.0.hex()}]}
+        ),
+        candidate=_json(
+            {"fixed_sos_members": [{"identity": identity, "value": 0.2.hex()}]}
+        ),
+    )
+
+    assert accepted.passed
+    assert accepted.accepted_reason_counts == {"equivalent-sos-support": 1}
+    assert not rejected.passed
+
+
 def test_semantic_comparator_uses_fixed_rmip_as_accepted_objective() -> None:
     result = SemanticCaseComparator(SemanticParityPolicy()).compare_surface(
         surface="primary-objective",

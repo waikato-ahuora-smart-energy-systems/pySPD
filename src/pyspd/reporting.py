@@ -15,7 +15,7 @@ from typing import Any, ClassVar
 
 import pyomo.environ as pyo
 
-from pyspd.orchestration import DailyRunResult
+from pyspd.orchestration import DailyRunResult, PriceTrace, SolveObservation
 from pyspd.reserve.data import RESERVE_FORMULATION_ID
 from pyspd.v16.compatibility import SPD16_FORMULATION_ID
 
@@ -284,6 +284,29 @@ class DailyReportRegistry:
 _V5 = frozenset({RESERVE_FORMULATION_ID})
 
 
+def _reported_bus_price(
+    bus_key: tuple[str, ...],
+    accepted: SolveObservation,
+    prices: PriceTrace,
+) -> float:
+    """Apply pinned-vSPD's dead-node bus report projection."""
+
+    allocations = accepted.node_bus_allocation
+    has_dead_node = any(
+        allocation_key[:-1] in prices.dead_nodes
+        and allocation_key[:2] + (allocation_key[-1],) == bus_key
+        and float(weight) != 0.0
+        for allocation_key, weight in allocations.items()
+    )
+    if not has_dead_node:
+        return float(prices.repaired_bus[bus_key])
+    return sum(
+        float(weight) * float(prices.node[allocation_key[:-1]])
+        for allocation_key, weight in allocations.items()
+        if allocation_key[:2] + (allocation_key[-1],) == bus_key
+    )
+
+
 class V5DailyResultSchema(DailyResultSchema):
     supported_formulations = _V5
 
@@ -329,7 +352,7 @@ class V5DailyReportRenderer(DailyReportRenderer):
                         "bus": bus_key[-1],
                         "raw_price_nzd_per_mwh": _number(raw),
                         "repaired_price_nzd_per_mwh": _number(
-                            prices.repaired_bus[bus_key]
+                            _reported_bus_price(bus_key, accepted, prices)
                         ),
                         "disconnected": _boolean(bus_key in prices.disconnected_buses),
                         "invalid": _boolean(bus_key in prices.invalid_buses),

@@ -20,9 +20,9 @@ from tools.gate12.canonical_diff import (
 from tools.gate12.evidence import REQUIRED_E2E_SURFACES, EvidenceContractError
 from tools.gate12.replay_artifacts import CanonicalReplayBundleStore
 
-SEMANTIC_PARITY_PROFILE = "gams-pyspd-semantic-tolerance-v1"
+SEMANTIC_PARITY_PROFILE = "gams-pyspd-semantic-tolerance-v2"
 SEMANTIC_CERTIFIED_PARITY_PROFILE = (
-    "gams-pyspd-semantic-tolerance-bus-certified-v1"
+    "gams-pyspd-semantic-tolerance-bus-certified-v2"
 )
 _EXACT_SURFACES = frozenset(
     {"case-selection", "publication-seconds", "state-transition"}
@@ -87,7 +87,7 @@ class SemanticParityPolicy:
 
     def to_dict(self) -> dict[str, object]:
         return {
-            "policy_id": "portable-semantic-policy-v1",
+            "policy_id": "portable-semantic-policy-v2",
             "price_tolerance": self.price_tolerance.hex(),
             "objective_tolerance": self.objective_tolerance.hex(),
             "physics_tolerance": self.physics_tolerance.hex(),
@@ -95,6 +95,7 @@ class SemanticParityPolicy:
             "zero_sparsity_tolerance": self.zero_sparsity_tolerance.hex(),
             "raw_price_sentinel": self.raw_price_sentinel.hex(),
             "primary_mip_objective_disposition": "qualified-diagnostic",
+            "fixed_sos_disposition": "compare-active-support-not-weight",
             "report_field_disposition": "crosswalk-required",
         }
 
@@ -240,6 +241,10 @@ class SemanticCaseComparator:
             and item.absolute_error is not None
         ):
             return "qualified-primary-mip-diagnostic"
+        if surface == "fixed-discrete-pricing-state" and self._same_sos_support(
+            item
+        ):
+            return "equivalent-sos-support"
         if surface == "raw-bus-price" and self._is_sentinel_difference(item):
             repaired_error = repaired_errors.get(item.path)
             if repaired_error is not None and repaired_error <= self.policy.price_tolerance:
@@ -257,6 +262,24 @@ class SemanticCaseComparator:
         ):
             return "within-tolerance"
         return None
+
+    def _same_sos_support(self, item: CanonicalValueDifference) -> bool:
+        if (
+            item.kind != "changed"
+            or len(item.path) != 3
+            or item.path[0] != "fixed_sos_members"
+            or not item.path[1].startswith("identity=")
+            or item.path[2] != "value"
+        ):
+            return False
+        reference = CanonicalJsonDiffer._number(item.reference)
+        candidate = CanonicalJsonDiffer._number(item.candidate)
+        return bool(
+            reference is not None
+            and candidate is not None
+            and abs(reference) > self.policy.zero_sparsity_tolerance
+            and abs(candidate) > self.policy.zero_sparsity_tolerance
+        )
 
     @staticmethod
     def _unresolved_reason(

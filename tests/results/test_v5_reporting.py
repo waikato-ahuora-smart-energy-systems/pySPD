@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pyomo.environ as pyo
@@ -21,9 +22,9 @@ from tests.orchestration.conftest import (
 FORMULATION = "vspd-v5.0.6-reserve"
 
 
-def _bundle() -> ReportBundle:
+def _bundle(observation=None) -> ReportBundle:
     configuration = DailyRunConfiguration(FORMULATION, "0" * 64, 3)
-    result = DailyRunner(SequenceExecutor([make_observation()])).run(
+    result = DailyRunner(SequenceExecutor([observation or make_observation()])).run(
         configuration, (make_prepared(),)
     )
     provenance = ArtifactProvenance(
@@ -159,3 +160,21 @@ def test_model_rows_use_fixed_pricing_state_and_complete_branch_domain() -> None
             "flow_mw": "0",
         },
     ]
+
+
+def test_bus_report_uses_allocated_transferred_price_for_dead_node_bus() -> None:
+    observation = make_observation()
+    bus_keys = sorted(observation.raw_bus_prices)
+    observation = replace(
+        observation,
+        bus_load={bus_keys[0]: 0.0, bus_keys[1]: 20.0},
+        bus_electrical_island={bus_keys[0]: 0.0, bus_keys[1]: 1.0},
+    )
+
+    rows = {
+        row["bus"]: row
+        for row in _bundle(observation).tables["bus"].rows
+    }
+
+    assert rows[bus_keys[0][-1]]["raw_price_nzd_per_mwh"] == "50"
+    assert rows[bus_keys[0][-1]]["repaired_price_nzd_per_mwh"] == "60"
