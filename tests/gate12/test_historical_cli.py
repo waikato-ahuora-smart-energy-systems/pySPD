@@ -63,6 +63,7 @@ def test_historical_cli_has_explicit_non_qualifying_shard_scope() -> None:
             "1e-12",
             "--material-only-shortfall-case-id",
             "241012022111005708",
+            "--suppress-residue-only-shortfall-loops",
         ]
     )
 
@@ -70,6 +71,7 @@ def test_historical_cli_has_explicit_non_qualifying_shard_scope() -> None:
     assert arguments.tight_scip_case_id == "241012022111000704"
     assert arguments.tight_scip_feastol == "1e-12"
     assert arguments.material_only_shortfall_case_id == "241012022111005708"
+    assert arguments.suppress_residue_only_shortfall_loops
 
 
 def test_complete_shard_succeeds_without_claiming_population_parity() -> None:

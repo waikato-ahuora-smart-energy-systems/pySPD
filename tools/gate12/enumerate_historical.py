@@ -116,6 +116,15 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--suppress-residue-only-shortfall-loops",
+        action="store_true",
+        help=(
+            "Before the transfer loop, clear all adjustments only when no "
+            "absolute shortfall exceeds the 1e-6 MW evidence threshold. "
+            "Requires --tight-scip-case-id."
+        ),
+    )
+    parser.add_argument(
         "--execution-scope",
         choices=("population", "shard"),
         default="population",
@@ -142,9 +151,12 @@ def _verify_reference(source_tree: Path) -> None:
 
 def main(arguments: list[str] | None = None) -> int:
     args = build_parser().parse_args(arguments)
-    if args.material_only_shortfall_case_id and not args.tight_scip_case_id:
+    if (
+        args.material_only_shortfall_case_id
+        or args.suppress_residue_only_shortfall_loops
+    ) and not args.tight_scip_case_id:
         raise EvidenceContractError(
-            "REQ-G12-HISTORICAL: material-only recovery requires a targeted SCIP case"
+            "REQ-G12-HISTORICAL: residue recovery requires a targeted SCIP case"
         )
     source_tree = args.source_tree.resolve()
     work_directory = args.work_directory.resolve()
@@ -154,6 +166,7 @@ def main(arguments: list[str] | None = None) -> int:
             args.tight_scip_case_id,
             args.tight_scip_feastol,
             args.material_only_shortfall_case_id,
+            args.suppress_residue_only_shortfall_loops,
         )
         if args.tight_scip_case_id
         else HistoricalVspdSourcePatcher()

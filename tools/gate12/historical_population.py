@@ -584,6 +584,7 @@ class HistoricalTargetedScipPatcher(HistoricalVspdSourcePatcher):
         case_id: str,
         feastol: str = "1e-10",
         material_only_case_id: str | None = None,
+        suppress_residue_only_cases: bool = False,
     ) -> None:
         if not re.fullmatch(r"[0-9]+", case_id):
             raise EvidenceContractError(
@@ -610,14 +611,19 @@ class HistoricalTargetedScipPatcher(HistoricalVspdSourcePatcher):
                 "REQ-G12-HISTORICAL: material-only case ID must be numeric"
             )
         self.material_only_case_id = material_only_case_id
+        self.suppress_residue_only_cases = suppress_residue_only_cases
         material_profile = (
             ""
             if material_only_case_id is None
             else f"-material-only-{material_only_case_id}-threshold1e-6"
         )
+        residue_profile = (
+            "-residue-only-threshold1e-6" if suppress_residue_only_cases else ""
+        )
         self.profile = (
             "historical-v5.0.2-dailymode0-scip-first-loop-material-transfer-"
             f"target-{case_id}-feastol{self.feastol}{material_profile}"
+            f"{residue_profile}"
         )
 
     def apply(self, programs: Path) -> HistoricalPatchEvidence:
@@ -633,6 +639,22 @@ class HistoricalTargetedScipPatcher(HistoricalVspdSourcePatcher):
                 "            ShortfallAdjustmentMW(t,n)\n"
                 "                $ (abs(EnergyShortfallMW(t,n)) <= 0.000001) = 0;\n"
                 "        );\n"
+                f"{loop_statement}"
+            )
+            solve_text = self._replace_all(
+                solve_text,
+                loop_statement,
+                guarded_loop,
+                1,
+            )
+        if self.suppress_residue_only_cases:
+            loop_statement = (
+                "        while( sum[n, ShortfallAdjustmentMW(ca,dt,n)],"
+            )
+            guarded_loop = (
+                "        ShortfallAdjustmentMW(t,n)\n"
+                "            $ (smax[n1, abs(EnergyShortfallMW(t,n1))] "
+                "<= 0.000001) = 0;\n"
                 f"{loop_statement}"
             )
             solve_text = self._replace_all(

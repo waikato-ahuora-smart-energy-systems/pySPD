@@ -236,14 +236,20 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
         target,
         "1e-12",
         material_case,
+        True,
     ).apply(guarded_programs)
     guarded_solve = (guarded_programs / "vSPDsolve.gms").read_text()
     assert guarded.profile.endswith(
         f"target-{target}-feastol1e-12-material-only-{material_case}-threshold1e-6"
+        "-residue-only-threshold1e-6"
     )
     assert guarded_solve.count(f"if(sameas(ca,'{material_case}'),") == 1
     assert (
         "$ (abs(EnergyShortfallMW(t,n)) <= 0.000001) = 0;" in guarded_solve
+    )
+    assert (
+        "$ (smax[n1, abs(EnergyShortfallMW(t,n1))] <= 0.000001) = 0;"
+        in guarded_solve
     )
     assert guarded.logical_sha256 not in {
         targeted.logical_sha256,
