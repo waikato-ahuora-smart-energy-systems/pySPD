@@ -101,6 +101,11 @@ accepted load, dispatch, objective, and prices.
   raw `+/-500000` sentinel only when the same repaired bus agrees. The
   certificate cannot resolve report, publication, missing-identity, or
   non-numeric differences.
+- A published-price alternative certificate must predeclare and bind its
+  warmup/period case set, require optimal complete cases and zero predecessor
+  fallback, and retain a failed result. Observing one favorable run after an
+  unfavorable governed run is diagnostic solver variability, not permission to
+  select the favorable output as parity evidence.
 - The final Gate 12 decision remains fail-closed at exactly 546 identities over
   all 139 dates, complete representative-day coverage, and zero unresolved
   material discrepancies.

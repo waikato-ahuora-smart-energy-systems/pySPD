@@ -441,6 +441,30 @@ selecting the distinct
 repaired bus differences are resolved by this certificate; report structure,
 publication, or any missing price identity remains fail-closed.
 
+Investigate an above-tolerance rounded publication value with a bounded
+qualified alternative run using:
+
+```bash
+uv run --group gdx python -m tools.gate12.certify_published_price_degeneracy \
+  --input /path/to/Pricing_20221106.gdx \
+  --system-directory /path/to/gams-system-directory \
+  --reference-bundle-root /path/to/incremental/gams-bundles \
+  --candidate-bundle-root /path/to/incremental/pyspd-bundles \
+  --trading-date 20221106 \
+  --run-root /path/to/incremental/published-price-runs \
+  --output /path/to/incremental/published-price-certificates/20221106.json
+```
+
+The runner discovers the discrepant period, selects its immediate warmup and
+all period cases from the GDX order, requires every target case to complete and
+requires zero predecessor-generation fallback. It binds the alternative report
+manifest and execution source. The first formal 2022-11-06 attempt correctly
+failed: its optimal no-fallback result was `13.18042 NZD/MWh`, `0.00161` from
+the GAMS `13.18203`. A prior diagnostic optimal run produced `13.18202`, but
+the favorable observation is not selected after the fact as passing evidence.
+The variable outcomes establish a solver-sensitive surface; a reproducible
+bounded envelope or stronger common-optimal-face certificate is still needed.
+
 For isolated partial inventories, pass `--execution-scope shard`. A complete
 shard then exits successfully and records `shard_complete: true`, while
 `population_passed` remains false and no interval manifest can be emitted.

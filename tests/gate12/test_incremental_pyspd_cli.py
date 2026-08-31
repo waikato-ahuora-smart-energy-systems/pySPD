@@ -7,6 +7,9 @@ import pytest
 from tools.gate12.certify_bus_price_degeneracy import (
     build_parser as bus_certificate_parser,
 )
+from tools.gate12.certify_published_price_degeneracy import (
+    build_parser as published_certificate_parser,
+)
 from tools.gate12.compare_incremental_replays import (
     build_parser as compare_parser,
 )
@@ -190,4 +193,33 @@ def test_bus_degeneracy_cli_requires_source_matrix_and_paired_bundles() -> None:
     )
 
     assert str(arguments.input) == "/inputs/Pricing_20221106.gdx"
+    assert arguments.trading_date == "20221106"
+
+
+def test_published_degeneracy_cli_requires_run_root_and_paired_bundles() -> None:
+    parser = published_certificate_parser()
+
+    with pytest.raises(SystemExit):
+        parser.parse_args([])
+
+    arguments = parser.parse_args(
+        [
+            "--input",
+            "/inputs/Pricing_20221106.gdx",
+            "--system-directory",
+            "/gams",
+            "--reference-bundle-root",
+            "/reference",
+            "--candidate-bundle-root",
+            "/candidate",
+            "--trading-date",
+            "20221106",
+            "--run-root",
+            "/runs",
+            "--output",
+            "/certificates/20221106-published.json",
+        ]
+    )
+
+    assert str(arguments.run_root) == "/runs"
     assert arguments.trading_date == "20221106"
