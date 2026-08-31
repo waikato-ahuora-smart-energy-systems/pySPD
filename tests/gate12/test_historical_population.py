@@ -196,6 +196,21 @@ def test_second_residue_guard_checkpoint_preserves_material_transfer() -> None:
     assert all(len(value) == 64 for value in hashes)
 
 
+def test_third_residue_guard_checkpoint_is_complete_and_exact() -> None:
+    root = Path(__file__).resolve().parents[2]
+    evidence = json.loads(
+        (root / "docs/gate-12/historical-residue-recovery-20230116.json").read_text()
+    )
+    assert evidence["selected_case_count"] == evidence["solved_case_count"] == 283
+    assert evidence["all_solves_optimal"] is True
+    assert evidence["affected_identity_count"] == len(evidence["identities"]) == 8
+    assert len({row[0] for row in evidence["identities"]}) == 8
+    assert all(abs(row[4]) > 1e-6 for row in evidence["identities"])
+    assert evidence["solver_options_changed"] is False
+    assert evidence["shard_complete"] is True
+    assert evidence["population_passed"] is False
+
+
 def test_historical_shortfall_evidence_accepts_optimal_material_transfer_rows() -> None:
     text = HEADER + (
         "51012022111800831|06-NOV-2022 07:00|WAI0111|WAI0501|1|4.5969|4.5971|1|1\n"

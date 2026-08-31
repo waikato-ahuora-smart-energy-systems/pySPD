@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "classification": "qualifying-subthreshold-residue-guard-shard-checkpoint",
+  "trading_date": "20230116",
+  "reference_commit": "3360a91ebd48f2e3cbb52a5e6766d893011054be",
+  "source_sha256": "120fdd849890f3d96d197ee549273045e7592f447e689a8d38f85b8250b1d3f2",
+  "execution_profile": "historical-v5.0.2-dailymode0-scip-solvelink5-first-loop-rtd-only-canonical-order-material-transfer",
+  "patch_profile": "historical-v5.0.2-dailymode0-scip-first-loop-material-transfer-subthreshold-residue-threshold1e-6",
+  "patch_logical_sha256": "ee09dc8ca3203d6793f54c42394d7a9e2da356008a3992931e9e04c9ddeade21",
+  "patch_metadata_file_sha256": "4593333d66124ccf96a5472a46c925fb96b903d6dffd236c64d146cc261e97dd",
+  "selected_case_count": 283,
+  "solved_case_count": 283,
+  "all_solves_optimal": true,
+  "checkpoint_logical_sha256": "ffb4258c067407fd5b3b61f4870f9f90dfa9c928c210dc2f7cfaccb143966fea",
+  "checkpoint_file_sha256": "4cb7b31dd75f937af1feff99ef77b4d7e35bc0619cfb00d20ee2a8224040a6a7",
+  "population_summary_file_sha256": "4181e787be3b7066647bb5fa1d371eab2bccdd80075cd579ad1e9288df988a18",
+  "artifact_sha256": {
+    "evidence": "1002b9fd54e01b97025861dbbd3cd986dfd5a8bbecb97a315c4897cd65e814cd",
+    "listing": "f9ac3abee9eede9fb24268037e953dbc86d72cb6157a46b02778ae02516931b1",
+    "progress": "adee69083e62b1c5689c62091178731ea76a0f08f99c41a93b51f625148901d0"
+  },
+  "affected_identity_count": 8,
+  "identities": [
+    ["151012023011830340", "16-JAN-2023 07:30", "KMO0331", "KMO1102", 2.849939815074],
+    ["151012023011835343", "16-JAN-2023 07:35", "KMO0331", "KMO1102", 1.079140380760],
+    ["151012023011840344", "16-JAN-2023 07:40", "KMO0331", "KMO1102", 2.031920798710],
+    ["151012023011935361", "16-JAN-2023 08:35", "CLH0111", "CLH0661", 0.468098424367],
+    ["151012023011940362", "16-JAN-2023 08:40", "CLH0111", "CLH0661", 0.134438974203],
+    ["151012023011945363", "16-JAN-2023 08:45", "CLH0111", "CLH0661", 0.133765541972],
+    ["151012023011950364", "16-JAN-2023 08:50", "CLH0111", "CLH0661", 0.133604702931],
+    ["151012023011955367", "16-JAN-2023 08:55", "CLH0111", "CLH0661", 0.133968173195]
+  ],
+  "identity_fields": ["case_id", "date_time", "node", "target_node", "energy_shortfall_mw"],
+  "solver_options_changed": false,
+  "shard_complete": true,
+  "population_passed": false
+}

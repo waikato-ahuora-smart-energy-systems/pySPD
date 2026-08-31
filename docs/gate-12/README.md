@@ -215,6 +215,10 @@ hash is
 the compact record is
 [`historical-residue-recovery-20221204.json`](historical-residue-recovery-20221204.json).
 
+The 2023-01-16 shard also passed: 283/283 exact optimal cases and eight
+material identities. Its logical checkpoint hash is `ffb4258c067407fd5b3b61f4870f9f90dfa9c928c210dc2f7cfaccb143966fea`;
+see [`historical-residue-recovery-20230116.json`](historical-residue-recovery-20230116.json).
+
 `HistoricalPopulationRunner` verifies every Gate 1 source size and SHA-256,
 reads the GDX run-mode surface, selects exactly RTD modes 101 and 201, and
 accepts a daily checkpoint only when the progress identities are exact, every
