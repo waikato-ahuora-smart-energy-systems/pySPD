@@ -80,7 +80,45 @@ def test_independent_validator_maps_equation_marginals_to_native_and_csv_prices(
     assert result.passed
     assert result.price_count == 1
     assert result.native_comparison.max_absolute_delta == pytest.approx(0.0)
+    assert result.report_comparison is not None
     assert result.report_comparison.max_absolute_delta == pytest.approx(0.0)
+
+
+def test_independent_validator_accepts_a_published_subset_of_solved_periods() -> None:
+    result = IndependentPriceValidator().validate(
+        bus_marginals={
+            ("case-1", "period-1", "B1"): 50.0,
+            ("case-2", "period-2", "B1"): 60.0,
+        },
+        allocations={
+            ("case-1", "period-1", "N1", "B1"): 1.0,
+            ("case-2", "period-2", "N1", "B1"): 1.0,
+        },
+        native_prices={
+            ("case-1", "period-1", "normal", "N1"): 50.0,
+            ("case-2", "period-2", "normal", "N1"): 60.0,
+        },
+        active_scenario="normal",
+        report_prices={("period-1", "normal", "N1"): 50.0},
+    )
+
+    assert result.passed
+    assert result.price_count == 2
+    assert result.report_comparison is not None
+    assert len(result.report_comparison.deltas) == 1
+
+
+def test_independent_validator_can_validate_native_prices_without_a_report() -> None:
+    result = IndependentPriceValidator().validate(
+        bus_marginals={("case", "period", "B1"): 50.0},
+        allocations={("case", "period", "N1", "B1"): 1.0},
+        native_prices={("case", "period", "normal", "N1"): 50.0},
+        active_scenario="normal",
+        report_prices=None,
+    )
+
+    assert result.passed
+    assert result.report_comparison is None
 
 
 def test_independent_validator_accepts_explicit_postprocessed_bus_prices() -> None:

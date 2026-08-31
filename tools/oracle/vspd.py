@@ -1756,10 +1756,19 @@ class VspdRunner:
             )
         else:
             assert published_energy_prices is not None
-            published_prices = {
-                (record.date_time, record.node): record.price
-                for record in published_energy_prices.records
-            }
+            daily_prefix = bool(
+                case.configuration is not None
+                and case.configuration.daily_mode == 1
+                and len(case.configuration.case_ids) > 1
+            )
+            published_prices = (
+                None
+                if daily_prefix
+                else {
+                    (record.date_time, record.node): record.price
+                    for record in published_energy_prices.records
+                }
+            )
             price_validation = GdxPublishedPriceValidator(system_directory).validate(
                 sources["pricing_solution"],
                 published_prices,

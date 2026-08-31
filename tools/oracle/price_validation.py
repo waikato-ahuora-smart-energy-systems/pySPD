@@ -164,13 +164,15 @@ class IndependentPriceValidation:
     active_scenario: str
     price_count: int
     native_comparison: PriceComparison
-    report_comparison: PriceComparison
+    report_comparison: PriceComparison | None
     bus_price_adjustment_count: int = 0
     price_transfer_count: int = 0
 
     @property
     def passed(self) -> bool:
-        return self.native_comparison.passed and self.report_comparison.passed
+        return self.native_comparison.passed and (
+            self.report_comparison is None or self.report_comparison.passed
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -180,7 +182,11 @@ class IndependentPriceValidation:
             "price_transfer_count": self.price_transfer_count,
             "passed": self.passed,
             "native_comparison": self.native_comparison.to_dict(),
-            "report_comparison": self.report_comparison.to_dict(),
+            "report_comparison": (
+                self.report_comparison.to_dict()
+                if self.report_comparison is not None
+                else None
+            ),
         }
 
 
@@ -193,7 +199,7 @@ class IndependentPriceValidator:
         allocations: Mapping[tuple[str, str, str, str], float],
         native_prices: Mapping[tuple[str, str, str, str], float],
         active_scenario: str,
-        report_prices: Mapping[tuple[str, str, str], float],
+        report_prices: Mapping[tuple[str, str, str], float] | None,
         native_absolute_tolerance: float = 1e-9,
         report_absolute_tolerance: float = 0.0005,
         mapped_bus_prices: Mapping[tuple[str, str, str], float] | None = None,
@@ -212,27 +218,25 @@ class IndependentPriceValidator:
             raise ValueError(
                 f"no native prices for active scenario {active_scenario!r}"
             )
+        allocations_by_node: dict[
+            tuple[str, str, str], list[NodeBusAllocation]
+        ] = {}
+        for (ca, dt, node, bus), factor in allocations.items():
+            allocations_by_node.setdefault((ca, dt, node), []).append(
+                NodeBusAllocation(node=node, bus=bus, factor=float(factor))
+            )
+        price_source = (
+            mapped_bus_prices if mapped_bus_prices is not None else bus_marginals
+        )
+        bus_prices_by_period: dict[tuple[str, str], dict[str, float]] = {}
+        for (ca, dt, bus), price in price_source.items():
+            bus_prices_by_period.setdefault((ca, dt), {})[bus] = float(price)
         calculated: dict[tuple[str, ...], float] = {}
         expected_nodes = {(ca, dt, node) for ca, dt, _, node in active_native}
         for ca, dt, node in sorted(expected_nodes):
-            node_allocations = (
-                NodeBusAllocation(node=node, bus=bus, factor=float(factor))
-                for (alloc_ca, alloc_dt, alloc_node, bus), factor in allocations.items()
-                if (alloc_ca, alloc_dt, alloc_node) == (ca, dt, node)
-            )
-            price_source = (
-                mapped_bus_prices
-                if mapped_bus_prices is not None
-                else bus_marginals
-            )
-            period_bus_prices = {
-                bus: float(price)
-                for (price_ca, price_dt, bus), price in price_source.items()
-                if (price_ca, price_dt) == (ca, dt)
-            }
             mapped = NodePriceMapper().map_prices(
-                period_bus_prices,
-                tuple(node_allocations),
+                bus_prices_by_period.get((ca, dt), {}),
+                allocations_by_node.get((ca, dt, node), ()),
             )
             calculated[(ca, dt, active_scenario, node)] = mapped[node]
         price_transfer_count = self._apply_dead_node_price_transfer(
@@ -254,17 +258,25 @@ class IndependentPriceValidator:
             (dt, scenario, node): value
             for (_, dt, scenario, node), value in calculated.items()
         }
-        active_report: dict[tuple[str, ...], float] = {
-            key: value
-            for key, value in report_prices.items()
-            if key[1] == active_scenario
-        }
-        report_comparison = PriceComparator.compare(
-            calculated_report,
-            active_report,
-            absolute_tolerance=report_absolute_tolerance,
-            relative_tolerance=1e-12,
-        )
+        report_comparison: PriceComparison | None = None
+        if report_prices is not None:
+            active_report: dict[tuple[str, ...], float] = {
+                key: value
+                for key, value in report_prices.items()
+                if key[1] == active_scenario
+            }
+            unknown_report_keys = set(active_report) - set(calculated_report)
+            if unknown_report_keys:
+                raise ValueError(
+                    "report prices are outside the calculated price universe: "
+                    f"{sorted(unknown_report_keys)}"
+                )
+            report_comparison = PriceComparator.compare(
+                {key: calculated_report[key] for key in active_report},
+                active_report,
+                absolute_tolerance=report_absolute_tolerance,
+                relative_tolerance=1e-12,
+            )
         return IndependentPriceValidation(
             active_scenario=active_scenario,
             price_count=len(calculated),
@@ -284,40 +296,42 @@ class IndependentPriceValidator:
         node_links: AbstractSet[tuple[str, str, str, str]],
         node_islands: AbstractSet[tuple[str, str, str, str]],
     ) -> int:
+        nodes_by_period: dict[tuple[str, str], set[str]] = {}
+        for ca, dt, scenario, node in calculated:
+            if scenario == active_scenario:
+                nodes_by_period.setdefault((ca, dt), set()).add(node)
+        islands_by_period_node: dict[tuple[str, str, str], set[str]] = {}
+        for ca, dt, node, island in node_islands:
+            islands_by_period_node.setdefault((ca, dt, node), set()).add(island)
+        connected_allocation_by_node: dict[tuple[str, str, str], float] = {}
+        for (ca, dt, node, bus), factor in allocations.items():
+            if (ca, dt, bus) not in disconnected_buses:
+                key = (ca, dt, node)
+                connected_allocation_by_node[key] = (
+                    connected_allocation_by_node.get(key, 0.0) + float(factor)
+                )
+        links_by_source: dict[tuple[str, str, str], set[str]] = {}
+        for ca, dt, source, target in node_links:
+            links_by_source.setdefault((ca, dt, source), set()).add(target)
+
         transfer_count = 0
         for ca, dt in sorted(price_transfer_periods):
-            nodes = {
-                key[3]
-                for key in calculated
-                if key[:3] == (ca, dt, active_scenario)
-            }
+            nodes = nodes_by_period.get((ca, dt), set())
             islands_by_node = {
-                node: {
-                    island
-                    for island_ca, island_dt, island_node, island in node_islands
-                    if (island_ca, island_dt, island_node) == (ca, dt, node)
-                }
+                node: islands_by_period_node.get((ca, dt, node), set())
                 for node in nodes
             }
             dead_nodes = {
                 node
                 for node in nodes
-                if sum(
-                    float(factor)
-                    for (alloc_ca, alloc_dt, alloc_node, bus), factor
-                    in allocations.items()
-                    if (alloc_ca, alloc_dt, alloc_node) == (ca, dt, node)
-                    and (ca, dt, bus) not in disconnected_buses
-                )
-                == 0.0
+                if connected_allocation_by_node.get((ca, dt, node), 0.0) == 0.0
             }
             while dead_nodes:
                 sources_by_node = {
                     node: {
                         target
-                        for link_ca, link_dt, source, target in node_links
-                        if (link_ca, link_dt, source) == (ca, dt, node)
-                        and target not in dead_nodes
+                        for target in links_by_source.get((ca, dt, node), set())
+                        if target not in dead_nodes
                         and islands_by_node.get(node, set())
                         & islands_by_node.get(target, set())
                     }
@@ -435,7 +449,7 @@ class GdxPublishedPriceValidator:
     def validate(
         self,
         solution_gdx: Path,
-        report_prices: Mapping[tuple[str, str], float],
+        report_prices: Mapping[tuple[str, str], float] | None,
     ) -> IndependentPriceValidation:
         try:
             import gams.transfer as gt  # type: ignore[import-untyped]
@@ -553,9 +567,13 @@ class GdxPublishedPriceValidator:
                 for ca, date_time, node in node_universe
             },
             active_scenario="normal",
-            report_prices={
-                (date_time, "normal", node): price
-                for (date_time, node), price in report_prices.items()
-            },
+            report_prices=(
+                {
+                    (date_time, "normal", node): price
+                    for (date_time, node), price in report_prices.items()
+                }
+                if report_prices is not None
+                else None
+            ),
             report_absolute_tolerance=5e-6,
         )

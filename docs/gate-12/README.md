@@ -300,9 +300,15 @@ raw and repaired bus prices separately, accepted physics and objectives,
 shortfall transitions, solve counts, native discrete/SOS state, publication
 weights and outputs, and the ordinary vSPD CSV reports. A bundle is emitted
 only after every operational solve is optimal and the existing independent
-matrix/price checks pass. With the observed single-node network entitlement,
-this command must wait while historical population enumeration owns the GAMS
-session.
+matrix/price checks pass. For a multi-case daily prefix, the independent price
+validator checks every raw nodal price against the balance marginals and node
+allocation factors. It does not compare those five-minute prices directly to
+the half-hourly, time-weighted publication CSV; publication aggregation and
+rounding remain a separate canonical parity surface. The validator indexes
+period, node, bus, island, and transfer relationships once so daily validation
+is linear in the evidence size. With the observed single-node network
+entitlement, this command must wait while historical population enumeration
+owns the GAMS session.
 
 When both canonical bundles for a date are available, compare and checkpoint
 all available dates with:
