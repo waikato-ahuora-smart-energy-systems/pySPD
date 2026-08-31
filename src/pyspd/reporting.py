@@ -554,6 +554,12 @@ def _model_rows(
             continue
         for key, value in _component_values(component):
             rows[report].append({**base, identity: key, quantity: _number(value)})
+    network_data = artifacts.get("network_data")
+    reported_branch_identities = {row["branch"] for row in rows["branch"]}
+    for branch in sorted(getattr(network_data, "report_branches", ())):
+        identity = "|".join(str(part) for part in branch)
+        if identity not in reported_branch_identities:
+            rows["branch"].append({**base, "branch": identity, "flow_mw": "0"})
     for component in primary.model.component_objects(
         pyo.Constraint, active=True, descend_into=True
     ):

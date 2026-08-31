@@ -23,3 +23,7 @@ def test_topology_derivations_match_vspd_semantics(
     assert result.set("ac_branch").members == {("C1", "D1", "BR1")}
     assert result.set("hvdc_link").members == {("C1", "D1", "HV1")}
     assert ("C1", "D1", "HV1") in result.set("branch").members
+    assert result.set("report_branch").members == {
+        ("C1", "D1", "BR1"),
+        ("C1", "D1", "HV1"),
+    }

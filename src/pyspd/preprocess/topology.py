@@ -30,6 +30,7 @@ class TopologyStep(PreprocessingStep):
             "total_bus_allocation",
             "bus_node_allocation_factor",
             "branch",
+            "report_branch",
             "branch_bus_definition",
             "branch_from_bus",
             "branch_to_bus",
@@ -151,6 +152,11 @@ class TopologyStep(PreprocessingStep):
             ),
             "branch": SparseSet(
                 "branch", ("case", "datetime", "branch"), frozenset(active_branches)
+            ),
+            "report_branch": SparseSet(
+                "report_branch",
+                ("case", "datetime", "branch"),
+                frozenset(key[:3] for key in definitions),
             ),
             "branch_bus_definition": SparseSet(
                 "branch_bus_definition",

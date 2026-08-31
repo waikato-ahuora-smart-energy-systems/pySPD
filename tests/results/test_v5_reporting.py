@@ -110,6 +110,13 @@ def test_model_rows_include_ac_and_hvdc_branch_flows() -> None:
             values={
                 "branch_flow": model.ac_flow,
                 "hvdc_flow": model.hvdc_flow,
+                "network_data": SimpleNamespace(
+                    report_branches={
+                        ("case", "time", "AC.1"),
+                        ("case", "time", "HVDC.1"),
+                        ("case", "time", "OPEN.1"),
+                    }
+                ),
             }
         ),
     )
@@ -138,5 +145,11 @@ def test_model_rows_include_ac_and_hvdc_branch_flows() -> None:
             "date_time": "time",
             "branch": "case|time|HVDC.1",
             "flow_mw": "25",
+        },
+        {
+            "case_id": "case",
+            "date_time": "time",
+            "branch": "case|time|OPEN.1",
+            "flow_mw": "0",
         },
     ]

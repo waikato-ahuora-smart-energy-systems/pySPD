@@ -478,13 +478,17 @@ projections in each case. The compact evidence index is
 The branch identity failures exposed a candidate reporting omission. Two of
 the missing rows per case are nonzero HVDC links (`BEN_HAY1.1` and
 `BEN_HAY2.1`); the report renderer exported `branch_flow` but not the separately
-registered `hvdc_flow`. The renderer and its Probity test now include both.
-This changes candidate report evidence and therefore requires a new governed
-PySPD replay; old bundles are not rewritten. The remaining missing branch rows
-are retained explicitly. `SystemOFV` is also intentionally unsupported: pinned
-vSPD adds its scarcity-limit-by-price constant to the summary value even though
-that constant is omitted from the solved objective, and the current PySPD
-summary has no equivalent derived field.
+registered `hvdc_flow`. The other missing rows are open/inactive branches that
+Authority retains with zero flow while preprocessing correctly excludes them
+from the optimization domain. The normalized network now carries a separate
+full report-only branch domain; the renderer emits AC and HVDC solved values
+and explicit zeros only for report-domain identities absent from both solved
+components. Probity tests cover both paths. This changes candidate report
+evidence and therefore requires a new governed PySPD replay; old bundles are
+not rewritten. `SystemOFV` is also intentionally unsupported: pinned vSPD adds
+its scarcity-limit-by-price constant to the summary value even though that
+constant is omitted from the solved objective, and the current PySPD summary
+has no equivalent derived field.
 
 Create case-specific bus-dual evidence from the independently loaded GDX
 allocation matrix with:

@@ -57,6 +57,7 @@ class NetworkData:
     market_node_constraint_limit: Mapping[Key, float]
     market_node_energy_offer_factor: Mapping[Key, float]
     market_node_energy_bid_factor: Mapping[Key, float]
+    report_branches: frozenset[Key] = frozenset()
     receiving_end_loss_proportion: float = 1.0
     use_ac_branch_limits: bool = True
     bus_deficit_penalty: float = 500_000.0
@@ -68,9 +69,15 @@ class NetworkData:
     market_node_surplus_penalty: float = 700_000.0
 
     def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "report_branches",
+            frozenset(self.report_branches) | frozenset(self.branches),
+        )
         for name in (
             "buses",
             "branches",
+            "report_branches",
             "ac_branches",
             "node_bus",
             "bus_island",
@@ -111,6 +118,8 @@ class NetworkData:
             raise NetworkDataError("at least one bus is required")
         if not self.ac_branches <= self.branches:
             raise NetworkDataError("AC branch lies outside the branch domain")
+        if not self.branches <= self.report_branches:
+            raise NetworkDataError("active branch lies outside the report domain")
         if not self.reference_buses <= self.buses:
             raise NetworkDataError("reference bus lies outside the bus domain")
         if {key[:3] for key in self.valid_ac_loss_segments} - self.ac_branches:
@@ -127,18 +136,16 @@ class NetworkData:
             for direction in ("forward", "backward")
         }
         if set(self.branch_capacity) != expected_capacity:
-            raise NetworkDataError("directional capacity does not cover active branches")
+            raise NetworkDataError(
+                "directional capacity does not cover active branches"
+            )
         if set(self.branch_constraint_sense) != set(self.branch_constraints):
             raise NetworkDataError("branch constraint sense does not cover its domain")
         if set(self.branch_constraint_limit) != set(self.branch_constraints):
             raise NetworkDataError("branch constraint limit does not cover its domain")
-        if set(self.market_node_constraint_sense) != set(
-            self.market_node_constraints
-        ):
+        if set(self.market_node_constraint_sense) != set(self.market_node_constraints):
             raise NetworkDataError("market-node sense does not cover its domain")
-        if set(self.market_node_constraint_limit) != set(
-            self.market_node_constraints
-        ):
+        if set(self.market_node_constraint_limit) != set(self.market_node_constraints):
             raise NetworkDataError("market-node limit does not cover its domain")
         mappings = (
             self.node_bus_allocation,
@@ -195,9 +202,7 @@ class NetworkData:
             for key in source.members("i_dateTimeBidNode")
             if key[:3] in bids and key[:2] + (key[3],) in nodes
         )
-        reference_nodes = source.component(
-            "i_dateTimeNodeParameter", "referenceNode"
-        )
+        reference_nodes = source.component("i_dateTimeNodeParameter", "referenceNode")
         reference_buses = frozenset(
             (case, datetime, bus)
             for case, datetime, node, bus in node_bus
@@ -219,9 +224,7 @@ class NetworkData:
         }
         bid_factors = {
             key: value
-            for key, value in source.numeric(
-                "i_dateTimeMNCnstrEnrgBidFactors"
-            ).items()
+            for key, value in source.numeric("i_dateTimeMNCnstrEnrgBidFactors").items()
             if key[:3] in market_constraints and key[:2] + (key[3],) in bids
         }
         return cls(
@@ -251,7 +254,9 @@ class NetworkData:
                 ).items()
                 if key in node_bus
             },
-            node_load={key: result.parameter("required_load").get(key) for key in nodes},
+            node_load={
+                key: result.parameter("required_load").get(key) for key in nodes
+            },
             bus_electrical_island={
                 key: source.numeric("i_dateTimeBusElectricalIsland").get(key, 0.0)
                 for key in buses
@@ -260,9 +265,7 @@ class NetworkData:
             branch_susceptance=result.parameter("branch_susceptance").values,
             branch_fixed_loss=result.parameter("branch_fixed_loss").values,
             ac_loss_segment_mw=result.parameter("ac_branch_loss_mw").values,
-            ac_loss_segment_factor=result.parameter(
-                "ac_branch_loss_factor"
-            ).values,
+            ac_loss_segment_factor=result.parameter("ac_branch_loss_factor").values,
             branch_constraint_sense={
                 key: result.parameter("branch_constraint_sense").get(key)
                 for key in branch_constraints
@@ -282,6 +285,7 @@ class NetworkData:
             },
             market_node_energy_offer_factor=offer_factors,
             market_node_energy_bid_factor=bid_factors,
+            report_branches=result.set("report_branch").members,
         )
 
 

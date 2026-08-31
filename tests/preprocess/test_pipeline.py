@@ -24,7 +24,7 @@ def test_preprocessing_pipeline_is_deterministic_and_immutable(
     assert [item.logical_sha256 for item in first.checkpoints] == [
         item.logical_sha256 for item in second.checkpoints
     ]
-    assert len(first.artifacts) == 99
+    assert len(first.artifacts) == 100
     with pytest.raises(TypeError):
         first.artifacts["new"] = first.artifacts["node"]  # type: ignore[index]
     with pytest.raises(TypeError):
