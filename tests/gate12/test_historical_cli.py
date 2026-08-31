@@ -59,11 +59,14 @@ def test_historical_cli_has_explicit_non_qualifying_shard_scope() -> None:
             "shard",
             "--tight-scip-case-id",
             "241012022111000704",
+            "--tight-scip-feastol",
+            "1e-12",
         ]
     )
 
     assert arguments.execution_scope == "shard"
     assert arguments.tight_scip_case_id == "241012022111000704"
+    assert arguments.tight_scip_feastol == "1e-12"
 
 
 def test_complete_shard_succeeds_without_claiming_population_parity() -> None:

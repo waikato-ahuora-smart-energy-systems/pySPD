@@ -13,6 +13,7 @@ import subprocess
 import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -578,15 +579,28 @@ class HistoricalVspdSourcePatcher:
 class HistoricalTargetedScipPatcher(HistoricalVspdSourcePatcher):
     """Load strict SCIP numerics for one identified pathological case only."""
 
-    def __init__(self, case_id: str) -> None:
+    def __init__(self, case_id: str, feastol: str = "1e-10") -> None:
         if not re.fullmatch(r"[0-9]+", case_id):
             raise EvidenceContractError(
                 "REQ-G12-HISTORICAL: targeted SCIP case ID must be numeric"
             )
+        try:
+            tolerance = Decimal(feastol)
+        except InvalidOperation as error:
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: targeted SCIP feastol must be numeric"
+            ) from error
+        if not tolerance.is_finite() or not Decimal("1e-17") <= tolerance < Decimal(
+            "1e-6"
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: targeted SCIP feastol must be in [1e-17, 1e-6)"
+            )
         self.case_id = case_id
+        self.feastol = format(tolerance.normalize(), "e")
         self.profile = (
             "historical-v5.0.2-dailymode0-scip-first-loop-material-transfer-"
-            f"target-{case_id}-feastol1e-10"
+            f"target-{case_id}-feastol{self.feastol}"
         )
 
     def apply(self, programs: Path) -> HistoricalPatchEvidence:
@@ -611,7 +625,7 @@ class HistoricalTargetedScipPatcher(HistoricalVspdSourcePatcher):
         scip_options = programs / "scip.opt"
         scip_options.write_text(
             "emphasis: numerics\n"
-            "numerics/feastol = 1e-10\n",
+            f"numerics/feastol = {self.feastol}\n",
             encoding="utf-8",
         )
         patched = (

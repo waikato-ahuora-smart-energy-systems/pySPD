@@ -94,8 +94,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--tight-scip-case-id",
         help=(
-            "Load the separately hash-addressed SCIP feastol 1e-10 option "
+            "Load a separately hash-addressed strict SCIP option "
             "file for this numeric case ID only."
+        ),
+    )
+    parser.add_argument(
+        "--tight-scip-feastol",
+        default="1e-10",
+        help=(
+            "Target-case SCIP feasibility tolerance in [1e-17, 1e-6); "
+            "ignored unless --tight-scip-case-id is supplied."
         ),
     )
     parser.add_argument(
@@ -129,7 +137,10 @@ def main(arguments: list[str] | None = None) -> int:
     work_directory = args.work_directory.resolve()
     _verify_reference(source_tree)
     patcher = (
-        HistoricalTargetedScipPatcher(args.tight_scip_case_id)
+        HistoricalTargetedScipPatcher(
+            args.tight_scip_case_id,
+            args.tight_scip_feastol,
+        )
         if args.tight_scip_case_id
         else HistoricalVspdSourcePatcher()
     )

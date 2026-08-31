@@ -180,6 +180,8 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
     )
     targeted_programs = tmp_path / "TargetedPrograms"
     shutil.copytree(programs, targeted_programs)
+    tighter_programs = tmp_path / "targeted-tighter"
+    shutil.copytree(programs, tighter_programs)
 
     patcher = HistoricalVspdSourcePatcher()
     result = patcher.apply(programs)
@@ -218,8 +220,19 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
     )
     assert "scip.opt" in targeted.file_sha256
 
+    tighter = HistoricalTargetedScipPatcher(target, "1e-12").apply(tighter_programs)
+    assert tighter.profile.endswith(f"target-{target}-feastol1e-12")
+    assert (tighter_programs / "scip.opt").read_text() == (
+        "emphasis: numerics\n"
+        "numerics/feastol = 1e-12\n"
+    )
+    assert tighter.logical_sha256 != targeted.logical_sha256
+
     with pytest.raises(EvidenceContractError, match="must be numeric"):
         HistoricalTargetedScipPatcher("bad-case")
+
+    with pytest.raises(EvidenceContractError, match="must be in"):
+        HistoricalTargetedScipPatcher(target, "1e-18")
 
     with pytest.raises(EvidenceContractError, match="source drift"):
         patcher.apply(programs)
