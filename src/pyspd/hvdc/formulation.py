@@ -409,6 +409,15 @@ def _canonical_sos_value(
 
 
 def _fix_continuous_state(model: pyo.ConcreteModel, fixed: Mapping[str, float]) -> None:
+    """Preserve solved SOS support while leaving active weights continuous.
+
+    The fixed-discrete pricing model must retain the primary solve's selected
+    SOS interval, but fixing the nonzero interpolation weights over-constrains
+    the RMIP and can make it infeasible.  Zero-valued members define the
+    inactive support; the interval binaries fixed by ``_fix_and_relax_discrete``
+    constrain the remaining weights.
+    """
+
     by_name = {
         variable.name: variable
         for variable in model.component_data_objects(pyo.Var, active=True)
@@ -417,7 +426,8 @@ def _fix_continuous_state(model: pyo.ConcreteModel, fixed: Mapping[str, float]) 
     if missing:
         raise ValueError("pricing model does not contain every SOS member")
     for name, value in fixed.items():
-        by_name[name].fix(value)
+        if value == 0.0:
+            by_name[name].fix(0.0)
 
 
 def _set_continuous_state(

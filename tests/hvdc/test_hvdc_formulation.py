@@ -20,7 +20,10 @@ from pyspd.hvdc import (
     validate_fixed_mip_price_finite_difference,
 )
 from pyspd.hvdc.diagnostics import DiagnosticCapabilityError
-from pyspd.hvdc.formulation import pricing_model_belongs_to_request
+from pyspd.hvdc.formulation import (
+    _fix_continuous_state,
+    pricing_model_belongs_to_request,
+)
 from tests.hvdc.conftest import make_hvdc_case
 
 
@@ -35,6 +38,25 @@ def solve(case):
     report = IndependentHvdcValidator().validate(outcome, tolerance=1e-6)
     assert report.passed, report.residuals
     return built, outcome, prices
+
+
+def test_fixed_rmip_preserves_sos_support_without_fixing_active_weights() -> None:
+    model = pyo.ConcreteModel()
+    model.members = pyo.Var(("inactive", "left", "right"), bounds=(0.0, 1.0))
+
+    _fix_continuous_state(
+        model,
+        {
+            "members[inactive]": 0.0,
+            "members[left]": 0.25,
+            "members[right]": 0.75,
+        },
+    )
+
+    assert model.members["inactive"].fixed
+    assert pyo.value(model.members["inactive"]) == 0.0
+    assert not model.members["left"].fixed
+    assert not model.members["right"].fixed
 
 
 def test_hvdc_forward_flow_loss_and_bus_prices() -> None:

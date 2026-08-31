@@ -267,9 +267,11 @@ covers the pinned GAMS source programs and GAMS executable bytes.
 The first live candidate-prefix rehearsal failed closed at historical case
 `51012022111105693`, exposing a native SCIP LP error under an over-tightened
 `1e-9` feasibility setting. The same isolated case completes with SCIP's
-explicit `1e-6` setting. The portable profile separately projects only SOS
-members within `1e-5` of zero or one to their exact boundary before fixing the
-HiGHS RMIP; the complete unit and probity suite validates this state transfer.
+explicit `1e-6` setting. The portable profile separately projects SOS members
+within `1e-5` of zero or one to their exact boundary, fixes only inactive
+zero-valued members, and leaves active interpolation weights continuous for
+the HiGHS RMIP. The portable interval binaries preserve the selected SOS
+support; the complete unit and probity suite validates this state transfer.
 The first bounded prefix rehearsal also exposed a quadratic branch-endpoint
 scan in post-solve observation projection. That projection now builds indexed
 node, offer, bus, branch, and flow maps once per case; the formerly failing

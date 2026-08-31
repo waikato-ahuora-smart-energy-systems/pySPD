@@ -55,11 +55,14 @@ pricing solver.
 
 The portable solver contract keeps SCIP's explicit `1e-6` primal-feasibility
 tolerance. Before the independent HiGHS solve, SOS members lying within `1e-5`
-of zero or one are projected to that exact boundary in both the primary
-evidence snapshot and the fixed pricing state. This removes solver-feasibility
-residue without changing interior interpolation weights. The independent
-objective validator retains the absolute residual as evidence and applies the
-declared tolerance to both absolute and scale-relative objective agreement.
+of zero or one are projected to that exact boundary in the primary evidence
+snapshot. Only zero-valued (inactive) SOS members are fixed in the pricing
+model; active interpolation weights remain continuous and are reoptimised
+within the interval selected by the separately fixed portable binaries. This
+removes solver-feasibility residue, preserves SOS support, and avoids
+over-constraining the RMIP. The independent objective validator retains the
+absolute residual as evidence and applies the declared tolerance to both
+absolute and scale-relative objective agreement.
 
 ## Consequences
 

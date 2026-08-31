@@ -10,7 +10,7 @@ from pyspd.reserve import ReserveSolvePolicy, reserve_formulation
 from tests.reserve.conftest import make_reserve_case
 
 
-def test_pricing_fixes_native_sos_members_at_primary_values() -> None:
+def test_pricing_preserves_native_sos_support_and_reoptimises_active_weights() -> None:
     built = ModelAssembler().assemble(reserve_formulation(), make_reserve_case())
     outcome = ReserveSolvePolicy().solve(built)
 
@@ -25,8 +25,15 @@ def test_pricing_fixes_native_sos_members_at_primary_values() -> None:
         primary = outcome.primary_model.artifacts[artifact]
         pricing = outcome.pricing_model.artifacts[artifact]
         for key in primary:
-            assert pricing[key].fixed
-            assert pyo.value(pricing[key]) == pytest.approx(pyo.value(primary[key]))
+            name = primary[key].name
+            assert pyo.value(primary[key]) == pytest.approx(
+                outcome.fixed_sos_members[name]
+            )
+            if outcome.fixed_sos_members[name] == 0.0:
+                assert pricing[key].fixed
+                assert pyo.value(pricing[key]) == 0.0
+            else:
+                assert not pricing[key].fixed
 
 
 def test_sos_member_fixing_is_separate_from_binary_fix_map() -> None:
