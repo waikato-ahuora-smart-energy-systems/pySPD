@@ -154,6 +154,7 @@ class _Evidence:
             "pyspd_gate12_untransferred": {},
             "pyspd_gate12_solve_count": {prefix: 1.0},
             "pyspd_gate12_primary_objective": {prefix: 100.0},
+            "pyspd_gate12_pricing_objective": {prefix: 99.999999},
             "pyspd_gate12_HVDCSENDING": {(*prefix, "NI"): 1.0},
             "pyspd_gate12_INZONE": {(*prefix, "NI", "FIR", "NR"): 1.0},
             "pyspd_gate12_HVDCSENDZERO": {(*prefix, "NI"): 0.0},
@@ -212,6 +213,11 @@ def test_gams_surface_projection_keeps_all_twelve_layers(tmp_path: Path) -> None
     assert physics["generation"] == [{"identity": ["O1"], "value": "0x1.4000000000000p+3"}]
     assert physics["structural_signature"] is None
     assert physics["variables"] == []
+    objectives = __import__("json").loads(projected.surfaces["primary-objective"])
+    assert objectives == {
+        "fixed_rmip_objective_nzd": "0x1.8fffffbce4218p+6",
+        "primary_mip_objective_nzd": "0x1.9000000000000p+6",
+    }
     fixed = __import__("json").loads(
         projected.surfaces["fixed-discrete-pricing-state"]
     )

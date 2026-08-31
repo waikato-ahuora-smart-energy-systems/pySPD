@@ -291,14 +291,16 @@ is absent from daily mode.
 The corrected first-date comparison also exposed a solver-tolerance artifact in
 the final affected interval. SCIP could return a nominally nonnegative balance
 violation about `1.6e-7 MW` below zero. With vSPD's `1,000,000 NZD/MW` penalty,
-that physically tiny bound residue moved the primary objective by about
+that physically tiny bound residue moved the raw primary objective by about
 `0.16 NZD`, and repeated SCIP runs could select different residues within the
-same tolerance. The governed portable and pinned-GAMS SCIP profiles now use
-`numerics/feastol = 1e-8`, bounding this penalty amplification at `0.01 NZD`.
-The initially tested `1e-9` setting was rejected because SCIP's internal LP
-solver failed on the second case of the governed first-date replay.
-The original exact failed checkpoint is retained; evidence produced with the
-tighter profile must use new bundle and checkpoint roots.
+same tolerance. Full-prefix trials at `1e-9` and `1e-8` were rejected because
+SCIP's internal LP solver failed on cases 2 and 68 respectively. The stable
+`1e-6` primary profile is therefore retained. The objective surface now keeps
+the raw SCIP MIP objective and the fixed-discrete HiGHS RMIP objective as
+separate values; the latter is the feasibility-refined economic parity value,
+while the former remains diagnostic evidence and is never silently replaced.
+The original exact failed checkpoint and both tighter-tolerance failed progress
+roots are retained.
 
 Materialize the independent pinned-GAMS bundles with the same discovery feed:
 

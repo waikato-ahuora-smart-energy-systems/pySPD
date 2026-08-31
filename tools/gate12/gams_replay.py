@@ -417,9 +417,12 @@ class GamsReplaySurfaceExporter:
             ),
             "primary-objective": _json_bytes(
                 {
-                    "objective_nzd": _number(
+                    "primary_mip_objective_nzd": _number(
                         evidence.value("pyspd_gate12_primary_objective", prefix)
-                    )
+                    ),
+                    "fixed_rmip_objective_nzd": _number(
+                        evidence.value("pyspd_gate12_pricing_objective", prefix)
+                    ),
                 }
             ),
             "fixed-discrete-pricing-state": _json_bytes(

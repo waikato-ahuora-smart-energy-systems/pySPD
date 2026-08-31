@@ -108,11 +108,16 @@ def test_common_surface_removes_python_only_structure_and_events(tmp_path) -> No
     physics = json.loads(surface.surfaces["primary-physics"])
     transition = json.loads(surface.surfaces["state-transition"])
     fixed = json.loads(surface.surfaces["fixed-discrete-pricing-state"])
+    objectives = json.loads(surface.surfaces["primary-objective"])
     assert physics["structural_signature"] is None
     assert physics["variables"] == []
     assert transition["events"] == []
     assert fixed["primary_structural_signature"] is None
     assert fixed["pricing_structural_signature"] is None
+    assert set(objectives) == {
+        "fixed_rmip_objective_nzd",
+        "primary_mip_objective_nzd",
+    }
 
 
 def test_common_fixed_state_maps_shared_semantics_and_drops_encoding_binaries() -> None:

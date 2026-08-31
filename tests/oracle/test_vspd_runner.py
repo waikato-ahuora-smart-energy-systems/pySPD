@@ -322,7 +322,7 @@ def test_fixed_lp_profile_injects_pricing_solve_after_each_mip(tmp_path: Path) -
     assert (programs / "pyspd_post_solve_snapshot.inc").is_file()
     assert (programs / "convert.opt").is_file()
     assert (programs / "scip.opt").read_text() == (
-        "emphasis: numerics\nnumerics/feastol = 1e-8\n"
+        "emphasis: numerics\nnumerics/feastol = 1e-6\n"
     )
     assert "dual_feasibility_tolerance = 1e-9" in (
         programs / "highs.opt"

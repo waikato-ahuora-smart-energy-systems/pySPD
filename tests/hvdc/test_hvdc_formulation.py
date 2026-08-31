@@ -41,7 +41,7 @@ def solve(case):
     return built, outcome, prices
 
 
-def test_primary_scip_tolerance_bounds_amplified_penalty_error(monkeypatch) -> None:
+def test_primary_scip_uses_corpus_stable_feasibility_tolerance(monkeypatch) -> None:
     captured = {}
     sentinel = object()
 
@@ -52,9 +52,7 @@ def test_primary_scip_tolerance_bounds_amplified_penalty_error(monkeypatch) -> N
     monkeypatch.setattr(NativeScipBackend, "solve_mip", capture)
 
     assert HvdcSolvePolicy._solve_scip(build(make_hvdc_case(enforce=True))) is sentinel
-    feasibility_tolerance = captured["numerics/feastol"]
-    assert feasibility_tolerance == 1e-8
-    assert 1_000_000.0 * feasibility_tolerance <= 0.01
+    assert captured["numerics/feastol"] == 1e-6
 
 
 def test_fixed_rmip_preserves_sos_support_without_fixing_active_weights() -> None:
