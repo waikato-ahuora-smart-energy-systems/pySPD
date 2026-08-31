@@ -13,6 +13,9 @@ from tools.gate12.certify_published_price_degeneracy import (
 from tools.gate12.compare_incremental_replays import (
     build_parser as compare_parser,
 )
+from tools.gate12.crosswalk_report_schemas import (
+    build_parser as report_crosswalk_parser,
+)
 from tools.gate12.materialize_incremental_gams import (
     build_parser as gams_parser,
 )
@@ -223,3 +226,26 @@ def test_published_degeneracy_cli_requires_run_root_and_paired_bundles() -> None
 
     assert str(arguments.run_root) == "/runs"
     assert arguments.trading_date == "20221106"
+
+
+def test_report_crosswalk_cli_requires_paired_bundles_and_output() -> None:
+    parser = report_crosswalk_parser()
+
+    with pytest.raises(SystemExit):
+        parser.parse_args([])
+
+    arguments = parser.parse_args(
+        [
+            "--reference-bundle-root",
+            "/reference",
+            "--candidate-bundle-root",
+            "/candidate",
+            "--trading-date",
+            "20221106",
+            "--output",
+            "/crosswalk/20221106.json",
+        ]
+    )
+
+    assert arguments.trading_date == "20221106"
+    assert str(arguments.output) == "/crosswalk/20221106.json"

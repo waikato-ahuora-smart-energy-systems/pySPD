@@ -76,8 +76,19 @@ largest repaired-bus difference is `0.126457185714337 NZD/MWh`, while its
 maximum node projection is only `9.592326932761353e-14 NZD/MWh`; one differing
 raw `-500000` sentinel is normalized only after its corresponding repaired bus
 matches. The certified semantic profile therefore has five unresolved paths:
-four report crosswalks and the `TP35/WPT1101` published energy difference of
-`0.00101 NZD/MWh`. Gate 12 remains open.
+four report surfaces and the `TP35/WPT1101` published energy difference of
+`0.00101 NZD/MWh`.
+
+The separately governed Authority-to-PySPD schema crosswalk now resolves the
+structure of those four report surfaces without weakening `report-field`.
+For each affected case it enumerates all 13 Authority tables and all 142
+Authority fields. Sixty-six fields have an explicit direct, derived, or pivot
+mapping; 76 Authority fields remain unsupported. Eleven candidate-field
+occurrences remain unmatched and the PySPD audit table is candidate-only. The
+artifact therefore fails, correctly, and makes no row-value parity claim. Its
+compact evidence index is
+[`report-crosswalk-20221106.json`](report-crosswalk-20221106.json). Gate 12
+remains open.
 
 The 2022-11-07 candidate prefix is now executing from the same frozen source.
 Its governed plan contains 210 cases through the last of six affected
@@ -419,6 +430,26 @@ examples. It does not delete or reinterpret the exact diff. Report-schema
 differences stay fail-closed as `report-crosswalk-required`; raw `+/-500000`
 sentinels are accepted only when the corresponding repaired-bus values match
 within the price tolerance.
+
+Generate the independent report-schema crosswalk with:
+
+```bash
+uv run python -m tools.gate12.crosswalk_report_schemas \
+  --reference-bundle-root /path/to/incremental/gams-bundles \
+  --candidate-bundle-root /path/to/incremental/pyspd-bundles \
+  --trading-date 20221106 \
+  --output /path/to/incremental/report-crosswalks/20221106.json
+```
+
+The crosswalk loads and hash-verifies both complete bundles, requires matching
+source/work-item/case provenance, recognizes only the 13 declared Authority
+table suffixes, rejects duplicate or malformed schemas, and records every
+mapped and unsupported field. Direct mappings, wide-to-long pivots, and
+derived fields are named separately. Its scope is deliberately
+`schema-only-no-row-value-parity-claim`: it exits nonzero for unsupported
+Authority fields, unmatched candidate fields, or candidate-only tables. A
+later row projector must use only proven mappings and retain identity, unit,
+precision, cardinality, and value differences before `report-field` can pass.
 
 Create case-specific bus-dual evidence from the independently loaded GDX
 allocation matrix with:

@@ -106,6 +106,14 @@ accepted load, dispatch, objective, and prices.
   fallback, and retain a failed result. Observing one favorable run after an
   unfavorable governed run is diagnostic solver variability, not permission to
   select the favorable output as parity evidence.
+- Authority/PySPD report representation is handled by the separately named
+  `authority-pyspd-report-schema-crosswalk-v1` profile. It hash-binds both
+  replay bundles, enumerates every declared Authority table and field, and
+  distinguishes direct, derived, pivoted, and unsupported fields. It is schema
+  evidence only: mappings cannot resolve the canonical `report-field` surface
+  until identity-strict row projection also proves cardinality, units,
+  precision, and values. Unknown, duplicate, missing, candidate-only, and
+  unsupported schema material remains fail-closed.
 - The final Gate 12 decision remains fail-closed at exactly 546 identities over
   all 139 dates, complete representative-day coverage, and zero unresolved
   material discrepancies.
