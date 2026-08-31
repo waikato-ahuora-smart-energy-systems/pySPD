@@ -547,6 +547,7 @@ def _model_rows(
         ("purchase", "bid", "bid", "purchase_mw"),
         ("island_risk", "risk", "risk", "quantity_mw"),
         ("branch_flow", "branch", "branch", "flow_mw"),
+        ("hvdc_flow", "branch", "branch", "flow_mw"),
     ):
         component = artifacts.get(artifact)
         if component is None:

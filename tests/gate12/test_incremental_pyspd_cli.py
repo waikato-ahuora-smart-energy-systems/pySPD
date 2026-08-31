@@ -20,6 +20,7 @@ from tools.gate12.materialize_incremental_gams import (
     build_parser as gams_parser,
 )
 from tools.gate12.materialize_incremental_pyspd import build_parser
+from tools.gate12.project_report_rows import build_parser as report_row_parser
 from tools.gate12.quantify_canonical_replay import (
     build_parser as quantify_parser,
 )
@@ -249,3 +250,28 @@ def test_report_crosswalk_cli_requires_paired_bundles_and_output() -> None:
 
     assert arguments.trading_date == "20221106"
     assert str(arguments.output) == "/crosswalk/20221106.json"
+
+
+def test_report_row_cli_requires_crosswalk_paired_bundles_and_output() -> None:
+    parser = report_row_parser()
+
+    with pytest.raises(SystemExit):
+        parser.parse_args([])
+
+    arguments = parser.parse_args(
+        [
+            "--reference-bundle-root",
+            "/reference",
+            "--candidate-bundle-root",
+            "/candidate",
+            "--schema-crosswalk",
+            "/crosswalk/20221106.json",
+            "--trading-date",
+            "20221106",
+            "--output",
+            "/rows/20221106.json",
+        ]
+    )
+
+    assert str(arguments.schema_crosswalk) == "/crosswalk/20221106.json"
+    assert str(arguments.output) == "/rows/20221106.json"

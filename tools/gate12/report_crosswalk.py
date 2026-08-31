@@ -305,7 +305,6 @@ _TABLE_RULES: dict[str, tuple[str, tuple[_FieldRule, ...]]] = {
                 kind="derived",
                 expression="status to Authority solve-status code",
             ),
-            _rule("SystemOFV", "objective_nzd"),
         ),
     ),
 }

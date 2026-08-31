@@ -82,8 +82,8 @@ four report surfaces and the `TP35/WPT1101` published energy difference of
 The separately governed Authority-to-PySPD schema crosswalk now resolves the
 structure of those four report surfaces without weakening `report-field`.
 For each affected case it enumerates all 13 Authority tables and all 142
-Authority fields. Sixty-six fields have an explicit direct, derived, or pivot
-mapping; 76 Authority fields remain unsupported. Eleven candidate-field
+Authority fields. Sixty-five fields have an explicit direct, derived, or pivot
+mapping; 77 Authority fields remain unsupported. Twelve candidate-field
 occurrences remain unmatched and the PySPD audit table is candidate-only. The
 artifact therefore fails, correctly, and makes no row-value parity claim. Its
 compact evidence index is
@@ -450,6 +450,41 @@ derived fields are named separately. Its scope is deliberately
 Authority fields, unmatched candidate fields, or candidate-only tables. A
 later row projector must use only proven mappings and retain identity, unit,
 precision, cardinality, and value differences before `report-field` can pass.
+
+Project the proven mappings onto identity-strict rows with:
+
+```bash
+uv run python -m tools.gate12.project_report_rows \
+  --reference-bundle-root /path/to/incremental/gams-bundles \
+  --candidate-bundle-root /path/to/incremental/pyspd-bundles \
+  --schema-crosswalk /path/to/incremental/report-crosswalks/20221106.json \
+  --trading-date 20221106 \
+  --output /path/to/incremental/report-row-parity/20221106.json
+```
+
+The runner re-hashes the crosswalk, verifies that every embedded case mapping
+exactly recomputes from the paired report surfaces, and compares numeric values
+against half of the Authority field's displayed unit. It never treats a
+missing zero row as present. On the first paired date it compared 12,619 mapped
+values. All 2,092 node prices, 395 offer quantities, 16 reserve-result prices,
+16 island-result reserve prices, and 16 published reserve prices pass; 2,091 of
+2,092 published energy prices pass. The unresolved mapped-row evidence is 166
+missing branch identities, 22 branch-flow precision differences, 11 bus-price
+differences, and the known `TP35/WPT1101` publication difference. Branch and
+market-node constraints, risk, and summary remain unimplemented row
+projections in each case. The compact evidence index is
+[`report-row-parity-20221106.json`](report-row-parity-20221106.json).
+
+The branch identity failures exposed a candidate reporting omission. Two of
+the missing rows per case are nonzero HVDC links (`BEN_HAY1.1` and
+`BEN_HAY2.1`); the report renderer exported `branch_flow` but not the separately
+registered `hvdc_flow`. The renderer and its Probity test now include both.
+This changes candidate report evidence and therefore requires a new governed
+PySPD replay; old bundles are not rewritten. The remaining missing branch rows
+are retained explicitly. `SystemOFV` is also intentionally unsupported: pinned
+vSPD adds its scarcity-limit-by-price constant to the summary value even though
+that constant is omitted from the solved objective, and the current PySPD
+summary has no equivalent derived field.
 
 Create case-specific bus-dual evidence from the independently loaded GDX
 allocation matrix with:

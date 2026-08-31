@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import hashlib
+from types import SimpleNamespace
 
+import pyomo.environ as pyo
+
+from pyspd import reporting
 from pyspd.orchestration import DailyRunConfiguration, DailyRunner
 from pyspd.reporting import (
     ArtifactProvenance,
@@ -94,3 +98,45 @@ def test_formulation_registry_rejects_unknown_or_duplicate_profiles() -> None:
         assert "unknown" in str(error)
     else:  # pragma: no cover - assertion guard
         raise AssertionError("unknown report profile was accepted")
+
+
+def test_model_rows_include_ac_and_hvdc_branch_flows() -> None:
+    model = pyo.ConcreteModel()
+    model.ac_flow = pyo.Var([("case", "time", "AC.1")], initialize=12.5)
+    model.hvdc_flow = pyo.Var([("case", "time", "HVDC.1")], initialize=25.0)
+    primary = SimpleNamespace(
+        model=model,
+        artifacts=SimpleNamespace(
+            values={
+                "branch_flow": model.ac_flow,
+                "hvdc_flow": model.hvdc_flow,
+            }
+        ),
+    )
+    rows: dict[str, list[dict[str, str]]] = {
+        "bid": [],
+        "risk": [],
+        "branch": [],
+        "constraint": [],
+    }
+
+    reporting._model_rows(
+        rows,
+        SimpleNamespace(primary_model=primary),
+        {"case_id": "case", "date_time": "time"},
+    )
+
+    assert rows["branch"] == [
+        {
+            "case_id": "case",
+            "date_time": "time",
+            "branch": "case|time|AC.1",
+            "flow_mw": "12.5",
+        },
+        {
+            "case_id": "case",
+            "date_time": "time",
+            "branch": "case|time|HVDC.1",
+            "flow_mw": "25",
+        },
+    ]

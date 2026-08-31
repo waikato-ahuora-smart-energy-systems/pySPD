@@ -7,18 +7,18 @@
     "51012022111810835",
     "61012022110425024"
   ],
-  "logical_sha256": "1e21442d331a522dbd2a49496174d92f283e87a17b7d8787f2a9c565aa5f1c74",
-  "mapped_authority_fields_per_case": 66,
+  "logical_sha256": "bae738b5954fccd79b50d6ebb617b4906623cecc42f7eb3425c0f76273a4d8fc",
+  "mapped_authority_fields_per_case": 65,
   "passed": false,
   "profile": "authority-pyspd-report-schema-crosswalk-v1",
   "reference_bundle_sha256": "a12456cf42be4eca390082dc7ea7b65d4ecbcc233a703f456068e9f85605d77d",
   "scope": "schema-only-no-row-value-parity-claim",
   "source_sha256": "282ac2abeaa2f0c7c6e26b967e2ba90289c0ba5a9e696b99069d11350d3037b8",
   "trading_date": "20221106",
-  "unmapped_candidate_field_occurrences_per_case": 11,
+  "unmapped_candidate_field_occurrences_per_case": 12,
   "unmapped_candidate_tables_per_case": [
     "audit"
   ],
-  "unmapped_reference_fields_per_case": 76,
+  "unmapped_reference_fields_per_case": 77,
   "work_item_sha256": "660f0e53a089fde3226618e5dd6f7c6effd15453891301f17022e532faaca6de"
 }

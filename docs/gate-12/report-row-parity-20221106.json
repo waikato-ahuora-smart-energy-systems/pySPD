@@ -1,0 +1,71 @@
+{
+  "above_precision_count": 34,
+  "candidate_bundle_sha256": "1f7b5878f287f25c03ee34d7ddde69d603b32cfc1b80cd00899a05e5d4204def",
+  "case_count": 4,
+  "case_ids": [
+    "51012022111800831",
+    "51012022111805834",
+    "51012022111810835",
+    "61012022110425024"
+  ],
+  "compared_value_count": 12619,
+  "extra_identity_count": 0,
+  "logical_sha256": "3f5aa26d50725f89d936e6834db2e501de7b4935749282b268ff9743e325c042",
+  "missing_identity_count": 166,
+  "passed": false,
+  "profile": "authority-pyspd-mapped-report-row-parity-v1",
+  "reference_bundle_sha256": "a12456cf42be4eca390082dc7ea7b65d4ecbcc233a703f456068e9f85605d77d",
+  "schema_crosswalk_sha256": "bae738b5954fccd79b50d6ebb617b4906623cecc42f7eb3425c0f76273a4d8fc",
+  "scope": "mapped-fields-at-authority-display-precision",
+  "source_sha256": "282ac2abeaa2f0c7c6e26b967e2ba90289c0ba5a9e696b99069d11350d3037b8",
+  "table_totals": {
+    "BranchResults_TP": {
+      "above_precision_count": 22,
+      "compared_value_count": 4202,
+      "missing_identity_count": 166
+    },
+    "BusResults_TP": {
+      "above_precision_count": 11,
+      "compared_value_count": 3790,
+      "missing_identity_count": 0
+    },
+    "IslandResults_TP": {
+      "above_precision_count": 0,
+      "compared_value_count": 16,
+      "missing_identity_count": 0
+    },
+    "NodeResults_TP": {
+      "above_precision_count": 0,
+      "compared_value_count": 2092,
+      "missing_identity_count": 0
+    },
+    "OfferResults_TP": {
+      "above_precision_count": 0,
+      "compared_value_count": 395,
+      "missing_identity_count": 0
+    },
+    "PublishedEnergyPrices_TP": {
+      "above_precision_count": 1,
+      "compared_value_count": 2092,
+      "missing_identity_count": 0
+    },
+    "PublishedReservePrices_TP": {
+      "above_precision_count": 0,
+      "compared_value_count": 16,
+      "missing_identity_count": 0
+    },
+    "ReserveResults_TP": {
+      "above_precision_count": 0,
+      "compared_value_count": 16,
+      "missing_identity_count": 0
+    }
+  },
+  "trading_date": "20221106",
+  "unimplemented_reference_tables_per_case": [
+    "BrConstraintResults_TP",
+    "MNodeConstraintResults_TP",
+    "RiskResults_TP",
+    "SummaryResults_TP"
+  ],
+  "work_item_sha256": "660f0e53a089fde3226618e5dd6f7c6effd15453891301f17022e532faaca6de"
+}
