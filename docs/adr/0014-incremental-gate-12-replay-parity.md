@@ -122,6 +122,10 @@ accepted load, dispatch, objective, and prices.
   extra, above-precision, and unimplemented material remains explicit. A
   report-renderer correction changes candidate evidence and requires replay;
   it never authorizes rewriting an existing bundle.
+- The mapped-row bus-certified profile may classify repaired-bus report values
+  only when the independent allocation-matrix certificate binds the exact same
+  reference and candidate bundles and complete case order. It cannot classify
+  any identity, non-bus observable, unsupported field, or unimplemented table.
 - The final Gate 12 decision remains fail-closed at exactly 546 identities over
   all 139 dates, complete representative-day coverage, and zero unresolved
   material discrepancies.

@@ -499,6 +499,16 @@ and falls back to `primary_model` only for profiles without a separate pricing
 model. The replacement replay will determine the fixed-state row result; the
 old v1 evidence remains unchanged.
 
+After recreating the independently loaded source-matrix certificate for the
+exact replacement bundle, pass it to `project_report_rows` with
+`--bus-price-certificate`. The runner verifies the date, source hash, reference
+and candidate bundle hashes, complete case order, and passing certificate
+disposition before selecting
+`authority-pyspd-mapped-report-row-parity-bus-certified-v2`. Only repaired-bus
+price value differences are classified by this route; identities, branch and
+constraint physics, publications, unsupported fields, and unimplemented tables
+remain fail-closed.
+
 Create case-specific bus-dual evidence from the independently loaded GDX
 allocation matrix with:
 

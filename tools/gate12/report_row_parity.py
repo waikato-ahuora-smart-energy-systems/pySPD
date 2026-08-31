@@ -10,6 +10,10 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, cast
 
+from tools.gate12.bus_price_degeneracy import (
+    BusPriceCaseCertificate,
+    BusPriceDegeneracyResult,
+)
 from tools.gate12.evidence import EvidenceContractError
 from tools.gate12.replay_artifacts import CanonicalReplayBundleStore
 from tools.gate12.report_crosswalk import (
@@ -18,6 +22,9 @@ from tools.gate12.report_crosswalk import (
 )
 
 REPORT_ROW_PARITY_PROFILE = "authority-pyspd-mapped-report-row-parity-v2"
+REPORT_ROW_BUS_CERTIFIED_PROFILE = (
+    "authority-pyspd-mapped-report-row-parity-bus-certified-v2"
+)
 _MAX_EXAMPLES = 20
 
 
@@ -361,6 +368,7 @@ class ReportRowTableResult:
     compared_value_count: int
     missing_identity_count: int
     extra_identity_count: int
+    certified_difference_count: int
     above_precision_count: int
     maximum_absolute_error: str
     missing_identity_examples: tuple[tuple[str, ...], ...]
@@ -384,6 +392,7 @@ class ReportRowTableResult:
             "compared_value_count": self.compared_value_count,
             "missing_identity_count": self.missing_identity_count,
             "extra_identity_count": self.extra_identity_count,
+            "certified_difference_count": self.certified_difference_count,
             "above_precision_count": self.above_precision_count,
             "maximum_absolute_error": self.maximum_absolute_error,
             "missing_identity_examples": [
@@ -424,6 +433,10 @@ class ReportCaseRowParity:
     def above_precision_count(self) -> int:
         return sum(table.above_precision_count for table in self.tables)
 
+    @property
+    def certified_difference_count(self) -> int:
+        return sum(table.certified_difference_count for table in self.tables)
+
     def to_dict(self) -> dict[str, object]:
         return {
             "case_id": self.case_id,
@@ -432,6 +445,7 @@ class ReportCaseRowParity:
             "candidate_report_sha256": self.candidate_report_sha256,
             "missing_identity_count": self.missing_identity_count,
             "extra_identity_count": self.extra_identity_count,
+            "certified_difference_count": self.certified_difference_count,
             "above_precision_count": self.above_precision_count,
             "unimplemented_reference_tables": list(self.unimplemented_reference_tables),
             "tables": [table.to_dict() for table in self.tables],
@@ -442,8 +456,19 @@ class ReportRowParityValidator:
     """Project only fields admitted by the schema crosswalk and compare rows."""
 
     def compare(
-        self, *, case_id: str, reference: bytes, candidate: bytes
+        self,
+        *,
+        case_id: str,
+        reference: bytes,
+        candidate: bytes,
+        bus_price_certificate: BusPriceCaseCertificate | None = None,
     ) -> ReportCaseRowParity:
+        if bus_price_certificate is not None and (
+            not bus_price_certificate.passed or bus_price_certificate.case_id != case_id
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-REPORT-ROW: invalid case bus-price certificate"
+            )
         schema = ReportSchemaCrosswalkValidator().compare(
             case_id=case_id, reference=reference, candidate=candidate
         )
@@ -473,6 +498,7 @@ class ReportRowParityValidator:
                     projections,
                     reference_tables[reference_table],
                     candidate_payload.get(projections[0].candidate_table),
+                    bus_price_certificate,
                 )
             )
         return ReportCaseRowParity(
@@ -512,11 +538,12 @@ class ReportRowParityValidator:
         projections: tuple[_Projection, ...],
         reference_table: dict[str, Any],
         candidate_table: object,
+        bus_price_certificate: BusPriceCaseCertificate | None,
     ) -> ReportRowTableResult:
         candidate_name = projections[0].candidate_table
         reference_rows = self._rows(reference_table, "reference")
         candidate_rows = self._rows(candidate_table, "candidate")
-        compared = missing = extra = above = 0
+        compared = missing = extra = certified = above = 0
         maximum = Decimal(0)
         missing_examples: list[tuple[str, ...]] = []
         extra_examples: list[tuple[str, ...]] = []
@@ -546,6 +573,13 @@ class ReportRowParityValidator:
                 compared += 1
                 if absolute_error <= half_unit:
                     continue
+                if (
+                    projection.reference_table == "BusResults_TP"
+                    and projection.observable == "repaired-bus-price"
+                    and bus_price_certificate is not None
+                ):
+                    certified += 1
+                    continue
                 above += 1
                 if len(differences) < _MAX_EXAMPLES:
                     differences.append(
@@ -565,6 +599,7 @@ class ReportRowParityValidator:
             compared_value_count=compared,
             missing_identity_count=missing,
             extra_identity_count=extra,
+            certified_difference_count=certified,
             above_precision_count=above,
             maximum_absolute_error=format(maximum, "f"),
             missing_identity_examples=tuple(missing_examples),
@@ -696,12 +731,14 @@ class ReportRowParityValidator:
 
 @dataclass(frozen=True, slots=True)
 class ReportRowParityResult:
+    profile: str
     trading_date: str
     source_sha256: str
     work_item_sha256: str
     reference_bundle_sha256: str
     candidate_bundle_sha256: str
     schema_crosswalk_sha256: str
+    bus_price_certificate_sha256: str | None
     cases: tuple[ReportCaseRowParity, ...]
     logical_sha256: str
 
@@ -712,7 +749,7 @@ class ReportRowParityResult:
     def to_dict(self, *, include_hash: bool = True) -> dict[str, object]:
         payload: dict[str, object] = {
             "schema_version": 1,
-            "profile": REPORT_ROW_PARITY_PROFILE,
+            "profile": self.profile,
             "scope": "mapped-fields-at-authority-display-precision",
             "trading_date": self.trading_date,
             "source_sha256": self.source_sha256,
@@ -720,12 +757,16 @@ class ReportRowParityResult:
             "reference_bundle_sha256": self.reference_bundle_sha256,
             "candidate_bundle_sha256": self.candidate_bundle_sha256,
             "schema_crosswalk_sha256": self.schema_crosswalk_sha256,
+            "bus_price_certificate_sha256": self.bus_price_certificate_sha256,
             "passed": self.passed,
             "missing_identity_count": sum(
                 case.missing_identity_count for case in self.cases
             ),
             "extra_identity_count": sum(
                 case.extra_identity_count for case in self.cases
+            ),
+            "certified_difference_count": sum(
+                case.certified_difference_count for case in self.cases
             ),
             "above_precision_count": sum(
                 case.above_precision_count for case in self.cases
@@ -749,10 +790,12 @@ class ReportRowParityRunner:
         reference_root: Path,
         candidate_root: Path,
         schema_crosswalk: Path,
+        bus_price_certificate: BusPriceDegeneracyResult | None = None,
     ) -> None:
         self.reference_store = CanonicalReplayBundleStore(reference_root)
         self.candidate_store = CanonicalReplayBundleStore(candidate_root)
         self.schema_payload, self.schema_sha256 = self._load_crosswalk(schema_crosswalk)
+        self.bus_price_certificate = bus_price_certificate
         self.validator = ReportRowParityValidator()
 
     def compare(self, trading_date: str) -> ReportRowParityResult:
@@ -779,6 +822,27 @@ class ReportRowParityRunner:
             if isinstance(item, dict) and isinstance(item.get("case_id"), str)
         }
         candidate_by_id = {case.case_id: case for case in candidate_cases}
+        certificate_by_id: dict[str, BusPriceCaseCertificate] = {}
+        profile = REPORT_ROW_PARITY_PROFILE
+        certificate_sha256 = None
+        if self.bus_price_certificate is not None:
+            certificate = self.bus_price_certificate
+            certificate.validate()
+            if (
+                not certificate.passed
+                or certificate.trading_date != trading_date
+                or certificate.source_sha256 != reference.source_sha256
+                or certificate.reference_bundle_sha256 != reference.logical_sha256
+                or certificate.candidate_bundle_sha256 != candidate.logical_sha256
+                or tuple(case.case_id for case in certificate.cases)
+                != reference.affected_case_ids
+            ):
+                raise EvidenceContractError(
+                    "REQ-G12-REPORT-ROW: bus-price certificate provenance does not match"
+                )
+            certificate_by_id = {case.case_id: case for case in certificate.cases}
+            profile = REPORT_ROW_BUS_CERTIFIED_PROFILE
+            certificate_sha256 = certificate.logical_sha256
         cases = []
         for expected in reference_cases:
             actual = candidate_by_id[expected.case_id]
@@ -796,43 +860,52 @@ class ReportRowParityRunner:
                     case_id=expected.case_id,
                     reference=expected.surfaces["report-field"],
                     candidate=actual.surfaces["report-field"],
+                    bus_price_certificate=certificate_by_id.get(expected.case_id),
                 )
             )
         unsigned = self._unsigned(
+            profile,
             trading_date,
             reference.source_sha256,
             reference.work_item_sha256,
             reference.logical_sha256,
             candidate.logical_sha256,
+            certificate_sha256,
             tuple(cases),
         )
         return ReportRowParityResult(
+            profile=profile,
             trading_date=trading_date,
             source_sha256=reference.source_sha256,
             work_item_sha256=reference.work_item_sha256,
             reference_bundle_sha256=reference.logical_sha256,
             candidate_bundle_sha256=candidate.logical_sha256,
             schema_crosswalk_sha256=self.schema_sha256,
+            bus_price_certificate_sha256=certificate_sha256,
             cases=tuple(cases),
             logical_sha256=_logical_sha256(unsigned),
         )
 
     def _unsigned(
         self,
+        profile: str,
         trading_date: str,
         source_sha256: str,
         work_item_sha256: str,
         reference_bundle_sha256: str,
         candidate_bundle_sha256: str,
+        bus_price_certificate_sha256: str | None,
         cases: tuple[ReportCaseRowParity, ...],
     ) -> dict[str, object]:
         result = ReportRowParityResult(
+            profile,
             trading_date,
             source_sha256,
             work_item_sha256,
             reference_bundle_sha256,
             candidate_bundle_sha256,
             self.schema_sha256,
+            bus_price_certificate_sha256,
             cases,
             "",
         )

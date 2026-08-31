@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from tools.gate12.bus_price_degeneracy import BusPriceCaseCertificate
 from tools.gate12.evidence import EvidenceContractError
 from tools.gate12.report_row_parity import (
     ReportRowParityRunner,
@@ -303,3 +304,71 @@ def test_constraint_rows_derive_rhs_and_sense_from_pyomo_bounds() -> None:
         "branch-constraint-rhs",
         "branch-constraint-sense",
     )
+
+
+def test_passing_bus_certificate_classifies_report_price_difference() -> None:
+    reference = _json(
+        {
+            "prefix_BusResults_TP": {
+                "fields": ["CaseID", "DateTime", "Bus", "Price ($/MWh)"],
+                "rows": [
+                    {
+                        "CaseID": "case",
+                        "DateTime": "time",
+                        "Bus": "BUS",
+                        "Price ($/MWh)": "10.000",
+                    }
+                ],
+            }
+        }
+    )
+    candidate = _json(
+        {
+            "bus": {
+                "field_order": [
+                    "case_id",
+                    "date_time",
+                    "bus",
+                    "repaired_price_nzd_per_mwh",
+                ],
+                "fields": [],
+                "rows": [
+                    {
+                        "case_id": "case",
+                        "date_time": "time",
+                        "bus": "BUS",
+                        "repaired_price_nzd_per_mwh": "11",
+                    }
+                ],
+            }
+        }
+    )
+    certificate = BusPriceCaseCertificate(
+        case_id="case",
+        allocation_sha256="0" * 64,
+        bus_count=1,
+        node_count=1,
+        allocation_count=1,
+        normalized_raw_sentinel_count=0,
+        above_tolerance_raw_bus_count=0,
+        above_tolerance_repaired_bus_count=1,
+        maximum_raw_bus_absolute_difference=0.0,
+        maximum_repaired_bus_absolute_difference=1.0,
+        maximum_raw_projected_node_difference=0.0,
+        maximum_repaired_projected_node_difference=0.0,
+        maximum_node_absolute_difference=0.0,
+        maximum_projection_residual=0.0,
+        price_tolerance=1e-4,
+        projection_tolerance=1e-10,
+    )
+
+    result = ReportRowParityValidator().compare(
+        case_id="case",
+        reference=reference,
+        candidate=candidate,
+        bus_price_certificate=certificate,
+    )
+
+    assert result.passed
+    assert result.tables[0].certified_difference_count == 1
+    assert result.tables[0].above_precision_count == 0

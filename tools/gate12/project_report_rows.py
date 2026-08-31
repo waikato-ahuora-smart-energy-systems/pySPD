@@ -6,6 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
+from tools.gate12.bus_price_degeneracy import BusPriceDegeneracyResultStore
 from tools.gate12.report_row_parity import (
     ReportRowParityResultStore,
     ReportRowParityRunner,
@@ -17,6 +18,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--reference-bundle-root", type=Path, required=True)
     parser.add_argument("--candidate-bundle-root", type=Path, required=True)
     parser.add_argument("--schema-crosswalk", type=Path, required=True)
+    parser.add_argument("--bus-price-certificate", type=Path)
     parser.add_argument("--trading-date", required=True)
     parser.add_argument("--output", type=Path, required=True)
     return parser
@@ -24,10 +26,16 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(arguments: list[str] | None = None) -> int:
     args = build_parser().parse_args(arguments)
+    certificate = (
+        None
+        if args.bus_price_certificate is None
+        else BusPriceDegeneracyResultStore().load(args.bus_price_certificate.resolve())
+    )
     result = ReportRowParityRunner(
         reference_root=args.reference_bundle_root.resolve(),
         candidate_root=args.candidate_bundle_root.resolve(),
         schema_crosswalk=args.schema_crosswalk.resolve(),
+        bus_price_certificate=certificate,
     ).compare(args.trading_date)
     target = ReportRowParityResultStore().write(result, args.output.resolve())
     payload = result.to_dict()
@@ -38,6 +46,7 @@ def main(arguments: list[str] | None = None) -> int:
                 "passed": result.passed,
                 "missing_identity_count": payload["missing_identity_count"],
                 "extra_identity_count": payload["extra_identity_count"],
+                "certified_difference_count": payload["certified_difference_count"],
                 "above_precision_count": payload["above_precision_count"],
                 "unimplemented_table_count": payload["unimplemented_table_count"],
                 "logical_sha256": result.logical_sha256,

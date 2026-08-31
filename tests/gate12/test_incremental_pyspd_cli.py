@@ -266,6 +266,8 @@ def test_report_row_cli_requires_crosswalk_paired_bundles_and_output() -> None:
             "/candidate",
             "--schema-crosswalk",
             "/crosswalk/20221106.json",
+            "--bus-price-certificate",
+            "/certificates/20221106.json",
             "--trading-date",
             "20221106",
             "--output",
@@ -274,4 +276,5 @@ def test_report_row_cli_requires_crosswalk_paired_bundles_and_output() -> None:
     )
 
     assert str(arguments.schema_crosswalk) == "/crosswalk/20221106.json"
+    assert str(arguments.bus_price_certificate) == "/certificates/20221106.json"
     assert str(arguments.output) == "/rows/20221106.json"
