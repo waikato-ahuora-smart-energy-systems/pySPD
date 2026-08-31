@@ -1174,8 +1174,39 @@ class HistoricalDailyCompletionValidator:
             and all(record.solver == "SCIP" for record in listing.operational_records)
         )
         if not exact_progress or not exact_listing:
+            first_progress_mismatch = next(
+                (
+                    f"index={index},expected={expected!r},actual={actual!r}"
+                    for index, (expected, actual) in enumerate(
+                        zip(selected_cases, successful, strict=False)
+                    )
+                    if expected != actual
+                ),
+                "none",
+            )
+            non_optimal = tuple(
+                (
+                    record.scenario,
+                    record.model,
+                    record.solver_status_code,
+                    record.model_status_code,
+                )
+                for record in listing.operational_records
+                if not record.optimal
+            )
+            wrong_solvers = tuple(
+                (record.scenario, record.model, record.solver)
+                for record in listing.operational_records
+                if record.solver != "SCIP"
+            )
             raise EvidenceContractError(
-                "REQ-G12-HISTORICAL: daily completion is not exact and optimal"
+                "REQ-G12-HISTORICAL: daily completion is not exact and optimal; "
+                f"selected={len(selected_cases)},successful={len(successful)},"
+                f"first_progress_mismatch={first_progress_mismatch}; "
+                f"primary={len(listing.primary)},pricing={len(listing.pricing)},"
+                f"operational={len(listing.operational_records)},"
+                f"non_optimal={non_optimal[:10]!r},"
+                f"wrong_solvers={wrong_solvers[:10]!r}"
             )
         evidence = HistoricalShortfallEvidence.parse(
             evidence_text, source_name=f"Pricing_{trading_date}"

@@ -429,7 +429,13 @@ def test_daily_completion_rejects_noncanonical_solve_order() -> None:
         for case, date_time in reversed(selected)
     )
 
-    with pytest.raises(EvidenceContractError, match="daily completion"):
+    with pytest.raises(
+        EvidenceContractError,
+        match=(
+            r"daily completion.*selected=2,successful=2,"
+            r"first_progress_mismatch=index=0"
+        ),
+    ):
         HistoricalDailyCompletionValidator().validate(
             trading_date="20221106",
             source_sha256="2" * 64,
@@ -453,7 +459,12 @@ def test_daily_completion_fails_closed(failure: str) -> None:
     if failure == "missing":
         progress = ""
 
-    with pytest.raises(EvidenceContractError, match="daily completion"):
+    expected_detail = {
+        "missing": "selected=1,successful=0",
+        "non_optimal": "non_optimal=(('case_1', 'vSPD_NMIR', 1, 8),)",
+        "wrong_solver": "wrong_solvers=(('case_1', 'vSPD_NMIR', 'CPLEX'),)",
+    }[failure]
+    with pytest.raises(EvidenceContractError, match="daily completion") as raised:
         HistoricalDailyCompletionValidator().validate(
             trading_date="20221106",
             source_sha256="2" * 64,
@@ -465,6 +476,7 @@ def test_daily_completion_fails_closed(failure: str) -> None:
             listing_text="listing",
             evidence_text=HEADER,
         )
+    assert expected_detail in str(raised.value)
 
 
 def test_historical_manifest_builder_requires_exact_546_across_139_dates() -> None:
