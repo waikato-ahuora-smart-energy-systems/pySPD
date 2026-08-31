@@ -87,8 +87,20 @@ accepted load, dispatch, objective, and prices.
 - Completed cases within a long date also survive interruption without retaining
   every solved Pyomo model in memory.
 - Exact canonical-byte comparison is a deliberately strict initial processor.
-  Any later tolerance or degeneracy-aware processor requires a new profile and
-  case-specific evidence; it cannot silently reinterpret earlier checkpoints.
+  The later semantic processor is separately named
+  `gams-pyspd-semantic-tolerance-v1`, hash-binds its hexadecimal policy and both
+  bundle hashes, and preserves the exact result unchanged. It accepts only
+  declared numeric tolerance, sparse numeric zero, a qualified diagnostic raw
+  SCIP objective, and raw-price sentinels whose corresponding repaired
+  economics pass. Report schema drift and above-tolerance prices remain
+  unresolved with bounded case/path evidence.
+- A separately hash-bound source-matrix certificate may select the distinct
+  `gams-pyspd-semantic-tolerance-bus-certified-v1` profile. It must reproduce
+  the observed node-price delta by projecting both engines' bus-price delta
+  through the original GDX node-allocation matrix. It may normalize a differing
+  raw `+/-500000` sentinel only when the same repaired bus agrees. The
+  certificate cannot resolve report, publication, missing-identity, or
+  non-numeric differences.
 - The final Gate 12 decision remains fail-closed at exactly 546 identities over
   all 139 dates, complete representative-day coverage, and zero unresolved
   material discrepancies.

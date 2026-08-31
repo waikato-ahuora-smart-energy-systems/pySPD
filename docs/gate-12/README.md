@@ -44,17 +44,40 @@ physics, fixed-discrete pricing, price repair, publication, and reports.
 
 ## Current execution evidence
 
-The first governed historical PySPD candidate prefix is complete. For
+The first governed historical PySPD candidate prefix and paired GAMS reference
+are complete. For
 2022-11-06, all 196 canonical predecessor and affected cases completed under
 the explicit SCIP-MIP → fixed-discrete → HiGHS-RMIP profile. The atomic
 bundle contains the four affected identities in canonical order and all twelve
 required surfaces for each identity (48 hash-verified surface files). Loading
 the completed bundle through `CanonicalReplayBundleStore` reverified every
 surface hash, and the bundle execution fingerprint exactly matched the frozen
-runtime source at commit `3799b80`. The compact durable evidence index is
+runtime source at commit `4043012`. The compact durable evidence index is
 [`pyspd-replay-20221106.json`](pyspd-replay-20221106.json). This is candidate
-execution evidence only; it becomes parity evidence after the corresponding
-pinned-GAMS bundle is produced and compared.
+execution evidence; the paired bundles have now also been compared by both the
+exact canonical-byte processor and the separately named semantic processor.
+
+The exact processor reports 36 changed surfaces and 1,119,607 changed paths.
+That result remains immutable evidence, but most paths are sparse-zero or
+report-schema representation differences. The semantic
+`gams-pyspd-semantic-tolerance-v1` processor applies the established `1e-4`
+price/objective tolerance, `1e-8` physics/fixed-state tolerance, explicit
+sparse-zero handling, and raw-price sentinel normalization only when the same
+bus's repaired economics agree. It treats the qualified SCIP primary MIP
+objective as diagnostic and still requires the fixed-discrete HiGHS RMIP
+objective to pass. Without a degeneracy certificate this reduces the first-date
+result to 13 unresolved paths across nine surfaces. Selection, transition state,
+publication seconds,
+fixed-discrete pricing state, accepted physics, fixed-RMIP objective, all 1,811
+changed node-price leaves, and all seven changed reserve-price leaves pass the
+declared policy. An independent certificate then projects both bus-price vectors
+through the hash-bound source node-allocation matrix. All four cases pass: the
+largest repaired-bus difference is `0.126457185714337 NZD/MWh`, while its
+maximum node projection is only `9.592326932761353e-14 NZD/MWh`; one differing
+raw `-500000` sentinel is normalized only after its corresponding repaired bus
+matches. The certified semantic profile therefore has five unresolved paths:
+four report crosswalks and the `TP35/WPT1101` published energy difference of
+`0.00101 NZD/MWh`. Gate 12 remains open.
 
 The 2022-11-07 candidate prefix is now executing from the same frozen source.
 Its governed plan contains 210 cases through the last of six affected
@@ -378,6 +401,45 @@ JSON leaf with its path and both values. Hexadecimal floating-point leaves are
 also compared numerically, with per-surface and per-date maximum absolute
 errors. It is diagnostic evidence: it does not apply a tolerance, certify a
 solver-sensitive alternative, or convert a discrepancy into a pass.
+
+Apply the separately named compact semantic policy with:
+
+```bash
+uv run python -m tools.gate12.validate_semantic_replay \
+  --reference-bundle-root /path/to/incremental/gams-bundles \
+  --candidate-bundle-root /path/to/incremental/pyspd-bundles \
+  --trading-date 20221106 \
+  --output /path/to/incremental/semantic-results/20221106.json
+```
+
+The command exits nonzero while any material path remains unresolved. Its
+immutable output binds both bundle hashes, the complete hexadecimal tolerance
+policy, accepted-reason counts, unresolved-reason counts, and bounded path
+examples. It does not delete or reinterpret the exact diff. Report-schema
+differences stay fail-closed as `report-crosswalk-required`; raw `+/-500000`
+sentinels are accepted only when the corresponding repaired-bus values match
+within the price tolerance.
+
+Create case-specific bus-dual evidence from the independently loaded GDX
+allocation matrix with:
+
+```bash
+uv run --group gdx python -m tools.gate12.certify_bus_price_degeneracy \
+  --input /path/to/Pricing_20221106.gdx \
+  --system-directory /path/to/gams-system-directory \
+  --reference-bundle-root /path/to/incremental/gams-bundles \
+  --candidate-bundle-root /path/to/incremental/pyspd-bundles \
+  --trading-date 20221106 \
+  --output /path/to/incremental/bus-price-certificates/20221106.json
+```
+
+Pass the resulting immutable artifact back to `validate_semantic_replay` with
+`--bus-price-certificate`. The validator verifies the date, source hash, both
+bundle hashes, case order, allocation hashes, and passing disposition before
+selecting the distinct
+`gams-pyspd-semantic-tolerance-bus-certified-v1` profile. Only numeric raw and
+repaired bus differences are resolved by this certificate; report structure,
+publication, or any missing price identity remains fail-closed.
 
 For isolated partial inventories, pass `--execution-scope shard`. A complete
 shard then exits successfully and records `shard_complete: true`, while

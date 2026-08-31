@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from tools.gate12.certify_bus_price_degeneracy import (
+    build_parser as bus_certificate_parser,
+)
 from tools.gate12.compare_incremental_replays import (
     build_parser as compare_parser,
 )
@@ -13,6 +16,9 @@ from tools.gate12.materialize_incremental_gams import (
 from tools.gate12.materialize_incremental_pyspd import build_parser
 from tools.gate12.quantify_canonical_replay import (
     build_parser as quantify_parser,
+)
+from tools.gate12.validate_semantic_replay import (
+    build_parser as semantic_parser,
 )
 
 
@@ -132,3 +138,56 @@ def test_quantified_diff_cli_requires_a_paired_date_and_output() -> None:
 
     assert arguments.trading_date == "20221106"
     assert str(arguments.output) == "/diffs/20221106.json"
+
+
+def test_semantic_validator_cli_requires_a_paired_date_and_output() -> None:
+    parser = semantic_parser()
+
+    with pytest.raises(SystemExit):
+        parser.parse_args([])
+
+    arguments = parser.parse_args(
+        [
+            "--reference-bundle-root",
+            "/reference",
+            "--candidate-bundle-root",
+            "/candidate",
+            "--trading-date",
+            "20221106",
+            "--output",
+            "/semantic/20221106.json",
+            "--bus-price-certificate",
+            "/certificates/20221106.json",
+        ]
+    )
+
+    assert arguments.trading_date == "20221106"
+    assert str(arguments.output) == "/semantic/20221106.json"
+    assert str(arguments.bus_price_certificate) == "/certificates/20221106.json"
+
+
+def test_bus_degeneracy_cli_requires_source_matrix_and_paired_bundles() -> None:
+    parser = bus_certificate_parser()
+
+    with pytest.raises(SystemExit):
+        parser.parse_args([])
+
+    arguments = parser.parse_args(
+        [
+            "--input",
+            "/inputs/Pricing_20221106.gdx",
+            "--system-directory",
+            "/gams",
+            "--reference-bundle-root",
+            "/reference",
+            "--candidate-bundle-root",
+            "/candidate",
+            "--trading-date",
+            "20221106",
+            "--output",
+            "/certificates/20221106.json",
+        ]
+    )
+
+    assert str(arguments.input) == "/inputs/Pricing_20221106.gdx"
+    assert arguments.trading_date == "20221106"
