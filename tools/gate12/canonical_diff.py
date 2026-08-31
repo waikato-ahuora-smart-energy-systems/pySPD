@@ -171,6 +171,19 @@ class CanonicalJsonDiffer:
                 output.update(self._flatten(payload[key], (*path, key)))
             return output
         if isinstance(payload, list) and payload:
+            identity_rows = self._identity_rows(payload)
+            if identity_rows is not None:
+                output = {}
+                for identity, row in sorted(identity_rows.items()):
+                    for key in sorted(row):
+                        if key != "identity":
+                            output.update(
+                                self._flatten(
+                                    row[key],
+                                    (*path, f"identity={identity}", key),
+                                )
+                            )
+                return output
             output = {}
             for index, value in enumerate(payload):
                 output.update(self._flatten(value, (*path, str(index))))
@@ -180,6 +193,27 @@ class CanonicalJsonDiffer:
                 "REQ-G12-DIFF: canonical JSON contains a non-finite number"
             )
         return {path: payload}
+
+    @staticmethod
+    def _identity_rows(payload: list[object]) -> dict[str, dict[str, object]] | None:
+        if not all(
+            isinstance(row, dict)
+            and isinstance(row.get("identity"), list)
+            and all(isinstance(item, str) for item in row["identity"])
+            for row in payload
+        ):
+            return None
+        rows: dict[str, dict[str, object]] = {}
+        for raw_row in payload:
+            assert isinstance(raw_row, dict)
+            row = {str(key): value for key, value in raw_row.items()}
+            identity = json.dumps(row["identity"], separators=(",", ":"))
+            if identity in rows:
+                raise EvidenceContractError(
+                    "REQ-G12-DIFF: canonical mapping contains duplicate identity"
+                )
+            rows[identity] = row
+        return rows
 
     @staticmethod
     def _absolute_error(reference: object, candidate: object) -> float | None:

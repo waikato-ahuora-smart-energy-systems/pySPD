@@ -110,6 +110,41 @@ def test_json_differ_exposes_canonical_encoding_drift() -> None:
     assert result.differences[0].path == ()
 
 
+def test_json_differ_aligns_canonical_mapping_rows_by_identity() -> None:
+    reference = _json(
+        {
+            "rows": [
+                {"identity": ["A"], "value": "0x1.0000000000000p+0"},
+                {"identity": ["B"], "value": "0x1.0000000000000p+1"},
+            ]
+        }
+    )
+    candidate = _json(
+        {
+            "rows": [
+                {"identity": ["C"], "value": "0x1.8000000000000p+1"},
+                {"identity": ["A"], "value": "0x1.0000000000000p+0"},
+            ]
+        }
+    )
+
+    result = CanonicalJsonDiffer().compare(reference, candidate)
+
+    assert result.missing_path_count == 1
+    assert result.extra_path_count == 1
+    assert result.changed_value_count == 0
+    assert result.numeric_difference_count == 0
+    assert result.maximum_absolute_error == 0.0
+    assert {difference.reference for difference in result.differences} == {
+        None,
+        "0x1.0000000000000p+1",
+    }
+    assert {difference.candidate for difference in result.differences} == {
+        None,
+        "0x1.8000000000000p+1",
+    }
+
+
 def test_bundle_differ_emits_hash_bound_path_level_evidence(tmp_path) -> None:
     _write_bundle(tmp_path / "reference", "gams-v502")
     _write_bundle(
