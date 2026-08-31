@@ -17,5 +17,9 @@ def test_ci_matches_linux_execution_deferral() -> None:
     workflow = (ROOT / ".github/workflows/quality.yml").read_text()
     assert "ubuntu-latest" not in workflow
     assert "macos-latest" in workflow
+    assert 'python-version: "3.13"' in workflow
     assert "uv sync --frozen" in workflow
     assert "pip install" not in workflow
+    assert "branches: [main]" in workflow
+    assert "cancel-in-progress: true" in workflow
+    assert "timeout-minutes: 20" in workflow

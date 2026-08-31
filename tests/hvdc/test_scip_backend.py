@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pyomo.environ as pyo
 import pytest
 from pyomo.opt import SolverResults, SolverStatus, TerminationCondition
 
+import pyspd.solver as solver_module
 from pyspd.solver import (
     GamsScipBackend,
     SolverConfiguration,
@@ -90,10 +93,17 @@ def test_scip_rejected_states_preserve_normalized_distinctions(
     )._version() == (54,)
 
 
-def test_default_backend_prefers_uv_managed_gams_runtime() -> None:
+def test_default_backend_prefers_uv_managed_gams_runtime(
+    tmp_path, monkeypatch
+) -> None:
+    runtime = tmp_path / "site-packages" / "gamspy_base"
+    runtime.mkdir(parents=True)
+    (runtime / "gams").touch()
+    specification = SimpleNamespace(submodule_search_locations=[str(runtime)])
+    monkeypatch.setattr(solver_module, "find_spec", lambda _name: specification)
+
     backend = GamsScipBackend()
     assert backend.system_directory.endswith("site-packages/gamspy_base")
-    assert (backend._version()[:1]) == (54,)
 
 
 def test_timeout_incumbent_is_explicit_and_options_are_forwarded() -> None:
