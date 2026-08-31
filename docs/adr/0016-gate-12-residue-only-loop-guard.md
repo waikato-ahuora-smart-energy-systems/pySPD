@@ -56,6 +56,9 @@ The standalone profile is
 - The first guarded date, 2022-11-25, passed 282/282 exact optimal selected
   cases and retained five material identities. Its checkpoint logical hash is
   `a9c993352f8ddef9f47933d0276ff7414cb922e26a0acd393ca82e7553deb8c7`.
+- The next guarded date, 2022-12-04, passed 274/274 exact optimal selected
+  cases and retained one material identity. Its checkpoint logical hash is
+  `c15fc962a45247766d27ae93bc2e5d3db5a295e1748ec25b786021640b88627e`.
 
 ## Rejected alternatives
 
@@ -80,6 +83,8 @@ The standalone profile is
   across all 139 hash-bound dates.
 - The qualifying 2022-11-25 evidence is indexed by
   `docs/gate-12/historical-residue-recovery-20221125.json`.
+- The qualifying 2022-12-04 evidence is indexed by
+  `docs/gate-12/historical-residue-recovery-20221204.json`.
 
 ## Revisit triggers
 

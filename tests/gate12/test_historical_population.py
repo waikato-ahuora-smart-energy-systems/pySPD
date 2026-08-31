@@ -156,6 +156,46 @@ def test_residue_guard_checkpoint_is_exact_hash_bound_and_nonpopulation() -> Non
     assert all(len(value) == 64 for value in hashes)
 
 
+def test_second_residue_guard_checkpoint_preserves_material_transfer() -> None:
+    root = Path(__file__).resolve().parents[2]
+    evidence = json.loads(
+        (root / "docs/gate-12/historical-residue-recovery-20221204.json").read_text()
+    )
+
+    assert evidence["classification"] == (
+        "qualifying-subthreshold-residue-guard-shard-checkpoint"
+    )
+    assert evidence["selected_case_count"] == evidence["solved_case_count"] == 274
+    assert evidence["all_solves_optimal"] is True
+    assert evidence["affected_identity_count"] == len(evidence["identities"]) == 1
+    assert evidence["identities"] == [
+        {
+            "case_id": "31012022122000526",
+            "date_time": "04-DEC-2022 09:00",
+            "node": "WVY0111",
+            "target_node": "WVY1101",
+            "energy_shortfall_mw": 2.025482396568,
+            "adjustment_mw": 2.025482396568,
+            "solve_loop": 1,
+            "model_status": 1,
+            "solver_status": 1,
+        }
+    ]
+    assert evidence["guard_contract"]["solver_options_changed"] is False
+    assert evidence["shard_complete"] is True
+    assert evidence["population_passed"] is False
+    hashes = (
+        evidence["patch_logical_sha256"],
+        evidence["patch_metadata_file_sha256"],
+        evidence["checkpoint_logical_sha256"],
+        evidence["checkpoint_file_sha256"],
+        evidence["population_summary_file_sha256"],
+        *evidence["patch_file_sha256"].values(),
+        *evidence["artifact_sha256"].values(),
+    )
+    assert all(len(value) == 64 for value in hashes)
+
+
 def test_historical_shortfall_evidence_accepts_optimal_material_transfer_rows() -> None:
     text = HEADER + (
         "51012022111800831|06-NOV-2022 07:00|WAI0111|WAI0501|1|4.5969|4.5971|1|1\n"

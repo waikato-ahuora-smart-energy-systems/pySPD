@@ -207,6 +207,14 @@ The compact record is
 Run this profile with `--suppress-residue-only-shortfall-loops` and no targeted
 SCIP arguments.
 
+The same qualified profile then passed the next chronological date,
+2022-12-04: 274/274 exact optimal selected cases and one first-loop transfer,
+`WVY0111 -> WVY1101` at 09:00 for `2.025482396568 MW`. Its checkpoint logical
+hash is
+`c15fc962a45247766d27ae93bc2e5d3db5a295e1748ec25b786021640b88627e`;
+the compact record is
+[`historical-residue-recovery-20221204.json`](historical-residue-recovery-20221204.json).
+
 `HistoricalPopulationRunner` verifies every Gate 1 source size and SHA-256,
 reads the GDX run-mode surface, selects exactly RTD modes 101 and 201, and
 accepts a daily checkpoint only when the progress identities are exact, every

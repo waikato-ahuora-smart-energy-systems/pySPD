@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "classification": "qualifying-subthreshold-residue-guard-shard-checkpoint",
+  "trading_date": "20221204",
+  "reference_commit": "3360a91ebd48f2e3cbb52a5e6766d893011054be",
+  "source_sha256": "848a80308a6c5e55bafb7b2a46882d3a1381d856e7c8b56f0a3bcb8239e80e3e",
+  "execution_scope": "shard",
+  "execution_profile": "historical-v5.0.2-dailymode0-scip-solvelink5-first-loop-rtd-only-canonical-order-material-transfer",
+  "patch_profile": "historical-v5.0.2-dailymode0-scip-first-loop-material-transfer-subthreshold-residue-threshold1e-6",
+  "patch_logical_sha256": "ee09dc8ca3203d6793f54c42394d7a9e2da356008a3992931e9e04c9ddeade21",
+  "patch_metadata_file_sha256": "4593333d66124ccf96a5472a46c925fb96b903d6dffd236c64d146cc261e97dd",
+  "patch_file_sha256": {
+    "vSPDperiod.gms": "89dc70d3b794e27aac1d96680c4bbd26eb418f169e8bba6494077f3412bb7db4",
+    "vSPDsettings.inc": "fcf4b90c1ba75abe6dbf7c7327da9ef491bc8b05f5ee7880dd28d695791198e2",
+    "vSPDsolve.gms": "b1240e3be117d6407a73987ea3c396605a95b83e374dd391c062bf0d72a13dc6"
+  },
+  "selected_case_count": 274,
+  "solved_case_count": 274,
+  "all_solves_optimal": true,
+  "checkpoint_logical_sha256": "c15fc962a45247766d27ae93bc2e5d3db5a295e1748ec25b786021640b88627e",
+  "checkpoint_file_sha256": "e147302b513d9564c8d4c48d57191f82abb6294ba0a2c6bbdea29a49fcfc68bd",
+  "population_summary_file_sha256": "c2b8f98df3c8a8e9a923762cbe79515e0636e38911ec31bed401a54147843e03",
+  "artifact_sha256": {
+    "evidence": "5f3daf618970bda006c21c1edcdad17625807314fd727e73f80db968dbb0ea8f",
+    "listing": "b5a3bf241d6b85667344177044882f9260f323e4927775900b8bc9273b30a4ec",
+    "progress": "bfe51012f5ead2ddbf55dae3a33ba1970330e23e8e1e334b1a7f3611c9ecc4e6"
+  },
+  "affected_identity_count": 1,
+  "identities": [
+    {
+      "case_id": "31012022122000526",
+      "date_time": "04-DEC-2022 09:00",
+      "node": "WVY0111",
+      "target_node": "WVY1101",
+      "energy_shortfall_mw": 2.025482396568,
+      "adjustment_mw": 2.025482396568,
+      "solve_loop": 1,
+      "model_status": 1,
+      "solver_status": 1
+    }
+  ],
+  "guard_contract": {
+    "cleared": "ShortfallAdjustmentMW where abs(EnergyShortfallMW) <= 1e-6 immediately before the discovery transfer loop",
+    "retained": "Every adjustment and evidence row where abs(EnergyShortfallMW) > 1e-6",
+    "solver_options_changed": false
+  },
+  "shard_complete": true,
+  "population_passed": false,
+  "admissibility": "May contribute its identity to the final 139-date population; does not by itself satisfy the 546-identity population gate or daily-mode parity."
+}
