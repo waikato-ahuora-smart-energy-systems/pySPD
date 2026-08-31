@@ -172,6 +172,7 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
         "EnergyShortFallCheck(t,n) = 1 $ { (EnergyShortfallMW(t,n) > 0) and ok(t,n) } ;\n"
         "loop( (t,n) $ EnergyShortfallMW(t,n),\n"
         "ShortfallAdjustmentMW(t,n) $ EligibleShortfallRemoval(t,n) = EnergyShortfallMW(t,n) ;\n"
+        "        while( sum[n, ShortfallAdjustmentMW(ca,dt,n)],\n"
         "            loop( nodeTonode(t,n,n1) $ ShortfallTransferFromTo(t,n,n1),\n"
         "               putclose rep 'Short fall adjustment from 'n.tl' to ', n1.tl,': ', ShortfallAdjustmentMW(t,n)' MW' /;\n"
         "            ) ;\n"
@@ -182,6 +183,8 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
     shutil.copytree(programs, targeted_programs)
     tighter_programs = tmp_path / "targeted-tighter"
     shutil.copytree(programs, tighter_programs)
+    guarded_programs = tmp_path / "targeted-guarded"
+    shutil.copytree(programs, guarded_programs)
 
     patcher = HistoricalVspdSourcePatcher()
     result = patcher.apply(programs)
@@ -228,11 +231,33 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
     )
     assert tighter.logical_sha256 != targeted.logical_sha256
 
+    material_case = "241012022111005708"
+    guarded = HistoricalTargetedScipPatcher(
+        target,
+        "1e-12",
+        material_case,
+    ).apply(guarded_programs)
+    guarded_solve = (guarded_programs / "vSPDsolve.gms").read_text()
+    assert guarded.profile.endswith(
+        f"target-{target}-feastol1e-12-material-only-{material_case}-threshold1e-6"
+    )
+    assert guarded_solve.count(f"if(sameas(ca,'{material_case}'),") == 1
+    assert (
+        "$ (abs(EnergyShortfallMW(t,n)) <= 0.000001) = 0;" in guarded_solve
+    )
+    assert guarded.logical_sha256 not in {
+        targeted.logical_sha256,
+        tighter.logical_sha256,
+    }
+
     with pytest.raises(EvidenceContractError, match="must be numeric"):
         HistoricalTargetedScipPatcher("bad-case")
 
     with pytest.raises(EvidenceContractError, match="must be in"):
         HistoricalTargetedScipPatcher(target, "1e-18")
+
+    with pytest.raises(EvidenceContractError, match="material-only.*numeric"):
+        HistoricalTargetedScipPatcher(target, material_only_case_id="bad-case")
 
     with pytest.raises(EvidenceContractError, match="source drift"):
         patcher.apply(programs)

@@ -579,7 +579,12 @@ class HistoricalVspdSourcePatcher:
 class HistoricalTargetedScipPatcher(HistoricalVspdSourcePatcher):
     """Load strict SCIP numerics for one identified pathological case only."""
 
-    def __init__(self, case_id: str, feastol: str = "1e-10") -> None:
+    def __init__(
+        self,
+        case_id: str,
+        feastol: str = "1e-10",
+        material_only_case_id: str | None = None,
+    ) -> None:
         if not re.fullmatch(r"[0-9]+", case_id):
             raise EvidenceContractError(
                 "REQ-G12-HISTORICAL: targeted SCIP case ID must be numeric"
@@ -598,15 +603,44 @@ class HistoricalTargetedScipPatcher(HistoricalVspdSourcePatcher):
             )
         self.case_id = case_id
         self.feastol = format(tolerance.normalize(), "e")
+        if material_only_case_id is not None and not re.fullmatch(
+            r"[0-9]+", material_only_case_id
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-HISTORICAL: material-only case ID must be numeric"
+            )
+        self.material_only_case_id = material_only_case_id
+        material_profile = (
+            ""
+            if material_only_case_id is None
+            else f"-material-only-{material_only_case_id}-threshold1e-6"
+        )
         self.profile = (
             "historical-v5.0.2-dailymode0-scip-first-loop-material-transfer-"
-            f"target-{case_id}-feastol{self.feastol}"
+            f"target-{case_id}-feastol{self.feastol}{material_profile}"
         )
 
     def apply(self, programs: Path) -> HistoricalPatchEvidence:
         super().apply(programs)
         solve = programs / "vSPDsolve.gms"
         solve_text = solve.read_text(encoding="utf-8")
+        if self.material_only_case_id is not None:
+            loop_statement = (
+                "        while( sum[n, ShortfallAdjustmentMW(ca,dt,n)],"
+            )
+            guarded_loop = (
+                f"        if(sameas(ca,'{self.material_only_case_id}'),\n"
+                "            ShortfallAdjustmentMW(t,n)\n"
+                "                $ (abs(EnergyShortfallMW(t,n)) <= 0.000001) = 0;\n"
+                "        );\n"
+                f"{loop_statement}"
+            )
+            solve_text = self._replace_all(
+                solve_text,
+                loop_statement,
+                guarded_loop,
+                1,
+            )
         solve_text = self._target_solve(
             solve_text,
             model="vSPD_NMIR",
