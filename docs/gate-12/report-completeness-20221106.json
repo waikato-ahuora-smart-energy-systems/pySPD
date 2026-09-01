@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "profile": "gate12-complete-report-semantic-certification-v2",
+  "trading_date": "20221106",
+  "certified_date": "2026-09-01",
+  "disposition": "first-date-complete-report-and-semantic-parity-passed",
+  "logical_sha256": "bff4cb702f36e7c0b139321db5caa2d56d01c75c8cc3b79d744444bbfd43a028",
+  "provenance": {
+    "source_sha256": "282ac2abeaa2f0c7c6e26b967e2ba90289c0ba5a9e696b99069d11350d3037b8",
+    "work_item_sha256": "660f0e53a089fde3226618e5dd6f7c6effd15453891301f17022e532faaca6de",
+    "reference_bundle_sha256": "e824a75c89939ea250e0a63d81b75cd0bac81c613aadda6dcb07be4fa0a066f0",
+    "candidate_execution_sha256": "da1fe7710f5e9087253a3fa3a6b67dca20e201c8b371700d6502d303be685875",
+    "candidate_bundle_sha256": "dd4be2178ced7115ed0455dbb4bad54ad7fcb31d8aa634a90d1cfda51a1fac7e"
+  },
+  "execution": {
+    "canonical_prefix_case_count": 196,
+    "completed_case_count": 196,
+    "affected_case_count": 4,
+    "solver_path": "SCIP-MIP -> fix discrete variables -> HiGHS-RMIP"
+  },
+  "schema_crosswalk": {
+    "profile": "authority-pyspd-report-schema-crosswalk-v1",
+    "passed": true,
+    "authority_table_count": 13,
+    "authority_fields_per_case": 142,
+    "unmapped_reference_field_count": 0,
+    "unmapped_candidate_field_count": 0,
+    "logical_sha256": "698f27f047307b268b5fc4c3b8e9277e6df1e777f3ec0765c31a8c5d08e6d04d"
+  },
+  "mapped_report_result": {
+    "profile": "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v3",
+    "passed": true,
+    "compared_value_count": 68558,
+    "missing_identity_count": 0,
+    "extra_identity_count": 0,
+    "certified_difference_count": 257,
+    "above_precision_count": 0,
+    "unimplemented_table_count": 0,
+    "logical_sha256": "700ca7c3177049438d5a3dcf5ae59b8da9ee1328a63bfc17021430b36011e184"
+  },
+  "supporting_evidence": {
+    "zero_flow_price_certificate_sha256": "d868b7460981035ccb44e67d85716add90d458ffdbabb6db785e494bf93c416a",
+    "report_row_parity_sha256": "700ca7c3177049438d5a3dcf5ae59b8da9ee1328a63bfc17021430b36011e184",
+    "semantic_result_sha256": "d4a9c89837869cc2623dd0304cb89e8d1bb6baa5379fc4b9a456cdcfb354cde7"
+  },
+  "semantic_result": {
+    "profile": "gams-pyspd-semantic-tolerance-zero-flow-report-certified-v3",
+    "passed": true,
+    "case_count": 4,
+    "surface_count": 48,
+    "failed_surface_count": 0,
+    "unresolved_difference_count": 0
+  },
+  "remaining_boundary": {
+    "first_date_certified": true,
+    "gate12_closed": false,
+    "reason": "Remaining exact-population, representative-day, repeat/resume, strict-profile, and evidence-index criteria are not complete."
+  }
+}

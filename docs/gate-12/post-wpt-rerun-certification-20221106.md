@@ -72,6 +72,9 @@ The compact independent-price evidence index is
 
 ## Next acceptance action
 
-Implement and compare the remaining risk and summary report tables, then close
-the explicit Authority/PySPD report-schema crosswalk boundary. Pricing itself
-no longer blocks the 2022-11-06 comparison.
+The complete class-based report projection and all 142 Authority field mappings
+now pass in the final provenance-clean replay. The 2022-11-06 comparison is
+certified with zero unresolved semantic differences. Gate 12 remains open for
+the exact 546-case/139-date population, representative-day, repeat/resume, and
+other checklist obligations—not for this date's prices or reports. See
+[`report-completeness-20221106.md`](report-completeness-20221106.md).

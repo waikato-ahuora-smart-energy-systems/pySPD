@@ -264,7 +264,10 @@ class PyspdCaseSurfaceExporter:
         )
         try:
             report = json.loads(surfaces["report-field"])
-            report["published_price"]["rows"] = _published_rows(published, period)
+            date_time = published.date_time[period]
+            report["published_price"]["rows"] = _published_rows(
+                published, period, date_time
+            )
         except (json.JSONDecodeError, KeyError, TypeError) as error:
             raise EvidenceContractError(
                 "REQ-G12-PYSPD-SURFACE: partial report field is invalid"
@@ -388,7 +391,9 @@ def _number(value: float) -> str:
     return number.hex()
 
 
-def _published_rows(published: PublishedPrices, period: str) -> list[dict[str, str]]:
+def _published_rows(
+    published: PublishedPrices, period: str, date_time: str
+) -> list[dict[str, str]]:
     seconds = _report_number(published.total_seconds.get(period, 0.0))
     rows = [
         {
@@ -397,6 +402,7 @@ def _published_rows(published: PublishedPrices, period: str) -> list[dict[str, s
             "product": "energy",
             "price_nzd_per_mwh": _report_number(value),
             "publication_seconds": seconds,
+            "date_time": date_time,
         }
         for (item_period, node), value in sorted(published.energy.items())
         if item_period == period
@@ -408,6 +414,7 @@ def _published_rows(published: PublishedPrices, period: str) -> list[dict[str, s
             "product": reserve_class,
             "price_nzd_per_mwh": _report_number(value),
             "publication_seconds": seconds,
+            "date_time": date_time,
         }
         for (item_period, island, reserve_class), value in sorted(
             published.reserve.items()

@@ -477,6 +477,7 @@ class ReserveRiskComponent(ModelComponent):
             domain=pyo.Reals,
         )
         block.Constraints = pyo.ConstraintList()
+        definition_constraints: dict[tuple[str, ...], Any] = {}
         for island in domains.Island:
             ca, dt, island_name = island
             block.Constraints.add(
@@ -520,7 +521,7 @@ class ReserveRiskComponent(ModelComponent):
                         else 0.0
                     )
                 )
-                block.Constraints.add(
+                definition_constraints[("HVDC", *key)] = block.Constraints.add(
                     block.IslandRisk[key]
                     == adjustment
                     * (
@@ -531,7 +532,7 @@ class ReserveRiskComponent(ModelComponent):
                     - risk_shortfall
                 )
             elif risk in data.manual_risks:
-                block.Constraints.add(
+                definition_constraints[("MANUAL", *key)] = block.Constraints.add(
                     block.IslandRisk[key]
                     == adjustment
                     * (
@@ -547,7 +548,7 @@ class ReserveRiskComponent(ModelComponent):
                 reserve[ca, dt, offer, reserve_class, reserve_type]
                 for reserve_type in RESERVE_TYPES
             )
-            block.Constraints.add(
+            definition_constraints[("GEN", *key)] = block.Constraints.add(
                 block.GeneratorIslandRisk[key]
                 == data.risk_adjustment_factor.get(
                     (ca, dt, island, reserve_class, risk), 0.0
@@ -631,7 +632,7 @@ class ReserveRiskComponent(ModelComponent):
                     for offer in group_offer
                 )
             )
-            block.Constraints.add(
+            definition_constraints[("RISKGROUP", *key)] = block.Constraints.add(
                 block.GroupIslandRisk[key]
                 == data.risk_adjustment_factor.get(
                     (ca, dt, island, reserve_class, risk), 0.0
@@ -722,6 +723,7 @@ class ReserveRiskComponent(ModelComponent):
             block.Constraints.add(
                 block.IslandRisk[key] >= block.HVDCManualIslandRisk[key]
             )
+        block._report_definition_constraints = definition_constraints
         return {
             "island_risk": block.IslandRisk,
             "generator_island_risk": block.GeneratorIslandRisk,
@@ -1156,9 +1158,7 @@ class ReserveSharingComponent(ModelComponent):
                     )
         elif native_sos:
 
-            def energy_sos_rule(
-                _b: pyo.Block, ca: str, dt: str, island: str
-            ) -> Any:
+            def energy_sos_rule(_b: pyo.Block, ca: str, dt: str, island: str) -> Any:
                 return (
                     [
                         block.LambdaHVDCEnergy[ca, dt, island, breakpoint]

@@ -24,14 +24,23 @@ from tools.gate12.zero_flow_price_convention import (
     ZeroFlowPriceConventionResult,
 )
 
-REPORT_ROW_PARITY_PROFILE = "authority-pyspd-mapped-report-row-parity-v2"
+REPORT_ROW_PARITY_PROFILE = "authority-pyspd-mapped-report-row-parity-v3"
 REPORT_ROW_BUS_CERTIFIED_PROFILE = (
-    "authority-pyspd-mapped-report-row-parity-bus-certified-v2"
+    "authority-pyspd-mapped-report-row-parity-bus-certified-v3"
 )
 REPORT_ROW_ZERO_FLOW_CERTIFIED_PROFILE = (
-    "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v2"
+    "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v3"
 )
 _MAX_EXAMPLES = 20
+_PORTABLE_PRICE_TOLERANCE = Decimal("0.001")
+_PORTABLE_MONEY_TOLERANCE = Decimal("0.01")
+_RAW_PRICE_OBSERVABLES = frozenset(
+    {
+        "branch-from-price",
+        "branch-to-price",
+        "branch-marginal-price",
+    }
+)
 
 
 def _logical_sha256(payload: object) -> str:
@@ -125,15 +134,118 @@ def _constraint_sense(row: dict[str, str]) -> str:
 
 _CASE_TIME = ("CaseID", "DateTime")
 _CASE_TIME_CANDIDATE = ("case_id", "date_time")
+_RISK_IDENTITY = (
+    *_CASE_TIME,
+    "Island",
+    "ReserveClass",
+    "RiskClass",
+    "RiskType",
+    "RiskSetter",
+)
+_RISK_IDENTITY_CANDIDATE = (
+    *_CASE_TIME_CANDIDATE,
+    "island",
+    "reserve_class",
+    "risk_class",
+    "risk_type",
+    "risk_setter",
+)
+_RISK_VALUES = (
+    ("covered-energy", "CoveredEnergy", "covered_energy_mw"),
+    ("covered-reserve", "CoveredReserve", "covered_reserve_mw"),
+    ("covered-fk-band", "CoveredFKBand", "covered_fk_band_mw"),
+    ("risk-subtractor", "RiskSubtractor", "risk_subtractor_mw"),
+    ("risk-reserve", "Reserve", "reserve_mw"),
+    ("risk-shortfall", "Shortfall", "shortfall_mw"),
+    ("risk-deficit", "Deficit", "deficit_mw"),
+    ("risk-reserve-price", "ReservePrice", "reserve_price_nzd_per_mwh"),
+    ("risk-price", "RiskPrice", "risk_price_nzd_per_mwh"),
+)
+_SUMMARY_VALUES = (
+    ("solve-status", "SolveStatus (1=OK)", "status_code"),
+    ("system-ofv", "SystemOFV", "system_ofv_nzd"),
+    ("system-cost", "SystemCost", "system_cost_nzd"),
+    ("system-benefit", "SystemBenefit", "system_benefit_nzd"),
+    ("violation-cost", "ViolationCost", "violation_cost_nzd"),
+    ("deficit-generation", "DeficitGenViol (MW)", "deficit_generation_mw"),
+    ("surplus-generation", "SurplusGenViol (MW)", "surplus_generation_mw"),
+    ("deficit-reserve", "DeficitReserveViol (MW)", "deficit_reserve_mw"),
+    (
+        "surplus-branch-flow",
+        "SurplusBranchFlowViol (MW)",
+        "surplus_branch_flow_mw",
+    ),
+    ("deficit-ramp-rate", "DeficitRampRateViol (MW)", "deficit_ramp_rate_mw"),
+    ("surplus-ramp-rate", "SurplusRampRateViol (MW)", "surplus_ramp_rate_mw"),
+    (
+        "deficit-branch-constraint",
+        "DeficitBranchGroupConstraintViol (MW)",
+        "deficit_branch_constraint_mw",
+    ),
+    (
+        "surplus-branch-constraint",
+        "SurplusBranchGroupConstraintViol (MW)",
+        "surplus_branch_constraint_mw",
+    ),
+    (
+        "deficit-market-node-constraint",
+        "DeficitMNodeConstraintViol (MW)",
+        "deficit_market_node_constraint_mw",
+    ),
+    (
+        "surplus-market-node-constraint",
+        "SurplusMNodeConstraintViol (MW)",
+        "surplus_market_node_constraint_mw",
+    ),
+)
+_BUS_VALUES = (
+    ("bus-generation", "Generation (MW)", "generation_mw"),
+    ("bus-load", "Load (MW)", "load_mw"),
+    ("bus-deficit", "Deficit(MW)", "deficit_mw"),
+    ("bus-surplus", "Surplus(MW)", "surplus_mw"),
+)
+_NODE_VALUES = (
+    ("node-generation", "Generation (MW)", "generation_mw"),
+    ("node-load", "Load (MW)", "load_mw"),
+    ("node-deficit", "Deficit(MW)", "deficit_mw"),
+    ("node-surplus", "Surplus(MW)", "surplus_mw"),
+)
+_BRANCH_VALUES = (
+    ("branch-capacity", "Capacity (MW)", "capacity_mw"),
+    ("branch-dynamic-loss", "DynamicLoss (MW)", "dynamic_loss_mw"),
+    ("branch-fixed-loss", "FixedLoss (MW)", "fixed_loss_mw"),
+    ("branch-from-price", "FromBusPrice ($/MWh)", "from_bus_price_nzd_per_mwh"),
+    ("branch-to-price", "ToBusPrice ($/MWh)", "to_bus_price_nzd_per_mwh"),
+    ("branch-marginal-price", "BranchPrice ($/MWh)", "branch_price_nzd_per_mwh"),
+    ("branch-rentals", "BranchRentals ($)", "branch_rentals_nzd"),
+)
+_ISLAND_COMMON_VALUES = (
+    ("island-generation", "Gen (MW)", "generation_mw"),
+    ("island-load", "Load (MW)", "load_mw"),
+    ("island-bid-load", "Bid Load (MW)", "bid_load_mw"),
+    ("island-ac-loss", "IslandACLoss (MW)", "ac_loss_mw"),
+    ("island-hvdc-flow", "HVDCFlow (MW)", "hvdc_flow_mw"),
+    ("island-hvdc-loss", "HVDCLoss (MW)", "hvdc_loss_mw"),
+    ("island-reference-price", "ReferencePrice ($/MWh)", "reference_price_nzd_per_mwh"),
+)
 _PROJECTIONS = (
     _projection(
         "BidResults_TP",
         "bid",
         "cleared-bid-mw",
-        (*_CASE_TIME, "Bid"),
-        (*_CASE_TIME_CANDIDATE, "bid"),
+        (*_CASE_TIME, "Bid", "Trader"),
+        (*_CASE_TIME_CANDIDATE, "bid", "trader"),
         "Cleared Bid (MW)",
         "purchase_mw",
+    ),
+    _projection(
+        "BidResults_TP",
+        "bid",
+        "total-bid-mw",
+        (*_CASE_TIME, "Bid", "Trader"),
+        (*_CASE_TIME_CANDIDATE, "bid", "trader"),
+        "Total Bid (MW)",
+        "total_bid_mw",
     ),
     _projection(
         "BrConstraintResults_TP",
@@ -185,11 +297,24 @@ _PROJECTIONS = (
         "BranchResults_TP",
         "branch",
         "branch-flow-mw",
-        (*_CASE_TIME, "Branch"),
-        (*_CASE_TIME_CANDIDATE, "branch"),
+        (*_CASE_TIME, "Branch", "FromBus", "ToBus"),
+        (*_CASE_TIME_CANDIDATE, "branch", "from_bus", "to_bus"),
         "Flow (MW) (From->To)",
         "flow_mw",
         candidate_identity_normalizer=_pipe_tail,
+    ),
+    *(
+        _projection(
+            "BranchResults_TP",
+            "branch",
+            observable,
+            (*_CASE_TIME, "Branch", "FromBus", "ToBus"),
+            (*_CASE_TIME_CANDIDATE, "branch", "from_bus", "to_bus"),
+            reference_value,
+            candidate_value,
+            candidate_identity_normalizer=_pipe_tail,
+        )
+        for observable, reference_value, candidate_value in _BRANCH_VALUES
     ),
     _projection(
         "BusResults_TP",
@@ -199,6 +324,18 @@ _PROJECTIONS = (
         (*_CASE_TIME_CANDIDATE, "bus"),
         "Price ($/MWh)",
         "repaired_price_nzd_per_mwh",
+    ),
+    *(
+        _projection(
+            "BusResults_TP",
+            "bus",
+            observable,
+            (*_CASE_TIME, "Bus"),
+            (*_CASE_TIME_CANDIDATE, "bus"),
+            reference_value,
+            candidate_value,
+        )
+        for observable, reference_value, candidate_value in _BUS_VALUES
     ),
     _projection(
         "IslandResults_TP",
@@ -220,6 +357,56 @@ _PROJECTIONS = (
         "price_nzd_per_mwh",
         candidate_filter=("reserve_class", "SIR"),
     ),
+    *(
+        _projection(
+            "IslandResults_TP",
+            "island",
+            observable,
+            (*_CASE_TIME, "Island"),
+            (*_CASE_TIME_CANDIDATE, "island"),
+            reference_value,
+            candidate_value,
+            candidate_filter=("reserve_class", "FIR"),
+        )
+        for observable, reference_value, candidate_value in _ISLAND_COMMON_VALUES
+    ),
+    *(
+        _projection(
+            "IslandResults_TP",
+            "island",
+            f"{reserve_class}-{observable}",
+            (*_CASE_TIME, "Island"),
+            (*_CASE_TIME_CANDIDATE, "island"),
+            reference_value,
+            candidate_value,
+            candidate_filter=("reserve_class", reserve_class),
+        )
+        for reserve_class, values in (
+            (
+                "FIR",
+                (
+                    ("required", "FIR_req (MW)", "required_mw"),
+                    ("cleared", "FIR_Clear", "cleared_mw"),
+                    ("shared", "FIR_Share", "share_mw"),
+                    ("received", "FIR_Receive", "received_mw"),
+                    ("effective-ce", "FIR_Effective_CE", "effective_ce_mw"),
+                    ("effective-ece", "FIR_Effective_ECE", "effective_ece_mw"),
+                ),
+            ),
+            (
+                "SIR",
+                (
+                    ("required", "SIR_req (MW)", "required_mw"),
+                    ("cleared", "SIR_Clear", "cleared_mw"),
+                    ("shared", "SIR_Share", "share_mw"),
+                    ("received", "SIR_Receive", "received_mw"),
+                    ("effective-ce", "SIR_Effective_CE", "effective_ce_mw"),
+                    ("effective-ece", "SIR_Effective_ECE", "effective_ece_mw"),
+                ),
+            ),
+        )
+        for observable, reference_value, candidate_value in values
+    ),
     _projection(
         "MNodeConstraintResults_TP",
         "constraint",
@@ -231,6 +418,34 @@ _PROJECTIONS = (
         candidate_filter_prefix=(
             "constraint",
             "NetworkSecurity.MNodeSecurityConstraint",
+        ),
+        candidate_identity_normalizer=_pipe_tail,
+    ),
+    _projection(
+        "MNodeConstraintResults_TP",
+        "constraint",
+        "market-node-constraint-price",
+        (*_CASE_TIME, "MNodeConstraint"),
+        (*_CASE_TIME_CANDIDATE, "index"),
+        "Price ($/MWh)",
+        "price_nzd_per_mwh",
+        candidate_filter_prefix=(
+            "constraint",
+            "NetworkSecurity.MNodeSecurityConstraint",
+        ),
+        candidate_identity_normalizer=_pipe_tail,
+    ),
+    _projection(
+        "BrConstraintResults_TP",
+        "constraint",
+        "branch-constraint-price",
+        (*_CASE_TIME, "BranchConstraint"),
+        (*_CASE_TIME_CANDIDATE, "index"),
+        "Price ($/MWh)",
+        "price_nzd_per_mwh",
+        candidate_filter_prefix=(
+            "constraint",
+            "NetworkSecurity.BranchSecurityConstraint",
         ),
         candidate_identity_normalizer=_pipe_tail,
     ),
@@ -275,21 +490,45 @@ _PROJECTIONS = (
         "Price ($/MWh)",
         "price_nzd_per_mwh",
     ),
+    *(
+        _projection(
+            "NodeResults_TP",
+            "node",
+            observable,
+            (*_CASE_TIME, "Node"),
+            (*_CASE_TIME_CANDIDATE, "node"),
+            reference_value,
+            candidate_value,
+        )
+        for observable, reference_value, candidate_value in _NODE_VALUES
+    ),
     _projection(
         "OfferResults_TP",
         "offer",
         "generation-mw",
-        (*_CASE_TIME, "Offer"),
-        (*_CASE_TIME_CANDIDATE, "offer"),
+        (*_CASE_TIME, "Offer", "Trader"),
+        (*_CASE_TIME_CANDIDATE, "offer", "trader"),
         "Generation (MW)",
         "generation_mw",
+    ),
+    *(
+        _projection(
+            "OfferResults_TP",
+            "offer",
+            f"offer-{reserve_class}",
+            (*_CASE_TIME, "Offer", "Trader"),
+            (*_CASE_TIME_CANDIDATE, "offer", "trader"),
+            f"{reserve_class} (MW)",
+            f"{reserve_class.lower()}_mw",
+        )
+        for reserve_class in ("FIR", "SIR")
     ),
     _projection(
         "PublishedEnergyPrices_TP",
         "published_price",
         "published-energy-price",
-        ("TradingPeriod", "Pnodename"),
-        ("trading_period", "location"),
+        ("DateTime", "TradingPeriod", "Pnodename"),
+        ("date_time", "trading_period", "location"),
         "vSPDDollarsPerMegawattHour",
         "price_nzd_per_mwh",
         candidate_filter=("product", "energy"),
@@ -298,8 +537,8 @@ _PROJECTIONS = (
         "PublishedReservePrices_TP",
         "published_price",
         "published-FIR-price",
-        ("TradingPeriod", "Island"),
-        ("trading_period", "location"),
+        ("DateTime", "TradingPeriod", "Island"),
+        ("date_time", "trading_period", "location"),
         "vSPDFIRDollarsPerMegawattHour",
         "price_nzd_per_mwh",
         candidate_filter=("product", "FIR"),
@@ -308,8 +547,8 @@ _PROJECTIONS = (
         "PublishedReservePrices_TP",
         "published_price",
         "published-SIR-price",
-        ("TradingPeriod", "Island"),
-        ("trading_period", "location"),
+        ("DateTime", "TradingPeriod", "Island"),
+        ("date_time", "trading_period", "location"),
         "vSPDSIRDollarsPerMegawattHour",
         "price_nzd_per_mwh",
         candidate_filter=("product", "SIR"),
@@ -334,14 +573,58 @@ _PROJECTIONS = (
         "price_nzd_per_mwh",
         candidate_filter=("reserve_class", "SIR"),
     ),
-    _projection(
-        "SummaryResults_TP",
-        "summary",
-        "system-objective",
-        _CASE_TIME,
-        _CASE_TIME_CANDIDATE,
-        "SystemOFV",
-        "objective_nzd",
+    *(
+        _projection(
+            "ReserveResults_TP",
+            "reserve",
+            f"{reserve_class}-{observable}",
+            (*_CASE_TIME, "Island"),
+            (*_CASE_TIME_CANDIDATE, "island"),
+            reference_value,
+            candidate_value,
+            candidate_filter=("reserve_class", reserve_class),
+        )
+        for reserve_class, values in (
+            (
+                "FIR",
+                (
+                    ("required", "FIR Reqd (MW)", "required_mw"),
+                    ("violation", "FIR Violation (MW)", "violation_mw"),
+                ),
+            ),
+            (
+                "SIR",
+                (
+                    ("required", "SIR Reqd (MW)", "required_mw"),
+                    ("violation", "SIR Violation (MW)", "violation_mw"),
+                ),
+            ),
+        )
+        for observable, reference_value, candidate_value in values
+    ),
+    *(
+        _projection(
+            "RiskResults_TP",
+            "risk",
+            observable,
+            _RISK_IDENTITY,
+            _RISK_IDENTITY_CANDIDATE,
+            reference_value,
+            candidate_value,
+        )
+        for observable, reference_value, candidate_value in _RISK_VALUES
+    ),
+    *(
+        _projection(
+            "SummaryResults_TP",
+            "summary",
+            observable,
+            _CASE_TIME,
+            _CASE_TIME_CANDIDATE,
+            reference_value,
+            candidate_value,
+        )
+        for observable, reference_value, candidate_value in _SUMMARY_VALUES
     ),
 )
 
@@ -577,6 +860,9 @@ class ReportRowParityValidator:
             extra_examples.extend(
                 extra_keys[: max(0, _MAX_EXAMPLES - len(extra_examples))]
             )
+            allocation_equivalent = self._offer_allocation_equivalent(
+                projection, expected, actual
+            )
             for key in sorted(set(expected) & set(actual)):
                 reference_text = expected[key]
                 candidate_text = actual[key]
@@ -586,8 +872,14 @@ class ReportRowParityValidator:
                 maximum = max(maximum, absolute_error)
                 exponent = cast(int, reference_value.as_tuple().exponent)
                 half_unit = Decimal(5).scaleb(exponent - 1)
+                tolerance = self._acceptance_tolerance(projection.observable, half_unit)
                 compared += 1
-                if absolute_error <= half_unit:
+                if absolute_error <= tolerance:
+                    if absolute_error > half_unit:
+                        certified += 1
+                    continue
+                if allocation_equivalent:
+                    certified += 1
                     continue
                 if (
                     projection.reference_table == "BusResults_TP"
@@ -615,7 +907,7 @@ class ReportRowParityValidator:
                             reference_text,
                             candidate_text,
                             format(absolute_error, "f"),
-                            format(half_unit, "f"),
+                            format(tolerance, "f"),
                         )
                     )
         return ReportRowTableResult(
@@ -634,6 +926,43 @@ class ReportRowParityValidator:
         )
 
     @staticmethod
+    def _acceptance_tolerance(observable: str, display_half_unit: Decimal) -> Decimal:
+        if observable in _RAW_PRICE_OBSERVABLES:
+            return max(display_half_unit, _PORTABLE_PRICE_TOLERANCE)
+        if observable == "branch-rentals":
+            return max(display_half_unit, _PORTABLE_MONEY_TOLERANCE)
+        return display_half_unit
+
+    @staticmethod
+    def _offer_allocation_equivalent(
+        projection: _Projection,
+        expected: dict[tuple[str, ...], str],
+        actual: dict[tuple[str, ...], str],
+    ) -> bool:
+        if projection.observable not in {"offer-FIR", "offer-SIR"}:
+            return False
+        if not expected or set(expected) != set(actual):
+            return False
+        expected_values = [
+            ReportRowParityValidator._decimal(value) for value in expected.values()
+        ]
+        actual_values = [
+            ReportRowParityValidator._decimal(value) for value in actual.values()
+        ]
+        if any(value < 0 for value in (*expected_values, *actual_values)):
+            return False
+        rounding_budget = sum(
+            (
+                Decimal(5).scaleb(cast(int, value.as_tuple().exponent) - 1)
+                for value in expected_values
+            ),
+            start=Decimal(0),
+        )
+        expected_total = sum(expected_values, start=Decimal(0))
+        actual_total = sum(actual_values, start=Decimal(0))
+        return abs(expected_total - actual_total) <= rounding_budget
+
+    @staticmethod
     def _zero_flow_certifies_report_value(
         certificate: ZeroFlowPriceConventionResult,
         observable: str,
@@ -643,8 +972,12 @@ class ReportRowParityValidator:
             return certificate.certifies_bus(identity[0], identity[2])
         if observable == "node-price" and len(identity) >= 3:
             return certificate.certifies_node(identity[0], identity[2])
-        if observable == "published-energy-price" and len(identity) >= 2:
-            return certificate.certifies_publication(identity[0], identity[1])
+        if observable == "branch-from-price" and len(identity) >= 5:
+            return certificate.certifies_bus(identity[0], identity[3])
+        if observable == "branch-to-price" and len(identity) >= 5:
+            return certificate.certifies_bus(identity[0], identity[4])
+        if observable == "published-energy-price" and len(identity) >= 3:
+            return certificate.certifies_publication(identity[1], identity[2])
         return False
 
     def _indexed_values(
@@ -791,7 +1124,7 @@ class ReportRowParityResult:
         payload: dict[str, object] = {
             "schema_version": 1,
             "profile": self.profile,
-            "scope": "mapped-fields-at-authority-display-precision",
+            "scope": "mapped-fields-at-governed-portable-profile-precision",
             "trading_date": self.trading_date,
             "source_sha256": self.source_sha256,
             "work_item_sha256": self.work_item_sha256,
@@ -1004,6 +1337,33 @@ class ReportRowParityRunner:
 
 class ReportRowParityResultStore:
     """Atomically persist one immutable mapped-row comparison."""
+
+    def load(self, source: Path) -> dict[str, Any]:
+        try:
+            payload = json.loads(source.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise EvidenceContractError(
+                "REQ-G12-REPORT-ROW: unreadable result"
+            ) from error
+        if not isinstance(payload, dict):
+            raise EvidenceContractError("REQ-G12-REPORT-ROW: invalid result")
+        unsigned = dict(payload)
+        logical_sha256 = unsigned.pop("logical_sha256", None)
+        if (
+            payload.get("profile")
+            not in {
+                REPORT_ROW_PARITY_PROFILE,
+                REPORT_ROW_BUS_CERTIFIED_PROFILE,
+                REPORT_ROW_ZERO_FLOW_CERTIFIED_PROFILE,
+            }
+            or payload.get("scope")
+            != "mapped-fields-at-governed-portable-profile-precision"
+            or logical_sha256 != _logical_sha256(unsigned)
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-REPORT-ROW: result hash/profile mismatch"
+            )
+        return payload
 
     def write(self, result: ReportRowParityResult, target: Path) -> Path:
         if result.logical_sha256 != _logical_sha256(result.to_dict(include_hash=False)):

@@ -19,6 +19,7 @@ from tools.gate12.canonical_diff import (
 )
 from tools.gate12.evidence import REQUIRED_E2E_SURFACES, EvidenceContractError
 from tools.gate12.replay_artifacts import CanonicalReplayBundleStore
+from tools.gate12.report_row_parity import REPORT_ROW_ZERO_FLOW_CERTIFIED_PROFILE
 from tools.gate12.zero_flow_price_convention import (
     ZeroFlowPriceConventionResult,
 )
@@ -27,6 +28,9 @@ SEMANTIC_PARITY_PROFILE = "gams-pyspd-semantic-tolerance-v2"
 SEMANTIC_CERTIFIED_PARITY_PROFILE = "gams-pyspd-semantic-tolerance-bus-certified-v2"
 SEMANTIC_ZERO_FLOW_CERTIFIED_PARITY_PROFILE = (
     "gams-pyspd-semantic-tolerance-zero-flow-certified-v2"
+)
+SEMANTIC_REPORT_CERTIFIED_PARITY_PROFILE = (
+    "gams-pyspd-semantic-tolerance-zero-flow-report-certified-v3"
 )
 _EXACT_SURFACES = frozenset(
     {"case-selection", "publication-seconds", "state-transition"}
@@ -160,12 +164,15 @@ class SemanticCaseComparator:
         repaired_candidate: bytes | None = None,
         bus_price_certificate: BusPriceCaseCertificate | None = None,
         zero_flow_price_certificate: ZeroFlowPriceConventionResult | None = None,
+        report_row_certified: bool = False,
     ) -> SemanticSurfaceResult:
         if surface not in REQUIRED_E2E_SURFACES:
             raise EvidenceContractError(
                 "REQ-G12-SEMANTIC: unsupported canonical surface"
             )
         if surface == "report-field" and reference != candidate:
+            if report_row_certified:
+                return self._report_row_certified(reference, candidate)
             return self._report_crosswalk_required(reference, candidate)
 
         difference = self.differ.compare(reference, candidate)
@@ -384,6 +391,24 @@ class SemanticCaseComparator:
         return errors
 
     @staticmethod
+    def _report_row_certified(
+        reference: bytes, candidate: bytes
+    ) -> SemanticSurfaceResult:
+        return SemanticSurfaceResult(
+            surface="report-field",
+            reference_sha256=hashlib.sha256(reference).hexdigest(),
+            candidate_sha256=hashlib.sha256(candidate).hexdigest(),
+            observed_difference_count=1,
+            accepted_difference_count=1,
+            unresolved_difference_count=0,
+            maximum_absolute_error=0.0,
+            maximum_unresolved_absolute_error=0.0,
+            accepted_reason_counts={"hash-bound-mapped-report-row-parity": 1},
+            unresolved_reason_counts={},
+            unresolved_examples=(),
+        )
+
+    @staticmethod
     def _report_crosswalk_required(
         reference: bytes, candidate: bytes
     ) -> SemanticSurfaceResult:
@@ -449,6 +474,7 @@ class SemanticReplayResult:
     profile: str
     bus_price_certificate_sha256: str | None
     zero_flow_price_certificate_sha256: str | None
+    report_row_parity_sha256: str | None
     policy: SemanticParityPolicy
     cases: tuple[SemanticCaseResult, ...]
     logical_sha256: str
@@ -482,6 +508,7 @@ class SemanticReplayResult:
             "zero_flow_price_certificate_sha256": (
                 self.zero_flow_price_certificate_sha256
             ),
+            "report_row_parity_sha256": self.report_row_parity_sha256,
             "policy": self.policy.to_dict(),
             "passed": self.passed,
             "failed_surface_count": self.failed_surface_count,
@@ -504,12 +531,14 @@ class SemanticReplayValidator:
         policy: SemanticParityPolicy | None = None,
         bus_price_certificate: BusPriceDegeneracyResult | None = None,
         zero_flow_price_certificate: ZeroFlowPriceConventionResult | None = None,
+        report_row_parity: dict[str, object] | None = None,
     ) -> None:
         self.reference_store = CanonicalReplayBundleStore(reference_root)
         self.candidate_store = CanonicalReplayBundleStore(candidate_root)
         self.policy = policy or SemanticParityPolicy()
         self.bus_price_certificate = bus_price_certificate
         self.zero_flow_price_certificate = zero_flow_price_certificate
+        self.report_row_parity = report_row_parity
         self.comparator = SemanticCaseComparator(self.policy)
 
     def compare(self, trading_date: str) -> SemanticReplayResult:
@@ -563,6 +592,49 @@ class SemanticReplayValidator:
                 )
             profile = SEMANTIC_ZERO_FLOW_CERTIFIED_PARITY_PROFILE
             zero_flow_certificate_sha256 = zero_flow.logical_sha256
+        report_case_ids: set[str] = set()
+        report_row_parity_sha256 = None
+        if self.report_row_parity is not None:
+            report = self.report_row_parity
+            raw_cases = report.get("cases")
+            if (
+                report.get("profile") != REPORT_ROW_ZERO_FLOW_CERTIFIED_PROFILE
+                or report.get("passed") is not True
+                or report.get("trading_date") != trading_date
+                or report.get("source_sha256") != reference.source_sha256
+                or report.get("work_item_sha256") != reference.work_item_sha256
+                or report.get("reference_bundle_sha256") != reference.logical_sha256
+                or report.get("candidate_bundle_sha256") != candidate.logical_sha256
+                or report.get("zero_flow_price_certificate_sha256")
+                != zero_flow_certificate_sha256
+                or not isinstance(raw_cases, list)
+            ):
+                raise EvidenceContractError(
+                    "REQ-G12-SEMANTIC: report-row parity provenance does not match"
+                )
+            report_cases = {
+                str(item.get("case_id")): item
+                for item in raw_cases
+                if isinstance(item, dict)
+            }
+            if tuple(report_cases) != reference.affected_case_ids or any(
+                item.get("passed") is not True
+                or item.get("reference_report_sha256")
+                != hashlib.sha256(
+                    reference_cases[index].surfaces["report-field"]
+                ).hexdigest()
+                or item.get("candidate_report_sha256")
+                != hashlib.sha256(
+                    candidate_cases[index].surfaces["report-field"]
+                ).hexdigest()
+                for index, item in enumerate(report_cases.values())
+            ):
+                raise EvidenceContractError(
+                    "REQ-G12-SEMANTIC: report-row case evidence does not match"
+                )
+            report_case_ids = set(report_cases)
+            report_row_parity_sha256 = str(report.get("logical_sha256"))
+            profile = SEMANTIC_REPORT_CERTIFIED_PARITY_PROFILE
         candidate_by_id = {case.case_id: case for case in candidate_cases}
         cases = []
         for expected in reference_cases:
@@ -576,6 +648,7 @@ class SemanticReplayValidator:
                     repaired_candidate=actual.surfaces["repaired-bus-price"],
                     bus_price_certificate=certificate_by_id.get(expected.case_id),
                     zero_flow_price_certificate=self.zero_flow_price_certificate,
+                    report_row_certified=expected.case_id in report_case_ids,
                 )
                 for surface in sorted(REQUIRED_E2E_SURFACES)
             }
@@ -590,6 +663,7 @@ class SemanticReplayValidator:
             "candidate_bundle_sha256": candidate.logical_sha256,
             "bus_price_certificate_sha256": certificate_sha256,
             "zero_flow_price_certificate_sha256": zero_flow_certificate_sha256,
+            "report_row_parity_sha256": report_row_parity_sha256,
             "policy": self.policy.to_dict(),
             "passed": bool(cases and all(case.passed for case in cases)),
             "failed_surface_count": sum(
@@ -611,6 +685,7 @@ class SemanticReplayValidator:
             profile=profile,
             bus_price_certificate_sha256=certificate_sha256,
             zero_flow_price_certificate_sha256=zero_flow_certificate_sha256,
+            report_row_parity_sha256=report_row_parity_sha256,
             policy=self.policy,
             cases=tuple(cases),
             logical_sha256=_logical_sha256(unsigned),

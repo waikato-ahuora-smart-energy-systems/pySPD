@@ -105,6 +105,7 @@ class PyspdReplayProgress:
     energy_numerator: Mapping[tuple[str, str], float]
     reserve_numerator: Mapping[tuple[str, str, str], float]
     total_seconds: Mapping[str, float]
+    period_date_time: Mapping[str, str]
     partial_surface_sha256: Mapping[str, Mapping[str, str]]
     partial_trading_period: Mapping[str, str]
     logical_sha256: str
@@ -123,6 +124,9 @@ class PyspdReplayProgress:
         )
         object.__setattr__(
             self, "total_seconds", MappingProxyType(dict(self.total_seconds))
+        )
+        object.__setattr__(
+            self, "period_date_time", MappingProxyType(dict(self.period_date_time))
         )
         object.__setattr__(
             self,
@@ -154,11 +158,12 @@ class PyspdReplayProgress:
         energy_numerator: Mapping[tuple[str, str], float] | None = None,
         reserve_numerator: Mapping[tuple[str, str, str], float] | None = None,
         total_seconds: Mapping[str, float] | None = None,
+        period_date_time: Mapping[str, str] | None = None,
         partial_surface_sha256: Mapping[str, Mapping[str, str]] | None = None,
         partial_trading_period: Mapping[str, str] | None = None,
     ) -> PyspdReplayProgress:
         unsigned = {
-            "schema_version": 2,
+            "schema_version": 3,
             "work_item_sha256": work_item_sha256,
             "application_configuration_sha256": application_configuration_sha256,
             "execution_source_sha256": execution_source_sha256,
@@ -175,6 +180,7 @@ class PyspdReplayProgress:
                 key: _float_text(value)
                 for key, value in sorted((total_seconds or {}).items())
             },
+            "period_date_time": dict(sorted((period_date_time or {}).items())),
             "partial_surface_sha256": {
                 case_id: dict(sorted(hashes.items()))
                 for case_id, hashes in sorted((partial_surface_sha256 or {}).items())
@@ -194,6 +200,7 @@ class PyspdReplayProgress:
             energy_numerator=energy_numerator or {},
             reserve_numerator=reserve_numerator or {},
             total_seconds=total_seconds or {},
+            period_date_time=period_date_time or {},
             partial_surface_sha256=partial_surface_sha256 or {},
             partial_trading_period=partial_trading_period or {},
             logical_sha256=_logical_sha256(unsigned),
@@ -213,18 +220,21 @@ class PyspdReplayProgress:
             "energy_numerator",
             "reserve_numerator",
             "total_seconds",
+            "period_date_time",
             "partial_surface_sha256",
             "partial_trading_period",
             "logical_sha256",
         }
-        if set(payload) != expected or payload.get("schema_version") != 2:
+        if set(payload) != expected or payload.get("schema_version") != 3:
             raise EvidenceContractError("REQ-G12-STREAM: unexpected progress schema")
         previous = payload["previous_generation"]
         seconds = payload["total_seconds"]
         hashes = payload["partial_surface_sha256"]
         periods = payload["partial_trading_period"]
+        period_date_time = payload["period_date_time"]
         if not all(
-            isinstance(item, dict) for item in (previous, seconds, hashes, periods)
+            isinstance(item, dict)
+            for item in (previous, seconds, hashes, periods, period_date_time)
         ):
             raise EvidenceContractError("REQ-G12-STREAM: invalid progress mappings")
         return cls(
@@ -249,6 +259,10 @@ class PyspdReplayProgress:
             ),
             total_seconds={
                 str(key): _float_value(value) for key, value in seconds.items()
+            },
+            period_date_time={
+                str(period): str(date_time)
+                for period, date_time in period_date_time.items()
             },
             partial_surface_sha256={
                 str(case_id): {str(name): str(value) for name, value in value.items()}
@@ -307,7 +321,7 @@ class PyspdReplayProgress:
 
     def to_dict(self, *, include_hash: bool = True) -> dict[str, object]:
         payload: dict[str, object] = {
-            "schema_version": 2,
+            "schema_version": 3,
             "work_item_sha256": self.work_item_sha256,
             "application_configuration_sha256": self.application_configuration_sha256,
             "execution_source_sha256": self.execution_source_sha256,
@@ -324,6 +338,7 @@ class PyspdReplayProgress:
                 key: _float_text(value)
                 for key, value in sorted(self.total_seconds.items())
             },
+            "period_date_time": dict(sorted(self.period_date_time.items())),
             "partial_surface_sha256": {
                 case_id: dict(sorted(hashes.items()))
                 for case_id, hashes in sorted(self.partial_surface_sha256.items())
@@ -477,6 +492,7 @@ class StreamingPyspdReplayRunner:
             energy_numerator=progress.energy_numerator,
             reserve_numerator=progress.reserve_numerator,
             total_seconds=progress.total_seconds,
+            date_time=progress.period_date_time,
         )
         previous_generation = dict(progress.previous_generation)
         event_sequence = progress.event_sequence
@@ -540,6 +556,7 @@ class StreamingPyspdReplayRunner:
                 energy_numerator=accumulator.energy_numerator,
                 reserve_numerator=accumulator.reserve_numerator,
                 total_seconds=accumulator.total_seconds,
+                period_date_time=accumulator.date_time,
                 partial_surface_sha256=partial_hashes,
                 partial_trading_period=partial_periods,
             )

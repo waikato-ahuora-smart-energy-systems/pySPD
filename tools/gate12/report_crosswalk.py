@@ -51,6 +51,8 @@ _TABLE_RULES: dict[str, tuple[str, tuple[_FieldRule, ...]]] = {
                 expression="trading period from date_time",
             ),
             _rule("Bid", "bid"),
+            _rule("Trader", "trader"),
+            _rule("Total Bid (MW)", "total_bid_mw"),
             _rule("Cleared Bid (MW)", "purchase_mw"),
         ),
     ),
@@ -87,6 +89,7 @@ _TABLE_RULES: dict[str, tuple[str, tuple[_FieldRule, ...]]] = {
                 kind="derived",
                 expression="active finite bound",
             ),
+            _rule("Price ($/MWh)", "price_nzd_per_mwh"),
         ),
     ),
     "BranchResults_TP": (
@@ -101,7 +104,16 @@ _TABLE_RULES: dict[str, tuple[str, tuple[_FieldRule, ...]]] = {
                 expression="trading period from date_time",
             ),
             _rule("Branch", "branch"),
+            _rule("FromBus", "from_bus"),
+            _rule("ToBus", "to_bus"),
             _rule("Flow (MW) (From->To)", "flow_mw"),
+            _rule("Capacity (MW)", "capacity_mw"),
+            _rule("DynamicLoss (MW)", "dynamic_loss_mw"),
+            _rule("FixedLoss (MW)", "fixed_loss_mw"),
+            _rule("FromBusPrice ($/MWh)", "from_bus_price_nzd_per_mwh"),
+            _rule("ToBusPrice ($/MWh)", "to_bus_price_nzd_per_mwh"),
+            _rule("BranchPrice ($/MWh)", "branch_price_nzd_per_mwh"),
+            _rule("BranchRentals ($)", "branch_rentals_nzd"),
         ),
     ),
     "BusResults_TP": (
@@ -116,7 +128,11 @@ _TABLE_RULES: dict[str, tuple[str, tuple[_FieldRule, ...]]] = {
                 expression="trading period from date_time",
             ),
             _rule("Bus", "bus"),
+            _rule("Generation (MW)", "generation_mw"),
+            _rule("Load (MW)", "load_mw"),
             _rule("Price ($/MWh)", "repaired_price_nzd_per_mwh"),
+            _rule("Deficit(MW)", "deficit_mw"),
+            _rule("Surplus(MW)", "surplus_mw"),
         ),
     ),
     "IslandResults_TP": (
@@ -131,6 +147,27 @@ _TABLE_RULES: dict[str, tuple[str, tuple[_FieldRule, ...]]] = {
                 expression="trading period from date_time",
             ),
             _rule("Island", "island"),
+            _rule("Gen (MW)", "generation_mw"),
+            _rule("Load (MW)", "load_mw"),
+            _rule("Bid Load (MW)", "bid_load_mw"),
+            _rule("IslandACLoss (MW)", "ac_loss_mw"),
+            _rule("HVDCFlow (MW)", "hvdc_flow_mw"),
+            _rule("HVDCLoss (MW)", "hvdc_loss_mw"),
+            _rule("ReferencePrice ($/MWh)", "reference_price_nzd_per_mwh"),
+            _rule(
+                "FIR_req (MW)",
+                "reserve_class",
+                "required_mw",
+                kind="pivot",
+                expression="reserve_class=FIR",
+            ),
+            _rule(
+                "SIR_req (MW)",
+                "reserve_class",
+                "required_mw",
+                kind="pivot",
+                expression="reserve_class=SIR",
+            ),
             _rule(
                 "FIR Price ($/MWh)",
                 "reserve_class",
@@ -142,6 +179,76 @@ _TABLE_RULES: dict[str, tuple[str, tuple[_FieldRule, ...]]] = {
                 "SIR Price ($/MWh)",
                 "reserve_class",
                 "price_nzd_per_mwh",
+                kind="pivot",
+                expression="reserve_class=SIR",
+            ),
+            _rule(
+                "FIR_Clear",
+                "reserve_class",
+                "cleared_mw",
+                kind="pivot",
+                expression="reserve_class=FIR",
+            ),
+            _rule(
+                "SIR_Clear",
+                "reserve_class",
+                "cleared_mw",
+                kind="pivot",
+                expression="reserve_class=SIR",
+            ),
+            _rule(
+                "FIR_Share",
+                "reserve_class",
+                "share_mw",
+                kind="pivot",
+                expression="reserve_class=FIR",
+            ),
+            _rule(
+                "SIR_Share",
+                "reserve_class",
+                "share_mw",
+                kind="pivot",
+                expression="reserve_class=SIR",
+            ),
+            _rule(
+                "FIR_Receive",
+                "reserve_class",
+                "received_mw",
+                kind="pivot",
+                expression="reserve_class=FIR",
+            ),
+            _rule(
+                "SIR_Receive",
+                "reserve_class",
+                "received_mw",
+                kind="pivot",
+                expression="reserve_class=SIR",
+            ),
+            _rule(
+                "FIR_Effective_CE",
+                "reserve_class",
+                "effective_ce_mw",
+                kind="pivot",
+                expression="reserve_class=FIR",
+            ),
+            _rule(
+                "SIR_Effective_CE",
+                "reserve_class",
+                "effective_ce_mw",
+                kind="pivot",
+                expression="reserve_class=SIR",
+            ),
+            _rule(
+                "FIR_Effective_ECE",
+                "reserve_class",
+                "effective_ece_mw",
+                kind="pivot",
+                expression="reserve_class=FIR",
+            ),
+            _rule(
+                "SIR_Effective_ECE",
+                "reserve_class",
+                "effective_ece_mw",
                 kind="pivot",
                 expression="reserve_class=SIR",
             ),
@@ -180,6 +287,7 @@ _TABLE_RULES: dict[str, tuple[str, tuple[_FieldRule, ...]]] = {
                 kind="derived",
                 expression="active finite bound",
             ),
+            _rule("Price ($/MWh)", "price_nzd_per_mwh"),
         ),
     ),
     "NodeResults_TP": (
@@ -194,7 +302,11 @@ _TABLE_RULES: dict[str, tuple[str, tuple[_FieldRule, ...]]] = {
                 expression="trading period from date_time",
             ),
             _rule("Node", "node"),
+            _rule("Generation (MW)", "generation_mw"),
+            _rule("Load (MW)", "load_mw"),
             _rule("Price ($/MWh)", "price_nzd_per_mwh"),
+            _rule("Deficit(MW)", "deficit_mw"),
+            _rule("Surplus(MW)", "surplus_mw"),
         ),
     ),
     "OfferResults_TP": (
@@ -209,12 +321,16 @@ _TABLE_RULES: dict[str, tuple[str, tuple[_FieldRule, ...]]] = {
                 expression="trading period from date_time",
             ),
             _rule("Offer", "offer"),
+            _rule("Trader", "trader"),
             _rule("Generation (MW)", "generation_mw"),
+            _rule("FIR (MW)", "fir_mw"),
+            _rule("SIR (MW)", "sir_mw"),
         ),
     ),
     "PublishedEnergyPrices_TP": (
         "published_price",
         (
+            _rule("DateTime", "date_time"),
             _rule("TradingPeriod", "trading_period"),
             _rule("Pnodename", "location"),
             _rule(
@@ -229,6 +345,7 @@ _TABLE_RULES: dict[str, tuple[str, tuple[_FieldRule, ...]]] = {
     "PublishedReservePrices_TP": (
         "published_price",
         (
+            _rule("DateTime", "date_time"),
             _rule("TradingPeriod", "trading_period"),
             _rule("Island", "location"),
             _rule(
@@ -260,6 +377,20 @@ _TABLE_RULES: dict[str, tuple[str, tuple[_FieldRule, ...]]] = {
             ),
             _rule("Island", "island"),
             _rule(
+                "FIR Reqd (MW)",
+                "reserve_class",
+                "required_mw",
+                kind="pivot",
+                expression="reserve_class=FIR",
+            ),
+            _rule(
+                "SIR Reqd (MW)",
+                "reserve_class",
+                "required_mw",
+                kind="pivot",
+                expression="reserve_class=SIR",
+            ),
+            _rule(
                 "FIR Price ($/MW)",
                 "reserve_class",
                 "price_nzd_per_mwh",
@@ -270,6 +401,20 @@ _TABLE_RULES: dict[str, tuple[str, tuple[_FieldRule, ...]]] = {
                 "SIR Price ($/MW)",
                 "reserve_class",
                 "price_nzd_per_mwh",
+                kind="pivot",
+                expression="reserve_class=SIR",
+            ),
+            _rule(
+                "FIR Violation (MW)",
+                "reserve_class",
+                "violation_mw",
+                kind="pivot",
+                expression="reserve_class=FIR",
+            ),
+            _rule(
+                "SIR Violation (MW)",
+                "reserve_class",
+                "violation_mw",
                 kind="pivot",
                 expression="reserve_class=SIR",
             ),
@@ -286,6 +431,20 @@ _TABLE_RULES: dict[str, tuple[str, tuple[_FieldRule, ...]]] = {
                 kind="derived",
                 expression="trading period from date_time",
             ),
+            _rule("Island", "island"),
+            _rule("ReserveClass", "reserve_class"),
+            _rule("RiskClass", "risk_class"),
+            _rule("RiskType", "risk_type"),
+            _rule("RiskSetter", "risk_setter"),
+            _rule("CoveredEnergy", "covered_energy_mw"),
+            _rule("CoveredReserve", "covered_reserve_mw"),
+            _rule("CoveredFKBand", "covered_fk_band_mw"),
+            _rule("RiskSubtractor", "risk_subtractor_mw"),
+            _rule("Reserve", "reserve_mw"),
+            _rule("Shortfall", "shortfall_mw"),
+            _rule("Deficit", "deficit_mw"),
+            _rule("ReservePrice", "reserve_price_nzd_per_mwh"),
+            _rule("RiskPrice", "risk_price_nzd_per_mwh"),
         ),
     ),
     "SummaryResults_TP": (
@@ -301,13 +460,44 @@ _TABLE_RULES: dict[str, tuple[str, tuple[_FieldRule, ...]]] = {
             ),
             _rule(
                 "SolveStatus (1=OK)",
-                "status",
-                kind="derived",
-                expression="status to Authority solve-status code",
+                "status_code",
+            ),
+            _rule("SystemOFV", "system_ofv_nzd"),
+            _rule("SystemCost", "system_cost_nzd"),
+            _rule("SystemBenefit", "system_benefit_nzd"),
+            _rule("ViolationCost", "violation_cost_nzd"),
+            _rule("DeficitGenViol (MW)", "deficit_generation_mw"),
+            _rule("SurplusGenViol (MW)", "surplus_generation_mw"),
+            _rule("DeficitReserveViol (MW)", "deficit_reserve_mw"),
+            _rule("SurplusBranchFlowViol (MW)", "surplus_branch_flow_mw"),
+            _rule("DeficitRampRateViol (MW)", "deficit_ramp_rate_mw"),
+            _rule("SurplusRampRateViol (MW)", "surplus_ramp_rate_mw"),
+            _rule(
+                "DeficitBranchGroupConstraintViol (MW)",
+                "deficit_branch_constraint_mw",
+            ),
+            _rule(
+                "SurplusBranchGroupConstraintViol (MW)",
+                "surplus_branch_constraint_mw",
+            ),
+            _rule(
+                "DeficitMNodeConstraintViol (MW)",
+                "deficit_market_node_constraint_mw",
+            ),
+            _rule(
+                "SurplusMNodeConstraintViol (MW)",
+                "surplus_market_node_constraint_mw",
             ),
         ),
     ),
 }
+
+_SUPPLEMENTAL_CANDIDATE_FIELDS: dict[str, frozenset[str]] = {
+    "bus": frozenset({"raw_price_nzd_per_mwh", "disconnected", "invalid"}),
+    "node": frozenset({"dead", "price_source"}),
+    "published_price": frozenset({"publication_seconds"}),
+}
+_SUPPLEMENTAL_CANDIDATE_TABLES = frozenset({"audit"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -444,7 +634,11 @@ class ReportSchemaCrosswalkValidator:
             candidate_report_sha256=hashlib.sha256(candidate).hexdigest(),
             tables=tables,
             unmapped_candidate_tables=tuple(
-                sorted(set(candidate_schemas) - expected_candidate_tables)
+                sorted(
+                    set(candidate_schemas)
+                    - expected_candidate_tables
+                    - _SUPPLEMENTAL_CANDIDATE_TABLES
+                )
             ),
         )
 
@@ -477,7 +671,11 @@ class ReportSchemaCrosswalkValidator:
             field_mappings=tuple(mappings),
             unmapped_reference_fields=tuple(unmapped_reference),
             unmapped_candidate_fields=tuple(
-                field for field in candidate_fields if field not in consumed
+                field
+                for field in candidate_fields
+                if field not in consumed
+                and field
+                not in _SUPPLEMENTAL_CANDIDATE_FIELDS.get(candidate_name, frozenset())
             ),
         )
 

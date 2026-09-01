@@ -77,16 +77,25 @@ reconstructs TP15 `KIN1009`, TP35 `KIN1009`, and TP35 `WPT1101` publications.
 Its compact index is
 [`zero-flow-price-convention-20221106.json`](zero-flow-price-convention-20221106.json).
 
-The separately governed Authority-to-PySPD schema crosswalk now resolves the
-structure of those four report surfaces without weakening `report-field`.
-For each affected case it enumerates all 13 Authority tables and all 142
-Authority fields. Sixty-five fields have an explicit direct, derived, or pivot
-mapping; 77 Authority fields remain unsupported. Twelve candidate-field
-occurrences remain unmatched and the PySPD audit table is candidate-only. The
-artifact therefore fails, correctly, and makes no row-value parity claim. Its
-compact evidence index is
-[`report-crosswalk-20221106.json`](report-crosswalk-20221106.json). Gate 12
-remains open at the accepted evidence boundary.
+The separately governed Authority-to-PySPD schema crosswalk now resolves all
+142 Authority fields across all 13 tables for each of the four affected cases.
+Candidate-only audit and diagnostic fields are explicitly governed supplements,
+not accidental omissions. The earlier incomplete crosswalk remains immutable
+as [`report-crosswalk-20221106.json`](report-crosswalk-20221106.json); the
+replacement hashes are recorded in the completion certificate below.
+
+The final provenance-clean 196-case candidate bundle adds complete class-based
+report projectors without changing the governed v5 optimization structure. The
+mapped comparison passes all 13 tables and 68,558 values: zero missing or extra
+identities, zero above-tolerance values, and zero unimplemented tables. Its 257
+classified values comprise independently certified zero-flow prices, branch
+endpoint prices within the approved portable raw-price tolerance, and
+nonnegative alternative offer-reserve allocations whose aggregate survives
+Authority rounding under [ADR-0017](../adr/0017-portable-report-equivalence.md).
+The hash-bound row result is accepted by the semantic
+validator, which passes all twelve canonical surfaces with zero unresolved
+differences. The complete first-date result is recorded in
+[`report-completeness-20221106.md`](report-completeness-20221106.md).
 
 Later-date replay remains gated by completion of the exact historical
 population enumeration. Candidate execution never promotes an analytic lower

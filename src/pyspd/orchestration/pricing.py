@@ -238,6 +238,7 @@ class PublishedPriceAccumulator:
         energy_numerator: Mapping[tuple[str, str], float] | None = None,
         reserve_numerator: Mapping[tuple[str, str, str], float] | None = None,
         total_seconds: Mapping[str, float] | None = None,
+        date_time: Mapping[str, str] | None = None,
     ) -> None:
         self.energy_numerator: dict[tuple[str, str], float] = defaultdict(float)
         self.energy_numerator.update(energy_numerator or {})
@@ -245,12 +246,14 @@ class PublishedPriceAccumulator:
         self.reserve_numerator.update(reserve_numerator or {})
         self.total_seconds: dict[str, float] = defaultdict(float)
         self.total_seconds.update(total_seconds or {})
+        self.date_time: dict[str, str] = dict(date_time or {})
 
     def add(self, result: CaseRunResult) -> None:
+        period = result.specification.trading_period
+        self.date_time.setdefault(period, result.specification.date_time)
         seconds = result.specification.publication_seconds
         if seconds <= 0.0 or result.prices is None:
             return
-        period = result.specification.trading_period
         self.total_seconds[period] += seconds
         for node, price in result.prices.node.items():
             self.energy_numerator[(period, node[2])] += price * seconds
@@ -268,7 +271,7 @@ class PublishedPriceAccumulator:
             for key, value in self.reserve_numerator.items()
             if self.total_seconds[key[0]] > 0.0
         }
-        return PublishedPrices(energy, reserve, self.total_seconds)
+        return PublishedPrices(energy, reserve, self.total_seconds, self.date_time)
 
 
 class PublishedPriceAggregator:

@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from tools.gate12.bus_price_degeneracy import BusPriceDegeneracyResultStore
+from tools.gate12.report_row_parity import ReportRowParityResultStore
 from tools.gate12.semantic_parity import (
     SemanticReplayResultStore,
     SemanticReplayValidator,
@@ -24,6 +25,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--bus-price-certificate", type=Path)
     parser.add_argument("--zero-flow-price-certificate", type=Path)
+    parser.add_argument("--report-row-parity", type=Path)
     return parser
 
 
@@ -44,6 +46,11 @@ def main(arguments: list[str] | None = None) -> int:
             else ZeroFlowPriceConventionResultStore().load(
                 args.zero_flow_price_certificate.resolve()
             )
+        ),
+        report_row_parity=(
+            None
+            if args.report_row_parity is None
+            else ReportRowParityResultStore().load(args.report_row_parity.resolve())
         ),
     ).compare(args.trading_date)
     target = SemanticReplayResultStore().write(result, args.output.resolve())

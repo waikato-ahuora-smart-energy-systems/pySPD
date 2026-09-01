@@ -228,9 +228,7 @@ class SolveObservation:
                 raise OrchestrationError(f"{name} contains a non-finite value")
             object.__setattr__(self, name, MappingProxyType(values))
         object.__setattr__(self, "node_transfer", tuple(self.node_transfer))
-        object.__setattr__(
-            self, "node_market_island", _proxy(self.node_market_island)
-        )
+        object.__setattr__(self, "node_market_island", _proxy(self.node_market_island))
         object.__setattr__(self, "bus_adjacency", frozenset(self.bus_adjacency))
         object.__setattr__(self, "degraded_reasons", tuple(self.degraded_reasons))
 
@@ -310,11 +308,13 @@ class PublishedPrices:
     energy: Mapping[tuple[str, str], float]
     reserve: Mapping[tuple[str, str, str], float]
     total_seconds: Mapping[str, float]
+    date_time: Mapping[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "energy", _proxy(self.energy))
         object.__setattr__(self, "reserve", _proxy(self.reserve))
         object.__setattr__(self, "total_seconds", _proxy(self.total_seconds))
+        object.__setattr__(self, "date_time", _proxy(self.date_time))
 
 
 @dataclass(frozen=True, slots=True)

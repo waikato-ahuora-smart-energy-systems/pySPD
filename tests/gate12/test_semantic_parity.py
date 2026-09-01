@@ -341,6 +341,19 @@ def test_exact_control_surface_is_not_relaxed() -> None:
     assert result.unresolved_reason_counts == {"exact-mismatch": 1}
 
 
+def test_report_surface_accepts_only_explicit_row_certification() -> None:
+    comparator = SemanticCaseComparator(SemanticParityPolicy())
+    result = comparator.compare_surface(
+        surface="report-field",
+        reference=_json({"Authority": {}}),
+        candidate=_json({"PySPD": {}}),
+        report_row_certified=True,
+    )
+
+    assert result.passed
+    assert result.accepted_reason_counts == {"hash-bound-mapped-report-row-parity": 1}
+
+
 def test_semantic_bundle_result_is_hash_bound_and_immutable(tmp_path: Path) -> None:
     _write_bundle(tmp_path / "reference", "gams-v502", node_price=10.0)
     _write_bundle(tmp_path / "candidate", "pyspd-v1", node_price=10.0 + 1e-8)

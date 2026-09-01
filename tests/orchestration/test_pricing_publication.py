@@ -97,6 +97,7 @@ def test_publication_uses_seconds_skips_zero_and_rounds() -> None:
     )
     assert published.energy[("TP1", "N1")] == 16.66667
     assert published.total_seconds["TP1"] == 300.0
+    assert published.date_time["TP1"] == "01-JAN-2024 00:00"
 
 
 def test_publication_accumulator_resumes_without_retaining_case_results() -> None:
@@ -125,6 +126,7 @@ def test_publication_accumulator_resumes_without_retaining_case_results() -> Non
         energy_numerator=accumulator.energy_numerator,
         reserve_numerator=accumulator.reserve_numerator,
         total_seconds=accumulator.total_seconds,
+        date_time=accumulator.date_time,
     )
     resumed.add(result(second, 20.0))
 

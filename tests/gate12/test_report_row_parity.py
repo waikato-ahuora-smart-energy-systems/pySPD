@@ -118,6 +118,135 @@ def test_node_row_above_half_display_unit_fails() -> None:
     assert result.tables[0].above_precision_count == 1
 
 
+def test_branch_endpoint_price_uses_governed_portable_price_tolerance() -> None:
+    reference = _json(
+        {
+            "prefix_BranchResults_TP": {
+                "fields": [
+                    "CaseID",
+                    "DateTime",
+                    "Branch",
+                    "FromBus",
+                    "ToBus",
+                    "FromBusPrice ($/MWh)",
+                ],
+                "rows": [
+                    {
+                        "CaseID": "case",
+                        "DateTime": "time",
+                        "Branch": "LINE",
+                        "FromBus": "A",
+                        "ToBus": "B",
+                        "FromBusPrice ($/MWh)": "10.00000",
+                    }
+                ],
+            }
+        }
+    )
+    candidate = _json(
+        {
+            "branch": {
+                "field_order": [
+                    "case_id",
+                    "date_time",
+                    "branch",
+                    "from_bus",
+                    "to_bus",
+                    "from_bus_price_nzd_per_mwh",
+                ],
+                "fields": [],
+                "rows": [
+                    {
+                        "case_id": "case",
+                        "date_time": "time",
+                        "branch": "LINE",
+                        "from_bus": "A",
+                        "to_bus": "B",
+                        "from_bus_price_nzd_per_mwh": "10.0009",
+                    }
+                ],
+            }
+        }
+    )
+
+    result = ReportRowParityValidator().compare(
+        case_id="case", reference=reference, candidate=candidate
+    )
+
+    assert result.passed
+    assert result.tables[0].certified_difference_count == 1
+
+
+def test_offer_reserve_alternative_allocation_requires_equal_aggregate() -> None:
+    reference = _json(
+        {
+            "prefix_OfferResults_TP": {
+                "fields": ["CaseID", "DateTime", "Offer", "Trader", "FIR (MW)"],
+                "rows": [
+                    {
+                        "CaseID": "case",
+                        "DateTime": "time",
+                        "Offer": "A",
+                        "Trader": "T",
+                        "FIR (MW)": "1.0000",
+                    },
+                    {
+                        "CaseID": "case",
+                        "DateTime": "time",
+                        "Offer": "B",
+                        "Trader": "T",
+                        "FIR (MW)": "2.0000",
+                    },
+                ],
+            }
+        }
+    )
+
+    def candidate(second: str) -> bytes:
+        return _json(
+            {
+                "offer": {
+                    "field_order": [
+                        "case_id",
+                        "date_time",
+                        "offer",
+                        "trader",
+                        "fir_mw",
+                    ],
+                    "fields": [],
+                    "rows": [
+                        {
+                            "case_id": "case",
+                            "date_time": "time",
+                            "offer": "A",
+                            "trader": "T",
+                            "fir_mw": "2.5",
+                        },
+                        {
+                            "case_id": "case",
+                            "date_time": "time",
+                            "offer": "B",
+                            "trader": "T",
+                            "fir_mw": second,
+                        },
+                    ],
+                }
+            }
+        )
+
+    equivalent = ReportRowParityValidator().compare(
+        case_id="case", reference=reference, candidate=candidate("0.5")
+    )
+    unequal = ReportRowParityValidator().compare(
+        case_id="case", reference=reference, candidate=candidate("0.6")
+    )
+
+    assert equivalent.passed
+    assert equivalent.tables[0].certified_difference_count == 2
+    assert not unequal.passed
+    assert unequal.tables[0].above_precision_count == 2
+
+
 def test_named_zero_flow_node_certificate_classifies_report_difference() -> None:
     reference = _json(
         {
@@ -278,6 +407,7 @@ def test_missing_candidate_identity_is_not_treated_as_zero() -> None:
                     "CaseID",
                     "DateTime",
                     "Offer",
+                    "Trader",
                     "Generation (MW)",
                 ],
                 "rows": [
@@ -285,6 +415,7 @@ def test_missing_candidate_identity_is_not_treated_as_zero() -> None:
                         "CaseID": "case",
                         "DateTime": "time",
                         "Offer": "OFFER",
+                        "Trader": "TRADER",
                         "Generation (MW)": "0.0000",
                     }
                 ],
@@ -298,6 +429,7 @@ def test_missing_candidate_identity_is_not_treated_as_zero() -> None:
                     "case_id",
                     "date_time",
                     "offer",
+                    "trader",
                     "generation_mw",
                 ],
                 "fields": [],
@@ -313,7 +445,7 @@ def test_missing_candidate_identity_is_not_treated_as_zero() -> None:
     assert not result.passed
     assert result.tables[0].missing_identity_count == 1
     assert result.tables[0].missing_identity_examples == (
-        ("case", "time", "OFFER", "generation-mw"),
+        ("case", "time", "OFFER", "TRADER", "generation-mw"),
     )
 
 
@@ -466,3 +598,151 @@ def test_passing_bus_certificate_classifies_report_price_difference() -> None:
     assert result.passed
     assert result.tables[0].certified_difference_count == 1
     assert result.tables[0].above_precision_count == 0
+
+
+def test_risk_and_summary_rows_compare_every_authority_numeric_field() -> None:
+    risk_identity = {
+        "CaseID": "case",
+        "DateTime": "time",
+        "Island": "NI",
+        "ReserveClass": "FIR",
+        "RiskClass": "CE",
+        "RiskType": "GEN",
+        "RiskSetter": "OFFER",
+    }
+    risk_values = {
+        "CoveredEnergy": "137.0000",
+        "CoveredReserve": "1.2500",
+        "CoveredFKBand": "0.5000",
+        "RiskSubtractor": "2.0000",
+        "Reserve": "140.0000",
+        "Shortfall": "0.0000",
+        "Deficit": "0.0000",
+        "ReservePrice": "0.0085",
+        "RiskPrice": "0.0001",
+    }
+    summary_values = {
+        "SolveStatus (1=OK)": "1.00000",
+        "SystemOFV": "1000.00000",
+        "SystemCost": "20.00000",
+        "SystemBenefit": "1.00000",
+        "ViolationCost": "0.50000",
+        "DeficitGenViol (MW)": "0.00000",
+        "SurplusGenViol (MW)": "0.00000",
+        "DeficitReserveViol (MW)": "0.00000",
+        "SurplusBranchFlowViol (MW)": "0.00000",
+        "DeficitRampRateViol (MW)": "0.00000",
+        "SurplusRampRateViol (MW)": "0.00000",
+        "DeficitBranchGroupConstraintViol (MW)": "0.00000",
+        "SurplusBranchGroupConstraintViol (MW)": "0.00000",
+        "DeficitMNodeConstraintViol (MW)": "0.00000",
+        "SurplusMNodeConstraintViol (MW)": "0.00000",
+    }
+    reference = _json(
+        {
+            "prefix_RiskResults_TP": {
+                "fields": [*risk_identity, *risk_values],
+                "rows": [{**risk_identity, **risk_values}],
+            },
+            "prefix_SummaryResults_TP": {
+                "fields": ["CaseID", "DateTime", *summary_values],
+                "rows": [{"CaseID": "case", "DateTime": "time", **summary_values}],
+            },
+        }
+    )
+    candidate = _json(
+        {
+            "risk": {
+                "field_order": [
+                    "case_id",
+                    "date_time",
+                    "island",
+                    "reserve_class",
+                    "risk_class",
+                    "risk_type",
+                    "risk_setter",
+                    "covered_energy_mw",
+                    "covered_reserve_mw",
+                    "covered_fk_band_mw",
+                    "risk_subtractor_mw",
+                    "reserve_mw",
+                    "shortfall_mw",
+                    "deficit_mw",
+                    "reserve_price_nzd_per_mwh",
+                    "risk_price_nzd_per_mwh",
+                ],
+                "fields": [],
+                "rows": [
+                    {
+                        "case_id": "case",
+                        "date_time": "time",
+                        "island": "NI",
+                        "reserve_class": "FIR",
+                        "risk_class": "CE",
+                        "risk_type": "GEN",
+                        "risk_setter": "OFFER",
+                        "covered_energy_mw": "137",
+                        "covered_reserve_mw": "1.25",
+                        "covered_fk_band_mw": "0.5",
+                        "risk_subtractor_mw": "2",
+                        "reserve_mw": "140",
+                        "shortfall_mw": "0",
+                        "deficit_mw": "0",
+                        "reserve_price_nzd_per_mwh": "0.0085",
+                        "risk_price_nzd_per_mwh": "0.0001",
+                    }
+                ],
+            },
+            "summary": {
+                "field_order": [
+                    "case_id",
+                    "date_time",
+                    "status_code",
+                    "system_ofv_nzd",
+                    "system_cost_nzd",
+                    "system_benefit_nzd",
+                    "violation_cost_nzd",
+                    "deficit_generation_mw",
+                    "surplus_generation_mw",
+                    "deficit_reserve_mw",
+                    "surplus_branch_flow_mw",
+                    "deficit_ramp_rate_mw",
+                    "surplus_ramp_rate_mw",
+                    "deficit_branch_constraint_mw",
+                    "surplus_branch_constraint_mw",
+                    "deficit_market_node_constraint_mw",
+                    "surplus_market_node_constraint_mw",
+                ],
+                "fields": [],
+                "rows": [
+                    {
+                        "case_id": "case",
+                        "date_time": "time",
+                        "status_code": "1",
+                        "system_ofv_nzd": "1000",
+                        "system_cost_nzd": "20",
+                        "system_benefit_nzd": "1",
+                        "violation_cost_nzd": "0.5",
+                        "deficit_generation_mw": "0",
+                        "surplus_generation_mw": "0",
+                        "deficit_reserve_mw": "0",
+                        "surplus_branch_flow_mw": "0",
+                        "deficit_ramp_rate_mw": "0",
+                        "surplus_ramp_rate_mw": "0",
+                        "deficit_branch_constraint_mw": "0",
+                        "surplus_branch_constraint_mw": "0",
+                        "deficit_market_node_constraint_mw": "0",
+                        "surplus_market_node_constraint_mw": "0",
+                    }
+                ],
+            },
+        }
+    )
+
+    result = ReportRowParityValidator().compare(
+        case_id="case", reference=reference, candidate=candidate
+    )
+
+    assert result.passed
+    assert not result.unimplemented_reference_tables
+    assert sum(table.compared_value_count for table in result.tables) == 24

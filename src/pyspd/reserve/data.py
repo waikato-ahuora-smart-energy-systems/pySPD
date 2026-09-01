@@ -91,6 +91,8 @@ class ReserveData:
     reserve_scarcity_enabled: Mapping[Key, float]
     market_reserve_offer_factor: Mapping[Key, float]
     market_reserve_bid_factor: Mapping[Key, float]
+    offer_trader: Mapping[Key, str] = field(default_factory=dict)
+    bid_trader: Mapping[Key, str] = field(default_factory=dict)
     big_m: float = 10_000.0
     deficit_reserve_ce_penalty: float = 100_000.0
     deficit_reserve_ece_penalty: float = 800_000.0
@@ -358,6 +360,16 @@ class ReserveData:
             reserve_scarcity_enabled,
             source.numeric("i_dateTimeMNCnstrResrvFactors"),
             source.numeric("i_dateTimeMNCnstrResrvBidFactors"),
+            offer_trader={
+                key[:3]: key[3]
+                for key in source.optional_members("i_dateTimeOfferTrader")
+                if key[:3] in hvdc_case.offers
+            },
+            bid_trader={
+                key[:3]: key[3]
+                for key in source.optional_members("i_dateTimeBidTrader")
+                if key[:3] in hvdc_case.bids
+            },
         )
 
 

@@ -144,19 +144,19 @@ def test_model_rows_use_fixed_pricing_state_and_complete_branch_domain() -> None
         {
             "case_id": "case",
             "date_time": "time",
-            "branch": "case|time|AC.1",
+            "branch": "AC.1",
             "flow_mw": "12.5",
         },
         {
             "case_id": "case",
             "date_time": "time",
-            "branch": "case|time|HVDC.1",
+            "branch": "HVDC.1",
             "flow_mw": "25",
         },
         {
             "case_id": "case",
             "date_time": "time",
-            "branch": "case|time|OPEN.1",
+            "branch": "OPEN.1",
             "flow_mw": "0",
         },
     ]
@@ -171,10 +171,128 @@ def test_bus_report_uses_allocated_transferred_price_for_dead_node_bus() -> None
         bus_electrical_island={bus_keys[0]: 0.0, bus_keys[1]: 1.0},
     )
 
-    rows = {
-        row["bus"]: row
-        for row in _bundle(observation).tables["bus"].rows
-    }
+    rows = {row["bus"]: row for row in _bundle(observation).tables["bus"].rows}
 
     assert rows[bus_keys[0][-1]]["raw_price_nzd_per_mwh"] == "50"
     assert rows[bus_keys[0][-1]]["repaired_price_nzd_per_mwh"] == "60"
+
+
+def test_v5_renderer_projects_complete_authority_risk_and_summary_rows() -> None:
+    ca, dt, island, reserve_class = "C1", "01-JAN-2024 00:00", "NI", "FIR"
+    offer, risk_class = "OFFER", "genRisk"
+    period = (ca, dt)
+    risk_key = (*period, island, offer, reserve_class, risk_class)
+    island_risk_key = (*period, island, reserve_class, risk_class)
+    model = pyo.ConcreteModel()
+    model.dual = pyo.Suffix(direction=pyo.Suffix.IMPORT_EXPORT)
+    model.risk_definition = pyo.Constraint(expr=pyo.Constraint.Feasible)
+    model.dual[model.risk_definition] = -0.125
+
+    def variable(name, indices, values):
+        component = pyo.Var(indices, initialize=values)
+        model.add_component(name, component)
+        return component
+
+    artifacts = {
+        "generation": variable("generation", [(*period, offer)], 137.0),
+        "reserve": variable(
+            "reserve",
+            [(*period, offer, reserve_class, "PLRO")],
+            1.25,
+        ),
+        "reserve_share_effective": variable("effective", [island_risk_key], 2.0),
+        "reserve_shortfall_unit": variable("shortfall", [risk_key], 0.0),
+        "reserve_deficit_ce": variable(
+            "deficit_ce", [(*period, island, reserve_class)], 0.0
+        ),
+        "reserve_deficit_ece": variable(
+            "deficit_ece", [(*period, island, reserve_class)], 0.0
+        ),
+        "balance_deficit": variable("balance_deficit", [(*period, "B1")], 0.1),
+        "balance_surplus": variable("balance_surplus", [(*period, "B1")], 0.2),
+        "branch_flow_surplus": variable("branch_flow_surplus", [(*period, "BR1")], 0.3),
+        "ramp_deficit": variable("ramp_deficit", [(*period, offer)], 0.4),
+        "ramp_surplus": variable("ramp_surplus", [(*period, offer)], 0.5),
+        "branch_constraint_deficit": variable(
+            "branch_constraint_deficit", [(*period, "BC1")], 0.6
+        ),
+        "branch_constraint_surplus": variable(
+            "branch_constraint_surplus", [(*period, "BC1")], 0.7
+        ),
+        "market_node_constraint_deficit": variable(
+            "market_node_constraint_deficit", [(*period, "MC1")], 0.8
+        ),
+        "market_node_constraint_surplus": variable(
+            "market_node_constraint_surplus", [(*period, "MC1")], 0.9
+        ),
+    }
+    model.system_cost = pyo.Var([period], initialize=20.0)
+    model.system_benefit = pyo.Var([period], initialize=1.0)
+    model.system_penalty = pyo.Var([period], initialize=0.5)
+    artifacts.update(
+        {
+            "system_cost_by_period": model.system_cost,
+            "system_benefit_by_period": model.system_benefit,
+            "system_penalty_by_period": model.system_penalty,
+            "risk_definition_constraints": {("GEN", *risk_key): model.risk_definition},
+        }
+    )
+    reserve_data = SimpleNamespace(
+        ce_risks={risk_class},
+        offer_island={(*period, offer, island)},
+        primary_secondary_offer=set(),
+        risk_group_offer=set(),
+        fk_band={(*period, offer): 0.5},
+        free_reserve={island_risk_key: 2.0},
+        risk_minimum={},
+        modulation_risk_class={},
+    )
+    case_data = SimpleNamespace(
+        reserve=reserve_data,
+        scarcity_blocks={(*period, "N1", "BLK1")},
+        scarcity_limit={(*period, "N1", "BLK1"): 100.0},
+        scarcity_price={(*period, "N1", "BLK1"): 10.0},
+    )
+    pricing = SimpleNamespace(
+        model=model,
+        artifacts=SimpleNamespace(values=artifacts),
+        case_data=case_data,
+    )
+    observation = replace(
+        make_observation(),
+        reserve_prices={(*period, island, reserve_class): 0.0085},
+        objective=-19.5,
+        solve_payload=SimpleNamespace(pricing_model=pricing),
+    )
+
+    bundle = _bundle(observation)
+    risk = bundle.tables["risk"].rows
+    summary = bundle.tables["summary"].rows[0]
+
+    assert risk == (
+        {
+            "case_id": ca,
+            "date_time": dt,
+            "island": island,
+            "reserve_class": reserve_class,
+            "risk_class": "CE",
+            "risk_type": "GEN",
+            "risk_setter": offer,
+            "covered_energy_mw": "137",
+            "covered_reserve_mw": "1.25",
+            "covered_fk_band_mw": "0.5",
+            "risk_subtractor_mw": "2",
+            "reserve_mw": "3.25",
+            "shortfall_mw": "0",
+            "deficit_mw": "0",
+            "reserve_price_nzd_per_mwh": "0.0085000000000000006",
+            "risk_price_nzd_per_mwh": "0.125",
+        },
+    )
+    assert summary["status_code"] == "1"
+    assert summary["system_ofv_nzd"] == "980.5"
+    assert summary["system_cost_nzd"] == "20"
+    assert summary["system_benefit_nzd"] == "1"
+    assert summary["violation_cost_nzd"] == "0.5"
+    assert summary["deficit_generation_mw"] == "0.10000000000000001"
+    assert summary["surplus_market_node_constraint_mw"] == "0.90000000000000002"

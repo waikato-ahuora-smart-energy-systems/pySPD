@@ -58,6 +58,8 @@ class NetworkData:
     market_node_energy_offer_factor: Mapping[Key, float]
     market_node_energy_bid_factor: Mapping[Key, float]
     report_branches: frozenset[Key] = frozenset()
+    report_branch_definitions: frozenset[Key] = frozenset()
+    reference_nodes: frozenset[Key] = frozenset()
     receiving_end_loss_proportion: float = 1.0
     use_ac_branch_limits: bool = True
     bus_deficit_penalty: float = 500_000.0
@@ -74,6 +76,12 @@ class NetworkData:
             "report_branches",
             frozenset(self.report_branches) | frozenset(self.branches),
         )
+        object.__setattr__(
+            self,
+            "report_branch_definitions",
+            frozenset(self.report_branch_definitions),
+        )
+        object.__setattr__(self, "reference_nodes", frozenset(self.reference_nodes))
         for name in (
             "buses",
             "branches",
@@ -286,6 +294,14 @@ class NetworkData:
             market_node_energy_offer_factor=offer_factors,
             market_node_energy_bid_factor=bid_factors,
             report_branches=result.set("report_branch").members,
+            report_branch_definitions=frozenset(
+                key
+                for key in source.members("i_dateTimeBranchDefn")
+                if key[:3] in result.set("report_branch").members
+            ),
+            reference_nodes=frozenset(
+                key for key, value in reference_nodes.items() if nonzero(value)
+            ),
         )
 
 

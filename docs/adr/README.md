@@ -21,6 +21,7 @@ replaces; accepted history is not rewritten.
 | [ADR-0014](0014-incremental-gate-12-replay-parity.md) | Replay and compare each completed Gate 12 date incrementally | Accepted by project direction |
 | [ADR-0015](0015-gate-12-targeted-historical-recovery.md) | Recover named pathological discovery cases without widening the general oracle | Accepted for bounded Gate 12 recovery evidence |
 | [ADR-0016](0016-gate-12-residue-only-loop-guard.md) | Skip historical transfer loops only when no material evidence can be emitted | Accepted for bounded Gate 12 discovery evidence |
+| [ADR-0017](0017-portable-report-equivalence.md) | Govern SCIP/HiGHS report equivalence separately from strict solver identity | Accepted by project direction for the portable Gate 12 profile |
 
 ## Status values
 

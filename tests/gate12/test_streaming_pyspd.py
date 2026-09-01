@@ -83,6 +83,7 @@ def test_progress_round_trips_exact_continuation_state(tmp_path) -> None:
         energy_numerator={("TP1", "N1"): 15000.25},
         reserve_numerator={("TP1", "NI", "FIR"): 100.5},
         total_seconds={"TP1": 300.0},
+        period_date_time={"TP1": "06-NOV-2022 00:00"},
     )
     store = PyspdReplayProgressStore(tmp_path / "progress", "20221106")
 
@@ -94,6 +95,7 @@ def test_progress_round_trips_exact_continuation_state(tmp_path) -> None:
     assert loaded == progress
     assert loaded is not None
     assert loaded.energy_numerator[("TP1", "N1")].hex() == (15000.25).hex()
+    assert loaded.period_date_time == {"TP1": "06-NOV-2022 00:00"}
 
 
 def test_progress_rejects_work_item_drift(tmp_path) -> None:
