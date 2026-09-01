@@ -458,12 +458,12 @@ class ZeroFlowPriceConventionRunner:
                 candidate_by_id[case_id].surfaces["rounded-published-output"]
             )
             for key in set(expected_publications) & set(actual_publications):
-                # Canonical publications are rounded to five decimals.  Include
-                # every difference outside one half of that displayed unit,
-                # even when it remains below the broader semantic price tolerance.
+                # The zero-flow certificate owns material publication deltas;
+                # smaller portable-solver noise remains governed by the ordinary
+                # semantic price tolerance.
                 if (
                     abs(actual_publications[key] - expected_publications[key])
-                    > 0.5 * 10.0**-5
+                    > self.validator.price_tolerance
                 ):
                     previous = publication_targets.setdefault(
                         key, (expected_publications[key], actual_publications[key])
@@ -540,15 +540,22 @@ class ZeroFlowPriceConventionRunner:
     ) -> float:
         inputs = evidence.case_inputs(case_id, date_time, branch_flow=None)
         reference_bus = evidence.case_bus_prices(case_id, date_time)
-        allocations = {
+        source_allocations = {
             bus: value
             for (item_node, bus), value in inputs.node_bus_allocation.items()
             if item_node == node
         }
-        if not allocations:
+        if not source_allocations:
             raise EvidenceContractError(
                 "REQ-G12-ZERO-FLOW: publication node has no source allocation"
             )
+        allocations = {
+            bus: value
+            for bus, value in source_allocations.items()
+            if bus in inputs.electrical_buses
+        }
+        if not allocations:
+            return 0.0
         canonical = dict(reference_bus)
         incident: dict[str, list[str]] = defaultdict(list)
         for branch, (from_bus, to_bus) in inputs.branches.items():

@@ -177,6 +177,88 @@ def test_branch_endpoint_price_uses_governed_portable_price_tolerance() -> None:
     assert result.tables[0].certified_difference_count == 1
 
 
+@pytest.mark.parametrize(
+    ("reference_table", "location_field", "price_field", "product"),
+    (
+        (
+            "PublishedEnergyPrices_TP",
+            "Pnodename",
+            "vSPDDollarsPerMegawattHour",
+            "energy",
+        ),
+        (
+            "PublishedReservePrices_TP",
+            "Island",
+            "vSPDSIRDollarsPerMegawattHour",
+            "SIR",
+        ),
+    ),
+)
+def test_published_price_rows_use_governed_portable_price_tolerance(
+    reference_table: str,
+    location_field: str,
+    price_field: str,
+    product: str,
+) -> None:
+    reference = _json(
+        {
+            f"prefix_{reference_table}": {
+                "fields": [
+                    "DateTime",
+                    "TradingPeriod",
+                    location_field,
+                    price_field,
+                ],
+                "rows": [
+                    {
+                        "DateTime": "time",
+                        "TradingPeriod": "TP1",
+                        location_field: "LOCATION",
+                        price_field: "10.00000",
+                    }
+                ],
+            }
+        }
+    )
+
+    def candidate(value: str) -> bytes:
+        return _json(
+            {
+                "published_price": {
+                    "field_order": [
+                        "date_time",
+                        "trading_period",
+                        "location",
+                        "product",
+                        "price_nzd_per_mwh",
+                    ],
+                    "fields": [],
+                    "rows": [
+                        {
+                            "date_time": "time",
+                            "trading_period": "TP1",
+                            "location": "LOCATION",
+                            "product": product,
+                            "price_nzd_per_mwh": value,
+                        }
+                    ],
+                }
+            }
+        )
+
+    within = ReportRowParityValidator().compare(
+        case_id="case", reference=reference, candidate=candidate("10.00009")
+    )
+    above = ReportRowParityValidator().compare(
+        case_id="case", reference=reference, candidate=candidate("10.00011")
+    )
+
+    assert within.passed
+    assert within.tables[0].certified_difference_count == 1
+    assert not above.passed
+    assert above.tables[0].above_precision_count == 1
+
+
 def test_offer_reserve_alternative_allocation_requires_equal_aggregate() -> None:
     reference = _json(
         {

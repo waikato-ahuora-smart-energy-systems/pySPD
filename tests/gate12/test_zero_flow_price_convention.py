@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -15,6 +16,7 @@ from tools.gate12.zero_flow_price_convention import (
     ZeroFlowPriceConventionResultStore,
     ZeroFlowPriceConventionValidator,
 )
+from tools.gate12.zero_flow_price_runner import ZeroFlowPriceConventionRunner
 
 
 def _inputs(
@@ -170,6 +172,105 @@ def test_publication_certificate_reconstructs_weighted_rounded_candidate() -> No
     assert certificate.passed
     assert certificate.reconstructed_candidate == 10.66667
     assert certificate.total_seconds == 300.0
+
+
+def test_publication_certificate_accepts_background_price_noise() -> None:
+    certificate = ZeroFlowPriceConventionValidator().compare_publication(
+        trading_period="TP1",
+        node="NODE",
+        reference=10.0,
+        candidate=10.66665,
+        contributions=(
+            PublicationContribution("case-1", "time-1", 100.0, 10.0),
+            PublicationContribution("case-2", "time-2", 200.0, 11.0),
+        ),
+        decimals=5,
+    )
+
+    assert certificate.reconstructed_candidate == 10.66667
+    assert certificate.absolute_residual == pytest.approx(0.00002)
+    assert certificate.passed
+
+
+def test_publication_projection_ignores_disconnected_allocated_bus() -> None:
+    class Evidence:
+        @staticmethod
+        def case_inputs(
+            _case_id: str, _date_time: str, *, branch_flow: object
+        ) -> ZeroFlowCaseInputs:
+            assert branch_flow is None
+            base = _inputs()
+            return ZeroFlowCaseInputs(
+                case_id=base.case_id,
+                date_time=base.date_time,
+                branches=base.branches,
+                first_loss_factors=base.first_loss_factors,
+                electrical_buses=base.electrical_buses,
+                bus_generation=base.bus_generation,
+                bus_load=base.bus_load,
+                branch_flow=base.branch_flow,
+                node_buses={"NODE": frozenset({"LEAF", "DEAD"})},
+                node_bus_allocation={
+                    ("NODE", "LEAF"): 1.0,
+                    ("NODE", "DEAD"): 0.0,
+                },
+                offer_nodes=base.offer_nodes,
+                bid_nodes=base.bid_nodes,
+            )
+
+        @staticmethod
+        def case_bus_prices(_case_id: str, _date_time: str) -> dict[str, float]:
+            reference, _candidate = _prices()
+            return reference
+
+    runner = object.__new__(ZeroFlowPriceConventionRunner)
+    runner.validator = ZeroFlowPriceConventionValidator()
+
+    assert runner._canonical_node_price(
+        evidence=cast(Any, Evidence()),
+        case_id="case",
+        date_time="time",
+        node="NODE",
+    ) == pytest.approx(10.0 / 0.999)
+
+
+def test_publication_projection_returns_zero_for_dead_node() -> None:
+    class Evidence:
+        @staticmethod
+        def case_inputs(
+            _case_id: str, _date_time: str, *, branch_flow: object
+        ) -> ZeroFlowCaseInputs:
+            assert branch_flow is None
+            base = _inputs()
+            return ZeroFlowCaseInputs(
+                case_id=base.case_id,
+                date_time=base.date_time,
+                branches=base.branches,
+                first_loss_factors=base.first_loss_factors,
+                electrical_buses=base.electrical_buses,
+                bus_generation=base.bus_generation,
+                bus_load=base.bus_load,
+                branch_flow=base.branch_flow,
+                node_buses={"DEAD-NODE": frozenset({"DEAD"})},
+                node_bus_allocation={("DEAD-NODE", "DEAD"): 1.0},
+                offer_nodes=base.offer_nodes,
+                bid_nodes=base.bid_nodes,
+            )
+
+        @staticmethod
+        def case_bus_prices(_case_id: str, _date_time: str) -> dict[str, float]:
+            reference, _candidate = _prices()
+            return reference
+
+    runner = object.__new__(ZeroFlowPriceConventionRunner)
+    runner.validator = ZeroFlowPriceConventionValidator()
+
+    assert runner._canonical_node_price(
+        evidence=cast(Any, Evidence()),
+        case_id="case",
+        date_time="time",
+        node="DEAD-NODE",
+    ) == 0.0
 
 
 def test_publication_certificate_rejects_wrong_candidate_or_missing_weight() -> None:

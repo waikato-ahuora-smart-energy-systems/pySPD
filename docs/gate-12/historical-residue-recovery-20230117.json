@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "classification": "qualifying-subthreshold-residue-guard-shard-checkpoint",
+  "trading_date": "20230117",
+  "reference_commit": "3360a91ebd48f2e3cbb52a5e6766d893011054be",
+  "source_sha256": "b2fbbcb045aba74abffb245bd30e4253ba9c64da65cb9feff5dae485b7ef0bf6",
+  "execution_profile": "historical-v5.0.2-dailymode0-scip-solvelink5-first-loop-rtd-only-canonical-order-material-transfer",
+  "patch_profile": "historical-v5.0.2-dailymode0-scip-first-loop-material-transfer-subthreshold-residue-threshold1e-6",
+  "patch_logical_sha256": "ee09dc8ca3203d6793f54c42394d7a9e2da356008a3992931e9e04c9ddeade21",
+  "patch_metadata_file_sha256": "4593333d66124ccf96a5472a46c925fb96b903d6dffd236c64d146cc261e97dd",
+  "selected_case_count": 271,
+  "solved_case_count": 271,
+  "all_solves_optimal": true,
+  "checkpoint_logical_sha256": "1bcfed2d989a8d23e1b30a361a985c99dd809f508f25c7abf532f5d6711e83a3",
+  "checkpoint_file_sha256": "5ef2dbadaa4dc1c84d20ddfd45184f03d6afab023ca51191fdf22b99e3229a76",
+  "population_summary_file_sha256": "8cb384d8dd349e0c477af24d783d63779dd692030dc3fa459a59422dfc2ff63d",
+  "artifact_sha256": {
+    "evidence": "0aa1cb76b21f0452881fc8da1ecf2c39f95c6d587c9bdd9a283a06ebe632ba8e",
+    "listing": "cc938b74dd870b37b0a653838a0f1ad750a3e5850e9fe4c23d409ccfcd15e7ca",
+    "progress": "3fc286afc6ef1fcb4294844df103d229df4048f4b4e5b657d33e7d69e2a05829"
+  },
+  "affected_identity_count": 1,
+  "identities": [
+    ["171012023010355022", "17-JAN-2023 16:55", "KMO0331", "KMO1102", 2.094803183992]
+  ],
+  "identity_fields": ["case_id", "date_time", "node", "target_node", "energy_shortfall_mw"],
+  "solver_options_changed": false,
+  "shard_complete": true,
+  "population_passed": false
+}

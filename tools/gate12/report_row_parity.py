@@ -24,21 +24,36 @@ from tools.gate12.zero_flow_price_convention import (
     ZeroFlowPriceConventionResult,
 )
 
-REPORT_ROW_PARITY_PROFILE = "authority-pyspd-mapped-report-row-parity-v3"
+REPORT_ROW_PARITY_PROFILE = "authority-pyspd-mapped-report-row-parity-v4"
 REPORT_ROW_BUS_CERTIFIED_PROFILE = (
-    "authority-pyspd-mapped-report-row-parity-bus-certified-v3"
+    "authority-pyspd-mapped-report-row-parity-bus-certified-v4"
 )
 REPORT_ROW_ZERO_FLOW_CERTIFIED_PROFILE = (
-    "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v3"
+    "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v4"
+)
+_LEGACY_REPORT_ROW_PROFILES = frozenset(
+    {
+        "authority-pyspd-mapped-report-row-parity-v3",
+        "authority-pyspd-mapped-report-row-parity-bus-certified-v3",
+        "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v3",
+    }
 )
 _MAX_EXAMPLES = 20
 _PORTABLE_PRICE_TOLERANCE = Decimal("0.001")
+_PORTABLE_PUBLISHED_PRICE_TOLERANCE = Decimal("0.0001")
 _PORTABLE_MONEY_TOLERANCE = Decimal("0.01")
 _RAW_PRICE_OBSERVABLES = frozenset(
     {
         "branch-from-price",
         "branch-to-price",
         "branch-marginal-price",
+    }
+)
+_PUBLISHED_PRICE_OBSERVABLES = frozenset(
+    {
+        "published-energy-price",
+        "published-FIR-price",
+        "published-SIR-price",
     }
 )
 
@@ -929,6 +944,8 @@ class ReportRowParityValidator:
     def _acceptance_tolerance(observable: str, display_half_unit: Decimal) -> Decimal:
         if observable in _RAW_PRICE_OBSERVABLES:
             return max(display_half_unit, _PORTABLE_PRICE_TOLERANCE)
+        if observable in _PUBLISHED_PRICE_OBSERVABLES:
+            return max(display_half_unit, _PORTABLE_PUBLISHED_PRICE_TOLERANCE)
         if observable == "branch-rentals":
             return max(display_half_unit, _PORTABLE_MONEY_TOLERANCE)
         return display_half_unit
@@ -1356,6 +1373,7 @@ class ReportRowParityResultStore:
                 REPORT_ROW_BUS_CERTIFIED_PROFILE,
                 REPORT_ROW_ZERO_FLOW_CERTIFIED_PROFILE,
             }
+            | _LEGACY_REPORT_ROW_PROFILES
             or payload.get("scope")
             != "mapped-fields-at-governed-portable-profile-precision"
             or logical_sha256 != _logical_sha256(unsigned)

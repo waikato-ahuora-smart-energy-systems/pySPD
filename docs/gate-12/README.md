@@ -97,6 +97,15 @@ validator, which passes all twelve canonical surfaces with zero unresolved
 differences. The complete first-date result is recorded in
 [`report-completeness-20221106.md`](report-completeness-20221106.md).
 
+The second paired date, 2023-01-17, also passes. Both engines completed its
+191-case prefix, and the one affected case passes all twelve semantic surfaces
+with zero unresolved differences. The independent topology validator certifies
+49 zero-flow bus derivatives, three node projections, and three TP34
+publications. The complete 13-table comparison covers 17,203 values with zero
+missing or extra identities, zero above-precision values, and zero
+unimplemented tables. See the
+[`2023-01-17 replay certificate`](replay-certification-20230117.md).
+
 Later-date replay remains gated by completion of the exact historical
 population enumeration. Candidate execution never promotes an analytic lower
 bound into an affected identity.
@@ -227,6 +236,12 @@ the compact record is
 The 2023-01-16 shard also passed: 283/283 exact optimal cases and eight
 material identities. Its logical checkpoint hash is `ffb4258c067407fd5b3b61f4870f9f90dfa9c928c210dc2f7cfaccb143966fea`;
 see [`historical-residue-recovery-20230116.json`](historical-residue-recovery-20230116.json).
+
+The next chronological shard, 2023-01-17, passed 271/271 exact optimal cases
+under the same residue-guard profile and emitted one material identity:
+`KMO0331 -> KMO1102` at 16:55 for `2.094803183992 MW`. Its logical checkpoint
+hash is `1bcfed2d989a8d23e1b30a361a985c99dd809f508f25c7abf532f5d6711e83a3`;
+see [`historical-residue-recovery-20230117.json`](historical-residue-recovery-20230117.json).
 
 `HistoricalPopulationRunner` verifies every Gate 1 source size and SHA-256,
 reads the GDX run-mode surface, selects exactly RTD modes 101 and 201, and

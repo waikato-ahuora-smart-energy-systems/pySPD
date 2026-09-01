@@ -22,6 +22,7 @@ replaces; accepted history is not rewritten.
 | [ADR-0015](0015-gate-12-targeted-historical-recovery.md) | Recover named pathological discovery cases without widening the general oracle | Accepted for bounded Gate 12 recovery evidence |
 | [ADR-0016](0016-gate-12-residue-only-loop-guard.md) | Skip historical transfer loops only when no material evidence can be emitted | Accepted for bounded Gate 12 discovery evidence |
 | [ADR-0017](0017-portable-report-equivalence.md) | Govern SCIP/HiGHS report equivalence separately from strict solver identity | Accepted by project direction for the portable Gate 12 profile |
+| [ADR-0018](0018-portable-published-price-report-tolerance.md) | Apply the portable price tolerance to published report rows | Accepted by project direction for the portable Gate 12 profile |
 
 ## Status values
 

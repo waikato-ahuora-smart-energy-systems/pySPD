@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "profile": "gate12-complete-report-semantic-certification-v2",
+  "trading_date": "20230117",
+  "certified_date": "2026-09-02",
+  "disposition": "second-date-complete-report-and-semantic-parity-passed",
+  "logical_sha256": "edf7ff9ac38c959eafe09b40eece036ad8a0a327a72325e20a20c967a0e84a92",
+  "provenance": {
+    "reference_commit": "3360a91ebd48f2e3cbb52a5e6766d893011054be",
+    "source_sha256": "b2fbbcb045aba74abffb245bd30e4253ba9c64da65cb9feff5dae485b7ef0bf6",
+    "work_item_sha256": "d4b3dd61bbfc7af5ae8262d64a5d176307eaf4999e99a9c8fb9533aad9608938",
+    "reference_bundle_sha256": "a5ed53aabc1305a0f4fc634a70ad6bc88b2f695d94bdc3b39288cc2115f37176",
+    "candidate_bundle_sha256": "c697c4902ceff8e231ddd89deb08603473ba54ed0fce4a3aa10f57f92542e814"
+  },
+  "execution": {
+    "canonical_prefix_case_count": 191,
+    "reference_completed_case_count": 191,
+    "candidate_completed_case_count": 191,
+    "affected_case_count": 1,
+    "affected_case_ids": [
+      "171012023010355022"
+    ],
+    "solver_path": "SCIP-MIP -> fix discrete variables -> HiGHS-RMIP",
+    "all_reference_solves_optimal": true,
+    "all_candidate_solves_optimal": true
+  },
+  "exact_diff_diagnostic": {
+    "profile": "gams-pyspd-canonical-json-quantified-diff-v1",
+    "changed_surface_count": 8,
+    "unresolved_leaf_count": 324289,
+    "logical_sha256": "fb0d903be7073075751f57bd245f711866be1a80f770281fcf54f9d586e97503"
+  },
+  "schema_crosswalk": {
+    "profile": "authority-pyspd-report-schema-crosswalk-v1",
+    "passed": true,
+    "authority_table_count": 13,
+    "unmapped_reference_field_count": 0,
+    "unmapped_candidate_field_count": 0,
+    "logical_sha256": "c1d12c03a428d8ca6b637d8a6e8b38ce05fceb94e5d17401525b6dca0834a769"
+  },
+  "zero_flow_price_certificate": {
+    "profile": "gams-pyspd-zero-flow-load-derivative-publication-v1",
+    "passed": true,
+    "certified_bus_count": 49,
+    "certified_node_count": 3,
+    "certified_publication_count": 3,
+    "maximum_node_projection_residual": 0.0,
+    "logical_sha256": "e46172ec995401b962004edd839dd37311a9a66a197def1b8a45d21c783feb38"
+  },
+  "mapped_report_result": {
+    "profile": "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v4",
+    "passed": true,
+    "compared_value_count": 17203,
+    "missing_identity_count": 0,
+    "extra_identity_count": 0,
+    "certified_difference_count": 270,
+    "above_precision_count": 0,
+    "unimplemented_table_count": 0,
+    "logical_sha256": "ead12cb289415f82f82fa537d2f698070532dd77896b3bd0a78abf81fef70d30"
+  },
+  "semantic_result": {
+    "profile": "gams-pyspd-semantic-tolerance-zero-flow-report-certified-v3",
+    "passed": true,
+    "case_count": 1,
+    "surface_count": 12,
+    "failed_surface_count": 0,
+    "unresolved_difference_count": 0,
+    "logical_sha256": "541f7269315439c1bf933ff4b8665df63fa92e0c6a3633660feec15861830f91"
+  },
+  "material_price_convention": {
+    "trading_period": "TP34",
+    "nodes": [
+      "GOR2202",
+      "OTA2202",
+      "WPT1101"
+    ],
+    "maximum_node_price_difference_nzd_per_mwh": 0.11549769467476,
+    "maximum_publication_reconstruction_residual_nzd_per_mwh": 0.00002,
+    "disposition": "independent-zero-flow-load-derivative-certificate-passed"
+  },
+  "remaining_boundary": {
+    "second_date_certified": true,
+    "gate12_closed": false,
+    "reason": "Remaining exact-population, representative-day, repeat/resume, strict-profile, and evidence-index criteria are not complete."
+  }
+}

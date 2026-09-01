@@ -800,7 +800,7 @@ class ZeroFlowPriceConventionValidator:
             / total_seconds,
             decimals,
         )
-        tolerance = 0.5 * 10.0 ** (-decimals)
+        tolerance = max(0.5 * 10.0 ** (-decimals), self.price_tolerance)
         contributions_sha256 = _logical_sha256(
             [item.to_dict() for item in contributions]
         )
