@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "profile": "gate12-complete-report-semantic-certification-v3",
+  "trading_date": "20230118",
+  "certified_date": "2026-09-02",
+  "disposition": "third-date-complete-report-and-semantic-parity-passed",
+  "logical_sha256": "4ebdbb78ea4688534b7b227aef38a89af5f33431d25d6ce65d85000f427b66d8",
+  "provenance": {
+    "reference_commit": "3360a91ebd48f2e3cbb52a5e6766d893011054be",
+    "source_sha256": "5e422922a518313b995f4da44e0374954dd14aee35dfd2da703851f4101d2c85",
+    "work_item_sha256": "149cd090f00c35f13a8612a8ae788d6ea9a751858306b367ab5f1537eb491f9e",
+    "reference_bundle_sha256": "d36d100d567ff6f00147cd395490c2c59a4859ccf48ff63f6a9f800a2a1e03ad",
+    "candidate_bundle_sha256": "ad099c2a260286f6f31da7dbf624470ab65da3d4a7b79fe0d13e0aad93c0a816"
+  },
+  "execution": {
+    "canonical_prefix_case_count": 190,
+    "reference_completed_case_count": 190,
+    "candidate_completed_case_count": 190,
+    "affected_case_count": 4,
+    "affected_case_ids": [
+      "181012023010310524",
+      "181012023010315527",
+      "181012023010320528",
+      "181012023010325529"
+    ],
+    "solver_path": "SCIP-MIP native SOS2 -> fix discrete variables and inactive SOS support -> HiGHS-RMIP",
+    "all_reference_solves_optimal": true,
+    "all_candidate_solves_optimal": true,
+    "maximum_fixed_rmip_objective_error_nzd": 8.221832104027271e-10
+  },
+  "exact_diff_diagnostic": {
+    "profile": "gams-pyspd-canonical-json-quantified-diff-v1",
+    "changed_surface_count": 32,
+    "unresolved_leaf_count": 1298815,
+    "logical_sha256": "09d1708a578a00952e48da08c5f9bdfe420ff124b5503b0c38d74e583fee5fc8"
+  },
+  "schema_crosswalk": {
+    "profile": "authority-pyspd-report-schema-crosswalk-v1",
+    "passed": true,
+    "authority_table_count": 13,
+    "unmapped_reference_field_count": 0,
+    "unmapped_candidate_field_count": 0,
+    "logical_sha256": "757f1f43a2f98862fa374412c1588094cad72f281f66650d471601dbaba93dd1"
+  },
+  "zero_flow_price_certificate": {
+    "profile": "gams-pyspd-zero-flow-load-derivative-publication-v1",
+    "passed": true,
+    "certified_bus_count": 190,
+    "certified_node_count": 7,
+    "certified_publication_count": 2,
+    "maximum_node_projection_residual": 0,
+    "logical_sha256": "63209b868a94b53b227f167832e6782835a777a2aa213a81dccc79f5985d89db"
+  },
+  "mapped_report_result": {
+    "profile": "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v5",
+    "passed": true,
+    "compared_value_count": 68516,
+    "missing_identity_count": 0,
+    "extra_identity_count": 0,
+    "certified_difference_count": 401,
+    "above_precision_count": 0,
+    "unimplemented_table_count": 0,
+    "logical_sha256": "c324cd0391452252d2aa7f4607a669f5170568d9f11f69c08b26ce2392907f7b"
+  },
+  "semantic_result": {
+    "profile": "gams-pyspd-semantic-tolerance-zero-flow-report-certified-v4",
+    "passed": true,
+    "case_count": 4,
+    "surface_count": 48,
+    "failed_surface_count": 0,
+    "unresolved_difference_count": 0,
+    "logical_sha256": "4dc2743948fd0baf315e75678956abf43b2a4522293ea6927929953745aed94d"
+  },
+  "material_price_convention": {
+    "trading_period": "TP33",
+    "nodes": ["OTA2202", "WPT1101"],
+    "maximum_publication_difference_nzd_per_mwh": 0.0751,
+    "maximum_publication_reconstruction_residual_nzd_per_mwh": 0,
+    "disposition": "independent-zero-flow-load-derivative-certificate-passed"
+  },
+  "market_node_dual_allocation": {
+    "case_id": "181012023010325529",
+    "date_time": "18-JAN-2023 16:25",
+    "family": "FK_SFD2201 SFD22",
+    "reference_price_row": "CTRLMAX",
+    "candidate_price_row": "MW+60",
+    "reference_family_total_nzd_per_mwh": 152.41571,
+    "candidate_family_total_nzd_per_mwh": 152.41571066210324,
+    "disposition": "binding-family-aggregate-preserved"
+  },
+  "remaining_boundary": {
+    "third_date_certified": true,
+    "gate12_closed": false,
+    "reason": "Remaining exact-population, representative-day, repeat/resume, strict-profile, current-profile regression, and evidence-index criteria are not complete."
+  }
+}

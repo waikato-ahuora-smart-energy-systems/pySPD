@@ -10,6 +10,7 @@ from typing import Any, Protocol
 import pyomo.environ as pyo
 
 from pyspd.architecture import Formulation, ModelAssembler, PricingEngine
+from pyspd.hvdc.data import SosRepresentation
 from pyspd.preprocess.shortfall import ShortfallTransferResolver, ShortfallTransferState
 from pyspd.reserve import ReserveCase, ReservePricingEngine, reserve_formulation
 from pyspd.v16.data import Spd16Case
@@ -319,6 +320,7 @@ def _updated_case(prepared: PreparedCase) -> ReserveCase:
     case = prepared.payload
     assert isinstance(case, ReserveCase)
     assert case.network is not None
+    assert case.hvdc is not None
     network = replace(case.network, node_load=prepared.required_load)
     required_by_region: dict[Key, float] = defaultdict(float)
     for node, value in prepared.required_load.items():
@@ -336,6 +338,7 @@ def _updated_case(prepared: PreparedCase) -> ReserveCase:
     return replace(
         case,
         network=network,
+        hvdc=replace(case.hvdc, sos_representation=SosRepresentation.NATIVE),
         required_load=required_by_region,
         generation_start=generation_start,
         scarcity_limit=scarcity_limit,

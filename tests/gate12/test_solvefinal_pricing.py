@@ -6,8 +6,38 @@ import pyomo.environ as pyo
 import pytest
 
 from pyspd.architecture import ModelAssembler
+from pyspd.hvdc.data import SosRepresentation
+from pyspd.orchestration import DailyCase, PreparedCase, ScheduleType
+from pyspd.orchestration.solver import _updated_case
 from pyspd.reserve import ReserveSolvePolicy, reserve_formulation
 from tests.reserve.conftest import make_reserve_case
+
+
+def test_application_solve_uses_native_scip_sos_state() -> None:
+    case = make_reserve_case()
+    assert case.network is not None
+    assert case.hvdc is not None
+    ca, date_time = next(iter(case.periods))
+    prepared = PreparedCase(
+        DailyCase(
+            ca,
+            date_time,
+            "TP1",
+            101,
+            ScheduleType.RTD,
+            5.0,
+            300.0,
+            0,
+            "0" * 64,
+        ),
+        case,
+        case.network.node_load,
+    )
+
+    updated = _updated_case(prepared)
+
+    assert updated.hvdc is not None
+    assert updated.hvdc.sos_representation is SosRepresentation.NATIVE
 
 
 def test_pricing_preserves_native_sos_support_and_reoptimises_active_weights() -> None:

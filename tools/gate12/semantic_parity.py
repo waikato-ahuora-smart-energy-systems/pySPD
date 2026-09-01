@@ -30,7 +30,7 @@ SEMANTIC_ZERO_FLOW_CERTIFIED_PARITY_PROFILE = (
     "gams-pyspd-semantic-tolerance-zero-flow-certified-v2"
 )
 SEMANTIC_REPORT_CERTIFIED_PARITY_PROFILE = (
-    "gams-pyspd-semantic-tolerance-zero-flow-report-certified-v3"
+    "gams-pyspd-semantic-tolerance-zero-flow-report-certified-v4"
 )
 _EXACT_SURFACES = frozenset(
     {"case-selection", "publication-seconds", "state-transition"}

@@ -24,18 +24,21 @@ from tools.gate12.zero_flow_price_convention import (
     ZeroFlowPriceConventionResult,
 )
 
-REPORT_ROW_PARITY_PROFILE = "authority-pyspd-mapped-report-row-parity-v4"
+REPORT_ROW_PARITY_PROFILE = "authority-pyspd-mapped-report-row-parity-v5"
 REPORT_ROW_BUS_CERTIFIED_PROFILE = (
-    "authority-pyspd-mapped-report-row-parity-bus-certified-v4"
+    "authority-pyspd-mapped-report-row-parity-bus-certified-v5"
 )
 REPORT_ROW_ZERO_FLOW_CERTIFIED_PROFILE = (
-    "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v4"
+    "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v5"
 )
 _LEGACY_REPORT_ROW_PROFILES = frozenset(
     {
         "authority-pyspd-mapped-report-row-parity-v3",
         "authority-pyspd-mapped-report-row-parity-bus-certified-v3",
         "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v3",
+        "authority-pyspd-mapped-report-row-parity-v4",
+        "authority-pyspd-mapped-report-row-parity-bus-certified-v4",
+        "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v4",
     }
 )
 _MAX_EXAMPLES = 20
@@ -56,6 +59,7 @@ _PUBLISHED_PRICE_OBSERVABLES = frozenset(
         "published-SIR-price",
     }
 )
+_MARKET_NODE_DUAL_FAMILY_SUFFIXES = ("CTRLMAX", "MW+6", "MW+60")
 
 
 def _logical_sha256(payload: object) -> str:
@@ -878,6 +882,15 @@ class ReportRowParityValidator:
             allocation_equivalent = self._offer_allocation_equivalent(
                 projection, expected, actual
             )
+            market_node_dual_equivalent = (
+                self._binding_market_node_dual_allocation_keys(
+                    projection,
+                    expected,
+                    actual,
+                    reference_rows,
+                    candidate_rows,
+                )
+            )
             for key in sorted(set(expected) & set(actual)):
                 reference_text = expected[key]
                 candidate_text = actual[key]
@@ -894,6 +907,9 @@ class ReportRowParityValidator:
                         certified += 1
                     continue
                 if allocation_equivalent:
+                    certified += 1
+                    continue
+                if key in market_node_dual_equivalent:
                     certified += 1
                     continue
                 if (
@@ -978,6 +994,139 @@ class ReportRowParityValidator:
         expected_total = sum(expected_values, start=Decimal(0))
         actual_total = sum(actual_values, start=Decimal(0))
         return abs(expected_total - actual_total) <= rounding_budget
+
+    def _binding_market_node_dual_allocation_keys(
+        self,
+        projection: _Projection,
+        expected: dict[tuple[str, ...], str],
+        actual: dict[tuple[str, ...], str],
+        reference_rows: tuple[dict[str, str], ...],
+        candidate_rows: tuple[dict[str, str], ...],
+    ) -> frozenset[tuple[str, ...]]:
+        """Certify solver-dependent dual placement across one binding limit family.
+
+        vSPD inputs can contain a control maximum and reserve-inclusive variants
+        for the same offer.  When reserve is zero, several rows are simultaneously
+        binding and an LP solver may place their common shadow-price total on a
+        different row.  Admission is deliberately narrow: the governed names,
+        identities, senses, binding status, non-negative duals, and aggregate dual
+        must all agree.
+        """
+
+        if (
+            projection.observable != "market-node-constraint-price"
+            or not expected
+            or set(expected) != set(actual)
+        ):
+            return frozenset()
+        related = {
+            item.observable: item
+            for item in _PROJECTIONS
+            if item.reference_table == "MNodeConstraintResults_TP"
+            and item.observable
+            in {
+                "market-node-constraint-lhs",
+                "market-node-constraint-rhs",
+                "market-node-constraint-sense",
+            }
+        }
+        if len(related) != 3:
+            raise EvidenceContractError(
+                "REQ-G12-REPORT-ROW: market-node support projections are incomplete"
+            )
+        support: dict[str, tuple[dict[tuple[str, ...], str], dict[tuple[str, ...], str]]] = {}
+        for observable, item in related.items():
+            support[observable] = (
+                self._indexed_values(reference_rows, item, reference=True),
+                self._indexed_values(candidate_rows, item, reference=False),
+            )
+
+        grouped: dict[tuple[str, ...], list[tuple[str, ...]]] = {}
+        for key in expected:
+            if len(key) < 4:
+                continue
+            constraint = key[-2]
+            base = self._market_node_dual_family_base(constraint)
+            if base is not None:
+                grouped.setdefault((*key[:-2], base), []).append(key)
+
+        certified: set[tuple[str, ...]] = set()
+        for keys in grouped.values():
+            if len(keys) < 2:
+                continue
+            reference_prices = [self._decimal(expected[key]) for key in keys]
+            candidate_prices = [self._decimal(actual[key]) for key in keys]
+            if any(value < 0 for value in reference_prices + candidate_prices):
+                continue
+            rounding_budget = sum(
+                (
+                    Decimal(5).scaleb(
+                        cast(int, value.as_tuple().exponent) - 1
+                    )
+                    for value in reference_prices
+                ),
+                start=Decimal(0),
+            )
+            reference_total = sum(reference_prices, start=Decimal(0))
+            candidate_total = sum(candidate_prices, start=Decimal(0))
+            if abs(reference_total - candidate_total) > rounding_budget:
+                continue
+            if not all(self._market_node_row_is_binding(key, support) for key in keys):
+                continue
+            certified.update(keys)
+        return frozenset(certified)
+
+    @staticmethod
+    def _market_node_dual_family_base(constraint: str) -> str | None:
+        for suffix in _MARKET_NODE_DUAL_FAMILY_SUFFIXES:
+            marker = f"_{suffix}"
+            if constraint.endswith(marker):
+                return constraint[: -len(marker)]
+        return None
+
+    def _market_node_row_is_binding(
+        self,
+        price_key: tuple[str, ...],
+        support: dict[
+            str,
+            tuple[dict[tuple[str, ...], str], dict[tuple[str, ...], str]],
+        ],
+    ) -> bool:
+        def key(observable: str) -> tuple[str, ...]:
+            return (*price_key[:-1], observable)
+
+        lhs = support["market-node-constraint-lhs"]
+        rhs = support["market-node-constraint-rhs"]
+        sense = support["market-node-constraint-sense"]
+        identity_lhs = key("market-node-constraint-lhs")
+        identity_rhs = key("market-node-constraint-rhs")
+        identity_sense = key("market-node-constraint-sense")
+        if not all(
+            identity in values
+            for identity, values in (
+                (identity_lhs, lhs[0]),
+                (identity_lhs, lhs[1]),
+                (identity_rhs, rhs[0]),
+                (identity_rhs, rhs[1]),
+                (identity_sense, sense[0]),
+                (identity_sense, sense[1]),
+            )
+        ):
+            return False
+        reference_rhs = self._decimal(rhs[0][identity_rhs])
+        exponent = cast(int, reference_rhs.as_tuple().exponent)
+        binding_tolerance = Decimal(5).scaleb(exponent - 1)
+        return (
+            self._decimal(sense[0][identity_sense]) == Decimal(-1)
+            and self._decimal(sense[1][identity_sense]) == Decimal(-1)
+            and abs(self._decimal(lhs[0][identity_lhs]) - reference_rhs)
+            <= binding_tolerance
+            and abs(
+                self._decimal(lhs[1][identity_lhs])
+                - self._decimal(rhs[1][identity_rhs])
+            )
+            <= binding_tolerance
+        )
 
     @staticmethod
     def _zero_flow_certifies_report_value(

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "classification": "qualifying-subthreshold-residue-guard-shard-checkpoint",
+  "trading_date": "20230118",
+  "reference_commit": "3360a91ebd48f2e3cbb52a5e6766d893011054be",
+  "source_sha256": "5e422922a518313b995f4da44e0374954dd14aee35dfd2da703851f4101d2c85",
+  "execution_profile": "historical-v5.0.2-dailymode0-scip-solvelink5-first-loop-rtd-only-canonical-order-material-transfer",
+  "patch_profile": "historical-v5.0.2-dailymode0-scip-first-loop-material-transfer-subthreshold-residue-threshold1e-6",
+  "patch_logical_sha256": "ee09dc8ca3203d6793f54c42394d7a9e2da356008a3992931e9e04c9ddeade21",
+  "selected_case_count": 277,
+  "solved_case_count": 277,
+  "all_solves_optimal": true,
+  "checkpoint_logical_sha256": "a5cab808d5864b50fa4250ec71c1b9a6f2b115a1781d550e2172d4b892b9174c",
+  "checkpoint_file_sha256": "d7fcafb343aae2de487754d1d79e76b6f06149b0560b01c39464b17fd7de0a0b",
+  "artifact_sha256": {
+    "evidence": "a347a914263d2b3cd96d6d601823f63152467fc9819c686b17f26d56c6a30c16",
+    "listing": "c42e89e59477f4bfacf1ee1051f5f1e1f5b6980cfde541918548cbcd10a12fc7",
+    "progress": "64c6c9bc3a5791c31390e4bb2832310c7a4c67bd42e2f4fb74d78d6e0d5c24cd"
+  },
+  "affected_identity_count": 4,
+  "identities": [
+    ["181012023010310524", "18-JAN-2023 16:10", "CLH0111", "CLH0661", 0.209863115763],
+    ["181012023010315527", "18-JAN-2023 16:15", "CLH0111", "CLH0661", 0.140363044336],
+    ["181012023010320528", "18-JAN-2023 16:20", "CLH0111", "CLH0661", 0.107935419322],
+    ["181012023010325529", "18-JAN-2023 16:25", "CLH0111", "CLH0661", 0.140096563945]
+  ],
+  "identity_fields": ["case_id", "date_time", "node", "target_node", "energy_shortfall_mw"],
+  "solver_options_changed": false,
+  "shard_complete": true,
+  "population_passed": false
+}

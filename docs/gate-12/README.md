@@ -106,9 +106,24 @@ missing or extra identities, zero above-precision values, and zero
 unimplemented tables. See the
 [`2023-01-17 replay certificate`](replay-certification-20230117.md).
 
-Later-date replay remains gated by completion of the exact historical
-population enumeration. Candidate execution never promotes an analytic lower
-bound into an affected identity.
+The third paired date, 2023-01-18, passes after correcting the application
+solve to use native SCIP SOS2 state. Both engines completed its 190-case prefix,
+and all four affected cases pass all twelve semantic surfaces with zero
+unresolved differences. The independent topology validator certifies 190 bus
+observations, seven node projections, and two TP33 publications. The complete
+13-table comparison covers 68,516 values with zero missing or extra identities,
+zero above-precision values, and zero unimplemented tables. A common
+`152.41571 NZD/MWh` dual total placed on different simultaneously binding
+SFD22 constraint rows is certified under
+[ADR-0020](../adr/0020-binding-market-node-dual-allocation.md). See the
+[`2023-01-18 replay certificate`](replay-certification-20230118.md).
+
+Further replay continues incrementally from exact historical discovery.
+Candidate execution never promotes an analytic lower bound into an affected
+identity. The earlier two dates also require regression under the new native
+SOS execution fingerprint before they can be claimed under the current
+profile; their existing immutable certificates remain valid for their recorded
+profiles.
 
 The representative v16 RTD portable-profile run is recorded in
 [`v16-representative-parity.json`](v16-representative-parity.json). Both the
@@ -242,6 +257,11 @@ under the same residue-guard profile and emitted one material identity:
 `KMO0331 -> KMO1102` at 16:55 for `2.094803183992 MW`. Its logical checkpoint
 hash is `1bcfed2d989a8d23e1b30a361a985c99dd809f508f25c7abf532f5d6711e83a3`;
 see [`historical-residue-recovery-20230117.json`](historical-residue-recovery-20230117.json).
+
+The 2023-01-18 shard passed 277/277 exact optimal cases and emitted four
+material `CLH0111 -> CLH0661` identities from 16:10 through 16:25. Its logical
+checkpoint hash is `a5cab808d5864b50fa4250ec71c1b9a6f2b115a1781d550e2172d4b892b9174c`;
+see [`historical-residue-recovery-20230118.json`](historical-residue-recovery-20230118.json).
 
 `HistoricalPopulationRunner` verifies every Gate 1 source size and SHA-256,
 reads the GDX run-mode surface, selects exactly RTD modes 101 and 201, and

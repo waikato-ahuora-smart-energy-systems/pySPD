@@ -329,6 +329,99 @@ def test_offer_reserve_alternative_allocation_requires_equal_aggregate() -> None
     assert unequal.tables[0].above_precision_count == 2
 
 
+def test_binding_market_node_duals_may_reallocate_within_named_limit_family() -> None:
+    constraints = (
+        "FK_SFD2201 SFD22_CTRLMAX",
+        "FK_SFD2201 SFD22_MW+6",
+        "FK_SFD2201 SFD22_MW+60",
+    )
+    reference = _json(
+        {
+            "prefix_MNodeConstraintResults_TP": {
+                "fields": [
+                    "CaseID",
+                    "DateTime",
+                    "MNodeConstraint",
+                    "LHS (MW)",
+                    "Price ($/MWh)",
+                    "RHS (MW)",
+                    "Sense (-1:<=, 0:=, 1:>=)",
+                ],
+                "rows": [
+                    {
+                        "CaseID": "case",
+                        "DateTime": "time",
+                        "MNodeConstraint": constraint,
+                        "LHS (MW)": "85.00000",
+                        "Price ($/MWh)": price,
+                        "RHS (MW)": "85.00000",
+                        "Sense (-1:<=, 0:=, 1:>=)": "-1.00000",
+                    }
+                    for constraint, price in zip(
+                        constraints, ("152.41571", "0.00000", "0.00000"), strict=True
+                    )
+                ],
+            }
+        }
+    )
+
+    def candidate(*, final_price: str, final_body: str = "85") -> bytes:
+        return _json(
+            {
+                "constraint": {
+                    "field_order": [
+                        "case_id",
+                        "date_time",
+                        "constraint",
+                        "index",
+                        "body",
+                        "lower",
+                        "upper",
+                        "price_nzd_per_mwh",
+                    ],
+                    "fields": [],
+                    "rows": [
+                        {
+                            "case_id": "case",
+                            "date_time": "time",
+                            "constraint": "NetworkSecurity.MNodeSecurityConstraintLE",
+                            "index": f"case|time|{constraint}",
+                            "body": final_body if constraint.endswith("MW+60") else "85",
+                            "lower": "",
+                            "upper": "85",
+                            "price_nzd_per_mwh": price,
+                        }
+                        for constraint, price in zip(
+                            constraints, ("0", "0", final_price), strict=True
+                        )
+                    ],
+                }
+            }
+        )
+
+    equivalent = ReportRowParityValidator().compare(
+        case_id="case",
+        reference=reference,
+        candidate=candidate(final_price="152.41571066210324"),
+    )
+    unequal_total = ReportRowParityValidator().compare(
+        case_id="case", reference=reference, candidate=candidate(final_price="151")
+    )
+    nonbinding = ReportRowParityValidator().compare(
+        case_id="case",
+        reference=reference,
+        candidate=candidate(final_price="152.41571066210324", final_body="84"),
+    )
+
+    assert equivalent.passed
+    assert equivalent.tables[0].certified_difference_count == 2
+    assert equivalent.tables[0].above_precision_count == 0
+    assert not unequal_total.passed
+    assert unequal_total.tables[0].above_precision_count == 2
+    assert not nonbinding.passed
+    assert nonbinding.tables[0].above_precision_count >= 1
+
+
 def test_named_zero_flow_node_certificate_classifies_report_difference() -> None:
     reference = _json(
         {
