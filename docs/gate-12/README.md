@@ -120,10 +120,11 @@ SFD22 constraint rows is certified under
 
 Further replay continues incrementally from exact historical discovery.
 Candidate execution never promotes an analytic lower bound into an affected
-identity. The earlier two dates also require regression under the new native
-SOS execution fingerprint before they can be claimed under the current
-profile; their existing immutable certificates remain valid for their recorded
-profiles.
+identity. The 2023-01-17 complete prefix has also passed regression under the
+new native-SOS execution fingerprint; see
+[`native-sos-regression-20230117.md`](native-sos-regression-20230117.md). The
+2022-11-06 date still requires current-profile regression. Existing immutable
+certificates remain valid for their recorded profiles.
 
 The representative v16 RTD portable-profile run is recorded in
 [`v16-representative-parity.json`](v16-representative-parity.json). Both the

@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "profile": "gate12-native-sos-regression-v1",
+  "trading_date": "20230117",
+  "certified_date": "2026-09-02",
+  "logical_sha256": "f7dce1a4571725d059d6c1b96b42efcb0b9fa09cc3ff730a5c134ebc0197012c",
+  "reference_bundle_sha256": "a5ed53aabc1305a0f4fc634a70ad6bc88b2f695d94bdc3b39288cc2115f37176",
+  "candidate_bundle_sha256": "3344647935e655e3f0aa07cd4470020a0b4abb97900593123cd69adeaf1c4976",
+  "candidate_execution_sha256": "0c668c3279ff208a05ea5fa214bfa315906782711c492644d047aa333572e993",
+  "canonical_prefix_case_count": 191,
+  "affected_case_ids": ["171012023010355022"],
+  "all_candidate_solves_optimal": true,
+  "maximum_fixed_rmip_objective_error_nzd": 2.9103830456733704e-11,
+  "quantified_diagnostic": {
+    "changed_surface_count": 8,
+    "unresolved_leaf_count": 322952,
+    "logical_sha256": "b67b0b9b14d80640f2a5a097f8679073f51ea5b09b139cd2ff4892229fad46fc"
+  },
+  "schema_crosswalk": {
+    "passed": true,
+    "logical_sha256": "70d7d9d8f713abd9f306fc409378e68a77885d9dc540446e7b5eb61c078caee7"
+  },
+  "zero_flow_price_certificate": {
+    "passed": true,
+    "certified_bus_count": 49,
+    "certified_node_count": 3,
+    "certified_publication_count": 3,
+    "logical_sha256": "e25d11fb54a5725c03e39da476b155a52ecbfe4c1d70b5b79ef09ab0ac179623"
+  },
+  "mapped_report_result": {
+    "profile": "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v5",
+    "passed": true,
+    "compared_value_count": 17203,
+    "certified_difference_count": 104,
+    "above_precision_count": 0,
+    "missing_identity_count": 0,
+    "extra_identity_count": 0,
+    "unimplemented_table_count": 0,
+    "logical_sha256": "0c0d23d5e7957dcaf7adef07c2c32837f4f97c5ed830da947c9fa2ec014f287e"
+  },
+  "semantic_result": {
+    "profile": "gams-pyspd-semantic-tolerance-zero-flow-report-certified-v4",
+    "passed": true,
+    "case_count": 1,
+    "surface_count": 12,
+    "failed_surface_count": 0,
+    "unresolved_difference_count": 0,
+    "logical_sha256": "3af51d41b1596992d84336de7df258745795fa0545cbbd20cdc9e11ca1763131"
+  },
+  "disposition": "current-native-sos-execution-profile-regression-passed"
+}
