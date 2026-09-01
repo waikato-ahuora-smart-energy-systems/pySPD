@@ -47,35 +47,35 @@ physics, fixed-discrete pricing, price repair, publication, and reports.
 The first governed historical PySPD candidate prefix and paired GAMS reference
 are complete. For 2022-11-06, all 196 canonical predecessor and affected cases
 completed under the explicit SCIP-MIP → fixed-discrete → HiGHS-RMIP profile.
-The current replacement bundle contains the four affected identities in
-canonical order and all twelve required surfaces per identity. It is bound to
-candidate hash
-`d2501a55e7def658e09eb466d4e5e28457d15208a5835138d1af4ba4213db69e`
+The post-WPT replacement bundles contain the four affected identities in
+canonical order and all twelve required surfaces per identity. They are bound
+to candidate hash
+`6b01efdf84eacfac717a47df9927482316288e0b7ab2ccc5c645a1ed25ef1f71`
 and governed two-objective GAMS bundle hash
-`a12456cf42be4eca390082dc7ea7b65d4ecbcc233a703f456068e9f85605d77d`.
+`e824a75c89939ea250e0a63d81b75cd0bac81c613aadda6dcb07be4fa0a066f0`.
 Superseded bundles and validator outputs remain immutable diagnostic evidence;
 they are not rewritten.
 
-The current exact processor reports 36 changed surfaces and 1,120,628 changed
+The refreshed exact processor reports 36 changed surfaces and 1,119,849 changed
 paths. Most are sparse-zero or report-schema representation differences. The
-semantic `gams-pyspd-semantic-tolerance-v2` processor compares active SOS
-support, applies the established `1e-4` price/objective tolerance and `1e-8`
-physics/fixed-state tolerance, and retains the SCIP primary objective as a
-named diagnostic while requiring the fixed-HiGHS objective to pass. It leaves
-ten unresolved paths across eight surfaces: four report-schema surfaces plus,
-in case `61012022110425024`, one node price, two raw bus prices, two repaired
-bus prices, and one rounded published energy price. All non-report surfaces in
-the first three affected cases pass.
+semantic processor compares active SOS support, applies the established
+`1e-4` price/objective tolerance and `1e-8` physics/fixed-state tolerance, and
+retains the SCIP primary objective as a named diagnostic while requiring the
+fixed-HiGHS objective to pass. With the independent zero-flow convention
+certificate, it leaves only four unresolved `report-field` schema records—one
+per affected case—and zero unresolved numeric price differences.
 
-The compact semantic evidence index is
-[`semantic-parity-20221106.json`](semantic-parity-20221106.json).
+The older compact semantic index remains immutable pre-correction evidence.
+The refreshed hashes and disposition are recorded in the
+[`post-WPT rerun certificate`](post-wpt-rerun-certification-20221106.md).
 
-The independent source-matrix certificate passes the first three cases but
-correctly rejects the final case: its remaining bus differences project to the
-same `WPT1101` node-price difference and therefore are not a bus-dual
-null-space alternative. The two repaired-bus errors are
-`0.010653407965453` and `0.009368422764978 NZD/MWh`; the node error is
-`0.010253407965453 NZD/MWh`.
+The older source-allocation null-space certificate correctly rejects the final
+case because its `KIN1009` delta is observable. The stronger independent
+source-topology certificate proves the two one-sided derivatives instead. It
+certifies 58 bus prices, projects `KIN1009` with zero residual, and exactly
+reconstructs TP15 `KIN1009`, TP35 `KIN1009`, and TP35 `WPT1101` publications.
+Its compact index is
+[`zero-flow-price-convention-20221106.json`](zero-flow-price-convention-20221106.json).
 
 The separately governed Authority-to-PySPD schema crosswalk now resolves the
 structure of those four report surfaces without weakening `report-field`.
@@ -550,13 +550,21 @@ unimplemented row projections in each case. The compact evidence index is
 The bus 816/820 and `WPT1101` differences in that immutable pre-correction
 artifact have since been diagnosed and eliminated in the production pricing
 path. They were opposite subgradient choices at passive, zero-flow AC-loss
-leaf buses. A target-case replay now matches the GAMS bus/node values within
-`7.8e-14 NZD/MWh` while matching the fixed-RMIP objective within `2.4e-11
-NZD`. See
-[`wpt1101-zero-flow-price.md`](wpt1101-zero-flow-price.md). The full-day bundle
-has not yet been regenerated, so the rolling `TP35` publication remains an
-open refreshed-evidence item rather than being inferred from the targeted
-run.
+leaf buses. The full 196-case prefix has now been regenerated through PySPD
+and pinned GAMS. The target-case bus/node values match within `1.8e-14
+NZD/MWh`, and the fixed-RMIP objective matches within `3.23e-11 NZD`.
+
+The refreshed run also establishes that pinned GAMS does not select the same
+side of every zero-flow loss kink: PySPD's documented `+1 MW load` convention
+changes 51 other final-case repaired bus marginals, one node price (`KIN1009`),
+and rolling publications at `KIN1009` and `WPT1101`. The latter differs by
+`0.00515 NZD/MWh`. The independent certificate proves these are exactly the
+documented load-side derivatives and reproduces all affected publications
+with zero residual. All 13,133 mapped report values now pass directly or by
+certificate at Authority precision; only eight unimplemented risk/summary
+tables keep complete E2E parity open. See
+[`wpt1101-zero-flow-price.md`](wpt1101-zero-flow-price.md) and the hash-bound
+[`post-WPT rerun certificate`](post-wpt-rerun-certification-20221106.md).
 
 The branch identity failures exposed a candidate reporting omission. Two of
 the missing rows per case are nonzero HVDC links (`BEN_HAY1.1` and
@@ -630,14 +638,40 @@ uv run --group gdx python -m tools.gate12.certify_published_price_degeneracy \
 The runner discovers the discrepant period, selects its immediate warmup and
 all period cases from the GDX order, requires every target case to complete and
 requires zero predecessor-generation fallback. It binds the alternative report
-manifest and execution source. The first formal 2022-11-06 attempt correctly
-failed: its optimal no-fallback result was `13.18042 NZD/MWh`, `0.00161` from
+manifest and execution source. The first formal pre-correction 2022-11-06
+attempt correctly failed: its optimal no-fallback result was `13.18042
+NZD/MWh`, `0.00161` from
 the GAMS `13.18203`. A prior diagnostic optimal run produced `13.18202`, but
 the favorable observation is not selected after the fact as passing evidence.
-On the current bundle the governed result is `13.18148`; its separately bound
-alternative returned `13.17947`, so the validator again fails. The variable
-outcomes establish a solver-sensitive surface; a reproducible bounded envelope
-or stronger common-optimal-face certificate is still needed.
+On that pre-correction bundle the governed result is `13.18148`; its separately
+bound alternative returned `13.17947`, so the validator again fails. The
+variable outcomes establish a solver-sensitive surface; a reproducible bounded
+envelope or stronger common-optimal-face certificate is still needed. In the
+refreshed post-WPT prefix, the governed WPT1101 publication is `13.18718`
+versus GAMS `13.18203`. The new source-topology certificate reconstructs
+`13.18718` exactly from the six weighted cases, superseding the alternative-run
+diagnostic for this convention-bound surface.
+
+Create that immutable zero-flow convention certificate directly from the
+official input GDX, the pinned GAMS result GDX, and the two canonical bundles
+with:
+
+```bash
+uv run --group gdx python -m tools.gate12.certify_zero_flow_price_convention \
+  --input /path/to/Pricing_20221106.gdx \
+  --reference-result-gdx /path/to/pyspd_gate12_results.gdx \
+  --system-directory /path/to/gams-system-directory \
+  --reference-bundle-root /path/to/incremental/gams-bundles \
+  --candidate-bundle-root /path/to/incremental/pyspd-bundles \
+  --trading-date 20221106 \
+  --output /path/to/zero-flow-price-certificate.json
+```
+
+Pass the resulting artifact to both `validate_semantic_replay` and
+`project_report_rows` with `--zero-flow-price-certificate`. Each consumer
+revalidates the certificate hash, source and bundle provenance, complete case
+order, and passing disposition before accepting only exact certified bus,
+node, and publication identities. All unrelated values remain fail-closed.
 
 For isolated partial inventories, pass `--execution-scope shard`. A complete
 shard then exits successfully and records `shard_complete: true`, while

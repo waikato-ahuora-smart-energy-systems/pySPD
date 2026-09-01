@@ -11,6 +11,9 @@ from tools.gate12.semantic_parity import (
     SemanticReplayResultStore,
     SemanticReplayValidator,
 )
+from tools.gate12.zero_flow_price_convention import (
+    ZeroFlowPriceConventionResultStore,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -20,6 +23,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--trading-date", required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--bus-price-certificate", type=Path)
+    parser.add_argument("--zero-flow-price-certificate", type=Path)
     return parser
 
 
@@ -28,14 +32,19 @@ def main(arguments: list[str] | None = None) -> int:
     certificate = (
         None
         if args.bus_price_certificate is None
-        else BusPriceDegeneracyResultStore().load(
-            args.bus_price_certificate.resolve()
-        )
+        else BusPriceDegeneracyResultStore().load(args.bus_price_certificate.resolve())
     )
     result = SemanticReplayValidator(
         reference_root=args.reference_bundle_root.resolve(),
         candidate_root=args.candidate_bundle_root.resolve(),
         bus_price_certificate=certificate,
+        zero_flow_price_certificate=(
+            None
+            if args.zero_flow_price_certificate is None
+            else ZeroFlowPriceConventionResultStore().load(
+                args.zero_flow_price_certificate.resolve()
+            )
+        ),
     ).compare(args.trading_date)
     target = SemanticReplayResultStore().write(result, args.output.resolve())
     print(

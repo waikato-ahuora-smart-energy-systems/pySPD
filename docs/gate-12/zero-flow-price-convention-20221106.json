@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "profile": "gate12-zero-flow-price-convention-evidence-index-v1",
+  "trading_date": "20221106",
+  "passed": true,
+  "source_sha256": "282ac2abeaa2f0c7c6e26b967e2ba90289c0ba5a9e696b99069d11350d3037b8",
+  "reference_result_gdx_sha256": "dab5ed719386968244868f5e2e07cd46e83be22ce756748820f307bc3901f715",
+  "reference_bundle_sha256": "e824a75c89939ea250e0a63d81b75cd0bac81c613aadda6dcb07be4fa0a066f0",
+  "candidate_bundle_sha256": "6b01efdf84eacfac717a47df9927482316288e0b7ab2ccc5c645a1ed25ef1f71",
+  "topology_sha256": "2bd0d390164c6ba4ac9ed590036e5137be8e0064515f0a4846aea81537144274",
+  "full_certificate_logical_sha256": "fd15aeebabcbd844253e3ca565a33fe5d84b1f9d3a535dfacf44c6cdc5c2a2c7",
+  "logical_sha256": "ec68fb1e13ef0ec122f563f4ab2f50135dc73361abccf4a4e014cc05ef9aa319",
+  "method": {
+    "price_convention": "one-sided objective sensitivity to +1 MW nodal load",
+    "zero_flow_proof": [
+      "reported branch flow for affected cases",
+      "zero-injection single-branch leaf balance for publication predecessors"
+    ],
+    "required_checks": [
+      "electrically connected single-branch leaf",
+      "zero generation and load",
+      "no active offer or bid node",
+      "positive inward and outward first loss factors",
+      "GAMS marginal equals a valid load-side or export-side derivative",
+      "PySPD marginal equals the analytic load-side derivative",
+      "material node delta equals source allocation projection",
+      "published value equals seconds-weighted five-decimal reconstruction"
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "51012022111800831",
+      "date_time": "06-NOV-2022 07:00",
+      "certified_bus_count": 2,
+      "certified_nodes": [],
+      "maximum_projection_residual": 0.0,
+      "passed": true
+    },
+    {
+      "case_id": "51012022111805834",
+      "date_time": "06-NOV-2022 07:05",
+      "certified_bus_count": 3,
+      "certified_nodes": [],
+      "maximum_projection_residual": 0.0,
+      "passed": true
+    },
+    {
+      "case_id": "51012022111810835",
+      "date_time": "06-NOV-2022 07:10",
+      "certified_bus_count": 2,
+      "certified_nodes": [],
+      "maximum_projection_residual": 0.0,
+      "passed": true
+    },
+    {
+      "case_id": "61012022110425024",
+      "date_time": "06-NOV-2022 17:25",
+      "certified_bus_count": 51,
+      "certified_nodes": ["KIN1009"],
+      "maximum_projection_residual": 0.0,
+      "passed": true
+    }
+  ],
+  "publications": [
+    {
+      "identity": ["TP15", "KIN1009"],
+      "gams_nzd_per_mwh": 0.07195,
+      "pyspd_nzd_per_mwh": 0.07198,
+      "reconstructed_nzd_per_mwh": 0.07198,
+      "reconstruction_residual": 0.0,
+      "total_seconds": 1780.0,
+      "contribution_count": 6,
+      "contributions_sha256": "7d3f5e2eb892e45d5a6fc708961b5d0e4fa6437f8fe8e83e70ee233fdfd51ae9",
+      "passed": true
+    },
+    {
+      "identity": ["TP35", "KIN1009"],
+      "gams_nzd_per_mwh": 13.21446,
+      "pyspd_nzd_per_mwh": 13.2206,
+      "reconstructed_nzd_per_mwh": 13.2206,
+      "reconstruction_residual": 0.0,
+      "total_seconds": 1800.0,
+      "contribution_count": 6,
+      "contributions_sha256": "8433f0c258f38978353997b075bddd219000734655cbdafb4382a07012f84d5c",
+      "passed": true
+    },
+    {
+      "identity": ["TP35", "WPT1101"],
+      "gams_nzd_per_mwh": 13.18203,
+      "pyspd_nzd_per_mwh": 13.18718,
+      "reconstructed_nzd_per_mwh": 13.18718,
+      "reconstruction_residual": 0.0,
+      "total_seconds": 1800.0,
+      "contribution_count": 6,
+      "contributions_sha256": "607a2ca1a1c7be455fa47031c7a3ff722a1c98a9ce1040b666386cc975ae0b5a",
+      "passed": true
+    }
+  ],
+  "comparison_results": {
+    "semantic": {
+      "profile": "gams-pyspd-semantic-tolerance-zero-flow-certified-v2",
+      "numeric_unresolved_difference_count": 0,
+      "report_schema_unresolved_difference_count": 4,
+      "logical_sha256": "0b2475ee65c2f29e1166bc5c06883aecf22c9e57b336d0eebac27d7b7ec460a3"
+    },
+    "mapped_report_rows": {
+      "profile": "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v2",
+      "compared_value_count": 13133,
+      "certified_difference_count": 57,
+      "above_precision_count": 0,
+      "missing_identity_count": 0,
+      "extra_identity_count": 0,
+      "unimplemented_table_count": 8,
+      "logical_sha256": "2d08c42fe56be5e518836abf37b414e2ba8ae2c6cdc3f112c96dce09475d19c4"
+    }
+  }
+}

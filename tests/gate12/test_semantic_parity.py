@@ -21,6 +21,12 @@ from tools.gate12.semantic_parity import (
     SemanticReplayResultStore,
     SemanticReplayValidator,
 )
+from tools.gate12.zero_flow_price_convention import (
+    PublicationContribution,
+    ZeroFlowCaseInputs,
+    ZeroFlowPriceConventionResult,
+    ZeroFlowPriceConventionValidator,
+)
 
 
 def _json(payload: object) -> bytes:
@@ -29,10 +35,7 @@ def _json(payload: object) -> bytes:
 
 def _mapping(*rows: tuple[str, float]) -> bytes:
     return _json(
-        [
-            {"identity": [identity], "value": value.hex()}
-            for identity, value in rows
-        ]
+        [{"identity": [identity], "value": value.hex()} for identity, value in rows]
     )
 
 
@@ -47,9 +50,7 @@ def _work_item() -> IncrementalReplayWorkItem:
 
 
 def _write_bundle(root: Path, profile: str, *, node_price: float) -> None:
-    surfaces = {
-        surface: _json({"value": 1.0}) for surface in REQUIRED_E2E_SURFACES
-    }
+    surfaces = {surface: _json({"value": 1.0}) for surface in REQUIRED_E2E_SURFACES}
     surfaces["node-price"] = _mapping(("NODE", node_price))
     case = CanonicalCaseSurfaces(
         case_id="affected",
@@ -99,19 +100,19 @@ def test_fixed_sos_weights_compare_support_not_continuous_magnitude() -> None:
     accepted = comparator.compare_surface(
         surface="fixed-discrete-pricing-state",
         reference=_json(
-            {"fixed_sos_members": [{"identity": identity, "value": 0.8.hex()}]}
+            {"fixed_sos_members": [{"identity": identity, "value": (0.8).hex()}]}
         ),
         candidate=_json(
-            {"fixed_sos_members": [{"identity": identity, "value": 0.2.hex()}]}
+            {"fixed_sos_members": [{"identity": identity, "value": (0.2).hex()}]}
         ),
     )
     rejected = comparator.compare_surface(
         surface="fixed-discrete-pricing-state",
         reference=_json(
-            {"fixed_sos_members": [{"identity": identity, "value": 0.0.hex()}]}
+            {"fixed_sos_members": [{"identity": identity, "value": (0.0).hex()}]}
         ),
         candidate=_json(
-            {"fixed_sos_members": [{"identity": identity, "value": 0.2.hex()}]}
+            {"fixed_sos_members": [{"identity": identity, "value": (0.2).hex()}]}
         ),
     )
 
@@ -215,9 +216,118 @@ def test_passing_case_certificate_resolves_only_numeric_bus_delta() -> None:
     )
 
     assert result.passed
-    assert result.accepted_reason_counts == {
-        "node-allocation-nullspace-certificate": 2
-    }
+    assert result.accepted_reason_counts == {"node-allocation-nullspace-certificate": 2}
+
+
+def test_zero_flow_certificate_resolves_only_named_bus_node_and_publication() -> None:
+    inputs = ZeroFlowCaseInputs(
+        case_id="case",
+        date_time="time",
+        branches={"LINE": ("PARENT", "LEAF")},
+        first_loss_factors={
+            ("LINE", "forward"): 0.001,
+            ("LINE", "backward"): 0.001,
+        },
+        electrical_buses=frozenset({"PARENT", "LEAF"}),
+        bus_generation={"PARENT": 1.0, "LEAF": 0.0},
+        bus_load={"PARENT": 1.0, "LEAF": 0.0},
+        branch_flow={"LINE": 0.0},
+        node_buses={"NODE": frozenset({"LEAF"})},
+        node_bus_allocation={("NODE", "LEAF"): 1.0},
+        offer_nodes=frozenset(),
+        bid_nodes=frozenset(),
+    )
+    reference_bus = {"PARENT": 10.0, "LEAF": 9.99}
+    candidate_bus = {"PARENT": 10.0, "LEAF": 10.0 / 0.999}
+    validator = ZeroFlowPriceConventionValidator()
+    case = validator.compare_case(
+        inputs=inputs,
+        reference_bus=reference_bus,
+        candidate_bus=candidate_bus,
+        reference_node={"NODE": reference_bus["LEAF"]},
+        candidate_node={"NODE": candidate_bus["LEAF"]},
+    )
+    publication = validator.compare_publication(
+        trading_period="TP1",
+        node="NODE",
+        reference=9.99,
+        candidate=10.01001,
+        contributions=(PublicationContribution("case", "time", 300.0, 10.01001),),
+        decimals=5,
+    )
+    certificate = ZeroFlowPriceConventionResult.create(
+        trading_date="20221106",
+        source_sha256="1" * 64,
+        reference_result_gdx_sha256="2" * 64,
+        reference_bundle_sha256="3" * 64,
+        candidate_bundle_sha256="4" * 64,
+        topology_sha256="5" * 64,
+        cases=(case,),
+        publications=(publication,),
+    )
+    comparator = SemanticCaseComparator(SemanticParityPolicy())
+
+    bus = comparator.compare_surface(
+        surface="repaired-bus-price",
+        reference=_json(
+            [{"identity": ["case", "time", "LEAF"], "value": (9.99).hex()}]
+        ),
+        candidate=_json(
+            [
+                {
+                    "identity": ["case", "time", "LEAF"],
+                    "value": (10.0 / 0.999).hex(),
+                }
+            ]
+        ),
+        zero_flow_price_certificate=certificate,
+    )
+    node = comparator.compare_surface(
+        surface="node-price",
+        reference=_json(
+            [{"identity": ["case", "time", "NODE"], "value": (9.99).hex()}]
+        ),
+        candidate=_json(
+            [
+                {
+                    "identity": ["case", "time", "NODE"],
+                    "value": (10.0 / 0.999).hex(),
+                }
+            ]
+        ),
+        zero_flow_price_certificate=certificate,
+    )
+    published = comparator.compare_surface(
+        surface="rounded-published-output",
+        reference=_json(
+            {"energy": [{"identity": ["TP1", "NODE"], "value": (9.99).hex()}]}
+        ),
+        candidate=_json(
+            {
+                "energy": [
+                    {
+                        "identity": ["TP1", "NODE"],
+                        "value": (10.01001).hex(),
+                    }
+                ]
+            }
+        ),
+        zero_flow_price_certificate=certificate,
+    )
+    unrelated = comparator.compare_surface(
+        surface="node-price",
+        reference=_json(
+            [{"identity": ["case", "time", "OTHER"], "value": (10.0).hex()}]
+        ),
+        candidate=_json(
+            [{"identity": ["case", "time", "OTHER"], "value": (11.0).hex()}]
+        ),
+        zero_flow_price_certificate=certificate,
+    )
+
+    assert bus.passed and node.passed and published.passed
+    assert bus.accepted_reason_counts == {"zero-flow-load-derivative-certificate": 1}
+    assert not unrelated.passed
 
 
 def test_exact_control_surface_is_not_relaxed() -> None:

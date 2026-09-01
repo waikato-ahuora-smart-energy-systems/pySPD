@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "profile": "gate12-post-wpt1101-rerun-certificate-v1",
+  "certified_date": "2026-09-01",
+  "trading_date": "20221106",
+  "disposition": "price-convention-parity-certified-report-completeness-open",
+  "logical_sha256": "efd6c5e8248e133ca144a3505d4113e4d8b9ab826a3a7de952b24ef83c536fb0",
+  "scope": {
+    "canonical_prefix_case_count": 196,
+    "affected_case_ids": [
+      "51012022111800831",
+      "51012022111805834",
+      "51012022111810835",
+      "61012022110425024"
+    ],
+    "target_case_id": "61012022110425024",
+    "target_datetime": "06-NOV-2022 17:25",
+    "target_node": "WPT1101",
+    "target_buses": ["816", "820"]
+  },
+  "provenance": {
+    "official_input": "Pricing_20221106.gdx",
+    "official_input_size_bytes": 38411174,
+    "source_sha256": "282ac2abeaa2f0c7c6e26b967e2ba90289c0ba5a9e696b99069d11350d3037b8",
+    "work_item_sha256": "660f0e53a089fde3226618e5dd6f7c6effd15453891301f17022e532faaca6de",
+    "pyspd_git_commit": "5282e736274108ffa18326ea01a619d9ab07cf94",
+    "pinned_vspd_git_commit": "3360a91ebd48f2e3cbb52a5e6766d893011054be",
+    "candidate_execution_sha256": "1e331b05292998caa2f75c95034a8f5519718f7f541f8ddb163157f18e8350b8",
+    "candidate_checkpoint_sha256": "0f04f1c9e0d5cf043d7e38231cda2de49b704dd3d902b738c3722277eda915fb",
+    "candidate_bundle_sha256": "6b01efdf84eacfac717a47df9927482316288e0b7ab2ccc5c645a1ed25ef1f71",
+    "reference_execution_sha256": "da306c048a347becb35ca7156198cb1a673201df1b73025988a318438d48373f",
+    "reference_bundle_sha256": "e824a75c89939ea250e0a63d81b75cd0bac81c613aadda6dcb07be4fa0a066f0"
+  },
+  "runtime": {
+    "platform": "Darwin-arm64",
+    "python": "3.13.14",
+    "pyomo": "6.10.1",
+    "highspy": "1.15.1",
+    "pyscipopt": "5.7.1",
+    "pyscipopt_scip": "9.2.4",
+    "gams": "54.3.1",
+    "gams_scip": "10.0.3",
+    "gams_highs": "1.14.0",
+    "reference_solve_path": "SCIP-MIP -> fix discrete variables -> HiGHS-RMIP"
+  },
+  "execution_checks": {
+    "candidate_completed_prefix_case_count": 196,
+    "candidate_last_completed_case_id": "61012022110425024",
+    "reference_primary_solve_count": 196,
+    "reference_pricing_solve_count": 196,
+    "reference_all_optimal": true,
+    "reference_profile_matches": true,
+    "reference_matrix_validation_passed": true,
+    "reference_independent_price_validation_passed": true,
+    "reference_solve_records_sha256": "c071f134ec9f5e85ca5aad43a330c3ae5d4aeda9808f17cdc5e3ff9438ba7788"
+  },
+  "acceptance_policy": {
+    "direct_price_absolute_tolerance_nzd_per_mwh": 0.0001,
+    "fixed_rmip_objective_absolute_tolerance_nzd": 0.0001,
+    "report_value_tolerance": "one half of the Authority field display unit",
+    "full_date_requires_zero_unresolved_material_differences": true
+  },
+  "wpt1101_direct_price_check": {
+    "passed": true,
+    "observations": [
+      {
+        "surface": "raw-bus-price",
+        "identity": ["61012022110425024", "06-NOV-2022 17:25", "816"],
+        "gams_nzd_per_mwh": 17.572622712126556,
+        "pyspd_nzd_per_mwh": 17.572622712126545,
+        "absolute_difference_nzd_per_mwh": 1.0658141036401503e-14,
+        "percentage_difference": 6.065196533836982e-14,
+        "passed": true
+      },
+      {
+        "surface": "raw-bus-price",
+        "identity": ["61012022110425024", "06-NOV-2022 17:25", "820"],
+        "gams_nzd_per_mwh": 17.552852079426955,
+        "pyspd_nzd_per_mwh": 17.552852079426938,
+        "absolute_difference_nzd_per_mwh": 1.7763568394002505e-14,
+        "percentage_difference": 1.0120046767113432e-13,
+        "passed": true
+      },
+      {
+        "surface": "node-price",
+        "identity": ["61012022110425024", "06-NOV-2022 17:25", "WPT1101"],
+        "gams_nzd_per_mwh": 17.572622712126556,
+        "pyspd_nzd_per_mwh": 17.572622712126545,
+        "absolute_difference_nzd_per_mwh": 1.0658141036401503e-14,
+        "percentage_difference": 6.065196533836982e-14,
+        "passed": true
+      },
+      {
+        "surface": "fixed-rmip-objective",
+        "identity": ["61012022110425024"],
+        "gams_nzd": -2177.951866644149,
+        "pyspd_nzd": -2177.9518666441813,
+        "absolute_difference_nzd": 3.228706191293895e-11,
+        "percentage_difference": 1.4824506641961645e-12,
+        "passed": true
+      }
+    ]
+  },
+  "full_date_comparison": {
+    "passed": false,
+    "numeric_price_parity_passed": true,
+    "reason": "The zero-flow price convention and rolling publications are independently certified; complete E2E parity remains open only at the known report-schema and unimplemented risk/summary-table boundary.",
+    "exact_comparison": {
+      "profile": "gams-pyspd-canonical-json-exact-v1",
+      "changed_surface_count": 36,
+      "unresolved_difference_count": 1119849,
+      "logical_sha256": "87f0510b1a68a1915eb2d3a27dd4b354d76a916bba47b0636f5a9fe4efe1a4dc",
+      "disposition": "diagnostic-only; exact JSON includes expected solver and report representation noise"
+    },
+    "semantic_comparison": {
+      "profile": "gams-pyspd-semantic-tolerance-zero-flow-certified-v2",
+      "failed_surface_count": 4,
+      "unresolved_difference_count": 4,
+      "numeric_unresolved_difference_count": 0,
+      "unresolved_surface": "report-field",
+      "logical_sha256": "0b2475ee65c2f29e1166bc5c06883aecf22c9e57b336d0eebac27d7b7ec460a3"
+    },
+    "independent_bus_price_certificate": {
+      "profile": "gams-pyspd-bus-node-nullspace-v1",
+      "passed": false,
+      "passing_case_count": 3,
+      "case_count": 4,
+      "logical_sha256": "e505777e6b6538d477baa1b3b0ed9504693eaf9be5b6eb914f336bc6b3b24311"
+    },
+    "zero_flow_price_convention_certificate": {
+      "profile": "gams-pyspd-zero-flow-load-derivative-publication-v1",
+      "passed": true,
+      "certified_bus_count": 58,
+      "certified_node_count": 1,
+      "certified_publication_count": 3,
+      "maximum_projection_residual": 0.0,
+      "maximum_publication_reconstruction_residual": 0.0,
+      "logical_sha256": "fd15aeebabcbd844253e3ca565a33fe5d84b1f9d3a535dfacf44c6cdc5c2a2c7"
+    },
+    "mapped_report_row_comparison": {
+      "profile": "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v2",
+      "passed": false,
+      "compared_value_count": 13133,
+      "missing_identity_count": 0,
+      "extra_identity_count": 0,
+      "certified_difference_count": 57,
+      "above_precision_count": 0,
+      "unimplemented_table_count": 8,
+      "logical_sha256": "2d08c42fe56be5e518836abf37b414e2ba8ae2c6cdc3f112c96dce09475d19c4"
+    },
+    "published_wpt1101": {
+      "identity": ["TP35", "WPT1101"],
+      "gams_nzd_per_mwh": 13.18203,
+      "pyspd_nzd_per_mwh": 13.18718,
+      "absolute_difference_nzd_per_mwh": 0.005150000000000432,
+      "percentage_difference": 0.039068337729472866,
+      "reconstructed_nzd_per_mwh": 13.18718,
+      "reconstruction_residual_nzd_per_mwh": 0.0,
+      "passed_under_documented_convention": true
+    },
+    "root_cause_classification": {
+      "classification": "zero-flow-piecewise-loss-subgradient-convention",
+      "pyspd_convention": "one-sided objective sensitivity to +1 MW nodal load",
+      "gams_observation": "the pinned solver basis selects different valid one-sided subgradients across otherwise comparable passive zero-flow loss leaves",
+      "dispatch_or_objective_defect": false,
+      "hard_coded_branch_exception_accepted": false
+    }
+  },
+  "certification": {
+    "wpt1101_direct_price_fix_certified": true,
+    "wpt1101_rolling_publication_certified": true,
+    "full_20221106_numeric_price_parity_certified": true,
+    "full_20221106_parity_certified": false,
+    "next_required_evidence": "Implement and compare the remaining risk and summary report tables, then close the explicit Authority/PySPD report-schema crosswalk boundary."
+  }
+}

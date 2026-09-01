@@ -14,6 +14,11 @@ from tools.gate12.report_row_parity import (
     ReportRowParityValidator,
     _logical_sha256,
 )
+from tools.gate12.zero_flow_price_convention import (
+    ZeroFlowBusObservation,
+    ZeroFlowCaseCertificate,
+    ZeroFlowPriceConventionResult,
+)
 
 
 def _json(payload: object) -> bytes:
@@ -111,6 +116,95 @@ def test_node_row_above_half_display_unit_fails() -> None:
 
     assert not result.passed
     assert result.tables[0].above_precision_count == 1
+
+
+def test_named_zero_flow_node_certificate_classifies_report_difference() -> None:
+    reference = _json(
+        {
+            "prefix_NodeResults_TP": {
+                "fields": ["CaseID", "DateTime", "Node", "Price ($/MWh)"],
+                "rows": [
+                    {
+                        "CaseID": "case",
+                        "DateTime": "time",
+                        "Node": "NODE",
+                        "Price ($/MWh)": "9.9900",
+                    }
+                ],
+            }
+        }
+    )
+    candidate = _json(
+        {
+            "node": {
+                "field_order": [
+                    "case_id",
+                    "date_time",
+                    "node",
+                    "price_nzd_per_mwh",
+                ],
+                "fields": [],
+                "rows": [
+                    {
+                        "case_id": "case",
+                        "date_time": "time",
+                        "node": "NODE",
+                        "price_nzd_per_mwh": "10.01001001001001",
+                    }
+                ],
+            }
+        }
+    )
+    observation = ZeroFlowBusObservation(
+        bus="LEAF",
+        branch="LINE",
+        parent_bus="PARENT",
+        inward_direction="forward",
+        first_inward_loss_factor=0.001,
+        first_outward_loss_factor=0.001,
+        reference_price=9.99,
+        candidate_price=10.0 / 0.999,
+        expected_load_derivative=10.0 / 0.999,
+        expected_export_derivative=9.99,
+        candidate_residual=0.0,
+        reference_residual=0.0,
+        reference_side="export",
+        zero_flow_evidence="reported-branch-flow",
+    )
+    case = ZeroFlowCaseCertificate(
+        case_id="case",
+        date_time="time",
+        observations=(observation,),
+        material_bus_identities=("LEAF",),
+        certified_node_identities=("NODE",),
+        unresolved_bus_reasons={},
+        unresolved_node_reasons={},
+        maximum_node_projection_residual=0.0,
+        price_tolerance=1e-4,
+        analytic_tolerance=1e-9,
+        projection_tolerance=1e-10,
+    )
+    certificate = ZeroFlowPriceConventionResult.create(
+        trading_date="20221106",
+        source_sha256="1" * 64,
+        reference_result_gdx_sha256="2" * 64,
+        reference_bundle_sha256="3" * 64,
+        candidate_bundle_sha256="4" * 64,
+        topology_sha256="5" * 64,
+        cases=(case,),
+        publications=(),
+    )
+
+    result = ReportRowParityValidator().compare(
+        case_id="case",
+        reference=reference,
+        candidate=candidate,
+        zero_flow_price_certificate=certificate,
+    )
+
+    assert result.passed
+    assert result.tables[0].certified_difference_count == 1
+    assert result.tables[0].above_precision_count == 0
 
 
 def test_reserve_wide_to_long_pivot_is_identity_strict() -> None:

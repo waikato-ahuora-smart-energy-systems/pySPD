@@ -20,10 +20,16 @@ from tools.gate12.report_crosswalk import (
     REPORT_SCHEMA_CROSSWALK_PROFILE,
     ReportSchemaCrosswalkValidator,
 )
+from tools.gate12.zero_flow_price_convention import (
+    ZeroFlowPriceConventionResult,
+)
 
 REPORT_ROW_PARITY_PROFILE = "authority-pyspd-mapped-report-row-parity-v2"
 REPORT_ROW_BUS_CERTIFIED_PROFILE = (
     "authority-pyspd-mapped-report-row-parity-bus-certified-v2"
+)
+REPORT_ROW_ZERO_FLOW_CERTIFIED_PROFILE = (
+    "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v2"
 )
 _MAX_EXAMPLES = 20
 
@@ -462,12 +468,20 @@ class ReportRowParityValidator:
         reference: bytes,
         candidate: bytes,
         bus_price_certificate: BusPriceCaseCertificate | None = None,
+        zero_flow_price_certificate: ZeroFlowPriceConventionResult | None = None,
     ) -> ReportCaseRowParity:
         if bus_price_certificate is not None and (
             not bus_price_certificate.passed or bus_price_certificate.case_id != case_id
         ):
             raise EvidenceContractError(
                 "REQ-G12-REPORT-ROW: invalid case bus-price certificate"
+            )
+        if (
+            zero_flow_price_certificate is not None
+            and not zero_flow_price_certificate.passed
+        ):
+            raise EvidenceContractError(
+                "REQ-G12-REPORT-ROW: invalid zero-flow price certificate"
             )
         schema = ReportSchemaCrosswalkValidator().compare(
             case_id=case_id, reference=reference, candidate=candidate
@@ -499,6 +513,7 @@ class ReportRowParityValidator:
                     reference_tables[reference_table],
                     candidate_payload.get(projections[0].candidate_table),
                     bus_price_certificate,
+                    zero_flow_price_certificate,
                 )
             )
         return ReportCaseRowParity(
@@ -539,6 +554,7 @@ class ReportRowParityValidator:
         reference_table: dict[str, Any],
         candidate_table: object,
         bus_price_certificate: BusPriceCaseCertificate | None,
+        zero_flow_price_certificate: ZeroFlowPriceConventionResult | None,
     ) -> ReportRowTableResult:
         candidate_name = projections[0].candidate_table
         reference_rows = self._rows(reference_table, "reference")
@@ -580,6 +596,16 @@ class ReportRowParityValidator:
                 ):
                     certified += 1
                     continue
+                if (
+                    zero_flow_price_certificate is not None
+                    and self._zero_flow_certifies_report_value(
+                        zero_flow_price_certificate,
+                        projection.observable,
+                        key,
+                    )
+                ):
+                    certified += 1
+                    continue
                 above += 1
                 if len(differences) < _MAX_EXAMPLES:
                     differences.append(
@@ -606,6 +632,20 @@ class ReportRowParityValidator:
             extra_identity_examples=tuple(extra_examples),
             differences=tuple(differences),
         )
+
+    @staticmethod
+    def _zero_flow_certifies_report_value(
+        certificate: ZeroFlowPriceConventionResult,
+        observable: str,
+        identity: tuple[str, ...],
+    ) -> bool:
+        if observable == "repaired-bus-price" and len(identity) >= 3:
+            return certificate.certifies_bus(identity[0], identity[2])
+        if observable == "node-price" and len(identity) >= 3:
+            return certificate.certifies_node(identity[0], identity[2])
+        if observable == "published-energy-price" and len(identity) >= 2:
+            return certificate.certifies_publication(identity[0], identity[1])
+        return False
 
     def _indexed_values(
         self,
@@ -739,6 +779,7 @@ class ReportRowParityResult:
     candidate_bundle_sha256: str
     schema_crosswalk_sha256: str
     bus_price_certificate_sha256: str | None
+    zero_flow_price_certificate_sha256: str | None
     cases: tuple[ReportCaseRowParity, ...]
     logical_sha256: str
 
@@ -758,6 +799,9 @@ class ReportRowParityResult:
             "candidate_bundle_sha256": self.candidate_bundle_sha256,
             "schema_crosswalk_sha256": self.schema_crosswalk_sha256,
             "bus_price_certificate_sha256": self.bus_price_certificate_sha256,
+            "zero_flow_price_certificate_sha256": (
+                self.zero_flow_price_certificate_sha256
+            ),
             "passed": self.passed,
             "missing_identity_count": sum(
                 case.missing_identity_count for case in self.cases
@@ -791,11 +835,13 @@ class ReportRowParityRunner:
         candidate_root: Path,
         schema_crosswalk: Path,
         bus_price_certificate: BusPriceDegeneracyResult | None = None,
+        zero_flow_price_certificate: ZeroFlowPriceConventionResult | None = None,
     ) -> None:
         self.reference_store = CanonicalReplayBundleStore(reference_root)
         self.candidate_store = CanonicalReplayBundleStore(candidate_root)
         self.schema_payload, self.schema_sha256 = self._load_crosswalk(schema_crosswalk)
         self.bus_price_certificate = bus_price_certificate
+        self.zero_flow_price_certificate = zero_flow_price_certificate
         self.validator = ReportRowParityValidator()
 
     def compare(self, trading_date: str) -> ReportRowParityResult:
@@ -843,6 +889,24 @@ class ReportRowParityRunner:
             certificate_by_id = {case.case_id: case for case in certificate.cases}
             profile = REPORT_ROW_BUS_CERTIFIED_PROFILE
             certificate_sha256 = certificate.logical_sha256
+        zero_flow_certificate_sha256 = None
+        if self.zero_flow_price_certificate is not None:
+            zero_flow = self.zero_flow_price_certificate
+            zero_flow.validate()
+            if (
+                not zero_flow.passed
+                or zero_flow.trading_date != trading_date
+                or zero_flow.source_sha256 != reference.source_sha256
+                or zero_flow.reference_bundle_sha256 != reference.logical_sha256
+                or zero_flow.candidate_bundle_sha256 != candidate.logical_sha256
+                or tuple(case.case_id for case in zero_flow.cases)
+                != reference.affected_case_ids
+            ):
+                raise EvidenceContractError(
+                    "REQ-G12-REPORT-ROW: zero-flow certificate provenance does not match"
+                )
+            profile = REPORT_ROW_ZERO_FLOW_CERTIFIED_PROFILE
+            zero_flow_certificate_sha256 = zero_flow.logical_sha256
         cases = []
         for expected in reference_cases:
             actual = candidate_by_id[expected.case_id]
@@ -861,6 +925,7 @@ class ReportRowParityRunner:
                     reference=expected.surfaces["report-field"],
                     candidate=actual.surfaces["report-field"],
                     bus_price_certificate=certificate_by_id.get(expected.case_id),
+                    zero_flow_price_certificate=self.zero_flow_price_certificate,
                 )
             )
         unsigned = self._unsigned(
@@ -871,6 +936,7 @@ class ReportRowParityRunner:
             reference.logical_sha256,
             candidate.logical_sha256,
             certificate_sha256,
+            zero_flow_certificate_sha256,
             tuple(cases),
         )
         return ReportRowParityResult(
@@ -882,6 +948,7 @@ class ReportRowParityRunner:
             candidate_bundle_sha256=candidate.logical_sha256,
             schema_crosswalk_sha256=self.schema_sha256,
             bus_price_certificate_sha256=certificate_sha256,
+            zero_flow_price_certificate_sha256=zero_flow_certificate_sha256,
             cases=tuple(cases),
             logical_sha256=_logical_sha256(unsigned),
         )
@@ -895,6 +962,7 @@ class ReportRowParityRunner:
         reference_bundle_sha256: str,
         candidate_bundle_sha256: str,
         bus_price_certificate_sha256: str | None,
+        zero_flow_price_certificate_sha256: str | None,
         cases: tuple[ReportCaseRowParity, ...],
     ) -> dict[str, object]:
         result = ReportRowParityResult(
@@ -906,6 +974,7 @@ class ReportRowParityRunner:
             candidate_bundle_sha256,
             self.schema_sha256,
             bus_price_certificate_sha256,
+            zero_flow_price_certificate_sha256,
             cases,
             "",
         )
