@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "profile": "gate12-native-sos-regression-v1",
+  "trading_date": "20221106",
+  "certified_date": "2026-09-02",
+  "logical_sha256": "ea2d281fc6fa9936ccf2a655edb76c4c813f547f5273d8910bab2edf9c519679",
+  "reference_bundle_sha256": "e824a75c89939ea250e0a63d81b75cd0bac81c613aadda6dcb07be4fa0a066f0",
+  "candidate_bundle_sha256": "5ab2c6cbb6053ce6d6bf6573d8c3244458c6c6a509a7dcbf0a85c5a0b596c4c2",
+  "candidate_execution_sha256": "0c668c3279ff208a05ea5fa214bfa315906782711c492644d047aa333572e993",
+  "canonical_prefix_case_count": 196,
+  "affected_case_ids": [
+    "51012022111800831",
+    "51012022111805834",
+    "51012022111810835",
+    "61012022110425024"
+  ],
+  "all_candidate_solves_optimal": true,
+  "maximum_fixed_rmip_objective_error_nzd": 1.3642420526593924e-11,
+  "quantified_diagnostic": {
+    "changed_surface_count": 36,
+    "unresolved_leaf_count": 1313446,
+    "logical_sha256": "ceb31a70169d5f9f1b057c2938bcfcf2d66332a2cf0af266e2272a5b724a2e5e"
+  },
+  "schema_crosswalk": {
+    "passed": true,
+    "logical_sha256": "4798ade14bf2b2ca0a370d355abe903b19c7af573fb31e5f29fe431e978b04ea"
+  },
+  "zero_flow_price_certificate": {
+    "passed": true,
+    "certified_bus_count": 58,
+    "certified_node_count": 1,
+    "certified_publication_count": 2,
+    "logical_sha256": "2d5aceaf401e43812b2038adf8dbed029e58a87fec66e222530f8623ec1ab783"
+  },
+  "mapped_report_result": {
+    "profile": "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v5",
+    "passed": true,
+    "compared_value_count": 68558,
+    "certified_difference_count": 254,
+    "above_precision_count": 0,
+    "missing_identity_count": 0,
+    "extra_identity_count": 0,
+    "unimplemented_table_count": 0,
+    "logical_sha256": "a0a2e5b1f340e725c93bf546c787317d041830d9f3064d84fdd1b080198a4eb6"
+  },
+  "semantic_result": {
+    "profile": "gams-pyspd-semantic-tolerance-zero-flow-report-certified-v4",
+    "passed": true,
+    "case_count": 4,
+    "surface_count": 48,
+    "failed_surface_count": 0,
+    "unresolved_difference_count": 0,
+    "logical_sha256": "6779c4ed44eb1d5da6859654295a6cc3e253a7726726d243ca8b3b66b5094e67"
+  },
+  "disposition": "current-native-sos-execution-profile-regression-passed"
+}
