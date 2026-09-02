@@ -380,15 +380,17 @@ class ACNetworkComponent(ModelComponent):
         def bus_balance(_b: pyo.Block, ca: str, dt: str, bus: str) -> Any:
             bus_key = (ca, dt, bus)
             supply = sum(
-                data.node_bus_allocation[ca, dt, node, bus] * generation[offer]
+                data.node_bus_allocation.get((ca, dt, node, bus), 0.0)
+                * generation[offer]
                 for offer, node in build_index.offers.get(bus_key, ())
             )
             demand_bid = sum(
-                data.node_bus_allocation[ca, dt, node, bus] * purchase[bid]
+                data.node_bus_allocation.get((ca, dt, node, bus), 0.0)
+                * purchase[bid]
                 for bid, node in build_index.bids.get(bus_key, ())
             )
             load = sum(
-                data.node_bus_allocation[ca, dt, node, bus]
+                data.node_bus_allocation.get((ca, dt, node, bus), 0.0)
                 * data.node_load[ca, dt, node]
                 for node in build_index.nodes.get(bus_key, ())
             )
@@ -408,7 +410,7 @@ class ACNetworkComponent(ModelComponent):
                 for branch in build_index.fixed_loss_branches.get(bus_key, ())
             )
             scarcity_supply = sum(
-                data.node_bus_allocation[ca, dt, node, bus]
+                data.node_bus_allocation.get((ca, dt, node, bus), 0.0)
                 * scarcity[ca, dt, node]
                 for node in build_index.nodes.get(bus_key, ())
             )

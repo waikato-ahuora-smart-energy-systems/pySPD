@@ -25,6 +25,7 @@ replaces; accepted history is not rewritten.
 | [ADR-0018](0018-portable-published-price-report-tolerance.md) | Apply the portable price tolerance to published report rows | Accepted by project direction for the portable Gate 12 profile |
 | [ADR-0019](0019-native-scip-sos2-application-state.md) | Use native SOS2 state in the SCIP application solve | Accepted for the SCIP/HiGHS Gate 12 profile |
 | [ADR-0020](0020-binding-market-node-dual-allocation.md) | Certify aggregate-preserving dual allocation across one binding market-node limit family | Accepted for the SCIP/HiGHS Gate 12 report profile |
+| [ADR-0021](0021-bounded-scip-sos-support-residue.md) | Bound structural native-SOS residue at twice the qualified SCIP feasibility tolerance | Accepted for the SCIP/HiGHS Gate 12 profile |
 
 ## Status values
 

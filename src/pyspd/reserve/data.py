@@ -306,6 +306,10 @@ class ReserveData:
             for case, dt, _island, group, risk in island_risk_group
             if risk in GEN_RISKS
         }
+        fk_band = {
+            offer: offer_parameter.get((*offer, "FKbandMW"), 0.0)
+            for offer in hvdc_case.offers
+        }
         hvdc_secondary: dict[Key, float] = {
             (*island, risk): island_parameter.get((*island, risk), 0.0)
             for island in island_domain
@@ -338,7 +342,7 @@ class ReserveData:
             hvdc_ramp,
             secondary_offer,
             secondary_group,
-            {offer: 0.0 for offer in hvdc_case.offers},
+            fk_band,
             hvdc_secondary,
             hvdc_secondary_subtractor,
             share_enabled,

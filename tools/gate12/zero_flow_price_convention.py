@@ -619,6 +619,30 @@ class ZeroFlowPriceConventionValidator:
             else:
                 observations.append(observation)
 
+        # A zero-loss leaf can inherit its price from another material bus.
+        # Accept that chain only when it eventually reaches a non-material
+        # anchor; otherwise a cycle could certify itself without evidence.
+        observation_by_bus = {item.bus: item for item in observations}
+        material_set = set(material_buses)
+
+        def anchored(bus: Bus, visiting: frozenset[Bus] = frozenset()) -> bool:
+            if bus in visiting:
+                return False
+            observation = observation_by_bus.get(bus)
+            if observation is None:
+                return False
+            if observation.parent_bus not in material_set:
+                return True
+            return anchored(observation.parent_bus, visiting | {bus})
+
+        anchored_observations: list[ZeroFlowBusObservation] = []
+        for item in observations:
+            if anchored(item.bus):
+                anchored_observations.append(item)
+            else:
+                unresolved_bus[item.bus] = "unanchored-zero-flow-component"
+        observations = anchored_observations
+
         certified_buses = {observation.bus for observation in observations}
         bus_delta = {
             bus: candidate_bus[bus] - reference_bus[bus] for bus in reference_bus
@@ -685,9 +709,9 @@ class ZeroFlowPriceConventionValidator:
         reference_bus: Mapping[Bus, float],
         candidate_bus: Mapping[Bus, float],
     ) -> tuple[ZeroFlowBusObservation | None, str | None]:
-        branches = incident.get(bus, ())
-        if len(branches) != 1:
-            return None, "not-single-branch-leaf"
+        branches = tuple(sorted(incident.get(bus, ())))
+        if not branches:
+            return None, "missing-incident-branch"
         if bus not in inputs.electrical_buses:
             return None, "electrically-disconnected-leaf"
         if (
@@ -695,19 +719,24 @@ class ZeroFlowPriceConventionValidator:
             or abs(inputs.bus_load.get(bus, 0.0)) > self.injection_tolerance
         ):
             return None, "nonzero-leaf-injection"
-        leaf_nodes = {node for node, buses in inputs.node_buses.items() if bus in buses}
-        if leaf_nodes & (inputs.offer_nodes | inputs.bid_nodes):
-            return None, "active-offer-or-bid-node"
 
-        branch = branches[0]
         if inputs.branch_flow is not None:
-            if branch not in inputs.branch_flow:
+            if any(branch not in inputs.branch_flow for branch in branches):
                 return None, "missing-branch-flow-evidence"
-            if abs(inputs.branch_flow[branch]) > self.flow_tolerance:
+            if any(
+                abs(inputs.branch_flow[branch]) > self.flow_tolerance
+                for branch in branches
+            ):
                 return None, "nonzero-branch-flow"
             zero_flow_evidence = "reported-branch-flow"
-        else:
+        elif len(branches) == 1:
             zero_flow_evidence = "zero-injection-leaf-balance"
+        else:
+            return None, "missing-component-flow-evidence"
+
+        branch = self._passive_boundary_branch(inputs, branches)
+        if branch is None:
+            return None, "not-single-loss-boundary-component"
 
         from_bus, to_bus = inputs.branches[branch]
         if bus == to_bus:
@@ -724,8 +753,10 @@ class ZeroFlowPriceConventionValidator:
             return None, "missing-parent-price"
         inward_factor = inputs.first_loss_factors.get((branch, inward), 0.0)
         outward_factor = inputs.first_loss_factors.get((branch, outward), 0.0)
-        if inward_factor <= 0.0 or outward_factor <= 0.0:
-            return None, "missing-positive-first-loss-factor"
+        if inward_factor < 0.0 or outward_factor < 0.0:
+            return None, "invalid-negative-first-loss-factor"
+        if (inward_factor == 0.0) != (outward_factor == 0.0):
+            return None, "incomplete-first-loss-factor"
 
         share = inputs.receiving_end_loss_proportion
         load_denominator = 1.0 - share * inward_factor
@@ -772,6 +803,121 @@ class ZeroFlowPriceConventionValidator:
             ),
             None,
         )
+
+    def canonical_load_price(
+        self,
+        *,
+        inputs: ZeroFlowCaseInputs,
+        reference_bus: Mapping[Bus, float],
+        bus: Bus,
+    ) -> float:
+        """Reconstruct one load-side price through an anchored passive tree."""
+
+        incident: dict[Bus, list[Branch]] = defaultdict(list)
+        for branch, (from_bus, to_bus) in inputs.branches.items():
+            incident[from_bus].append(branch)
+            incident[to_bus].append(branch)
+        memo: dict[Bus, float] = {}
+
+        def visit(item: Bus, visiting: frozenset[Bus]) -> float:
+            if item in memo:
+                return memo[item]
+            if item in visiting:
+                raise EvidenceContractError(
+                    "REQ-G12-ZERO-FLOW: unanchored passive component"
+                )
+            branches = tuple(sorted(incident.get(item, ())))
+            if (
+                not branches
+                or item not in inputs.electrical_buses
+                or abs(inputs.bus_generation.get(item, 0.0))
+                > self.injection_tolerance
+                or abs(inputs.bus_load.get(item, 0.0)) > self.injection_tolerance
+                or inputs.branch_flow is not None
+                and (
+                    any(branch not in inputs.branch_flow for branch in branches)
+                    or any(
+                        abs(inputs.branch_flow[branch]) > self.flow_tolerance
+                        for branch in branches
+                    )
+                )
+            ):
+                return reference_bus[item]
+            branch = self._passive_boundary_branch(inputs, branches)
+            if branch is None:
+                return reference_bus[item]
+            from_bus, to_bus = inputs.branches[branch]
+            if item == to_bus:
+                parent, inward, outward = from_bus, "forward", "backward"
+            else:
+                parent, inward, outward = to_bus, "backward", "forward"
+            inward_factor = inputs.first_loss_factors.get((branch, inward), 0.0)
+            outward_factor = inputs.first_loss_factors.get((branch, outward), 0.0)
+            share = inputs.receiving_end_loss_proportion
+            load_denominator = 1.0 - share * inward_factor
+            export_denominator = 1.0 + (1.0 - share) * outward_factor
+            if (
+                inward_factor < 0.0
+                or outward_factor < 0.0
+                or (inward_factor == 0.0) != (outward_factor == 0.0)
+                or load_denominator <= 0.0
+                or export_denominator <= 0.0
+            ):
+                return reference_bus[item]
+            expected_load = (
+                reference_bus[parent] * (1.0 + (1.0 - share) * inward_factor)
+                / load_denominator
+            )
+            expected_export = (
+                reference_bus[parent] * (1.0 - share * outward_factor)
+                / export_denominator
+            )
+            if min(
+                abs(reference_bus[item] - expected_load),
+                abs(reference_bus[item] - expected_export),
+            ) > self.analytic_tolerance:
+                raise EvidenceContractError(
+                    "REQ-G12-ZERO-FLOW: historical bus is not on a valid kink side"
+                )
+            # A positive-loss edge is the independently observed kink
+            # boundary.  Only zero-loss transformer links recurse; this both
+            # propagates the load-side convention through a passive tree and
+            # rejects an unanchored zero-loss cycle.
+            parent_price = (
+                reference_bus[parent]
+                if inward_factor > 0.0 or outward_factor > 0.0
+                else visit(parent, visiting | {item})
+            )
+            value = (
+                parent_price * (1.0 + (1.0 - share) * inward_factor)
+                / load_denominator
+            )
+            memo[item] = value
+            return value
+
+        return visit(bus, frozenset())
+
+    @staticmethod
+    def _passive_boundary_branch(
+        inputs: ZeroFlowCaseInputs, branches: tuple[Branch, ...]
+    ) -> Branch | None:
+        if len(branches) == 1:
+            return branches[0]
+        positive = [
+            branch
+            for branch in branches
+            if inputs.first_loss_factors.get((branch, "forward"), 0.0) > 0.0
+            or inputs.first_loss_factors.get((branch, "backward"), 0.0) > 0.0
+        ]
+        zero_loss = [
+            branch
+            for branch in branches
+            if inputs.first_loss_factors.get((branch, "forward"), 0.0) == 0.0
+            and inputs.first_loss_factors.get((branch, "backward"), 0.0) == 0.0
+        ]
+        if len(positive) == 1 and len(zero_loss) == len(branches) - 1:
+            return positive[0]
+        return None
 
     def compare_publication(
         self,

@@ -111,13 +111,13 @@ class NetworkPricingEngine(PricingEngine):
         *,
         tolerance: float = 1e-9,
     ) -> None:
-        """Select vSPD's +load derivative at a zero-flow loss kink.
+        """Select the +load derivative on an anchored passive zero-flow tree.
 
-        A zero-injection leaf on a lossy branch has two valid LP duals: the
-        derivative for an incremental export and the derivative for an
-        incremental load.  GAMS/HiGHS reports the latter.  HighsPy can select
-        the former from the same optimal face, so normalize that otherwise
-        solver-order-dependent dual to the exact one-sided load sensitivity.
+        A passive zero-flow component behind one lossy boundary can have two
+        valid LP duals: the derivatives for incremental export and load.
+        Normalize to the load-side derivative and propagate it through any
+        zero-loss transformer leaves.  Positive-loss boundaries anchor the
+        recursion; unanchored zero-loss cycles retain their solver duals.
         """
 
         network = case.network
@@ -130,65 +130,126 @@ class NetworkPricingEngine(PricingEngine):
 
         branch_flow = built_model.artifacts["branch_flow"]
         directed_flow = built_model.artifacts["directed_branch_flow"]
+        generation = built_model.artifacts["generation"]
+        purchase = built_model.artifacts["purchase"]
+        scarcity = built_model.artifacts["energy_scarcity_node"]
         receiving_share = network.receiving_end_loss_proportion
-        for leaf, branches in sorted(incident.items()):
-            if len(branches) != 1:
-                continue
-            if network.bus_electrical_island.get(leaf, 0.0) == 0.0:
-                continue
-            leaf_nodes = {
-                (*leaf[:2], key[2])
+        original = dict(prices)
+
+        def first_factor(branch: Key, direction: str) -> float:
+            factors = [
+                factor
+                for key, factor in network.ac_loss_segment_factor.items()
+                if key[:3] == branch and key[4] == direction
+            ]
+            return min(factors, default=0.0)
+
+        def passive(bus: Key, branches: tuple[Key, ...]) -> bool:
+            if network.bus_electrical_island.get(bus, 0.0) == 0.0:
+                return False
+            if any(
+                abs(float(pyo.value(branch_flow[branch]))) > tolerance
+                or abs(network.branch_fixed_loss.get(branch, 0.0)) > tolerance
+                or any(
+                    abs(float(pyo.value(directed_flow[*branch, direction])))
+                    > tolerance
+                    for direction in ("forward", "backward")
+                )
+                for branch in branches
+            ):
+                return False
+            nodes = {
+                (*bus[:2], key[2])
                 for key in network.node_bus
-                if (*key[:2], key[3]) == leaf
+                if (*key[:2], key[3]) == bus
+                and abs(network.node_bus_allocation.get(key, 0.0)) > tolerance
             }
             if any(
                 abs(network.node_load.get(node, 0.0)) > tolerance
-                for node in leaf_nodes
-            ) or any(
-                (*key[:2], key[3]) in leaf_nodes
-                for key in (*network.offer_node, *network.bid_node)
+                or abs(float(pyo.value(scarcity[node]))) > tolerance
+                for node in nodes
             ):
-                continue
-            branch = branches[0]
-            if abs(float(pyo.value(branch_flow[branch]))) > tolerance:
-                continue
+                return False
             if any(
-                abs(float(pyo.value(directed_flow[*branch, direction])))
-                > tolerance
-                for direction in ("forward", "backward")
+                abs(float(pyo.value(generation[(*prefix, offer)]))) > tolerance
+                for *prefix, offer, node in network.offer_node
+                if tuple(prefix) == bus[:2] and node in nodes
             ):
-                continue
+                return False
+            return not any(
+                abs(float(pyo.value(purchase[(*prefix, bid)]))) > tolerance
+                for *prefix, bid, node in network.bid_node
+                if tuple(prefix) == bus[:2] and node in nodes
+            )
 
+        selected: dict[Key, tuple[Key, Key, str, float]] = {}
+        for bus, raw_branches in sorted(incident.items()):
+            branches = tuple(sorted(raw_branches))
+            if not passive(bus, branches):
+                continue
+            positive = [
+                branch
+                for branch in branches
+                if first_factor(branch, "forward") > 0.0
+                or first_factor(branch, "backward") > 0.0
+            ]
+            zero_loss = [
+                branch
+                for branch in branches
+                if first_factor(branch, "forward") == 0.0
+                and first_factor(branch, "backward") == 0.0
+            ]
+            if len(branches) == 1:
+                branch = branches[0]
+            elif len(positive) == 1 and len(zero_loss) == len(branches) - 1:
+                branch = positive[0]
+            else:
+                continue
             from_bus = next(
                 key[3] for key in network.branch_from_bus if key[:3] == branch
             )
             to_bus = next(
                 key[3] for key in network.branch_to_bus if key[:3] == branch
             )
-            if leaf[2] == to_bus:
+            if bus[2] == to_bus:
                 parent = (*branch[:2], from_bus)
                 inward_direction = "forward"
-            elif leaf[2] == from_bus:
+            elif bus[2] == from_bus:
                 parent = (*branch[:2], to_bus)
                 inward_direction = "backward"
             else:  # pragma: no cover - guarded by the network-data contract
                 continue
-            factors = [
-                factor
-                for key, factor in network.ac_loss_segment_factor.items()
-                if key[:3] == branch and key[4] == inward_direction
-            ]
-            if not factors:
-                continue
-            first_factor = min(factors)
-            if first_factor <= 0.0:
-                continue
-            denominator = 1.0 - receiving_share * first_factor
-            if denominator <= 0.0:
+            selected[bus] = (
+                branch,
+                parent,
+                inward_direction,
+                first_factor(branch, inward_direction),
+            )
+
+        memo: dict[Key, float] = {}
+
+        def load_price(bus: Key, visiting: frozenset[Key]) -> float:
+            if bus in memo:
+                return memo[bus]
+            if bus in visiting or bus not in selected:
+                return original[bus]
+            _branch, parent, _direction, factor = selected[bus]
+            denominator = 1.0 - receiving_share * factor
+            if factor < 0.0 or denominator <= 0.0:
                 raise ValueError("AC loss factor makes incremental delivery invalid")
-            prices[leaf] = prices[parent] * (
-                1.0 + (1.0 - receiving_share) * first_factor
+            parent_price = (
+                original[parent]
+                if factor > 0.0
+                else load_price(parent, visiting | {bus})
+            )
+            value = parent_price * (
+                1.0 + (1.0 - receiving_share) * factor
             ) / denominator
+            memo[bus] = value
+            return value
+
+        for bus in selected:
+            prices[bus] = load_price(bus, frozenset())
 
     def price(self, built_model: BuiltModel, solve_result: SolveResult) -> NetworkPrices:
         if not solve_result.solution_loaded:

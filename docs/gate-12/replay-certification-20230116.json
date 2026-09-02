@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "profile": "gate12-complete-report-semantic-certification-v4",
+  "trading_date": "20230116",
+  "certified_date": "2026-09-03",
+  "disposition": "fourth-date-complete-report-and-semantic-parity-passed",
+  "logical_sha256": "401ef053e6119d9037e5b7616abcb031688828f75adb28b2e846663f9a7bbc7e",
+  "provenance": {
+    "reference_commit": "3360a91ebd48f2e3cbb52a5e6766d893011054be",
+    "source_sha256": "120fdd849890f3d96d197ee549273045e7592f447e689a8d38f85b8250b1d3f2",
+    "work_item_sha256": "4f46d10fdb7fabb1f4e33140986d69ddf50607b2256c08b5ad66bb4434dacd8c",
+    "reference_bundle_sha256": "9cf0f838fe464471871e7eb0e33b34cc8c7285f3215dec3d98aea4996c4a11e0",
+    "candidate_bundle_sha256": "9f6fdbfa8b0d525b41a49b5e65f60dc65e544a52ff6ec6454ff47ac4f00f1fe2"
+  },
+  "execution": {
+    "canonical_prefix_case_count": 109,
+    "reference_completed_case_count": 109,
+    "candidate_completed_case_count": 109,
+    "affected_case_count": 8,
+    "affected_case_ids": [
+      "151012023011830340",
+      "151012023011835343",
+      "151012023011840344",
+      "151012023011935361",
+      "151012023011940362",
+      "151012023011945363",
+      "151012023011950364",
+      "151012023011955367"
+    ],
+    "solver_path": "SCIP-MIP native SOS2 -> fix discrete variables and inactive SOS support -> HiGHS-RMIP",
+    "all_reference_solves_optimal": true,
+    "all_candidate_solves_optimal": true,
+    "maximum_fixed_rmip_objective_error_nzd": 2.0881998352706432e-09
+  },
+  "exact_diff_diagnostic": {
+    "profile": "gams-pyspd-canonical-json-quantified-diff-v1",
+    "changed_surface_count": 71,
+    "unresolved_leaf_count": 2611648,
+    "logical_sha256": "d0a5d0cc2a41eb8148cbd08eae2f09c6cacc6c666702a0e58a00da63450916f5"
+  },
+  "schema_crosswalk": {
+    "profile": "authority-pyspd-report-schema-crosswalk-v1",
+    "passed": true,
+    "authority_table_count": 13,
+    "unmapped_reference_field_count": 0,
+    "unmapped_candidate_field_count": 0,
+    "logical_sha256": "45948c8487b871d2d6d3046ef9db265a04ef5aea22a3d26d2f6749904536d4e9"
+  },
+  "zero_flow_price_certificate": {
+    "profile": "gams-pyspd-zero-flow-load-derivative-publication-v1",
+    "passed": true,
+    "certified_bus_count": 448,
+    "certified_node_count": 41,
+    "distinct_certified_node_count": 6,
+    "certified_publication_count": 10,
+    "maximum_node_projection_residual": 0.0,
+    "maximum_publication_reconstruction_residual_nzd_per_mwh": 0.000009999999988963282,
+    "logical_sha256": "4fbf736f42d631f8f30c59e8992d2e30eb5c9a5187596df3e00b2f254d9e911f"
+  },
+  "mapped_report_result": {
+    "profile": "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v5",
+    "passed": true,
+    "compared_value_count": 137394,
+    "missing_identity_count": 0,
+    "extra_identity_count": 0,
+    "certified_difference_count": 1387,
+    "above_precision_count": 0,
+    "unimplemented_table_count": 0,
+    "logical_sha256": "b63036d23a4dea9b4d630f61550a4c75c94f7dd80f84998ab1a07ef5e018c611"
+  },
+  "semantic_result": {
+    "profile": "gams-pyspd-semantic-tolerance-zero-flow-report-certified-v4",
+    "passed": true,
+    "case_count": 8,
+    "surface_count": 96,
+    "failed_surface_count": 0,
+    "unresolved_difference_count": 0,
+    "sos_feasibility_residue_count": 2,
+    "sos_feasibility_residue_tolerance": 0.000002,
+    "logical_sha256": "97be3a6c2b2aa4a949608dd99d18028e914ec7f26411b54632083dc19bafd3c6"
+  },
+  "material_price_convention": {
+    "trading_periods": ["TP16", "TP18"],
+    "nodes": ["GOR2202", "KIN1009", "MKE1101", "MKE1101 MKE1", "OTA2202", "WPT1101"],
+    "maximum_node_price_difference_nzd_per_mwh": 0.25737569005190153,
+    "maximum_publication_difference_nzd_per_mwh": 0.25578000000001566,
+    "maximum_publication_reconstruction_residual_nzd_per_mwh": 0.000009999999988963282,
+    "disposition": "independent-zero-flow-load-derivative-certificate-passed"
+  },
+  "model_corrections": [
+    "sparse-node-bus-allocation-defaults-to-zero",
+    "offer-parameter-fk-band-ingestion",
+    "governed-1e-7-sos-activity-threshold",
+    "anchored-passive-zero-flow-transformer-tree-price-normalization"
+  ],
+  "remaining_boundary": {
+    "fourth_date_certified": true,
+    "certified_v5_date_count": 4,
+    "certified_v5_affected_case_count": 17,
+    "gate12_closed": false,
+    "reason": "Remaining exact-population, representative-day, repeat/resume, strict-profile, and evidence-index criteria are not complete."
+  }
+}

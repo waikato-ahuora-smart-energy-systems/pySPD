@@ -69,6 +69,29 @@ def test_disconnected_topology_is_balanced_locally_and_prices_dead_end() -> None
     assert prices.bus[("C1", "T1", "B2")] == pytest.approx(500_000.0)
 
 
+def test_missing_sparse_node_bus_allocation_is_treated_as_zero() -> None:
+    case = make_network_case()
+    assert case.network is not None
+    missing = ("C1", "T1", "N1", "B1")
+    case = replace(
+        case,
+        network=replace(
+            case.network,
+            node_bus_allocation={
+                key: value
+                for key, value in case.network.node_bus_allocation.items()
+                if key != missing
+            },
+        ),
+    )
+
+    built = ModelAssembler().assemble(ac_network_formulation(), case)
+    balance = built.artifacts["energy_balance"]["C1", "T1", "B1"]
+    representation = generate_standard_repn(balance.body)
+
+    assert representation.nonlinear_expr is None
+
+
 def test_dead_node_is_classified_from_electrical_island_status() -> None:
     case = make_network_case()
     assert case.network is not None
@@ -134,6 +157,40 @@ def test_zero_flow_loss_branch_uses_gams_load_subgradient(
     assert validate_nodal_price_finite_difference(
         case, leaf_node, tolerance=1e-6
     ).passed
+
+
+def test_zero_flow_load_subgradient_propagates_through_transformer_tree() -> None:
+    case = make_three_bus_case()
+    assert case.network is not None
+    period = ("C1", "T1")
+    lossy = (*period, "L1")
+    transformer = (*period, "L2")
+    network = replace(
+        case.network,
+        node_load={
+            (*period, "N1"): 50.0,
+            (*period, "N2"): 0.0,
+            (*period, "N3"): 0.0,
+        },
+        ac_loss_segment_factor={
+            (*lossy, "ls1", direction): 0.001
+            for direction in ("forward", "backward")
+        }
+        | {
+            (*transformer, "ls1", direction): 0.0
+            for direction in ("forward", "backward")
+        },
+    )
+
+    built, prices, _report = solve(replace(case, network=network))
+
+    assert pyo.value(built.artifacts["branch_flow"][lossy]) == pytest.approx(0.0)
+    assert pyo.value(built.artifacts["branch_flow"][transformer]) == pytest.approx(
+        0.0
+    )
+    expected = 10.0 / 0.999
+    assert prices.bus[(*period, "B2")] == pytest.approx(expected)
+    assert prices.bus[(*period, "B3")] == pytest.approx(expected)
 
 
 def test_loss_segment_boundary_and_reverse_direction_are_exact() -> None:

@@ -4,6 +4,7 @@ from dataclasses import replace
 
 import pyomo.environ as pyo
 import pytest
+from pyomo.repn.standard_repn import generate_standard_repn
 
 from pyspd.architecture import ModelAssembler
 from pyspd.hvdc import (
@@ -22,6 +23,7 @@ from pyspd.hvdc import (
 from pyspd.hvdc.diagnostics import DiagnosticCapabilityError
 from pyspd.hvdc.formulation import (
     WarmStartSnapshot,
+    _canonical_sos_value,
     _fix_continuous_state,
     pricing_model_belongs_to_request,
 )
@@ -178,6 +180,12 @@ def test_fixed_rmip_preserves_sos_support_without_fixing_active_weights() -> Non
     assert not model.members["right"].fixed
 
 
+def test_sos_support_uses_the_governed_solvefinal_threshold() -> None:
+    assert _canonical_sos_value(1e-7) == 0.0
+    assert _canonical_sos_value(-1e-7) == 0.0
+    assert _canonical_sos_value(1.01e-7) == pytest.approx(1.01e-7)
+
+
 def test_hvdc_forward_flow_loss_and_bus_prices() -> None:
     _built, outcome, prices = solve(make_hvdc_case())
     primary = outcome.primary_model
@@ -186,6 +194,29 @@ def test_hvdc_forward_flow_loss_and_bus_prices() -> None:
     assert flow == pytest.approx(41.6666666667)
     assert loss == pytest.approx(1.6666666667)
     assert prices.bus[("C1", "T1", "B2")] > prices.bus[("C1", "T1", "B1")]
+
+
+def test_hvdc_build_treats_missing_sparse_node_bus_allocation_as_zero() -> None:
+    case = make_hvdc_case()
+    assert case.network is not None
+    missing = ("C1", "T1", "N1", "B1")
+    case = replace(
+        case,
+        network=replace(
+            case.network,
+            node_bus_allocation={
+                key: value
+                for key, value in case.network.node_bus_allocation.items()
+                if key != missing
+            },
+        ),
+    )
+
+    built = build(case)
+    balance = built.artifacts["energy_balance"]["C1", "T1", "B1"]
+    representation = generate_standard_repn(balance.body)
+
+    assert representation.nonlinear_expr is None
 
 
 def test_hvdc_reversal_uses_reverse_link_orientation() -> None:

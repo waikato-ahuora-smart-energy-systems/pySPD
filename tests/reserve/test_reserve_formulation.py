@@ -125,6 +125,37 @@ def test_every_risk_class_and_secondary_risk_algebra_is_built() -> None:
     assert len(built.artifacts["hvdc_manual_island_risk"]) == 8
 
 
+def test_frequency_keeper_band_is_included_in_generator_risk() -> None:
+    base = make_reserve_case()
+    assert base.reserve is not None
+    offer = ("C1", "T1", "GEN")
+
+    def generator_risk_definition_constant(fk_band: float) -> float:
+        reserve = replace(base.reserve, fk_band={offer: fk_band})
+        built = ModelAssembler().assemble(
+            reserve_formulation(), replace(base, reserve=reserve)
+        )
+        generator_risk = built.artifacts["generator_island_risk"]
+        constraints = built.artifacts["risk_constraints"]
+        target = generator_risk["C1", "T1", "NI", "GEN", "FIR", "genRisk"]
+        row = next(
+            constraint
+            for constraint in constraints.values()
+            if constraint.equality
+            and any(
+                variable is target
+                for variable in generate_standard_repn(
+                    constraint.body, compute_values=True
+                ).linear_vars
+            )
+        )
+        return float(generate_standard_repn(row.body, compute_values=True).constant)
+
+    assert generator_risk_definition_constant(15.0) - (
+        generator_risk_definition_constant(0.0)
+    ) == pytest.approx(-15.0)
+
+
 def test_risk_group_ignores_mapping_to_offer_outside_active_domain() -> None:
     case = make_reserve_case()
     assert case.reserve is not None

@@ -52,7 +52,10 @@ from pyspd.solver import (
 type Key = tuple[str, ...]
 
 _SUPPORTED = frozenset({HVDC_FORMULATION_ID})
-_SOS_STATE_CANONICALIZATION_TOLERANCE = 1e-5
+# Match the governed GAMS ``solveFinal`` overlay: a solved SOS member is
+# inactive only when its magnitude is at or below 1e-7.  A wider threshold can
+# erase a legitimate adjacent member and over-constrain the fixed RMIP.
+_SOS_STATE_CANONICALIZATION_TOLERANCE = 1e-7
 _SCIP_PRIMAL_FEASIBILITY_TOLERANCE = 1e-6
 
 

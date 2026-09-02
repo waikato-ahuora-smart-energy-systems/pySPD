@@ -556,50 +556,12 @@ class ZeroFlowPriceConventionRunner:
         }
         if not allocations:
             return 0.0
-        canonical = dict(reference_bus)
-        incident: dict[str, list[str]] = defaultdict(list)
-        for branch, (from_bus, to_bus) in inputs.branches.items():
-            incident[from_bus].append(branch)
-            incident[to_bus].append(branch)
-        for bus in allocations:
-            branches = incident.get(bus, ())
-            if len(branches) != 1 or bus not in inputs.electrical_buses:
-                continue
-            if (
-                abs(inputs.bus_generation.get(bus, 0.0))
-                > self.validator.injection_tolerance
-                or abs(inputs.bus_load.get(bus, 0.0))
-                > self.validator.injection_tolerance
-            ):
-                continue
-            leaf_nodes = {
-                item_node
-                for item_node, buses in inputs.node_buses.items()
-                if bus in buses
-            }
-            if leaf_nodes & (inputs.offer_nodes | inputs.bid_nodes):
-                continue
-            branch = branches[0]
-            from_bus, to_bus = inputs.branches[branch]
-            if bus == to_bus:
-                parent, inward, outward = from_bus, "forward", "backward"
-            else:
-                parent, inward, outward = to_bus, "backward", "forward"
-            inward_factor = inputs.first_loss_factors.get((branch, inward), 0.0)
-            outward_factor = inputs.first_loss_factors.get((branch, outward), 0.0)
-            if inward_factor <= 0.0 or outward_factor <= 0.0:
-                continue
-            expected_load = reference_bus[parent] / (1.0 - inward_factor)
-            expected_export = reference_bus[parent] * (1.0 - outward_factor)
-            if (
-                min(
-                    abs(reference_bus[bus] - expected_load),
-                    abs(reference_bus[bus] - expected_export),
-                )
-                > self.validator.analytic_tolerance
-            ):
-                raise EvidenceContractError(
-                    "REQ-G12-ZERO-FLOW: historical bus is not on a valid kink side"
-                )
-            canonical[bus] = expected_load
-        return sum(weight * canonical[bus] for bus, weight in allocations.items())
+        return sum(
+            weight
+            * self.validator.canonical_load_price(
+                inputs=inputs,
+                reference_bus=reference_bus,
+                bus=bus,
+            )
+            for bus, weight in allocations.items()
+        )

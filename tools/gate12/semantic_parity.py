@@ -53,6 +53,7 @@ class SemanticParityPolicy:
     objective_tolerance: float = 1e-4
     physics_tolerance: float = 1e-8
     fixed_state_tolerance: float = 1e-8
+    sos_support_residue_tolerance: float = 2e-6
     zero_sparsity_tolerance: float = 1e-12
     raw_price_sentinel: float = 500_000.0
 
@@ -62,6 +63,7 @@ class SemanticParityPolicy:
             self.objective_tolerance,
             self.physics_tolerance,
             self.fixed_state_tolerance,
+            self.sos_support_residue_tolerance,
             self.zero_sparsity_tolerance,
             self.raw_price_sentinel,
         )
@@ -98,6 +100,9 @@ class SemanticParityPolicy:
             "objective_tolerance": self.objective_tolerance.hex(),
             "physics_tolerance": self.physics_tolerance.hex(),
             "fixed_state_tolerance": self.fixed_state_tolerance.hex(),
+            "sos_support_residue_tolerance": (
+                self.sos_support_residue_tolerance.hex()
+            ),
             "zero_sparsity_tolerance": self.zero_sparsity_tolerance.hex(),
             "raw_price_sentinel": self.raw_price_sentinel.hex(),
             "primary_mip_objective_disposition": "qualified-diagnostic",
@@ -262,6 +267,11 @@ class SemanticCaseComparator:
             return "qualified-primary-mip-diagnostic"
         if surface == "fixed-discrete-pricing-state" and self._same_sos_support(item):
             return "equivalent-sos-support"
+        if (
+            surface == "fixed-discrete-pricing-state"
+            and self._is_sos_support_residue(item)
+        ):
+            return "scip-sos-feasibility-residue"
         if surface == "raw-bus-price" and self._is_sentinel_difference(item):
             repaired_error = repaired_errors.get(item.path)
             if (
@@ -339,6 +349,27 @@ class SemanticCaseComparator:
             and candidate is not None
             and abs(reference) > self.policy.zero_sparsity_tolerance
             and abs(candidate) > self.policy.zero_sparsity_tolerance
+        )
+
+    def _is_sos_support_residue(self, item: CanonicalValueDifference) -> bool:
+        """Accept only bounded structural leakage on an SOS member.
+
+        Native SCIP can return tiny positive values on otherwise inactive SOS
+        members within its qualified primal-feasibility regime.  The pinned
+        GAMS artifact records post-RMIP levels, where those free members can
+        return to zero, so their identities appear structurally absent.  This
+        rule is deliberately separate from fixed-state numeric tolerance and
+        is bounded at twice the configured SCIP feasibility tolerance.
+        """
+
+        return bool(
+            item.kind in {"missing", "extra"}
+            and len(item.path) == 3
+            and item.path[0] == "fixed_sos_members"
+            and item.path[1].startswith("identity=")
+            and item.path[2] == "value"
+            and self._structural_number(item)
+            <= self.policy.sos_support_residue_tolerance
         )
 
     @staticmethod

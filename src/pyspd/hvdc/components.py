@@ -334,12 +334,13 @@ class HVDCACNetworkComponent(ACNetworkComponent):
         def bus_balance(_b: pyo.Block, ca: str, dt: str, bus: str) -> Any:
             bus_key = (ca, dt, bus)
             supply = sum(
-                network_data.node_bus_allocation[ca, dt, node, bus]
+                network_data.node_bus_allocation.get((ca, dt, node, bus), 0.0)
                 * generation[offer]
                 for offer, node in build_index.offers.get(bus_key, ())
             )
             demand_bid = sum(
-                network_data.node_bus_allocation[ca, dt, node, bus] * purchase[bid]
+                network_data.node_bus_allocation.get((ca, dt, node, bus), 0.0)
+                * purchase[bid]
                 for bid, node in build_index.bids.get(bus_key, ())
             )
             load = sum(

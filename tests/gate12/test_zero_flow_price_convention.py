@@ -93,7 +93,6 @@ def test_zero_injection_leaf_balance_is_an_explicit_zero_flow_proof() -> None:
         (_inputs(flow=1.0), "nonzero-branch-flow"),
         (_inputs(leaf_generation=1.0), "nonzero-leaf-injection"),
         (_inputs(leaf_load=1.0), "nonzero-leaf-injection"),
-        (_inputs(offer_nodes=frozenset({"NODE"})), "active-offer-or-bid-node"),
     ],
 )
 def test_rejects_a_leaf_without_zero_flow_passivity(
@@ -110,6 +109,111 @@ def test_rejects_a_leaf_without_zero_flow_passivity(
 
     assert not certificate.passed
     assert certificate.unresolved_bus_reasons == {"LEAF": reason}
+
+
+def test_zero_dispatch_offer_does_not_make_a_zero_flow_bus_active() -> None:
+    reference, candidate = _prices()
+    certificate = ZeroFlowPriceConventionValidator().compare_case(
+        inputs=_inputs(offer_nodes=frozenset({"NODE"})),
+        reference_bus=reference,
+        candidate_bus=candidate,
+        reference_node={"NODE": reference["LEAF"]},
+        candidate_node={"NODE": candidate["LEAF"]},
+    )
+
+    assert certificate.passed
+
+
+def test_certifies_anchored_zero_flow_transformer_tree() -> None:
+    root = 10.0
+    reference_hub = root * 0.999
+    candidate_hub = root / 0.999
+    inputs = ZeroFlowCaseInputs(
+        case_id="case",
+        date_time="time",
+        branches={
+            "BOUNDARY": ("ROOT", "HUB"),
+            "TX1": ("HUB", "LEAF1"),
+            "TX2": ("HUB", "LEAF2"),
+        },
+        first_loss_factors={
+            ("BOUNDARY", "forward"): 0.001,
+            ("BOUNDARY", "backward"): 0.001,
+            ("TX1", "forward"): 0.0,
+            ("TX1", "backward"): 0.0,
+            ("TX2", "forward"): 0.0,
+            ("TX2", "backward"): 0.0,
+        },
+        electrical_buses=frozenset({"ROOT", "HUB", "LEAF1", "LEAF2"}),
+        bus_generation={},
+        bus_load={},
+        branch_flow={"BOUNDARY": 0.0, "TX1": 0.0, "TX2": 0.0},
+        node_buses={"NODE": frozenset({"HUB", "LEAF1", "LEAF2"})},
+        node_bus_allocation={
+            ("NODE", "HUB"): 1 / 3,
+            ("NODE", "LEAF1"): 1 / 3,
+            ("NODE", "LEAF2"): 1 / 3,
+        },
+        offer_nodes=frozenset({"NODE"}),
+        bid_nodes=frozenset(),
+    )
+    reference = {
+        "ROOT": root,
+        "HUB": reference_hub,
+        "LEAF1": reference_hub,
+        "LEAF2": reference_hub,
+    }
+    candidate = {
+        "ROOT": root,
+        "HUB": candidate_hub,
+        "LEAF1": candidate_hub,
+        "LEAF2": candidate_hub,
+    }
+    certificate = ZeroFlowPriceConventionValidator().compare_case(
+        inputs=inputs,
+        reference_bus=reference,
+        candidate_bus=candidate,
+        reference_node={"NODE": reference_hub},
+        candidate_node={"NODE": candidate_hub},
+    )
+
+    assert certificate.passed
+    assert set(certificate.certified_bus_identities) == {"HUB", "LEAF1", "LEAF2"}
+    assert ZeroFlowPriceConventionValidator().canonical_load_price(
+        inputs=inputs, reference_bus=reference, bus="LEAF1"
+    ) == pytest.approx(candidate_hub)
+
+
+def test_rejects_an_unanchored_zero_loss_cycle() -> None:
+    inputs = ZeroFlowCaseInputs(
+        case_id="case",
+        date_time="time",
+        branches={"TX": ("A", "B")},
+        first_loss_factors={
+            ("TX", "forward"): 0.0,
+            ("TX", "backward"): 0.0,
+        },
+        electrical_buses=frozenset({"A", "B"}),
+        bus_generation={},
+        bus_load={},
+        branch_flow={"TX": 0.0},
+        node_buses={"NODE": frozenset({"A", "B"})},
+        node_bus_allocation={("NODE", "A"): 0.5, ("NODE", "B"): 0.5},
+        offer_nodes=frozenset(),
+        bid_nodes=frozenset(),
+    )
+    certificate = ZeroFlowPriceConventionValidator().compare_case(
+        inputs=inputs,
+        reference_bus={"A": 10.0, "B": 10.0},
+        candidate_bus={"A": 11.0, "B": 11.0},
+        reference_node={"NODE": 10.0},
+        candidate_node={"NODE": 11.0},
+    )
+
+    assert not certificate.passed
+    assert set(certificate.unresolved_bus_reasons.values()) == {
+        "unanchored-zero-flow-component"
+    }
 
 
 def test_rejects_wrong_candidate_derivative_and_non_kink_reference() -> None:

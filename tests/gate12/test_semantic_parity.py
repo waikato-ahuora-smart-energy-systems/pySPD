@@ -121,6 +121,62 @@ def test_fixed_sos_weights_compare_support_not_continuous_magnitude() -> None:
     assert not rejected.passed
 
 
+def test_fixed_sos_support_accepts_only_bounded_scip_feasibility_residue() -> None:
+    shared = [
+        "hvdc-reserve-lambda",
+        "case",
+        "date",
+        "NI",
+        "SIR",
+        "forward",
+        "ls7",
+    ]
+    residue = [*shared[:-1], "ls8"]
+    comparator = SemanticCaseComparator(SemanticParityPolicy())
+    accepted = comparator.compare_surface(
+        surface="fixed-discrete-pricing-state",
+        reference=_json(
+            {
+                "fixed_sos_members": [
+                    {"identity": shared, "value": (1.0).hex()}
+                ]
+            }
+        ),
+        candidate=_json(
+            {
+                "fixed_sos_members": [
+                    {"identity": shared, "value": (1.0).hex()},
+                    {"identity": residue, "value": (1.6e-6).hex()},
+                ]
+            }
+        ),
+    )
+    rejected = comparator.compare_surface(
+        surface="fixed-discrete-pricing-state",
+        reference=_json(
+            {
+                "fixed_sos_members": [
+                    {"identity": shared, "value": (1.0).hex()}
+                ]
+            }
+        ),
+        candidate=_json(
+            {
+                "fixed_sos_members": [
+                    {"identity": shared, "value": (1.0).hex()},
+                    {"identity": residue, "value": (2.1e-6).hex()},
+                ]
+            }
+        ),
+    )
+
+    assert accepted.passed
+    assert accepted.accepted_reason_counts == {
+        "scip-sos-feasibility-residue": 1
+    }
+    assert not rejected.passed
+
+
 def test_semantic_comparator_uses_fixed_rmip_as_accepted_objective() -> None:
     result = SemanticCaseComparator(SemanticParityPolicy()).compare_surface(
         surface="primary-objective",

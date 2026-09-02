@@ -118,15 +118,26 @@ SFD22 constraint rows is certified under
 [ADR-0020](../adr/0020-binding-market-node-dual-allocation.md). See the
 [`2023-01-18 replay certificate`](replay-certification-20230118.md).
 
+The fourth paired date, 2023-01-16, passes all 96 semantic surfaces across its
+eight affected cases. Both engines completed the 109-case prefix, and the
+largest fixed-RMIP objective difference is `2.09e-9 NZD`. The independent
+topology validator certifies 448 zero-flow bus observations, 41 node
+projections, and ten TP16/TP18 publications. The complete 13-table comparison
+covers 137,394 values with zero missing or extra identities, zero
+above-precision values, and zero unimplemented tables. The date also adds the
+bounded native-SCIP SOS residue rule governed by
+[ADR-0021](../adr/0021-bounded-scip-sos-support-residue.md). See the
+[`2023-01-16 replay certificate`](replay-certification-20230116.md).
+
 Further replay continues incrementally from exact historical discovery.
 Candidate execution never promotes an analytic lower bound into an affected
 identity. The complete 2022-11-06 and 2023-01-17 prefixes have both passed
 regression under the native-SOS execution fingerprint; see
 [`native-sos-regression-20221106.md`](native-sos-regression-20221106.md) and
 [`native-sos-regression-20230117.md`](native-sos-regression-20230117.md).
-Together with the 2023-01-18 correction certificate, all three paired dates
-now pass the current execution profile. Existing immutable certificates remain
-valid for their recorded profiles.
+Together with the 2023-01-16 and 2023-01-18 correction certificates, all four
+paired dates now pass their recorded native-SOS execution profiles. Existing
+immutable certificates remain valid for their recorded profiles.
 
 The representative v16 RTD portable-profile run is recorded in
 [`v16-representative-parity.json`](v16-representative-parity.json). Both the
