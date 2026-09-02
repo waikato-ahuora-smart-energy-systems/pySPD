@@ -17,6 +17,7 @@
 | Complete-day performance budget | no controlled matched full-day pair | GATE 12 |
 | Period-to-period solver warm start | Exact 15,224-value parity; SCIP discrete start 0.47% slower; HiGHS primal start rejected after slower/raw-dual-changing smoke trial | PASS PARITY; DO NOT ENABLE |
 | GDX preparation optimization | 72.08% preparation reduction; exact 3,682,271-record Gate 2 canonical-feed hash; real-GDX integration pass | PASS; ENABLED |
+| Indexed network model construction | 31.94% solve-path reduction; exact nine-decimal normalized 57,073-variable/32,370-row matrix parity | PASS; ENABLED |
 | Locked clean environment | both base and oracle `uv sync --frozen` commands exit 0 | PASS |
 | Repository quality | 239 passed, 1 skipped; Ruff and mypy pass | PASS |
 | Independent human sign-off | not required by project direction | NOT APPLICABLE |

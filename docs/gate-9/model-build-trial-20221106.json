@@ -1,0 +1,54 @@
+{
+  "baseline": {
+    "median_solve_wall_seconds": 82.21690114593366,
+    "preparation_seconds": 12.614760749973357,
+    "result_sha256": "dded9cda42d3eecf331028e2885ff01b74dbb9f9533ffe0e279809790699a2f3",
+    "solve_wall_seconds": [82.48044712492265, 81.95335516694468]
+  },
+  "baseline_execution_sha256": "d975884fa7e9db1658252c7f676f1b53f489bd528ac939a913acc121463fb436",
+  "benchmark_execution_sha256": "b3c38a9197fb0b63a2b430b0f8cfc8d99f2bffa4f0666af369cab8df1698598a",
+  "candidate": {
+    "all_solves_optimal": true,
+    "case_solve_seconds": [
+      [13.467760208062828, 13.410818374948576, 14.00334379193373, 13.939891207963228],
+      [14.430016416939907, 13.91990529105533, 14.318716499954462, 14.299821457942016]
+    ],
+    "median_solve_wall_seconds": 55.95941524999216,
+    "preparation_seconds": 12.554126624949276,
+    "result_sha256": "cdfbba107cb3449c91b8210ec13ea160dcf97ee4e082e472e616a25c3526783d",
+    "solve_wall_seconds": [54.88607220805716, 57.032758291927166]
+  },
+  "case_count": 4,
+  "case_ids": [
+    "51012022111100690",
+    "51012022111105693",
+    "51012022111110695",
+    "51012022111115698"
+  ],
+  "comparison": {
+    "incremental_end_to_end_reduction_percent": 27.75246103970417,
+    "original_baseline_end_to_end_reduction_percent": 46.17389321602527,
+    "solve_reduction_percent": 31.936846962080082
+  },
+  "final_source_execution_sha256": "ecf43e4f9b4bf27c34090e7424183c21c128b5b9a106a9c8083ecbf387345cc6",
+  "logical_sha256": "271dd4df9f48f5e52ea89b3ccf77cc00e900b384666da461d636458413c3ab2e",
+  "matrix_validation": {
+    "baseline_normalized_sha256": "b263d8dcac5fa62b2bc322174e38e400c120f9b3d60ff867cd7c4f3b0ea91b0e",
+    "candidate_normalized_sha256": "b263d8dcac5fa62b2bc322174e38e400c120f9b3d60ff867cd7c4f3b0ea91b0e",
+    "case_id": "51012022111100690",
+    "passed": true,
+    "rounding_decimals": 9,
+    "rows": 32370,
+    "variables": 57073
+  },
+  "profile": "pyspd-indexed-network-build-benchmark-v1",
+  "schema_version": 1,
+  "source_name": "Pricing_20221106.gdx",
+  "source_sha256": "282ac2abeaa2f0c7c6e26b967e2ba90289c0ba5a9e696b99069d11350d3037b8",
+  "validation": {
+    "mypy_source_files": 130,
+    "pytest_passed": 467,
+    "pytest_skipped": 1,
+    "ruff_passed": true
+  }
+}

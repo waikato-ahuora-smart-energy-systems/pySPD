@@ -46,6 +46,11 @@ vectorizes GAMS special-value classification and indexes UEL validation. It
 reduced the measured four-case preparation phase by 72.08%, with exact
 3,682,271-record canonical-feed parity. The optimized path is enabled.
 
+The [indexed network model-build trial](model-build-trial-20221106.md) then
+removed repeated all-to-all incidence scans and duplicate HVDC balance
+construction. Four-case solve time fell 31.94%; the complete 57,073-column,
+32,370-row normalized matrix matched the prior formulation exactly.
+
 See the [closure decision](closure-decision.md),
 [checklist](gate-checklist.md), [qualification evidence](qualification.json),
 and [Probity records](tdd/).

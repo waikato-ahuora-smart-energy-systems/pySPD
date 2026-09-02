@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Mapping
+from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Any
 
 import pyomo.environ as pyo
@@ -32,6 +35,90 @@ def _network(context: BuildContext) -> NetworkData:
     data = _case(context).network
     assert data is not None
     return data
+
+
+type DirectedBranch = tuple[Key, str]
+
+
+@dataclass(frozen=True, slots=True)
+class NetworkBuildIndex:
+    """Deterministic incidence lists used while constructing network equations."""
+
+    sending: Mapping[Key, tuple[DirectedBranch, ...]]
+    receiving: Mapping[Key, tuple[DirectedBranch, ...]]
+    incident: Mapping[Key, tuple[tuple[Key, str, bool], ...]]
+    offers: Mapping[Key, tuple[tuple[Key, str], ...]]
+    bids: Mapping[Key, tuple[tuple[Key, str], ...]]
+    nodes: Mapping[Key, tuple[str, ...]]
+    fixed_loss_branches: Mapping[Key, tuple[Key, ...]]
+    from_bus: Mapping[Key, str]
+    to_bus: Mapping[Key, str]
+    loss_segments: Mapping[DirectedBranch, tuple[Key, ...]]
+
+    @classmethod
+    def build(cls, data: NetworkData, loss_segments: Any) -> NetworkBuildIndex:
+        sending: dict[Key, list[DirectedBranch]] = defaultdict(list)
+        receiving: dict[Key, list[DirectedBranch]] = defaultdict(list)
+        incident: dict[Key, list[tuple[Key, str, bool]]] = defaultdict(list)
+        from_bus = {key[:3]: key[3] for key in data.branch_from_bus}
+        to_bus = {key[:3]: key[3] for key in data.branch_to_bus}
+        for branch in sorted(data.ac_branches):
+            directed = (
+                ("forward", from_bus[branch], to_bus[branch]),
+                ("backward", to_bus[branch], from_bus[branch]),
+            )
+            for direction, sent_bus, received_bus in directed:
+                sent_key = (*branch[:2], sent_bus)
+                received_key = (*branch[:2], received_bus)
+                sending[sent_key].append((branch, direction))
+                receiving[received_key].append((branch, direction))
+                incident[sent_key].append(
+                    (branch, direction, sent_key == received_key)
+                )
+                if received_key != sent_key:
+                    incident[received_key].append((branch, direction, True))
+
+        node_buses: dict[Key, list[str]] = defaultdict(list)
+        nodes: dict[Key, list[str]] = defaultdict(list)
+        for ca, dt, node, bus in sorted(data.node_bus):
+            node_buses[(ca, dt, node)].append(bus)
+            nodes[(ca, dt, bus)].append(node)
+        offers: dict[Key, list[tuple[Key, str]]] = defaultdict(list)
+        for ca, dt, offer, node in sorted(data.offer_node):
+            for bus in node_buses[(ca, dt, node)]:
+                offers[(ca, dt, bus)].append(((ca, dt, offer), node))
+        bids: dict[Key, list[tuple[Key, str]]] = defaultdict(list)
+        for ca, dt, bid, node in sorted(data.bid_node):
+            for bus in node_buses[(ca, dt, node)]:
+                bids[(ca, dt, bus)].append(((ca, dt, bid), node))
+        fixed: dict[Key, list[Key]] = defaultdict(list)
+        for branch in sorted(data.branches):
+            for bus_key in sorted(data.buses):
+                if (*branch, bus_key[2]) in data.branch_bus_connect:
+                    fixed[bus_key].append(branch)
+        grouped_segments: dict[DirectedBranch, list[Key]] = defaultdict(list)
+        for key in loss_segments:
+            grouped_segments[(key[:3], key[4])].append(key)
+
+        def freeze(values: Mapping[Key, list[Any]]) -> Mapping[Key, tuple[Any, ...]]:
+            return MappingProxyType(
+                {key: tuple(items) for key, items in values.items()}
+            )
+
+        return cls(
+            freeze(sending),
+            freeze(receiving),
+            freeze(incident),
+            freeze(offers),
+            freeze(bids),
+            freeze(nodes),
+            freeze(fixed),
+            MappingProxyType(from_bus),
+            MappingProxyType(to_bus),
+            MappingProxyType(
+                {key: tuple(items) for key, items in grouped_segments.items()}
+            ),
+        )
 
 
 class NetworkDomainsComponent(ModelComponent):
@@ -128,9 +215,6 @@ class ACNetworkComponent(ModelComponent):
     def build(self, context: BuildContext) -> Mapping[str, Any]:
         data = _network(context)
         network = context.artifacts["network_domains"]
-        generation = context.artifacts["generation"]
-        purchase = context.artifacts["purchase"]
-        scarcity = context.artifacts["energy_scarcity_node"]
         block = pyo.Block(concrete=True)
         context.model.add_component("ACNetwork", block)
 
@@ -160,99 +244,24 @@ class ACNetworkComponent(ModelComponent):
         block.SurplusBranchFlow = pyo.Var(
             network.Branch, domain=pyo.NonNegativeReals
         )
-
-        def sending(branch: Key, bus: Key, direction: str) -> bool:
-            endpoint = (
-                data.branch_from_bus
-                if direction == "forward"
-                else data.branch_to_bus
-            )
-            return (*branch, bus[2]) in endpoint
-
-        def receiving(branch: Key, bus: Key, direction: str) -> bool:
-            endpoint = (
-                data.branch_to_bus
-                if direction == "forward"
-                else data.branch_from_bus
-            )
-            return (*branch, bus[2]) in endpoint
+        build_index = NetworkBuildIndex.build(data, network.ACLossSegment)
 
         def flow_balance(_b: pyo.Block, ca: str, dt: str, bus: str) -> Any:
             bus_key = (ca, dt, bus)
             return _b.ACNodeNetInjection[bus_key] == sum(
                 _b.ACBranchFlowDirected[*branch, direction]
-                for branch in data.ac_branches
-                for direction in ("forward", "backward")
-                if sending(branch, bus_key, direction)
+                for branch, direction in build_index.sending.get(bus_key, ())
             ) - sum(
                 _b.ACBranchFlowDirected[*branch, direction]
-                for branch in data.ac_branches
-                for direction in ("forward", "backward")
-                if receiving(branch, bus_key, direction)
+                for branch, direction in build_index.receiving.get(bus_key, ())
             )
 
         block.ACNodeNetInjectionDefinition1 = pyo.Constraint(
             network.Bus, rule=flow_balance
         )
 
-        def bus_balance(_b: pyo.Block, ca: str, dt: str, bus: str) -> Any:
-            bus_key = (ca, dt, bus)
-            supply = sum(
-                data.node_bus_allocation.get((ca, dt, node, bus), 0.0)
-                * generation[ca, dt, offer]
-                for o_ca, o_dt, offer, node in data.offer_node
-                if (o_ca, o_dt) == (ca, dt)
-                and (ca, dt, node, bus) in data.node_bus
-            )
-            demand_bid = sum(
-                data.node_bus_allocation.get((ca, dt, node, bus), 0.0)
-                * purchase[ca, dt, bid]
-                for b_ca, b_dt, bid, node in data.bid_node
-                if (b_ca, b_dt) == (ca, dt)
-                and (ca, dt, node, bus) in data.node_bus
-            )
-            load = sum(
-                data.node_bus_allocation.get((ca, dt, node, bus), 0.0)
-                * data.node_load[(ca, dt, node)]
-                for n_ca, n_dt, node, n_bus in data.node_bus
-                if (n_ca, n_dt, n_bus) == bus_key
-            )
-            dynamic_loss = sum(
-                (
-                    data.receiving_end_loss_proportion
-                    if receiving(branch, bus_key, direction)
-                    else 1.0 - data.receiving_end_loss_proportion
-                )
-                * _b.ACBranchLossesDirected[*branch, direction]
-                for branch in data.ac_branches
-                for direction in ("forward", "backward")
-                if receiving(branch, bus_key, direction)
-                or sending(branch, bus_key, direction)
-            )
-            fixed_loss = sum(
-                0.5 * data.branch_fixed_loss[branch]
-                for branch in data.branches
-                if (*branch, bus) in data.branch_bus_connect
-            )
-            scarcity_supply = sum(
-                data.node_bus_allocation.get((ca, dt, node, bus), 0.0)
-                * scarcity[ca, dt, node]
-                for n_ca, n_dt, node, n_bus in data.node_bus
-                if (n_ca, n_dt, n_bus) == bus_key
-            )
-            return _b.ACNodeNetInjection[bus_key] == (
-                supply
-                - demand_bid
-                - load
-                - dynamic_loss
-                - fixed_loss
-                + _b.DeficitBusGeneration[bus_key]
-                - _b.SurplusBusGeneration[bus_key]
-                + scarcity_supply
-            )
-
-        block.ACNodeNetInjectionDefinition2 = pyo.Constraint(
-            network.Bus, rule=bus_balance
+        block.ACNodeNetInjectionDefinition2 = self._energy_balance(
+            context, block, build_index
         )
 
         def maximum_flow(
@@ -281,19 +290,9 @@ class ACNetworkComponent(ModelComponent):
 
         def load_flow(_b: pyo.Block, ca: str, dt: str, branch: str) -> Any:
             key = (ca, dt, branch)
-            from_bus = next(
-                bus
-                for b_ca, b_dt, b_branch, bus in data.branch_from_bus
-                if (b_ca, b_dt, b_branch) == key
-            )
-            to_bus = next(
-                bus
-                for b_ca, b_dt, b_branch, bus in data.branch_to_bus
-                if (b_ca, b_dt, b_branch) == key
-            )
             return _b.ACBranchFlow[key] == data.branch_susceptance[key] * (
-                _b.ACNodeAngle[ca, dt, from_bus]
-                - _b.ACNodeAngle[ca, dt, to_bus]
+                _b.ACNodeAngle[ca, dt, build_index.from_bus[key]]
+                - _b.ACNodeAngle[ca, dt, build_index.to_bus[key]]
             )
 
         block.LinearLoadFlow = pyo.Constraint(network.ACBranch, rule=load_flow)
@@ -312,8 +311,9 @@ class ACNetworkComponent(ModelComponent):
                 _b.ACBranchFlowDirected[ca, dt, branch, direction]
                 == sum(
                     _b.ACBranchFlowBlockDirected[key]
-                    for key in network.ACLossSegment
-                    if key[:3] == (ca, dt, branch) and key[4] == direction
+                    for key in build_index.loss_segments.get(
+                        ((ca, dt, branch), direction), ()
+                    )
                 )
             ),
         )
@@ -337,8 +337,9 @@ class ACNetworkComponent(ModelComponent):
                 _b.ACBranchLossesDirected[ca, dt, branch, direction]
                 == sum(
                     _b.ACBranchLossesBlockDirected[key]
-                    for key in network.ACLossSegment
-                    if key[:3] == (ca, dt, branch) and key[4] == direction
+                    for key in build_index.loss_segments.get(
+                        ((ca, dt, branch), direction), ()
+                    )
                 )
             ),
         )
@@ -363,6 +364,66 @@ class ACNetworkComponent(ModelComponent):
             "branch_loss_calculation": block.ACBranchLossCalculation,
             "directed_branch_loss_definition": block.ACDirectedBranchLossDefinition,
         }
+
+    def _energy_balance(
+        self,
+        context: BuildContext,
+        block: pyo.Block,
+        build_index: NetworkBuildIndex,
+    ) -> pyo.Constraint:
+        data = _network(context)
+        network = context.artifacts["network_domains"]
+        generation = context.artifacts["generation"]
+        purchase = context.artifacts["purchase"]
+        scarcity = context.artifacts["energy_scarcity_node"]
+
+        def bus_balance(_b: pyo.Block, ca: str, dt: str, bus: str) -> Any:
+            bus_key = (ca, dt, bus)
+            supply = sum(
+                data.node_bus_allocation[ca, dt, node, bus] * generation[offer]
+                for offer, node in build_index.offers.get(bus_key, ())
+            )
+            demand_bid = sum(
+                data.node_bus_allocation[ca, dt, node, bus] * purchase[bid]
+                for bid, node in build_index.bids.get(bus_key, ())
+            )
+            load = sum(
+                data.node_bus_allocation[ca, dt, node, bus]
+                * data.node_load[ca, dt, node]
+                for node in build_index.nodes.get(bus_key, ())
+            )
+            dynamic_loss = sum(
+                (
+                    data.receiving_end_loss_proportion
+                    if is_receiving
+                    else 1.0 - data.receiving_end_loss_proportion
+                )
+                * _b.ACBranchLossesDirected[*branch, direction]
+                for branch, direction, is_receiving in build_index.incident.get(
+                    bus_key, ()
+                )
+            )
+            fixed_loss = sum(
+                0.5 * data.branch_fixed_loss[branch]
+                for branch in build_index.fixed_loss_branches.get(bus_key, ())
+            )
+            scarcity_supply = sum(
+                data.node_bus_allocation[ca, dt, node, bus]
+                * scarcity[ca, dt, node]
+                for node in build_index.nodes.get(bus_key, ())
+            )
+            return _b.ACNodeNetInjection[bus_key] == (
+                supply
+                - demand_bid
+                - load
+                - dynamic_loss
+                - fixed_loss
+                + _b.DeficitBusGeneration[bus_key]
+                - _b.SurplusBusGeneration[bus_key]
+                + scarcity_supply
+            )
+
+        return pyo.Constraint(network.Bus, rule=bus_balance)
 
 
 class NetworkSecurityComponent(ModelComponent):

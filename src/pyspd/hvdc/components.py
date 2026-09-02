@@ -17,6 +17,7 @@ from pyspd.hvdc.data import (
 )
 from pyspd.network.components import (
     ACNetworkComponent,
+    NetworkBuildIndex,
     NetworkEconomicsComponent,
     NetworkSecurityComponent,
 )
@@ -307,8 +308,12 @@ class HVDCACNetworkComponent(ACNetworkComponent):
         {"hvdc_data", "hvdc_domains", "hvdc_flow", "hvdc_loss"}
     )
 
-    def build(self, context: BuildContext) -> Mapping[str, Any]:
-        artifacts = dict(super().build(context))
+    def _energy_balance(
+        self,
+        context: BuildContext,
+        block: pyo.Block,
+        build_index: NetworkBuildIndex,
+    ) -> pyo.Constraint:
         network_data = _network(context)
         hvdc_data = _hvdc(context)
         network = context.artifacts["network_domains"]
@@ -317,63 +322,57 @@ class HVDCACNetworkComponent(ACNetworkComponent):
         scarcity = context.artifacts["energy_scarcity_node"]
         hvdc_flow = context.artifacts["hvdc_flow"]
         hvdc_loss = context.artifacts["hvdc_loss"]
-        block = context.model.ACNetwork
-        block.del_component(block.ACNodeNetInjectionDefinition2)
+        received_links: dict[Key, list[Key]] = {}
+        sent_links: dict[Key, list[Key]] = {}
+        for link in sorted(hvdc_data.links):
+            for bus_key in sorted(network_data.buses):
+                if (*link, bus_key[2]) in hvdc_data.receiving_bus:
+                    received_links.setdefault(bus_key, []).append(link)
+                if (*link, bus_key[2]) in hvdc_data.sending_bus:
+                    sent_links.setdefault(bus_key, []).append(link)
 
         def bus_balance(_b: pyo.Block, ca: str, dt: str, bus: str) -> Any:
             bus_key = (ca, dt, bus)
             supply = sum(
-                network_data.node_bus_allocation.get((ca, dt, node, bus), 0.0)
-                * generation[ca, dt, offer]
-                for o_ca, o_dt, offer, node in network_data.offer_node
-                if (o_ca, o_dt) == (ca, dt)
-                and (ca, dt, node, bus) in network_data.node_bus
+                network_data.node_bus_allocation[ca, dt, node, bus]
+                * generation[offer]
+                for offer, node in build_index.offers.get(bus_key, ())
             )
             demand_bid = sum(
-                network_data.node_bus_allocation.get((ca, dt, node, bus), 0.0)
-                * purchase[ca, dt, bid]
-                for b_ca, b_dt, bid, node in network_data.bid_node
-                if (b_ca, b_dt) == (ca, dt)
-                and (ca, dt, node, bus) in network_data.node_bus
+                network_data.node_bus_allocation[ca, dt, node, bus] * purchase[bid]
+                for bid, node in build_index.bids.get(bus_key, ())
             )
             load = sum(
                 network_data.node_bus_allocation.get((ca, dt, node, bus), 0.0)
                 * network_data.node_load[(ca, dt, node)]
-                for n_ca, n_dt, node, n_bus in network_data.node_bus
-                if (n_ca, n_dt, n_bus) == bus_key
+                for node in build_index.nodes.get(bus_key, ())
             )
             ac_loss = sum(
                 (
                     network_data.receiving_end_loss_proportion
-                    if _receiving(network_data, branch, bus_key, direction)
+                    if is_receiving
                     else 1.0 - network_data.receiving_end_loss_proportion
                 )
                 * _b.ACBranchLossesDirected[*branch, direction]
-                for branch in network_data.ac_branches
-                for direction in ("forward", "backward")
-                if _receiving(network_data, branch, bus_key, direction)
-                or _sending(network_data, branch, bus_key, direction)
+                for branch, direction, is_receiving in build_index.incident.get(
+                    bus_key, ()
+                )
             )
             fixed_loss = sum(
                 0.5 * network_data.branch_fixed_loss[branch]
-                for branch in network_data.branches
-                if (*branch, bus) in network_data.branch_bus_connect
+                for branch in build_index.fixed_loss_branches.get(bus_key, ())
             )
             received_hvdc = sum(
                 hvdc_flow[link] - hvdc_loss[link]
-                for link in hvdc_data.links
-                if (*link, bus) in hvdc_data.receiving_bus
+                for link in received_links.get(bus_key, ())
             )
             sent_hvdc = sum(
-                hvdc_flow[link]
-                for link in hvdc_data.links
-                if (*link, bus) in hvdc_data.sending_bus
+                hvdc_flow[link] for link in sent_links.get(bus_key, ())
             )
             scarcity_supply = sum(
                 network_data.node_bus_allocation.get((ca, dt, node, bus), 0.0)
                 * scarcity[ca, dt, node]
-                for n_ca, n_dt, node, n_bus in network_data.node_bus
-                if (n_ca, n_dt, n_bus) == bus_key
+                for node in build_index.nodes.get(bus_key, ())
             )
             return _b.ACNodeNetInjection[bus_key] == (
                 supply
@@ -388,11 +387,7 @@ class HVDCACNetworkComponent(ACNetworkComponent):
                 + scarcity_supply
             )
 
-        block.ACNodeNetInjectionDefinition2 = pyo.Constraint(
-            network.Bus, rule=bus_balance
-        )
-        artifacts["energy_balance"] = block.ACNodeNetInjectionDefinition2
-        return artifacts
+        return pyo.Constraint(network.Bus, rule=bus_balance)
 
 
 class HVDCSecurityComponent(NetworkSecurityComponent):
@@ -475,13 +470,3 @@ class HVDCSecurityComponent(NetworkSecurityComponent):
 class HVDCEconomicsComponent(NetworkEconomicsComponent):
     name = "network_economics"
     supported_formulations = _SUPPORTED
-
-
-def _sending(data: NetworkData, branch: Key, bus: Key, direction: str) -> bool:
-    endpoint = data.branch_from_bus if direction == "forward" else data.branch_to_bus
-    return (*branch, bus[2]) in endpoint
-
-
-def _receiving(data: NetworkData, branch: Key, bus: Key, direction: str) -> bool:
-    endpoint = data.branch_to_bus if direction == "forward" else data.branch_from_bus
-    return (*branch, bus[2]) in endpoint
