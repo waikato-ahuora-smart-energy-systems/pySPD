@@ -21,10 +21,11 @@ from pyspd.hvdc import (
 )
 from pyspd.hvdc.diagnostics import DiagnosticCapabilityError
 from pyspd.hvdc.formulation import (
+    WarmStartSnapshot,
     _fix_continuous_state,
     pricing_model_belongs_to_request,
 )
-from pyspd.solver import NativeScipBackend
+from pyspd.solver import HighsBackend, NativeScipBackend
 from tests.hvdc.conftest import make_hvdc_case
 
 
@@ -45,22 +46,25 @@ def test_primary_scip_uses_corpus_stable_feasibility_tolerance(monkeypatch) -> N
     captured = {}
     sentinel = object()
 
-    def capture(_backend, _model, configuration):
+    def capture(_backend, _model, configuration, *, warm_start_discrete=False):
         captured.update(configuration.options)
+        captured["warm_start_discrete"] = warm_start_discrete
         return sentinel
 
     monkeypatch.setattr(NativeScipBackend, "solve_mip", capture)
 
     assert HvdcSolvePolicy._solve_scip(build(make_hvdc_case(enforce=True))) is sentinel
     assert captured["numerics/feastol"] == 1e-6
+    assert captured["warm_start_discrete"] is False
 
 
 def test_fixed_rmip_uses_gams_highs_tolerances(monkeypatch) -> None:
     captured = {}
     sentinel = object()
 
-    def capture(_backend, _model, configuration):
+    def capture(_backend, _model, configuration, *, warm_start=False):
         captured.update(configuration.options)
+        captured["warm_start"] = warm_start
         return sentinel
 
     monkeypatch.setattr("pyspd.hvdc.formulation.HighsBackend.solve", capture)
@@ -70,6 +74,89 @@ def test_fixed_rmip_uses_gams_highs_tolerances(monkeypatch) -> None:
     assert captured["dual_feasibility_tolerance"] == 1e-9
     assert captured["primal_residual_tolerance"] == 1e-9
     assert captured["dual_residual_tolerance"] == 1e-9
+    assert captured["warm_start"] is False
+
+
+def test_warm_start_remaps_period_identity_and_rejects_incompatible_values() -> None:
+    previous = pyo.ConcreteModel()
+    previous.dispatch = pyo.Var(
+        [("CASE-1", "TIME-1", "GEN")], domain=pyo.Binary, initialize=1.0
+    )
+    previous.flow = pyo.Var(
+        [("CASE-1", "TIME-1", "HVDC")], bounds=(-10.0, 10.0), initialize=4.0
+    )
+    previous.fixed = pyo.Var(
+        [("CASE-1", "TIME-1", "FIXED")], domain=pyo.Binary, initialize=1.0
+    )
+    snapshot = WarmStartSnapshot.capture(previous)
+    discrete_snapshot = WarmStartSnapshot.capture(previous, discrete_only=True)
+    assert len(discrete_snapshot.values) == 2
+
+    candidate = pyo.ConcreteModel()
+    candidate.dispatch = pyo.Var(
+        [("CASE-2", "TIME-2", "GEN")], domain=pyo.Binary
+    )
+    candidate.flow = pyo.Var(
+        [("CASE-2", "TIME-2", "HVDC")], bounds=(-2.0, 2.0)
+    )
+    candidate.fixed = pyo.Var(
+        [("CASE-2", "TIME-2", "FIXED")], domain=pyo.Binary, initialize=0.0
+    )
+    candidate.fixed["CASE-2", "TIME-2", "FIXED"].fix()
+
+    assert snapshot.apply(candidate, discrete_only=True) == 1
+    assert candidate.dispatch["CASE-2", "TIME-2", "GEN"].value == 1.0
+    assert candidate.flow["CASE-2", "TIME-2", "HVDC"].value is None
+    assert candidate.fixed["CASE-2", "TIME-2", "FIXED"].value == 0.0
+    assert snapshot.apply(candidate) == 1
+    assert candidate.flow["CASE-2", "TIME-2", "HVDC"].value is None
+
+
+def test_policy_records_cross_period_and_same_period_warm_starts(monkeypatch) -> None:
+    observed: list[bool] = []
+    original = HighsBackend.solve
+
+    def capture(
+        self,
+        model,
+        configuration,
+        *,
+        load_solution=True,
+        accept_nonoptimal=False,
+        warm_start=False,
+    ):
+        observed.append(warm_start)
+        return original(
+            self,
+            model,
+            configuration,
+            load_solution=load_solution,
+            accept_nonoptimal=accept_nonoptimal,
+            warm_start=False,
+        )
+
+    monkeypatch.setattr(HighsBackend, "solve", capture)
+    first = HvdcSolvePolicy(
+        warm_start_primary=True,
+        warm_start_pricing=True,
+    ).solve(
+        build(make_hvdc_case(enforce=True))
+    )
+    second = HvdcSolvePolicy(
+        warm_start_primary=True,
+        warm_start_pricing=True,
+        previous_period_start=first.next_warm_start,
+    ).solve(build(make_hvdc_case(enforce=True)))
+
+    assert first.warm_start.prior_value_count == 0
+    assert first.warm_start.pricing_value_count > 0
+    assert second.warm_start.prior_value_count > 0
+    assert second.warm_start.primary_discrete_count > 0
+    assert second.warm_start.pricing_value_count > 0
+    assert True in observed
+    assert second.primary_snapshot.objective == pytest.approx(
+        first.primary_snapshot.objective
+    )
 
 
 def test_fixed_rmip_preserves_sos_support_without_fixing_active_weights() -> None:

@@ -24,6 +24,8 @@ from pyspd.hvdc.formulation import (
     HvdcSolveOutcome,
     HvdcSolvePolicy,
     SolutionSnapshot,
+    WarmStartAudit,
+    WarmStartSnapshot,
     detect_nonphysical_hvdc,
     hvdc_formulation,
 )
@@ -56,6 +58,8 @@ __all__ = [
     "PricingModelAudit",
     "SolutionSnapshot",
     "SosRepresentation",
+    "WarmStartAudit",
+    "WarmStartSnapshot",
     "active_discrete_count",
     "audit_pricing_model",
     "detect_nonphysical_hvdc",

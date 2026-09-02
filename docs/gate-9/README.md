@@ -35,6 +35,12 @@ and byte-deterministic full physical results remain Gate 12 obligations. Gate 9
 authorizes Gate 10 packaging and operational assurance for a non-distributable
 engineering candidate only; Gate 0 legal holds still control public release.
 
+A later [period-to-period warm-start trial](warm-start-trial-20221106.md)
+passed exact cold-path parity across 15,224 values, but SCIP discrete warm
+starting was 0.47% slower on the order-balanced four-case sample. HiGHS primal
+initialization was also slower and changed a degenerate raw dual. Both paths
+remain opt-in diagnostics; the qualified application default remains cold.
+
 See the [closure decision](closure-decision.md),
 [checklist](gate-checklist.md), [qualification evidence](qualification.json),
 and [Probity records](tdd/).

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pyomo.environ as pyo
 import pytest
+from pyomo.contrib.solver.solvers.scip.scip_direct import ScipDirect
 
 from pyspd.solver import (
     NativeScipBackend,
@@ -46,6 +47,24 @@ def test_native_scip_solves_and_loads_an_optimal_mip() -> None:
     assert outcome.incumbent_objective == pytest.approx(5.0)
     assert outcome.best_bound == pytest.approx(5.0)
     assert outcome.relative_gap == pytest.approx(0.0)
+
+
+def test_native_scip_passes_an_explicit_discrete_warm_start(monkeypatch) -> None:
+    model = _binary_model()
+    model.x.set_value(0.0)
+    captured: dict[str, object] = {}
+    original = ScipDirect.solve
+
+    def capture(self, pyomo_model, **kwargs):
+        captured.update(kwargs)
+        return original(self, pyomo_model, **kwargs)
+
+    monkeypatch.setattr(ScipDirect, "solve", capture)
+
+    outcome = NativeScipBackend().solve_mip(model, warm_start_discrete=True)
+
+    assert outcome.solve.status is SolveStatus.OPTIMAL
+    assert captured["warmstart_discrete_vars"] is True
 
 
 class UnavailableScip:

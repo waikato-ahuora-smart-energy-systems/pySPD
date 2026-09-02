@@ -5,12 +5,13 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 import pyomo.environ as pyo
 
 from pyspd.architecture import Formulation, ModelAssembler, PricingEngine
 from pyspd.hvdc.data import SosRepresentation
+from pyspd.hvdc.formulation import HvdcSolvePolicy, WarmStartSnapshot
 from pyspd.preprocess.shortfall import ShortfallTransferResolver, ShortfallTransferState
 from pyspd.reserve import ReserveCase, ReservePricingEngine, reserve_formulation
 from pyspd.v16.data import Spd16Case
@@ -194,12 +195,29 @@ class ShortfallLoop:
 class ReserveCaseExecutor:
     """Execute a prepared case through Gate 7 SCIP→fixed-discrete→HiGHS."""
 
+    def __init__(
+        self,
+        *,
+        warm_start_primary: bool = False,
+        warm_start_pricing: bool = False,
+    ) -> None:
+        self.warm_start_primary = bool(warm_start_primary)
+        self.warm_start_pricing = bool(warm_start_pricing)
+        self._previous_period_start: WarmStartSnapshot | None = None
+
     def solve(self, prepared: PreparedCase) -> SolveObservation:
         if not isinstance(prepared.payload, ReserveCase):
             raise TypeError("ReserveCaseExecutor requires a ReserveCase payload")
         case = _updated_case(prepared)
         built = ModelAssembler().assemble(self.formulation(), case)
-        outcome = built.formulation.solve_policy().solve(built)
+        policy_type = cast(type[HvdcSolvePolicy], built.formulation.solve_policy)
+        outcome = policy_type(
+            warm_start_primary=self.warm_start_primary,
+            warm_start_pricing=self.warm_start_pricing,
+            previous_period_start=self._previous_period_start,
+        ).solve(built)
+        if self.warm_start_primary:
+            self._previous_period_start = outcome.next_warm_start
         prices = self.pricing_engine().price(built, outcome)
         # Pinned vSPD reports the levels left by solveFinal: the primary MIP
         # selects discrete/SOS state, then the fixed RMIP refines continuous

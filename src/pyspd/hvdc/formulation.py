@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from itertools import pairwise
@@ -80,6 +81,72 @@ class SolutionSnapshot:
         object.__setattr__(self, "variables", MappingProxyType(dict(self.variables)))
 
 
+type WarmStartKey = tuple[str, tuple[str, ...]]
+
+
+@dataclass(frozen=True, slots=True)
+class WarmStartSnapshot:
+    """Period-neutral primal values that can seed a freshly built model."""
+
+    values: Mapping[WarmStartKey, float]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "values", MappingProxyType(dict(self.values)))
+
+    @classmethod
+    def capture(
+        cls,
+        model: pyo.ConcreteModel,
+        *,
+        discrete_only: bool = False,
+    ) -> WarmStartSnapshot:
+        values: dict[WarmStartKey, float] = {}
+        for variable in model.component_data_objects(pyo.Var, active=True):
+            if discrete_only and not (
+                variable.is_binary() or variable.is_integer()
+            ):
+                continue
+            value = pyo.value(variable, exception=False)
+            if value is None or not math.isfinite(float(value)):
+                continue
+            key = _warm_start_key(variable)
+            if key in values:
+                raise ValueError(f"duplicate period-neutral warm-start key: {key!r}")
+            values[key] = float(value)
+        return cls(values)
+
+    def apply(
+        self,
+        model: pyo.ConcreteModel,
+        *,
+        discrete_only: bool = False,
+    ) -> int:
+        applied = 0
+        for variable in model.component_data_objects(pyo.Var, active=True):
+            if variable.fixed:
+                continue
+            if discrete_only and not (
+                variable.is_binary() or variable.is_integer()
+            ):
+                continue
+            value = self.values.get(_warm_start_key(variable))
+            if value is None or not _warm_start_value_is_valid(variable, value):
+                continue
+            if variable.is_binary() or variable.is_integer():
+                value = float(round(value))
+            variable.set_value(value, skip_validation=True)
+            applied += 1
+        return applied
+
+
+@dataclass(frozen=True, slots=True)
+class WarmStartAudit:
+    enabled: bool
+    prior_value_count: int
+    primary_discrete_count: int
+    pricing_value_count: int
+
+
 @dataclass(frozen=True, slots=True)
 class HvdcSolveOutcome:
     primary_model: BuiltModel
@@ -92,6 +159,8 @@ class HvdcSolveOutcome:
     fixed_sos_members: Mapping[str, float]
     primary_snapshot: SolutionSnapshot
     pricing_snapshot: SolutionSnapshot
+    next_warm_start: WarmStartSnapshot
+    warm_start: WarmStartAudit
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -107,16 +176,45 @@ class HvdcSolvePolicy(SolvePolicy):
 
     supported_formulations = _SUPPORTED
 
+    def __init__(
+        self,
+        *,
+        warm_start_primary: bool = False,
+        warm_start_pricing: bool = False,
+        previous_period_start: WarmStartSnapshot | None = None,
+    ) -> None:
+        self.warm_start_primary = bool(warm_start_primary)
+        self.warm_start_pricing = bool(warm_start_pricing)
+        self.previous_period_start = previous_period_start
+
     def solve(self, built_model: BuiltModel) -> HvdcSolveOutcome:
         case = built_model.case_data
         if not isinstance(case, HvdcCase) or case.hvdc is None:
             raise TypeError("HVDC solve policy requires HvdcCase")
         primary = built_model
+        prior = self.previous_period_start if self.warm_start_primary else None
+        prior_value_count = len(prior.values) if prior is not None else 0
+        primary_warm_count = (
+            prior.apply(primary.model, discrete_only=True)
+            if prior is not None
+            else 0
+        )
         discrete = _active_discrete(primary.model)
         if discrete:
-            initial: SolveResult | MipSolveResult = self._solve_scip(primary)
+            initial: SolveResult | MipSolveResult = self._solve_scip(
+                primary,
+                warm_start=primary_warm_count > 0,
+            )
         else:
-            initial = self._solve_highs(primary)
+            primary_warm_count = (
+                prior.apply(primary.model)
+                if prior is not None
+                else 0
+            )
+            initial = self._solve_highs(
+                primary,
+                warm_start=primary_warm_count > 0,
+            )
         issues = detect_nonphysical_hvdc(primary)
         primary_mip: MipSolveResult | None = (
             initial if isinstance(initial, MipSolveResult) else None
@@ -124,7 +222,15 @@ class HvdcSolvePolicy(SolvePolicy):
         if issues and not (case.hvdc.enforce_sos2 and case.hvdc.enforce_flow_direction):
             enforced_case = replace(case, hvdc=case.hvdc.with_mip_enforcement())
             primary = ModelAssembler().assemble(self._formulation(), enforced_case)
-            primary_mip = self._solve_scip(primary)
+            primary_warm_count = (
+                prior.apply(primary.model, discrete_only=True)
+                if prior is not None
+                else 0
+            )
+            primary_mip = self._solve_scip(
+                primary,
+                warm_start=primary_warm_count > 0,
+            )
             remaining = detect_nonphysical_hvdc(primary)
             if remaining:
                 raise ValueError(
@@ -138,11 +244,24 @@ class HvdcSolvePolicy(SolvePolicy):
         fixed_sos_members = _solvefinal_sos_member_values(primary)
         _set_continuous_state(primary.model, fixed_sos_members)
         pricing = ModelAssembler().assemble(self._formulation(), primary.case_data)
+        pricing_warm_count = 0
+        if self.warm_start_pricing:
+            pricing_warm_count = WarmStartSnapshot.capture(primary.model).apply(
+                pricing.model
+            )
         _fix_and_relax_discrete(pricing.model, fixed)
         _fix_continuous_state(pricing.model, fixed_sos_members)
         _deactivate_sos(pricing.model)
         _assert_continuous_pricing_model(pricing.model)
-        pricing_result = self._solve_highs(pricing)
+        pricing_result = self._solve_highs(
+            pricing,
+            warm_start=pricing_warm_count > 0,
+        )
+        next_warm_start = (
+            WarmStartSnapshot.capture(primary.model, discrete_only=True)
+            if self.warm_start_primary
+            else WarmStartSnapshot({})
+        )
         return HvdcSolveOutcome(
             primary,
             pricing,
@@ -154,13 +273,24 @@ class HvdcSolvePolicy(SolvePolicy):
             fixed_sos_members,
             _snapshot(primary),
             _snapshot(pricing),
+            next_warm_start,
+            WarmStartAudit(
+                self.warm_start_primary or self.warm_start_pricing,
+                prior_value_count,
+                primary_warm_count,
+                pricing_warm_count,
+            ),
         )
 
     def _formulation(self) -> Formulation:
         return hvdc_formulation()
 
     @staticmethod
-    def _solve_scip(built: BuiltModel) -> MipSolveResult:
+    def _solve_scip(
+        built: BuiltModel,
+        *,
+        warm_start: bool = False,
+    ) -> MipSolveResult:
         return NativeScipBackend().solve_mip(
             built.model,
             SolverConfiguration(
@@ -175,10 +305,15 @@ class HvdcSolvePolicy(SolvePolicy):
                     "numerics/feastol": _SCIP_PRIMAL_FEASIBILITY_TOLERANCE,
                 }
             ),
+            warm_start_discrete=warm_start,
         )
 
     @staticmethod
-    def _solve_highs(built: BuiltModel) -> SolveResult:
+    def _solve_highs(
+        built: BuiltModel,
+        *,
+        warm_start: bool = False,
+    ) -> SolveResult:
         return HighsBackend().solve(
             built.model,
             SolverConfiguration(
@@ -192,6 +327,7 @@ class HvdcSolvePolicy(SolvePolicy):
                     "threads": 1,
                 }
             ),
+            warm_start=warm_start,
         )
 
 
@@ -358,6 +494,37 @@ def _active_discrete(model: pyo.ConcreteModel) -> tuple[Any, ...]:
         variable
         for variable in model.component_data_objects(pyo.Var, active=True)
         if not variable.fixed and (variable.is_binary() or variable.is_integer())
+    )
+
+
+def _warm_start_key(variable: Any) -> WarmStartKey:
+    index = variable.index()
+    if index is None:
+        tokens: tuple[Any, ...] = ()
+    elif isinstance(index, tuple):
+        tokens = index
+    else:
+        tokens = (index,)
+    # Every operational case model contains one case/date pair. Removing it
+    # creates a stable semantic identity for the canonical successor period.
+    if len(tokens) >= 2:
+        tokens = tokens[2:]
+    return variable.parent_component().name, tuple(str(token) for token in tokens)
+
+
+def _warm_start_value_is_valid(variable: Any, value: float) -> bool:
+    if not math.isfinite(value):
+        return False
+    lower = pyo.value(variable.lb, exception=False)
+    upper = pyo.value(variable.ub, exception=False)
+    tolerance = 1e-7
+    if lower is not None and value < float(lower) - tolerance:
+        return False
+    if upper is not None and value > float(upper) + tolerance:
+        return False
+    return not (
+        (variable.is_binary() or variable.is_integer())
+        and abs(value - round(value)) > tolerance
     )
 
 

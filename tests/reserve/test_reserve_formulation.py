@@ -67,6 +67,34 @@ def test_accepted_output_uses_fixed_rmip_continuous_state() -> None:
     }
 
 
+def test_executor_carries_an_opt_in_discrete_start_to_the_next_period() -> None:
+    case = make_reserve_case()
+    assert case.network is not None
+    prepared = PreparedCase(
+        DailyCase(
+            "C1",
+            "T1",
+            "TP1",
+            101,
+            ScheduleType.RTD,
+            5.0,
+            300.0,
+            0,
+            "0" * 64,
+        ),
+        case,
+        case.network.node_load,
+    )
+    executor = ReserveCaseExecutor(warm_start_primary=True)
+
+    first = executor.solve(prepared)
+    second = executor.solve(prepared)
+
+    assert first.solve_payload.warm_start.primary_discrete_count == 0
+    assert second.solve_payload.warm_start.primary_discrete_count > 0
+    assert first.objective == pytest.approx(second.objective)
+
+
 def test_gate7_is_class_composed_and_extensible() -> None:
     formulation = reserve_formulation()
     assert ReserveOfferComponent in formulation.components

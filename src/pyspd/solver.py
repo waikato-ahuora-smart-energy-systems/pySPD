@@ -120,6 +120,7 @@ class HighsBackend(SolverBackend):
         *,
         load_solution: bool = True,
         accept_nonoptimal: bool = False,
+        warm_start: bool = False,
     ) -> SolveResult:
         solver = self._solver_factory("appsi_highs")
         if solver is None or not solver.available(exception_flag=False):
@@ -128,10 +129,19 @@ class HighsBackend(SolverBackend):
             )
         for name, value in configuration.options.items():
             solver.options[name] = value
+        solve_options: dict[str, Any] = {"load_solutions": False}
+        if warm_start:
+            solve_options["warmstart"] = True
         try:
-            raw_results = solver.solve(model, load_solutions=False)
+            raw_results = solver.solve(model, **solve_options)
         except Exception as error:
             raise SolverExecutionError(f"HiGHS execution error: {error}") from error
+        finally:
+            if warm_start and hasattr(solver, "config"):
+                # The legacy APPSI facade mutates its shared configuration when
+                # keyword overrides are supplied. Restore the cold default so
+                # a warm solve cannot contaminate later independent solves.
+                solver.config.warmstart = False
 
         raw_status = raw_results.solver.status
         termination = raw_results.solver.termination_condition
@@ -351,6 +361,7 @@ class NativeScipBackend(SolverBackend):
         *,
         load_solution: bool = True,
         accept_nonoptimal_incumbent: bool = False,
+        warm_start_discrete: bool = False,
     ) -> MipSolveResult:
         discrete_count = sum(
             variable.is_binary() or variable.is_integer()
@@ -371,6 +382,8 @@ class NativeScipBackend(SolverBackend):
                 name: value for name, value in options.items() if name not in known
             },
         }
+        if warm_start_discrete:
+            solve_options["warmstart_discrete_vars"] = True
         if "time_limit_seconds" in options:
             solve_options["time_limit"] = float(options["time_limit_seconds"])
         if "relative_gap" in options:

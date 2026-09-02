@@ -40,6 +40,25 @@ def test_highs_safe_load_and_effective_options() -> None:
     assert model.x.value == pytest.approx(1.0)
 
 
+def test_highs_passes_an_explicit_primal_warm_start() -> None:
+    solver = FakeSolver()
+    model = optimal_model()
+    model.x.set_value(2.0)
+
+    result = HighsBackend(solver_factory=lambda _name: solver).solve(
+        model,
+        load_solution=False,
+        accept_nonoptimal=True,
+        warm_start=True,
+    )
+
+    assert result.status is SolveStatus.NO_SOLUTION
+    assert solver.solve_options == {
+        "load_solutions": False,
+        "warmstart": True,
+    }
+
+
 def test_nonoptimal_results_are_mapped_but_not_silently_loaded() -> None:
     model = pyo.ConcreteModel()
     model.x = pyo.Var()
@@ -70,6 +89,7 @@ class FakeSolver:
         self._available = available
         self._raises = raises
         self.options: dict[str, object] = {}
+        self.solve_options: dict[str, object] = {}
 
     def available(self, exception_flag: bool = False) -> bool:
         return self._available
@@ -77,7 +97,8 @@ class FakeSolver:
     def version(self) -> tuple[int, ...]:
         return (1, 15, 1)
 
-    def solve(self, model: object, load_solutions: bool = False) -> SolverResults:
+    def solve(self, model: object, **kwargs) -> SolverResults:
+        self.solve_options = dict(kwargs)
         if self._raises:
             raise RuntimeError("synthetic backend failure")
         results = SolverResults()

@@ -1,0 +1,108 @@
+{
+  "case_count": 4,
+  "case_ids": [
+    "51012022111100690",
+    "51012022111105693",
+    "51012022111110695",
+    "51012022111115698"
+  ],
+  "environment": "Darwin-arm64",
+  "execution_sha256": "915ecec7e896b02ec0e56bfc083967612d400517ba70d2c98da507f87419bcb1",
+  "logical_sha256": "0172ace88169db0e44fe3acc4b64cc9b74fcd1aa30e45f03ace5c15b8c99152c",
+  "parity": {
+    "scip": {
+      "compared_value_count": 15224,
+      "exact_result_sha256_match": true,
+      "fixed_discrete_match": true,
+      "identity_match": true,
+      "maximum_objective_error": 0.0,
+      "maximum_physics_error": 0.0,
+      "maximum_price_error": 0.0,
+      "objective_tolerance": 0.0001,
+      "passed": true,
+      "physics_tolerance": 1e-08,
+      "price_tolerance": 0.0001,
+      "published_output_exact_match": true
+    }
+  },
+  "preparation_seconds": 43.39494016696699,
+  "profile": "pyspd-period-warm-start-benchmark-v1",
+  "repetitions": 2,
+  "runs": [
+    {
+      "all_solves_optimal": true,
+      "case_solve_seconds": [
+        16.41133454197552,
+        20.792689999914728,
+        18.464036290999502,
+        20.1375661669299
+      ],
+      "mode": "cold",
+      "pricing_warm_start_counts": [0, 0, 0, 0],
+      "primary_warm_start_counts": [0, 0, 0, 0],
+      "repetition": 1,
+      "result_sha256": "4bfc69fdd9094f27f81749e272ac934c60283a9913b66abb988fe0a6a6e3a6b7",
+      "wall_seconds": 75.8699027079856
+    },
+    {
+      "all_solves_optimal": true,
+      "case_solve_seconds": [
+        17.79943324998021,
+        20.975453334045596,
+        18.965746625093743,
+        20.185052583925426
+      ],
+      "mode": "scip",
+      "pricing_warm_start_counts": [0, 0, 0, 0],
+      "primary_warm_start_counts": [0, 12, 12, 12],
+      "repetition": 1,
+      "result_sha256": "4bfc69fdd9094f27f81749e272ac934c60283a9913b66abb988fe0a6a6e3a6b7",
+      "wall_seconds": 77.98954212502576
+    },
+    {
+      "all_solves_optimal": true,
+      "case_solve_seconds": [
+        17.77274137502536,
+        21.388522709021345,
+        19.013536583050154,
+        19.444665624992922
+      ],
+      "mode": "scip",
+      "pricing_warm_start_counts": [0, 0, 0, 0],
+      "primary_warm_start_counts": [0, 12, 12, 12],
+      "repetition": 2,
+      "result_sha256": "4bfc69fdd9094f27f81749e272ac934c60283a9913b66abb988fe0a6a6e3a6b7",
+      "wall_seconds": 77.68574012501631
+    },
+    {
+      "all_solves_optimal": true,
+      "case_solve_seconds": [
+        18.095301834051497,
+        21.976667832932435,
+        17.811141457990743,
+        21.13066991697997
+      ],
+      "mode": "cold",
+      "pricing_warm_start_counts": [0, 0, 0, 0],
+      "primary_warm_start_counts": [0, 0, 0, 0],
+      "repetition": 2,
+      "result_sha256": "4bfc69fdd9094f27f81749e272ac934c60283a9913b66abb988fe0a6a6e3a6b7",
+      "wall_seconds": 79.07796441600658
+    }
+  ],
+  "schema_version": 1,
+  "source_name": "Pricing_20221106.gdx",
+  "source_sha256": "282ac2abeaa2f0c7c6e26b967e2ba90289c0ba5a9e696b99069d11350d3037b8",
+  "summary": {
+    "cold": {
+      "elapsed_reduction_percent_vs_cold": 0.0,
+      "median_seconds": 77.47393356199609,
+      "speedup_factor_vs_cold": 1.0
+    },
+    "scip": {
+      "elapsed_reduction_percent_vs_cold": -0.46945797935237144,
+      "median_seconds": 77.83764112502104,
+      "speedup_factor_vs_cold": 0.9953273563051485
+    }
+  }
+}
