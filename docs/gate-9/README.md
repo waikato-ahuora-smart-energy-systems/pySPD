@@ -41,6 +41,11 @@ starting was 0.47% slower on the order-balanced four-case sample. HiGHS primal
 initialization was also slower and changed a degenerate raw dual. Both paths
 remain opt-in diagnostics; the qualified application default remains cold.
 
+The subsequent [GDX preparation optimization](gdx-preparation-trial-20221106.md)
+vectorizes GAMS special-value classification and indexes UEL validation. It
+reduced the measured four-case preparation phase by 72.08%, with exact
+3,682,271-record canonical-feed parity. The optimized path is enabled.
+
 See the [closure decision](closure-decision.md),
 [checklist](gate-checklist.md), [qualification evidence](qualification.json),
 and [Probity records](tdd/).

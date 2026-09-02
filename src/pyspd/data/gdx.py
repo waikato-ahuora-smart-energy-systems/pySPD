@@ -201,14 +201,25 @@ class GdxAdapter:
                     for index in range(dimension)
                 ]
                 columns = [str(column) for column in records_frame.columns]
-                for row in records_frame.itertuples(index=False, name=None):
+                value_columns: dict[str, tuple[ScalarValue, ...]] = {}
+                for index in range(dimension, len(columns)):
+                    field_name = columns[index]
+                    values = records_frame.iloc[:, index]
+                    if field_name == "element_text":
+                        value_columns[field_name] = tuple(
+                            ScalarValue.text("" if value is None else str(value))
+                            for value in values
+                        )
+                    else:
+                        value_columns[field_name] = cls.classify_numeric_column(
+                            values, special_values
+                        )
+                for row_index, row in enumerate(
+                    records_frame.itertuples(index=False, name=None)
+                ):
                     keys = tuple(str(value) for value in row[:dimension])
                     values = {
-                        columns[index]: (
-                            ScalarValue.text("" if row[index] is None else str(row[index]))
-                            if columns[index] == "element_text"
-                            else cls.classify_numeric(row[index], special_values)
-                        )
+                        columns[index]: value_columns[columns[index]][row_index]
                         for index in range(dimension, len(columns))
                     }
                     records.append(RawRecord(keys, values))
@@ -226,6 +237,48 @@ class GdxAdapter:
                 )
             )
         return RawSymbols(source_name, source_sha256, tuple(symbols))
+
+    @staticmethod
+    def classify_numeric_column(
+        values: Any, special_values: Any
+    ) -> tuple[ScalarValue, ...]:
+        """Classify one GDX value column with vectorized special-value tests."""
+
+        import numpy as np
+
+        numeric = np.asarray(values, dtype=np.float64)
+        if numeric.ndim != 1:
+            raise ValueError("GDX numeric value column must be one-dimensional")
+        codes = np.zeros(len(numeric), dtype=np.uint8)
+        predicates = (
+            (1, "isEps", ValueKind.EPS),
+            (2, "isNA", ValueKind.NA),
+            (3, "isUndef", ValueKind.UNDEF),
+            (4, "isPosInf", ValueKind.POSITIVE_INFINITY),
+            (5, "isNegInf", ValueKind.NEGATIVE_INFINITY),
+        )
+        special_by_code: dict[int, ScalarValue] = {}
+        for code, predicate, kind in predicates:
+            detected = np.asarray(
+                getattr(special_values, predicate)(numeric), dtype=bool
+            )
+            if detected.shape != numeric.shape:
+                raise ValueError(
+                    f"GDX {predicate} predicate returned an incompatible shape"
+                )
+            codes[(codes == 0) & detected] = code
+            special_by_code[code] = ScalarValue.special(kind)
+        finite = codes == 0
+        if np.any(finite & ~np.isfinite(numeric)):
+            raise ValueError("unclassified non-finite GDX numeric value")
+        numeric = numeric.copy()
+        numeric[finite & (numeric == 0.0)] = 0.0
+        return tuple(
+            ScalarValue.finite(float(value))
+            if code == 0
+            else special_by_code[int(code)]
+            for value, code in zip(numeric, codes, strict=True)
+        )
 
     @staticmethod
     def classify_numeric(value: Any, special_values: Any) -> ScalarValue:

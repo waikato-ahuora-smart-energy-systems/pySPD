@@ -148,6 +148,7 @@ class SymbolCatalog:
                     f"{allowed_domains}"
                 )
             identities: set[tuple[str, ...]] = set()
+            uel_memberships = tuple(frozenset(order) for order in symbol.uel_orders)
             for record in symbol.records:
                 if record.keys in identities:
                     raise SymbolCatalogError(
@@ -155,7 +156,7 @@ class SymbolCatalog:
                     )
                 identities.add(record.keys)
                 for index, key in enumerate(record.keys):
-                    if key not in symbol.uel_orders[index]:
+                    if key not in uel_memberships[index]:
                         raise SymbolCatalogError(
                             f"record key absent from UEL order in {name}[{index}]: {key}"
                         )

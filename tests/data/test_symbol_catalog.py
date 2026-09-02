@@ -4,7 +4,14 @@ from dataclasses import replace
 
 import pytest
 
-from pyspd.data import RawSymbol, RawSymbols, SymbolCatalog, SymbolCatalogError
+from pyspd.data import (
+    RawRecord,
+    RawSymbol,
+    RawSymbols,
+    ScalarValue,
+    SymbolCatalog,
+    SymbolCatalogError,
+)
 
 
 def empty_source(catalog: SymbolCatalog) -> RawSymbols:
@@ -68,3 +75,25 @@ def test_catalog_accepts_explicitly_optional_historical_family_absence() -> None
     )
 
     catalog.validate(without_optional)
+
+
+def test_catalog_still_rejects_duplicate_and_out_of_domain_records() -> None:
+    catalog = SymbolCatalog.vspd_v5()
+    source = empty_source(catalog)
+    original = source.symbols[0]
+    value = {"element_text": ScalarValue.text("")}
+    duplicate = replace(
+        original,
+        uel_orders=(("D1",),),
+        records=(RawRecord(("D1",), value), RawRecord(("D1",), value)),
+    )
+    with pytest.raises(SymbolCatalogError, match="duplicate record identity"):
+        catalog.validate(replace(source, symbols=(duplicate, *source.symbols[1:])))
+
+    outside = replace(
+        original,
+        uel_orders=(("D1",),),
+        records=(RawRecord(("D2",), value),),
+    )
+    with pytest.raises(SymbolCatalogError, match="record key absent from UEL order"):
+        catalog.validate(replace(source, symbols=(outside, *source.symbols[1:])))

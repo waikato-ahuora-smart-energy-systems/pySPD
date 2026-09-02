@@ -1,0 +1,48 @@
+{
+  "baseline": {
+    "all_solves_optimal": true,
+    "commit": "c7a04df",
+    "preparation_seconds": 45.175984833040275,
+    "result_sha256": "df64b4c63cc5a58390f32b859a4441d32f69a615934b6854c3008fe92b3922bb",
+    "solve_wall_seconds": [82.11083929101005]
+  },
+  "candidate": {
+    "all_solves_optimal": true,
+    "canonical_feed_write_seconds": 13.558175040991046,
+    "median_solve_wall_seconds": 82.21690114593366,
+    "preparation_seconds": 12.614760749973357,
+    "raw_gdx_read_seconds": 9.235226041055284,
+    "result_sha256": "dded9cda42d3eecf331028e2885ff01b74dbb9f9533ffe0e279809790699a2f3",
+    "solve_wall_seconds": [82.48044712492265, 81.95335516694468]
+  },
+  "case_count": 4,
+  "case_ids": [
+    "51012022111100690",
+    "51012022111105693",
+    "51012022111110695",
+    "51012022111115698"
+  ],
+  "comparison": {
+    "baseline_end_to_end_seconds": 127.28682412405033,
+    "candidate_end_to_end_seconds": 94.83166189590702,
+    "end_to_end_reduction_percent": 25.497660462102015,
+    "preparation_reduction_percent": 72.07640121937679,
+    "solve_change_percent": 0.12916912777826384
+  },
+  "environment": "Darwin-arm64",
+  "execution_sha256": "d975884fa7e9db1658252c7f676f1b53f489bd528ac939a913acc121463fb436",
+  "feed_logical_sha256": "4ffc656e0ec57f4c77a1e1af9549404d72ef842af04e77ad784ae0ae8f12df9f",
+  "logical_sha256": "4706441d67ee452f3f0c6bde619d1e203f31ba37d31e41c238e13dbc7af05f09",
+  "profile": "pyspd-gdx-preparation-benchmark-v1",
+  "schema_version": 1,
+  "semantic_validation": {
+    "canonical_feed_exact_match": true,
+    "cross_process_baseline_result_sha256": "df64b4c63cc5a58390f32b859a4441d32f69a615934b6854c3008fe92b3922bb",
+    "cross_process_result_hash_is_not_stable": true,
+    "full_gdx_feed_integration_test_passed": true,
+    "prior_unchanged_result_sha256": "4bfc69fdd9094f27f81749e272ac934c60283a9913b66abb988fe0a6a6e3a6b7",
+    "record_count": 3682271
+  },
+  "source_name": "Pricing_20221106.gdx",
+  "source_sha256": "282ac2abeaa2f0c7c6e26b967e2ba90289c0ba5a9e696b99069d11350d3037b8"
+}
