@@ -207,6 +207,33 @@ def test_zero_flow_cplex_subgradient_propagates_through_transformer_tree() -> No
     )
 
 
+def test_zero_flow_export_subgradient_propagates_through_lossy_tree() -> None:
+    case = make_three_bus_case()
+    assert case.network is not None
+    period = ("C1", "T1")
+    network = replace(
+        case.network,
+        node_load={
+            (*period, "N1"): 50.0,
+            (*period, "N2"): 0.0,
+            (*period, "N3"): 0.0,
+        },
+        ac_loss_segment_factor={
+            (*branch, "ls1", direction): 0.001
+            for branch in ((*period, "L1"), (*period, "L2"))
+            for direction in ("forward", "backward")
+        },
+    )
+
+    _built, prices, _report = solve(replace(case, network=network))
+
+    assert prices.bus[(*period, "B2")] == pytest.approx(10.0 * 0.999)
+    assert prices.bus[(*period, "B3")] == pytest.approx(10.0 * 0.999**2)
+    assert prices.bus_price_intervals[(*period, "B3")] == pytest.approx(
+        (10.0 * 0.999**2, 10.0 / 0.999**2)
+    )
+
+
 def test_zero_flow_interval_uses_each_directional_loss_factor() -> None:
     case = make_network_case(
         generation_bus="B1",

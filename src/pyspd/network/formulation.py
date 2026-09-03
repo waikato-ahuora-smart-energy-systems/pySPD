@@ -198,29 +198,29 @@ class NetworkPricingEngine(PricingEngine):
                 if tuple(prefix) == bus[:2] and node in nodes
             )
 
+        endpoints = {
+            branch: (
+                (*branch[:2], next(
+                    key[3]
+                    for key in network.branch_from_bus
+                    if key[:3] == branch
+                )),
+                (*branch[:2], next(
+                    key[3]
+                    for key in network.branch_to_bus
+                    if key[:3] == branch
+                )),
+            )
+            for branch in network.ac_branches
+        }
+        passive_buses = {
+            bus
+            for bus, raw_branches in incident.items()
+            if passive(bus, tuple(raw_branches))
+        }
         selected: dict[Key, tuple[Key, Key, float, float]] = {}
-        for bus, raw_branches in sorted(incident.items()):
-            branches = tuple(sorted(raw_branches))
-            if not passive(bus, branches):
-                continue
-            positive = [
-                branch
-                for branch in branches
-                if first_factor(branch, "forward") > 0.0
-                or first_factor(branch, "backward") > 0.0
-            ]
-            zero_loss = [
-                branch
-                for branch in branches
-                if first_factor(branch, "forward") == 0.0
-                and first_factor(branch, "backward") == 0.0
-            ]
-            if len(branches) == 1:
-                branch = branches[0]
-            elif len(positive) == 1 and len(zero_loss) == len(branches) - 1:
-                branch = positive[0]
-            else:
-                continue
+
+        def select(bus: Key, branch: Key, parent: Key) -> None:
             from_bus = next(
                 key[3] for key in network.branch_from_bus if key[:3] == branch
             )
@@ -228,21 +228,69 @@ class NetworkPricingEngine(PricingEngine):
                 key[3] for key in network.branch_to_bus if key[:3] == branch
             )
             if bus[2] == to_bus:
-                parent = (*branch[:2], from_bus)
                 inward_direction = "forward"
                 outward_direction = "backward"
             elif bus[2] == from_bus:
-                parent = (*branch[:2], to_bus)
                 inward_direction = "backward"
                 outward_direction = "forward"
             else:  # pragma: no cover - guarded by the network-data contract
-                continue
+                return
             selected[bus] = (
                 branch,
                 parent,
                 first_factor(branch, inward_direction),
                 first_factor(branch, outward_direction),
             )
+
+        # A passive zero-injection tree has one live boundary. Orient every
+        # branch away from that boundary so an export-side choice propagates
+        # through chains containing more than one lossy branch. Components
+        # with multiple live boundaries or cycles remain solver-selected.
+        unvisited = set(passive_buses)
+        while unvisited:
+            start = min(unvisited)
+            component: set[Key] = set()
+            pending = [start]
+            while pending:
+                bus = pending.pop()
+                if bus in component:
+                    continue
+                component.add(bus)
+                for branch in incident[bus]:
+                    left, right = endpoints[branch]
+                    neighbour = right if left == bus else left
+                    if neighbour in passive_buses and neighbour not in component:
+                        pending.append(neighbour)
+            unvisited.difference_update(component)
+            internal = {
+                branch
+                for bus in component
+                for branch in incident[bus]
+                if all(endpoint in component for endpoint in endpoints[branch])
+            }
+            boundary = {
+                (bus, branch, right if left == bus else left)
+                for bus in component
+                for branch in incident[bus]
+                for left, right in (endpoints[branch],)
+                if (right if left == bus else left) not in component
+            }
+            if len(boundary) != 1 or len(internal) != len(component) - 1:
+                continue
+            root, root_branch, root_parent = next(iter(boundary))
+            queue = [(root, root_branch, root_parent)]
+            visited: set[Key] = set()
+            while queue:
+                bus, branch, parent = queue.pop(0)
+                if bus in visited:
+                    continue
+                visited.add(bus)
+                select(bus, branch, parent)
+                for child_branch in incident[bus]:
+                    left, right = endpoints[child_branch]
+                    child = right if left == bus else left
+                    if child in component and child not in visited:
+                        queue.append((child, child_branch, bus))
 
         memo: dict[Key, float] = {}
         interval_memo: dict[Key, tuple[float, float] | None] = {}
@@ -257,9 +305,9 @@ class NetworkPricingEngine(PricingEngine):
             if min(inward_factor, outward_factor) < 0.0 or denominator <= 0.0:
                 raise ValueError("AC loss factor makes incremental delivery invalid")
             parent_price = (
-                original[parent]
-                if inward_factor > 0.0 or outward_factor > 0.0
-                else cplex_price(parent, visiting | {bus})
+                cplex_price(parent, visiting | {bus})
+                if parent in selected
+                else original[parent]
             )
             value = parent_price * denominator / (
                 1.0 + (1.0 - receiving_share) * outward_factor
@@ -275,8 +323,13 @@ class NetworkPricingEngine(PricingEngine):
             if bus in visiting or bus not in selected:
                 return None
             _branch, parent, inward_factor, outward_factor = selected[bus]
+            parent_interval = (
+                analytic_interval(parent, visiting | {bus})
+                if parent in selected
+                else None
+            )
             if inward_factor == 0.0 and outward_factor == 0.0:
-                value = analytic_interval(parent, visiting | {bus})
+                value = parent_interval
                 interval_memo[bus] = value
                 return value
             inward_denominator = 1.0 - receiving_share * inward_factor
@@ -289,14 +342,20 @@ class NetworkPricingEngine(PricingEngine):
                 or outward_denominator <= 0.0
             ):
                 raise ValueError("AC loss factor makes incremental delivery invalid")
-            parent_price = original[parent]
-            export_price = parent_price * (
+            parent_price = cplex_price(parent, visiting | {bus})
+            parent_bounds = parent_interval or (parent_price, parent_price)
+            export_ratio = (
                 1.0 - receiving_share * outward_factor
             ) / outward_denominator
-            load_price = parent_price * (
+            load_ratio = (
                 1.0 + (1.0 - receiving_share) * inward_factor
             ) / inward_denominator
-            value = (min(export_price, load_price), max(export_price, load_price))
+            endpoints = tuple(
+                bound * ratio
+                for bound in parent_bounds
+                for ratio in (export_ratio, load_ratio)
+            )
+            value = (min(endpoints), max(endpoints))
             interval_memo[bus] = value
             return value
 

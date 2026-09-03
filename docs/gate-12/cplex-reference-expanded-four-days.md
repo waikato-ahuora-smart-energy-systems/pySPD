@@ -58,13 +58,26 @@ summary objective. The 2019 archive has no published-price tables.
 All 274 cases solve optimally. There are 162 missing and 279 extra risk-result
 identities caused by a different risk-setter representation; all other mapped
 tables are identity-complete. The largest summary difference is 0.003499 NZD
-in system cost (0.000316% of CPLEX). The largest published-energy difference
-is 0.50780 NZD/MWh at ORO1101 TP29, or 0.507145% of the CPLEX value.
+in system cost (0.000316% of CPLEX). Before the passive-tree correction, the
+largest published-energy difference was 0.50780 NZD/MWh at ORO1101 TP29, or
+0.507145% of the CPLEX value.
 
 The maximum 77.296935 result is a repaired raw-bus price at an unallocated bus,
-not a published node price. Nevertheless, the published-energy difference is
-outside the analytic zero-flow explanation described below and remains an
-unresolved output-parity failure.
+not a published node price. The ORO1101 defect was a passive zero-injection
+tree `509 → 518 → 522` containing two consecutive lossy zero-flow branches.
+The original normalization handled a leaf behind one lossy boundary, including
+lossless transformer descendants, but stopped at passive bus 518 because it
+was incident to both lossy branches. The generalized implementation orients
+only an acyclic passive component with exactly one live boundary and propagates
+the selected export endpoint through every edge. Components with cycles or
+multiple live boundaries remain solver-selected.
+
+All five TP29 cases were rerun. Their summary and every published-energy row
+match CPLEX at stored precision; ORO1101 is exactly 100.12922 NZD/MWh. A
+record-substituted 274-case comparison reduces above-precision values from
+34,438 to 34,411 and moves the remaining published-energy maximum to ORO1101
+TP12 at 0.38293 NZD/MWh. That artifact is explicitly TP29-only; a complete-day
+rerun is still required to apply and measure the generic correction elsewhere.
 
 ### 2023-11-24
 
@@ -104,12 +117,13 @@ selects export 76,443 times (82.13%) and load 16,632 times. Of the load choices,
 16,376 (98.46%) occur at buses with no node allocation. Only 256 case-node
 observations propagate to BPT1101, KIN1009, RFN1102, or WPT1101.
 
-For the four new days, the maximum publication changes predicted solely by
-replacing a CPLEX load endpoint with PySPD's governed export endpoint are
-0.023038 NZD/MWh on 2023-09-22 and 0.030708 NZD/MWh on 2023-11-24. Those bounds
-are far below the observed 0.50780 and 2.51039 maxima. The analytic interval
-correctly certifies genuine zero-flow degeneracy, but it does not explain or
-waive the new published-price failures.
+The original single-boundary scan predicted maximum publication changes of
+0.023038 NZD/MWh on 2023-09-22 and 0.030708 NZD/MWh on 2023-11-24. Its first
+bound did not include a chain with consecutive lossy branches; the new
+passive-tree replay explains and removes the 0.50780 ORO1101 TP29 difference.
+The 2023-11-24 bound remains far below its 2.51039 TP29 maximum, which the
+separate CPLEX continuation experiment classifies as inherited-basis dual
+selection rather than this endpoint-propagation defect.
 
 See
 [`cplex-zero-flow-analysis-ten-days.json`](cplex-zero-flow-analysis-ten-days.json)
@@ -135,6 +149,10 @@ Compact run summaries bind the ignored full JSONL streams by SHA-256:
   and [`cplex-reference-comparison-20190606-highs.json`](cplex-reference-comparison-20190606-highs.json)
 - [`cplex-reference-paths-20230922-highs.json`](cplex-reference-paths-20230922-highs.json)
   and [`cplex-reference-comparison-20230922-highs.json`](cplex-reference-comparison-20230922-highs.json)
+- [`cplex-reference-paths-20230922-tp29-passive-tree-five-cases.json`](cplex-reference-paths-20230922-tp29-passive-tree-five-cases.json)
+  and [`cplex-reference-comparison-20230922-tp29-passive-tree-five-cases.json`](cplex-reference-comparison-20230922-tp29-passive-tree-five-cases.json)
+- [`cplex-reference-paths-20230922-highs-tp29-corrected.json`](cplex-reference-paths-20230922-highs-tp29-corrected.json)
+  and [`cplex-reference-comparison-20230922-highs-tp29-corrected.json`](cplex-reference-comparison-20230922-highs-tp29-corrected.json)
 - [`cplex-reference-paths-20231124-highs-corrected.json`](cplex-reference-paths-20231124-highs-corrected.json)
   and [`cplex-reference-comparison-20231124-highs-corrected.json`](cplex-reference-comparison-20231124-highs-corrected.json)
 - [`cplex-reference-paths-20231124-tp16-source-disconnection-three-cases.json`](cplex-reference-paths-20231124-tp16-source-disconnection-three-cases.json)

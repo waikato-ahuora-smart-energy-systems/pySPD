@@ -106,6 +106,11 @@ The exercise found and tested these defects before the final runs:
     price. PySPD bus and branch reporting now projects node price back to a bus
     only for an unresolved dead node, not for an initially dead node whose
     price transfer succeeded.
+11. Export-endpoint normalization stopped at a passive intermediate bus when
+    consecutive zero-flow branches both had positive losses. It now orients a
+    uniquely live-anchored acyclic passive component and propagates through
+    every lossy or lossless edge. The five-case 2023-09-22 TP29 rerun exactly
+    reproduces CPLEX's 100.12922 NZD/MWh ORO1101 publication.
 
 Items 2 and 7 change the applicable optimization/orchestration domain. Items
 3, 4, 8 and 10 are report corrections; item 9 is orchestration state fidelity;
@@ -113,6 +118,11 @@ items 1, 5 and 6 are input, solver-policy and execution corrections
 respectively. Together, items 7–10 make all bus and branch rows in the three
 affected TP16 cases match CPLEX at stored precision and reproduce the TP16
 ABY0111 publication exactly at 158.78761 NZD/MWh.
+
+Item 11 is a governed price-selection correction on an already optimal
+zero-flow face. A TP29-only substitution into the 274-case 2023-09-22 stream
+moves the remaining published maximum to ORO1101 TP12 at 0.38293 NZD/MWh; the
+rest of that day has not yet been rerun under item 11.
 
 ### 2023-11-24 TP29 basis diagnosis
 
