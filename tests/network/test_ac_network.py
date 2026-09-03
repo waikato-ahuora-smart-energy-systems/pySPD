@@ -32,6 +32,8 @@ def test_two_bus_uncongested_dc_flow_and_prices() -> None:
     assert prices.bus[("C1", "T1", "B1")] == pytest.approx(10.0)
     assert prices.bus[("C1", "T1", "B2")] == pytest.approx(10.0)
     assert prices.node[("C1", "T1", "N2")] == pytest.approx(10.0)
+    assert prices.bus_price_intervals == {}
+    assert prices.node_price_intervals == {}
 
 
 def test_congestion_separates_nodal_prices_without_capacity_violation() -> None:
@@ -153,7 +155,12 @@ def test_zero_flow_loss_branch_uses_cplex_export_subgradient(
     assert prices.raw_bus_duals[("C1", "T1", passive_leaf)] == pytest.approx(
         10.0 * 0.999
     )
+    expected_interval = (10.0 * 0.999, 10.0 / 0.999)
     leaf_node = ("C1", "T1", f"N{passive_leaf[-1]}")
+    assert prices.bus_price_intervals[("C1", "T1", passive_leaf)] == pytest.approx(
+        expected_interval
+    )
+    assert prices.node_price_intervals[leaf_node] == pytest.approx(expected_interval)
     load_derivative = validate_nodal_price_finite_difference(case, leaf_node)
     assert load_derivative.finite_difference_price == pytest.approx(10.0 / 0.999)
     assert not load_derivative.passed
@@ -191,6 +198,38 @@ def test_zero_flow_cplex_subgradient_propagates_through_transformer_tree() -> No
     expected = 10.0 * 0.999
     assert prices.bus[(*period, "B2")] == pytest.approx(expected)
     assert prices.bus[(*period, "B3")] == pytest.approx(expected)
+    expected_interval = (expected, 10.0 / 0.999)
+    assert prices.bus_price_intervals[(*period, "B2")] == pytest.approx(
+        expected_interval
+    )
+    assert prices.bus_price_intervals[(*period, "B3")] == pytest.approx(
+        expected_interval
+    )
+
+
+def test_zero_flow_interval_uses_each_directional_loss_factor() -> None:
+    case = make_network_case(
+        generation_bus="B1",
+        load_bus="B1",
+        loss_segments=(("ls1", 100.0, 0.001),),
+    )
+    assert case.network is not None
+    branch = ("C1", "T1", "L1", "ls1")
+    network = replace(
+        case.network,
+        ac_loss_segment_factor={
+            (*branch, "forward"): 0.002,
+            (*branch, "backward"): 0.001,
+        },
+    )
+
+    _built, prices, _report = solve(replace(case, network=network))
+
+    leaf = ("C1", "T1", "B2")
+    assert prices.bus[leaf] == pytest.approx(10.0 * 0.999)
+    assert prices.bus_price_intervals[leaf] == pytest.approx(
+        (10.0 * 0.999, 10.0 / 0.998)
+    )
 
 
 def test_loss_segment_boundary_and_reverse_direction_are_exact() -> None:

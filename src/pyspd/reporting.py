@@ -1216,6 +1216,9 @@ class V5DailyReportRenderer(DailyReportRenderer):
                         "repaired_price_nzd_per_mwh": _number(
                             _reported_bus_price(bus_key, accepted, prices)
                         ),
+                        "price_interval": _price_interval(
+                            prices.repaired_bus_intervals.get(bus_key)
+                        ),
                         "disconnected": _boolean(bus_key in prices.disconnected_buses),
                         "invalid": _boolean(bus_key in prices.invalid_buses),
                     }
@@ -1226,6 +1229,9 @@ class V5DailyReportRenderer(DailyReportRenderer):
                         **base,
                         "node": node_key[-1],
                         "price_nzd_per_mwh": _number(value),
+                        "price_interval": _price_interval(
+                            prices.node_intervals.get(node_key)
+                        ),
                         "dead": _boolean(node_key in prices.dead_nodes),
                         "price_source": prices.dead_node_price_source.get(
                             node_key, node_key
@@ -1268,6 +1274,9 @@ class V5DailyReportRenderer(DailyReportRenderer):
                         "location": node,
                         "product": "energy",
                         "price_nzd_per_mwh": _number(value),
+                        "price_interval": _price_interval(
+                            run.published.energy_intervals.get((period, node))
+                        ),
                         "publication_seconds": _number(
                             run.published.total_seconds[period]
                         ),
@@ -1283,6 +1292,7 @@ class V5DailyReportRenderer(DailyReportRenderer):
                         "location": island,
                         "product": reserve_class,
                         "price_nzd_per_mwh": _number(value),
+                        "price_interval": "",
                         "publication_seconds": _number(
                             run.published.total_seconds[period]
                         ),
@@ -1377,6 +1387,7 @@ def _daily_definitions(formulation_id: str) -> dict[str, ReportDefinition]:
             ("bus", "id"),
             ("raw_price_nzd_per_mwh", "NZD/MWh"),
             ("repaired_price_nzd_per_mwh", "NZD/MWh"),
+            ("price_interval", "NZD/MWh"),
             ("disconnected", "boolean"),
             ("invalid", "boolean"),
             ("generation_mw", "MW"),
@@ -1388,6 +1399,7 @@ def _daily_definitions(formulation_id: str) -> dict[str, ReportDefinition]:
             *common,
             ("node", "id"),
             ("price_nzd_per_mwh", "NZD/MWh"),
+            ("price_interval", "NZD/MWh"),
             ("dead", "boolean"),
             ("price_source", "id"),
             ("generation_mw", "MW"),
@@ -1463,6 +1475,7 @@ def _daily_definitions(formulation_id: str) -> dict[str, ReportDefinition]:
             ("location", "id"),
             ("product", "id"),
             ("price_nzd_per_mwh", "NZD/MWh"),
+            ("price_interval", "NZD/MWh"),
             ("publication_seconds", "s"),
             ("date_time", "datetime"),
         ),
@@ -1487,6 +1500,12 @@ def _number(value: Any | None) -> str:
     if not math.isfinite(numeric):
         raise ReportError("reports cannot contain non-finite numbers")
     return format(numeric, ".17g")
+
+
+def _price_interval(value: tuple[float, float] | None) -> str:
+    if value is None:
+        return ""
+    return json.dumps([float(_number(bound)) for bound in value], separators=(",", ":"))
 
 
 def _boolean(value: bool) -> str:

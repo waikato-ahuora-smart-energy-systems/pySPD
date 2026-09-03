@@ -67,6 +67,13 @@ claims that cannot safely be conflated:
    certified kink remains visible, is projected through node allocations and
    publication weights, and is never silently discarded.
 
+PySPD now preserves both truths in its output contract. The deterministic
+export value remains the scalar `price`, while affected bus, node, and
+published-energy results also carry `price_interval: [lower, upper]`. The
+interval is computed from the source loss factors, not inferred from the CPLEX
+result. Differentiable prices have no interval field. No endpoint-selection or
+solver-convention label is emitted.
+
 Exact reproduction of every historical raw dual would require the original
 CPLEX matrix order, presolve, options and basis sequence. The installed GAMSPy
 license includes full CPLEX and provides a route for a future fixed-RMIP CPLEX

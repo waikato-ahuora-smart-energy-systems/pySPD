@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Any
 
@@ -89,7 +89,12 @@ class NetworkPrices:
     raw_bus_duals: Mapping[Key, float]
     dead_nodes: frozenset[Key]
     unit: str = "NZD/MWh"
-    convention: str = "CPLEX-compatible LP equality marginal"
+    bus_price_intervals: Mapping[Key, tuple[float, float]] = field(
+        default_factory=dict
+    )
+    node_price_intervals: Mapping[Key, tuple[float, float]] = field(
+        default_factory=dict
+    )
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "bus", MappingProxyType(dict(self.bus)))
@@ -98,20 +103,30 @@ class NetworkPrices:
             self, "raw_bus_duals", MappingProxyType(dict(self.raw_bus_duals))
         )
         object.__setattr__(self, "dead_nodes", frozenset(self.dead_nodes))
+        object.__setattr__(
+            self,
+            "bus_price_intervals",
+            MappingProxyType(dict(self.bus_price_intervals)),
+        )
+        object.__setattr__(
+            self,
+            "node_price_intervals",
+            MappingProxyType(dict(self.node_price_intervals)),
+        )
 
 
 class NetworkPricingEngine(PricingEngine):
     supported_formulations = _SUPPORTED
 
     @staticmethod
-    def _cplex_zero_flow_leaf_prices(
+    def _zero_flow_leaf_prices(
         built_model: BuiltModel,
         case: NetworkCase,
         prices: dict[Key, float],
         *,
         tolerance: float = 1e-9,
-    ) -> None:
-        """Select the CPLEX export derivative on a passive zero-flow tree.
+    ) -> dict[Key, tuple[float, float]]:
+        """Select the export derivative and return the analytic dual interval.
 
         A passive zero-flow component behind one lossy boundary can have two
         valid LP duals: the derivatives for incremental export and load.
@@ -183,7 +198,7 @@ class NetworkPricingEngine(PricingEngine):
                 if tuple(prefix) == bus[:2] and node in nodes
             )
 
-        selected: dict[Key, tuple[Key, Key, str, float]] = {}
+        selected: dict[Key, tuple[Key, Key, float, float]] = {}
         for bus, raw_branches in sorted(incident.items()):
             branches = tuple(sorted(raw_branches))
             if not passive(bus, branches):
@@ -215,42 +230,84 @@ class NetworkPricingEngine(PricingEngine):
             if bus[2] == to_bus:
                 parent = (*branch[:2], from_bus)
                 inward_direction = "forward"
+                outward_direction = "backward"
             elif bus[2] == from_bus:
                 parent = (*branch[:2], to_bus)
                 inward_direction = "backward"
+                outward_direction = "forward"
             else:  # pragma: no cover - guarded by the network-data contract
                 continue
             selected[bus] = (
                 branch,
                 parent,
-                inward_direction,
                 first_factor(branch, inward_direction),
+                first_factor(branch, outward_direction),
             )
 
         memo: dict[Key, float] = {}
+        interval_memo: dict[Key, tuple[float, float] | None] = {}
 
         def cplex_price(bus: Key, visiting: frozenset[Key]) -> float:
             if bus in memo:
                 return memo[bus]
             if bus in visiting or bus not in selected:
                 return original[bus]
-            _branch, parent, _direction, factor = selected[bus]
-            denominator = 1.0 - receiving_share * factor
-            if factor < 0.0 or denominator <= 0.0:
+            _branch, parent, inward_factor, outward_factor = selected[bus]
+            denominator = 1.0 - receiving_share * outward_factor
+            if min(inward_factor, outward_factor) < 0.0 or denominator <= 0.0:
                 raise ValueError("AC loss factor makes incremental delivery invalid")
             parent_price = (
                 original[parent]
-                if factor > 0.0
+                if inward_factor > 0.0 or outward_factor > 0.0
                 else cplex_price(parent, visiting | {bus})
             )
             value = parent_price * denominator / (
-                1.0 + (1.0 - receiving_share) * factor
+                1.0 + (1.0 - receiving_share) * outward_factor
             )
             memo[bus] = value
             return value
 
+        def analytic_interval(
+            bus: Key, visiting: frozenset[Key]
+        ) -> tuple[float, float] | None:
+            if bus in interval_memo:
+                return interval_memo[bus]
+            if bus in visiting or bus not in selected:
+                return None
+            _branch, parent, inward_factor, outward_factor = selected[bus]
+            if inward_factor == 0.0 and outward_factor == 0.0:
+                value = analytic_interval(parent, visiting | {bus})
+                interval_memo[bus] = value
+                return value
+            inward_denominator = 1.0 - receiving_share * inward_factor
+            outward_denominator = 1.0 + (
+                1.0 - receiving_share
+            ) * outward_factor
+            if (
+                min(inward_factor, outward_factor) < 0.0
+                or inward_denominator <= 0.0
+                or outward_denominator <= 0.0
+            ):
+                raise ValueError("AC loss factor makes incremental delivery invalid")
+            parent_price = original[parent]
+            export_price = parent_price * (
+                1.0 - receiving_share * outward_factor
+            ) / outward_denominator
+            load_price = parent_price * (
+                1.0 + (1.0 - receiving_share) * inward_factor
+            ) / inward_denominator
+            value = (min(export_price, load_price), max(export_price, load_price))
+            interval_memo[bus] = value
+            return value
+
         for bus in selected:
             prices[bus] = cplex_price(bus, frozenset())
+            analytic_interval(bus, frozenset())
+        return {
+            bus: interval
+            for bus, interval in interval_memo.items()
+            if interval is not None and interval[1] - interval[0] > tolerance
+        }
 
     def price(self, built_model: BuiltModel, solve_result: SolveResult) -> NetworkPrices:
         if not solve_result.solution_loaded:
@@ -263,12 +320,13 @@ class NetworkPricingEngine(PricingEngine):
             tuple(index): float(built_model.model.dual[constraints[index]])
             for index in constraints
         }
-        self._cplex_zero_flow_leaf_prices(built_model, case, raw)
+        bus_intervals = self._zero_flow_leaf_prices(built_model, case, raw)
         # In ACnodeNetInjectionDefinition2, required load appears with a
         # negative coefficient on the right-hand side.  The equality marginal
         # therefore already has the positive market-price sign used by vSPD.
         bus_prices = dict(raw)
         node_prices: dict[Key, float] = {}
+        node_intervals: dict[Key, tuple[float, float]] = {}
         dead: set[Key] = set()
         for node in case.nodes:
             allocations = [
@@ -288,7 +346,31 @@ class NetworkPricingEngine(PricingEngine):
                     weight * bus_prices[(node[0], node[1], bus)]
                     for bus, weight in allocations
                 )
-        return NetworkPrices(bus_prices, node_prices, raw, frozenset(dead))
+                lower = 0.0
+                upper = 0.0
+                has_interval = False
+                for bus, weight in allocations:
+                    bus_key = (node[0], node[1], bus)
+                    bounds = bus_intervals.get(
+                        bus_key, (bus_prices[bus_key], bus_prices[bus_key])
+                    )
+                    has_interval = has_interval or bus_key in bus_intervals
+                    if weight >= 0.0:
+                        lower += weight * bounds[0]
+                        upper += weight * bounds[1]
+                    else:
+                        lower += weight * bounds[1]
+                        upper += weight * bounds[0]
+                if has_interval and upper - lower > 1e-9:
+                    node_intervals[node] = (lower, upper)
+        return NetworkPrices(
+            bus=bus_prices,
+            node=node_prices,
+            raw_bus_duals=raw,
+            dead_nodes=frozenset(dead),
+            bus_price_intervals=bus_intervals,
+            node_price_intervals=node_intervals,
+        )
 
 
 @dataclass(frozen=True, slots=True)

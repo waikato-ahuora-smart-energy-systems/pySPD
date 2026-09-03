@@ -201,6 +201,9 @@ class SolveObservation:
     node_bus_allocation: Mapping[Key, float]
     bus_electrical_island: Mapping[Key, float]
     node_electrical_island: Mapping[Key, float]
+    raw_bus_price_intervals: Mapping[Key, tuple[float, float]] = field(
+        default_factory=dict
+    )
     node_market_island: Mapping[Key, str] = field(default_factory=dict)
     node_transfer: tuple[tuple[Key, Key], ...] = ()
     bus_adjacency: frozenset[tuple[Key, Key]] = frozenset()
@@ -230,6 +233,15 @@ class SolveObservation:
                 raise OrchestrationError(f"{name} contains a non-finite value")
             object.__setattr__(self, name, MappingProxyType(values))
         object.__setattr__(self, "node_transfer", tuple(self.node_transfer))
+        object.__setattr__(
+            self,
+            "raw_bus_price_intervals",
+            _price_interval_proxy(
+                self.raw_bus_price_intervals,
+                valid_keys=self.raw_bus_prices,
+                name="raw_bus_price_intervals",
+            ),
+        )
         object.__setattr__(self, "node_market_island", _proxy(self.node_market_island))
         object.__setattr__(self, "bus_adjacency", frozenset(self.bus_adjacency))
         object.__setattr__(self, "degraded_reasons", tuple(self.degraded_reasons))
@@ -245,6 +257,13 @@ class PriceTrace:
     dead_nodes: frozenset[Key]
     dead_node_price_source: Mapping[Key, Key]
     invalid_buses: frozenset[Key]
+    raw_bus_intervals: Mapping[Key, tuple[float, float]] = field(
+        default_factory=dict
+    )
+    repaired_bus_intervals: Mapping[Key, tuple[float, float]] = field(
+        default_factory=dict
+    )
+    node_intervals: Mapping[Key, tuple[float, float]] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         for name in (
@@ -260,6 +279,18 @@ class PriceTrace:
         )
         object.__setattr__(self, "dead_nodes", frozenset(self.dead_nodes))
         object.__setattr__(self, "invalid_buses", frozenset(self.invalid_buses))
+        for name, valid_keys in (
+            ("raw_bus_intervals", self.raw_bus),
+            ("repaired_bus_intervals", self.repaired_bus),
+            ("node_intervals", self.node),
+        ):
+            object.__setattr__(
+                self,
+                name,
+                _price_interval_proxy(
+                    getattr(self, name), valid_keys=valid_keys, name=name
+                ),
+            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -311,12 +342,24 @@ class PublishedPrices:
     reserve: Mapping[tuple[str, str, str], float]
     total_seconds: Mapping[str, float]
     date_time: Mapping[str, str] = field(default_factory=dict)
+    energy_intervals: Mapping[tuple[str, str], tuple[float, float]] = field(
+        default_factory=dict
+    )
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "energy", _proxy(self.energy))
         object.__setattr__(self, "reserve", _proxy(self.reserve))
         object.__setattr__(self, "total_seconds", _proxy(self.total_seconds))
         object.__setattr__(self, "date_time", _proxy(self.date_time))
+        object.__setattr__(
+            self,
+            "energy_intervals",
+            _price_interval_proxy(
+                self.energy_intervals,
+                valid_keys=self.energy,
+                name="energy_intervals",
+            ),
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -350,6 +393,30 @@ class DailyRunResult:
 
 def _proxy[K, V](values: Mapping[K, V]) -> Mapping[K, V]:
     return MappingProxyType(dict(values))
+
+
+def _price_interval_proxy[K](
+    values: Mapping[K, tuple[float, float]],
+    *,
+    valid_keys: Mapping[K, float],
+    name: str,
+) -> Mapping[K, tuple[float, float]]:
+    output: dict[K, tuple[float, float]] = {}
+    for key, raw_bounds in values.items():
+        if key not in valid_keys:
+            raise OrchestrationError(f"{name} contains an unknown price key")
+        if len(raw_bounds) != 2:
+            raise OrchestrationError(f"{name} bounds must have length two")
+        bounds = (float(raw_bounds[0]), float(raw_bounds[1]))
+        if not all(math.isfinite(value) for value in bounds):
+            raise OrchestrationError(f"{name} contains a non-finite bound")
+        if bounds[0] > bounds[1]:
+            raise OrchestrationError(f"{name} lower bound exceeds upper bound")
+        scalar = float(valid_keys[key])
+        if scalar < bounds[0] - 1e-9 or scalar > bounds[1] + 1e-9:
+            raise OrchestrationError(f"{name} does not contain its scalar price")
+        output[key] = bounds
+    return MappingProxyType(output)
 
 
 def _sha256(payload: object) -> str:

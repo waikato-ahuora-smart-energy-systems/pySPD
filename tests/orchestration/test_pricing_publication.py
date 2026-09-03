@@ -5,6 +5,7 @@ from dataclasses import replace
 from pyspd.orchestration import (
     CaseRunResult,
     CaseRunStatus,
+    IndependentPublicationValidator,
     MarketPricePostProcessor,
     PublishedPriceAccumulator,
     PublishedPriceAggregator,
@@ -20,6 +21,24 @@ def test_allocation_weighted_node_prices_keep_raw_and_repaired_layers() -> None:
     assert trace.raw_bus != {}
     assert trace.raw_bus == trace.repaired_bus
     assert trace.node[("C1", "01-JAN-2024 00:00", "N1")] == 40.0
+
+
+def test_analytic_bus_interval_is_allocated_to_node_without_endpoint_metadata() -> None:
+    observation = make_observation(raw_prices=(40.0, 60.0))
+    bus = ("C1", "01-JAN-2024 00:00", "B1")
+    node = ("C1", "01-JAN-2024 00:00", "N1")
+    observation = replace(
+        observation,
+        raw_bus_price_intervals={bus: (39.5, 40.5)},
+    )
+
+    trace = MarketPricePostProcessor().process(
+        observation, price_transfer_enabled=False
+    )
+
+    assert trace.raw_bus_intervals == {bus: (39.5, 40.5)}
+    assert trace.repaired_bus_intervals == {bus: (39.5, 40.5)}
+    assert trace.node_intervals == {node: (39.5, 40.5)}
 
 
 def test_sos_invalid_price_is_replaced_from_adjacent_valid_bus() -> None:
@@ -100,6 +119,61 @@ def test_publication_uses_seconds_skips_zero_and_rounds() -> None:
     assert published.date_time["TP1"] == "01-JAN-2024 00:00"
 
 
+def test_publication_weights_analytic_intervals_and_omits_scalar_only_nodes() -> None:
+    first = make_daily_case(seconds=100.0)
+    second = make_daily_case("C2", "01-JAN-2024 00:05", ordinal=1, seconds=200.0)
+    processor = MarketPricePostProcessor()
+
+    def result(case, prices, interval):
+        observation = make_observation(case, raw_prices=prices)
+        first_bus = min(observation.raw_bus_prices)
+        observation = replace(
+            observation,
+            raw_bus_price_intervals={first_bus: interval} if interval else {},
+        )
+        return CaseRunResult(
+            case,
+            CaseRunStatus.COMPLETE,
+            1,
+            observation,
+            processor.process(observation, price_transfer_enabled=False),
+            (),
+            {},
+            {},
+            frozenset(),
+        )
+
+    published = PublishedPriceAggregator().aggregate(
+        (
+            result(first, (10.0, 30.0), (9.0, 11.0)),
+            result(second, (20.0, 30.0), None),
+        ),
+        decimals=5,
+    )
+
+    assert published.energy[("TP1", "N1")] == 16.66667
+    assert published.energy_intervals[("TP1", "N1")] == (16.33333, 17.0)
+    assert ("TP1", "N2") not in published.energy_intervals
+    assert IndependentPublicationValidator().validate(
+        (
+            result(first, (10.0, 30.0), (9.0, 11.0)),
+            result(second, (20.0, 30.0), None),
+        ),
+        published,
+    ).passed
+    wrong = replace(
+        published,
+        energy_intervals={("TP1", "N1"): (16.0, 18.0)},
+    )
+    assert not IndependentPublicationValidator().validate(
+        (
+            result(first, (10.0, 30.0), (9.0, 11.0)),
+            result(second, (20.0, 30.0), None),
+        ),
+        wrong,
+    ).passed
+
+
 def test_publication_accumulator_resumes_without_retaining_case_results() -> None:
     first = make_daily_case(seconds=100.0)
     second = make_daily_case("C2", "01-JAN-2024 00:05", ordinal=1, seconds=200.0)
@@ -124,6 +198,9 @@ def test_publication_accumulator_resumes_without_retaining_case_results() -> Non
     accumulator.add(result(first, 10.0))
     resumed = PublishedPriceAccumulator(
         energy_numerator=accumulator.energy_numerator,
+        energy_lower_numerator=accumulator.energy_lower_numerator,
+        energy_upper_numerator=accumulator.energy_upper_numerator,
+        energy_interval_keys=frozenset(accumulator.energy_interval_keys),
         reserve_numerator=accumulator.reserve_numerator,
         total_seconds=accumulator.total_seconds,
         date_time=accumulator.date_time,

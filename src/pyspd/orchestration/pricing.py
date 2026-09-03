@@ -52,6 +52,7 @@ class MarketPricePostProcessor:
         price_transfer_enabled: bool,
     ) -> PriceTrace:
         raw = dict(observation.raw_bus_prices)
+        raw_intervals = dict(observation.raw_bus_price_intervals)
         repaired = dict(raw)
         disconnected = self._disconnected(observation)
         for bus in raw:
@@ -85,7 +86,19 @@ class MarketPricePostProcessor:
                 invalid = self._invalid(
                     observation, repaired, disconnected, initial=False
                 )
-        node_prices = self._allocate_nodes(observation, repaired)
+        repaired_intervals = {
+            bus: bounds
+            for bus, bounds in raw_intervals.items()
+            if math.isclose(
+                repaired.get(bus, math.nan),
+                raw[bus],
+                rel_tol=0.0,
+                abs_tol=self.tolerance,
+            )
+        }
+        node_prices, node_intervals = self._allocate_nodes(
+            observation, repaired, repaired_intervals
+        )
         dead_nodes = {
             node
             for node in observation.node_electrical_island
@@ -105,6 +118,7 @@ class MarketPricePostProcessor:
             )
             self._transfer_dead_prices(
                 node_prices,
+                node_intervals,
                 dead_nodes,
                 sources,
                 observation.node_transfer,
@@ -119,6 +133,9 @@ class MarketPricePostProcessor:
             dead_nodes=frozenset(dead_nodes),
             dead_node_price_source=sources,
             invalid_buses=frozenset(invalid),
+            raw_bus_intervals=raw_intervals,
+            repaired_bus_intervals=repaired_intervals,
+            node_intervals=node_intervals,
         )
 
     def _disconnected(self, observation: SolveObservation) -> set[Key]:
@@ -192,18 +209,39 @@ class MarketPricePostProcessor:
 
     @staticmethod
     def _allocate_nodes(
-        observation: SolveObservation, prices: dict[Key, float]
-    ) -> dict[Key, float]:
+        observation: SolveObservation,
+        prices: dict[Key, float],
+        intervals: Mapping[Key, tuple[float, float]],
+    ) -> tuple[dict[Key, float], dict[Key, tuple[float, float]]]:
         output = dict.fromkeys(observation.node_electrical_island, 0.0)
+        lower = dict.fromkeys(observation.node_electrical_island, 0.0)
+        upper = dict.fromkeys(observation.node_electrical_island, 0.0)
+        interval_nodes: set[Key] = set()
         for key, weight in observation.node_bus_allocation.items():
             node = key[:3]
             bus = key[:2] + (key[3],)
-            output[node] = output.get(node, 0.0) + weight * prices.get(bus, 0.0)
-        return output
+            price = prices.get(bus, 0.0)
+            output[node] = output.get(node, 0.0) + weight * price
+            bounds = intervals.get(bus, (price, price))
+            if bus in intervals:
+                interval_nodes.add(node)
+            if weight >= 0.0:
+                lower[node] = lower.get(node, 0.0) + weight * bounds[0]
+                upper[node] = upper.get(node, 0.0) + weight * bounds[1]
+            else:
+                lower[node] = lower.get(node, 0.0) + weight * bounds[1]
+                upper[node] = upper.get(node, 0.0) + weight * bounds[0]
+        node_intervals = {
+            node: (lower[node], upper[node])
+            for node in interval_nodes
+            if upper[node] - lower[node] > 1e-9
+        }
+        return output, node_intervals
 
     @staticmethod
     def _transfer_dead_prices(
         node_prices: dict[Key, float],
+        node_intervals: dict[Key, tuple[float, float]],
         dead_nodes: set[Key],
         sources: dict[Key, Key],
         mappings: tuple[tuple[Key, Key], ...],
@@ -222,6 +260,10 @@ class MarketPricePostProcessor:
                 }:
                     continue
                 node_prices[target] = node_prices.get(candidate, 0.0)
+                if candidate in node_intervals:
+                    node_intervals[target] = node_intervals[candidate]
+                else:
+                    node_intervals.pop(target, None)
                 sources[target] = candidate
                 remaining.remove(target)
                 changed = True
@@ -236,12 +278,24 @@ class PublishedPriceAccumulator:
         self,
         *,
         energy_numerator: Mapping[tuple[str, str], float] | None = None,
+        energy_lower_numerator: Mapping[tuple[str, str], float] | None = None,
+        energy_upper_numerator: Mapping[tuple[str, str], float] | None = None,
+        energy_interval_keys: frozenset[tuple[str, str]] | None = None,
         reserve_numerator: Mapping[tuple[str, str, str], float] | None = None,
         total_seconds: Mapping[str, float] | None = None,
         date_time: Mapping[str, str] | None = None,
     ) -> None:
         self.energy_numerator: dict[tuple[str, str], float] = defaultdict(float)
         self.energy_numerator.update(energy_numerator or {})
+        self.energy_lower_numerator: dict[tuple[str, str], float] = defaultdict(
+            float
+        )
+        self.energy_lower_numerator.update(energy_lower_numerator or {})
+        self.energy_upper_numerator: dict[tuple[str, str], float] = defaultdict(
+            float
+        )
+        self.energy_upper_numerator.update(energy_upper_numerator or {})
+        self.energy_interval_keys = set(energy_interval_keys or ())
         self.reserve_numerator: dict[tuple[str, str, str], float] = defaultdict(float)
         self.reserve_numerator.update(reserve_numerator or {})
         self.total_seconds: dict[str, float] = defaultdict(float)
@@ -256,9 +310,17 @@ class PublishedPriceAccumulator:
             return
         self.total_seconds[period] += seconds
         for node, price in result.prices.node.items():
-            self.energy_numerator[(period, node[2])] += price * seconds
-        for key, price in result.prices.reserve.items():
-            self.reserve_numerator[(period, key[2], key[3])] += price * seconds
+            key = (period, node[2])
+            self.energy_numerator[key] += price * seconds
+            bounds = result.prices.node_intervals.get(node, (price, price))
+            self.energy_lower_numerator[key] += bounds[0] * seconds
+            self.energy_upper_numerator[key] += bounds[1] * seconds
+            if node in result.prices.node_intervals:
+                self.energy_interval_keys.add(key)
+        for reserve_key, price in result.prices.reserve.items():
+            self.reserve_numerator[
+                (period, reserve_key[2], reserve_key[3])
+            ] += price * seconds
 
     def finish(self, *, decimals: int) -> PublishedPrices:
         energy = {
@@ -271,7 +333,27 @@ class PublishedPriceAccumulator:
             for key, value in self.reserve_numerator.items()
             if self.total_seconds[key[0]] > 0.0
         }
-        return PublishedPrices(energy, reserve, self.total_seconds, self.date_time)
+        energy_intervals = {
+            key: (
+                round(
+                    self.energy_lower_numerator[key] / self.total_seconds[key[0]],
+                    decimals,
+                ),
+                round(
+                    self.energy_upper_numerator[key] / self.total_seconds[key[0]],
+                    decimals,
+                ),
+            )
+            for key in self.energy_interval_keys
+            if self.total_seconds[key[0]] > 0.0
+        }
+        return PublishedPrices(
+            energy=energy,
+            reserve=reserve,
+            total_seconds=self.total_seconds,
+            date_time=self.date_time,
+            energy_intervals=energy_intervals,
+        )
 
 
 class PublishedPriceAggregator:

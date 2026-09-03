@@ -48,11 +48,27 @@ LP prices require accepted optimal termination, canonical signs/units, and
 finite-difference validation. Price-bearing ranged rows are mapped explicitly.
 Historical CPLEX vSPD results are the authoritative price oracle. At the
 nondifferentiable zero-flow point of a lossy AC branch, a passive leaf bus uses
-the CPLEX-compatible export-side endpoint. This is calculated from the
-parent-bus dual, receiving-end loss share, and inward first-segment loss factor.
-All differentiable bus prices remain direct fixed-RMIP marginals. This rule
-does not change dispatch, the fixed-RMIP objective, or prices away from the
-loss kink.
+the deterministic export-side endpoint as its scalar price. PySPD also emits
+the complete analytic interval between the export and load derivatives. For
+parent price `p`, receiving-end loss share `r`, inward first-segment factor
+`f_in`, and outward first-segment factor `f_out`, the endpoints are:
+
+- `export = p(1-r f_out) / (1+(1-r)f_out)`; and
+- `load = p(1+(1-r)f_in) / (1-r f_in)`.
+
+The interval is stored in ascending order so it also remains valid for negative
+parent prices. Zero-loss transformer descendants inherit the anchored
+interval. Bus intervals are allocated to nodes and publication periods using
+the same signed allocation and duration weights as scalar prices. A repair
+that changes a bus scalar invalidates its pre-repair interval; a dead-node
+price transfer transfers the source interval with the scalar.
+
+The public shape is deliberately minimal: `price` remains the scalar and
+`price_interval: [lower, upper]` is present only where an analytic loss-kink
+interval exists. It carries no selection-convention or selected-endpoint
+field. All differentiable prices remain direct fixed-RMIP marginals and omit
+interval metadata. This rule does not change dispatch, the fixed-RMIP
+objective, or prices away from the loss kink.
 
 ## Consequences
 
@@ -67,6 +83,8 @@ loss kink.
   on primal feasibility, dispatch, or objective value. Any difference that
   reaches a node or publication remains a separately reported CPLEX
   output-parity difference.
+- Reports expose `price_interval` on affected bus, node, and published-energy
+  rows; scalar-only rows contain an empty CSV value.
 - Stage 7 repeats the complete pricing audit after NMIR/reserve binaries arrive.
 
 ## Rejected alternatives
@@ -83,6 +101,8 @@ loss kink.
 - Analytic sign/unit/complementarity/reduced-cost cases.
 - Finite-difference demand and reserve perturbations away from kinks; explicit
   endpoint tests at nondifferentiable zero-flow loss faces.
+- Independent recomputation of interval allocation, dead-node transfer, and
+  publication weighting.
 - Gate 6 submodel and Gate 7 full-formulation pricing-model audits.
 - PySPD-to-historical-CPLEX published-output comparison at reference precision,
   with pinned-vSPD comparison retained as secondary diagnostic evidence.

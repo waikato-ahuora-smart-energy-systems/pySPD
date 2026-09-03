@@ -188,6 +188,31 @@ def test_bus_report_uses_allocated_transferred_price_for_dead_node_bus() -> None
     assert rows[bus_keys[0][-1]]["repaired_price_nzd_per_mwh"] == "60"
 
 
+def test_price_interval_is_reported_only_where_analytic_interval_exists() -> None:
+    observation = make_observation()
+    first_bus = min(observation.raw_bus_prices)
+    observation = replace(
+        observation,
+        raw_bus_price_intervals={first_bus: (49.5, 50.5)},
+    )
+
+    bundle = _bundle(observation)
+    buses = {row["bus"]: row for row in bundle.tables["bus"].rows}
+    nodes = {row["node"]: row for row in bundle.tables["node"].rows}
+    published = {
+        row["location"]: row
+        for row in bundle.tables["published_price"].rows
+        if row["product"] == "energy"
+    }
+
+    assert buses["B1"]["price_interval"] == "[49.5,50.5]"
+    assert buses["B2"]["price_interval"] == ""
+    assert nodes["N1"]["price_interval"] == "[49.5,50.5]"
+    assert nodes["N2"]["price_interval"] == ""
+    assert published["N1"]["price_interval"] == "[49.5,50.5]"
+    assert published["N2"]["price_interval"] == ""
+
+
 def test_report_direction_treats_solver_noise_as_zero_forward_flow() -> None:
     assert reporting._branch_report_direction(-2.99e-11) == "forward"
     assert reporting._branch_report_direction(-1.0e-6) == "backward"
