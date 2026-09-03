@@ -143,7 +143,7 @@ class MarketPricePostProcessor:
         for bus in observation.raw_bus_prices:
             island = observation.bus_electrical_island.get(bus, 0.0)
             island_load[(bus[0], bus[1], island)] += observation.bus_load.get(bus, 0.0)
-        return {
+        return set(observation.persistent_disconnected_buses) | {
             bus
             for bus in observation.raw_bus_prices
             if (

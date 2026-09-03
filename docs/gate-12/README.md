@@ -21,6 +21,17 @@ Four additional SCIP→HiGHS full-day runs are documented in the
 [`expanded CPLEX analysis`](cplex-reference-expanded-four-days.md).
 The cross-corpus treatment of basis-dependent passive zero-flow prices is in
 the [`ten-day CPLEX zero-flow analysis`](cplex-zero-flow-analysis-ten-days.md).
+The 2023-11-24 ARG1101 diagnosis proves a second basis-dependent boundary:
+fresh CPLEX reproduces HiGHS on the same fixed LP, while only CPLEX's
+MIP-to-fixed-LP continuation reproduces the archived marginal. See the
+[`TP29 canonical-matrix diagnosis`](cplex-tp29-mip-basis-diagnosis-20231124.md).
+The corrected 297-case 2023-11-24 evidence also reproduces TP16 ABY0111
+exactly at 158.78761 NZD/MWh after restoring vSPD's daily transfer guard,
+persistent disconnected-bus state, and unresolved-dead-node bus-report rule.
+Its complete-day evidence is bound by
+[`cplex-reference-paths-20231124-highs-corrected.json`](cplex-reference-paths-20231124-highs-corrected.json)
+and
+[`cplex-reference-comparison-20231124-highs-corrected.json`](cplex-reference-comparison-20231124-highs-corrected.json).
 
 Gate 12 owns the exact end-to-end validation intentionally removed from the
 amended Gate 8 boundary. It does not reopen or duplicate the Stage 8

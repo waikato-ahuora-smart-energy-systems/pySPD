@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "profile": "cplex-mip-basis-price-diagnosis-v1",
+  "date": "2023-11-24",
+  "trading_period": "TP29",
+  "case_id": "241012023110125942",
+  "node": "ARG1101",
+  "bus": "499",
+  "archive": {
+    "case_bus_price_nzd_per_mwh_displayed": 175.221,
+    "published_tp_price_nzd_per_mwh": 183.5199,
+    "system_objective_displayed": 90150365.90023
+  },
+  "scip_mip_highs_fixed_rmip": {
+    "case_node_price_nzd_per_mwh": 172.3515734605,
+    "published_tp_price_nzd_per_mwh": 181.00951,
+    "system_objective": 90150365.9002257,
+    "optimal": true
+  },
+  "gamspy_cplex_replays": {
+    "fresh_cplex_on_scip_fixed_matrix": {
+      "case_node_price_nzd_per_mwh": 172.35157346048533,
+      "system_objective": 90150365.9002257,
+      "status": "ModelStatus.OptimalGlobal"
+    },
+    "cplex_mip_then_fixed_cplex_rmip": {
+      "case_node_price_nzd_per_mwh": 175.221050811755,
+      "primary_objective": 90150365.9002257,
+      "pricing_objective": 90150365.9002257,
+      "status": "ModelStatus.OptimalGlobal"
+    }
+  },
+  "state_comparison": {
+    "binary_member_count": 16,
+    "sos2_member_count": 118,
+    "active_sos2_member_count": 15,
+    "fixed_state_bound_mismatch_count": 0
+  },
+  "matrix_evidence": {
+    "pre_mip_sha256": "349210a6bacd355a268944b9cfeac9fad8e1e99c1b3ad1139efb063ed051484d",
+    "scip_fixed_rmip_sha256": "c57588311fdb9024bfad0284581ce78a295a5647325b69a03a587e8c77f62255"
+  },
+  "differences": {
+    "fresh_cplex_minus_highs_case_price": -1.4665602066088468e-11,
+    "cplex_path_minus_archive_displayed_case_price": 0.00005081175498822277,
+    "published_absolute_nzd_per_mwh": 2.51039,
+    "published_relative_percent_of_cplex": 1.3679115997774631
+  },
+  "finding": "The primal optimum and fixed binary/SOS support are identical. A fresh fixed-LP solve selects the HiGHS marginal, while the CPLEX MIP-to-fixed-LP continuation selects the archived marginal. The remaining difference is a non-unique dual selected by inherited CPLEX solve state, not a Pyomo algebra or optimality defect.",
+  "licence_boundary": "The installed GAMSPy academic licence permits CPLEX only for a model constructed through GAMSPy. It cannot execute the original GAMS source, so the canonical GAMS Convert matrix was reconstructed and solved through GAMSPy."
+}

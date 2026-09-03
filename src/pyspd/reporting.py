@@ -289,11 +289,12 @@ def _reported_bus_price(
     accepted: SolveObservation,
     prices: PriceTrace,
 ) -> float:
-    """Apply pinned-vSPD's dead-node bus report projection."""
+    """Apply pinned-vSPD's unresolved-dead-node bus report projection."""
 
     allocations = accepted.node_bus_allocation
     has_dead_node = any(
         allocation_key[:-1] in prices.dead_nodes
+        and allocation_key[:-1] not in prices.dead_node_price_source
         and allocation_key[:2] + (allocation_key[-1],) == bus_key
         and float(weight) != 0.0
         for allocation_key, weight in allocations.items()
@@ -380,7 +381,6 @@ class V5SummaryReportProjector:
     """Project the pinned-vSPD trading-period summary from registered handles."""
 
     _VIOLATION_COMPONENTS: ClassVar[tuple[tuple[str, str], ...]] = (
-        ("deficit_generation_mw", "balance_deficit"),
         ("surplus_generation_mw", "balance_surplus"),
         ("surplus_branch_flow_mw", "branch_flow_surplus"),
         ("deficit_ramp_rate_mw", "ramp_deficit"),
@@ -451,6 +451,12 @@ class V5SummaryReportProjector:
             name: _component_sum(artifacts[component], period)
             for name, component in self._VIOLATION_COMPONENTS
         }
+        # vSPD's o_defGenViolation_TP is the sum of bus balance deficit and
+        # ENERGYSCARCITYNODE. The latter is the nodal shortfall variable used
+        # when energy-scarcity blocks are enabled.
+        values["deficit_generation_mw"] = _component_sum(
+            artifacts["balance_deficit"], period
+        ) + _component_sum(artifacts["energy_scarcity_node"], period)
         values["deficit_reserve_mw"] = _component_sum(
             artifacts["reserve_deficit_ce"], period
         ) + _component_sum(artifacts["reserve_deficit_ece"], period)

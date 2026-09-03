@@ -313,6 +313,10 @@ def _maximum_mapping_payload(
     return {"absolute_difference": abs(value), "signed_difference": value, "identity": identity}
 
 
+def corpus_scope(day_count: int) -> str:
+    return f"All {day_count} deterministic CPLEX reference-corpus days"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--corpus", required=True, type=Path)
@@ -332,7 +336,7 @@ def main() -> None:
     payload = {
         "schema_version": 1,
         "profile": "cplex-passive-zero-flow-endpoint-analysis-v1",
-        "scope": "All six deterministic CPLEX reference-corpus days",
+        "scope": corpus_scope(len(days)),
         "days": days,
         "totals": {
             "case_count": sum(day["case_count"] for day in days),

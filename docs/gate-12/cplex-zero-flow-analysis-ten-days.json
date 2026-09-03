@@ -640,7 +640,7 @@
   ],
   "profile": "cplex-passive-zero-flow-endpoint-analysis-v1",
   "schema_version": 1,
-  "scope": "All six deterministic CPLEX reference-corpus days",
+  "scope": "All 10 deterministic CPLEX reference-corpus days",
   "totals": {
     "affected_node_case_count": 256,
     "affected_nodes": [

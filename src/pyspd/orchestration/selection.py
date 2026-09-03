@@ -222,8 +222,14 @@ class DailyCasePreparer:
             node_transfer=transfer_map,
             use_actual_load=nonzero(dt_parameter.get((*period, "useActualLoad"), 0.0)),
             rtd_load_reconstruction_enabled=not daily_mode,
-            transfer_enabled=nonzero(
-                dt_parameter.get((*period, "enrgShortfallTransfer"), 0.0)
+            # vSPDsolve.gms suppresses shortfall transfer for RTD/PRSS cases in
+            # daily mode, even when the source flag is enabled. Non-daily runs
+            # and other study modes retain the source-controlled path.
+            transfer_enabled=(
+                nonzero(
+                    dt_parameter.get((*period, "enrgShortfallTransfer"), 0.0)
+                )
+                and (not daily_mode or selected.study_mode not in {101, 201})
             ),
             price_transfer_enabled=nonzero(
                 dt_parameter.get((*period, "priceTransfer"), 0.0)

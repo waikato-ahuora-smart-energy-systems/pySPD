@@ -59,9 +59,17 @@ class ShortfallLoop:
         transitions: list[ShortfallTransition] = []
         all_transfers: dict[tuple[Key, Key], float] = defaultdict(float)
         all_untransferred: set[Key] = set()
+        persistent_disconnected: set[Key] = set()
         accepted: SolveObservation | None = None
         for solve_loop in range(1, limit + 1):
             accepted = self.executor.solve(current)
+            persistent_disconnected.update(
+                _source_disconnected_buses(accepted, self.tolerance)
+            )
+            accepted = replace(
+                accepted,
+                persistent_disconnected_buses=frozenset(persistent_disconnected),
+            )
             if not current.transfer_enabled:
                 return self._result(
                     current,
@@ -387,41 +395,8 @@ def _values(component: Any) -> dict[Key, float]:
 
 
 def _dead_nodes(observation: SolveObservation, tolerance: float) -> set[Key]:
-    island_load: dict[tuple[str, str, float], float] = defaultdict(float)
-    island_generation: dict[tuple[str, str, float], float] = defaultdict(float)
-    for bus in observation.raw_bus_prices:
-        island = observation.bus_electrical_island.get(bus, 0.0)
-        identity = (bus[0], bus[1], island)
-        island_load[identity] += observation.bus_load.get(bus, 0.0)
-        island_generation[identity] += observation.bus_generation.get(bus, 0.0)
-    disconnected = {
-        bus
-        for bus in observation.raw_bus_prices
-        if (
-            observation.bus_electrical_island.get(bus, 0.0) == 0.0
-            and abs(observation.bus_load.get(bus, 0.0)) <= tolerance
-        )
-        or abs(
-            island_load[
-                (
-                    bus[0],
-                    bus[1],
-                    observation.bus_electrical_island.get(bus, 0.0),
-                )
-            ]
-        )
-        <= tolerance
-        or abs(
-            island_generation[
-                (
-                    bus[0],
-                    bus[1],
-                    observation.bus_electrical_island.get(bus, 0.0),
-                )
-            ]
-        )
-        <= tolerance
-    }
+    disconnected = set(observation.persistent_disconnected_buses)
+    disconnected.update(_source_disconnected_buses(observation, tolerance))
     return {
         node
         for node in observation.node_electrical_island
@@ -433,3 +408,29 @@ def _dead_nodes(observation: SolveObservation, tolerance: float) -> set[Key]:
         )
         <= tolerance
     }
+
+
+def _source_disconnected_buses(
+    observation: SolveObservation, tolerance: float
+) -> set[Key]:
+    """Reproduce the persistent pre-shortfall ``busDisconnected`` assignment."""
+
+    island_load: dict[tuple[str, str, float], float] = defaultdict(float)
+    island_generation: dict[tuple[str, str, float], float] = defaultdict(float)
+    for bus in observation.raw_bus_prices:
+        island = observation.bus_electrical_island.get(bus, 0.0)
+        identity = (bus[0], bus[1], island)
+        island_load[identity] += observation.bus_load.get(bus, 0.0)
+        island_generation[identity] += observation.bus_generation.get(bus, 0.0)
+    disconnected: set[Key] = set()
+    for bus in observation.raw_bus_prices:
+        island = observation.bus_electrical_island.get(bus, 0.0)
+        identity = (bus[0], bus[1], island)
+        if (
+            island == 0.0
+            and abs(observation.bus_load.get(bus, 0.0)) <= tolerance
+        ) or abs(island_load[identity]) <= tolerance or abs(
+            island_generation[identity]
+        ) <= tolerance:
+            disconnected.add(bus)
+    return disconnected

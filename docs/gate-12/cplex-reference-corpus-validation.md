@@ -93,10 +93,37 @@ The exercise found and tested these defects before the final runs:
 6. Report constraint-dual lookup was indexed rather than repeatedly scanned;
    report projection fell from about 40 seconds to under one second per case in
    the measured diagnostic.
+7. Daily RTD/PRSS cases incorrectly honored the source shortfall-transfer flag.
+   vSPD suppresses that transfer in daily mode. The corrected guard removes
+   three unnecessary 2023-11-24 TP16 repeat solves and restores their CPLEX
+   objective, dispatch and deficit reporting.
+8. Summary deficit generation omitted `ENERGYSCARCITYNODE`. It now sums that
+   nodal scarcity quantity with bus balance deficit exactly as vSPD does.
+9. vSPD's pre-shortfall `busDisconnected` assignment is persistent. PySPD now
+   retains the union of those assignments across bounded re-solves, including
+   electrical islands with zero generation, before final price publication.
+10. vSPD clears a dead-node marker after successfully transferring its node
+    price. PySPD bus and branch reporting now projects node price back to a bus
+    only for an unresolved dead node, not for an initially dead node whose
+    price transfer succeeded.
 
-Only item 2 changes the optimization domain for the 2023 PRSS cases. Items 3
-and 4 are report corrections; items 1, 5 and 6 are input, solver-policy and
-execution corrections respectively.
+Items 2 and 7 change the applicable optimization/orchestration domain. Items
+3, 4, 8 and 10 are report corrections; item 9 is orchestration state fidelity;
+items 1, 5 and 6 are input, solver-policy and execution corrections
+respectively. Together, items 7–10 make all bus and branch rows in the three
+affected TP16 cases match CPLEX at stored precision and reproduce the TP16
+ABY0111 publication exactly at 158.78761 NZD/MWh.
+
+### 2023-11-24 TP29 basis diagnosis
+
+The worst published-energy difference on the four newly replayed days is
+ARG1101 in TP29: 2.51039 NZD/MWh (1.3679% of CPLEX). Canonical-matrix replay
+shows identical objective and fixed binary/SOS support. Fresh CPLEX on SCIP's
+fixed LP reproduces the HiGHS marginal, while CPLEX MIP followed by its fixed
+LP continuation reproduces the archived CPLEX marginal. The difference is a
+non-unique dual selected by inherited solver state, not a Pyomo algebra or
+optimality defect. See
+[`cplex-tp29-mip-basis-diagnosis-20231124.md`](cplex-tp29-mip-basis-diagnosis-20231124.md).
 
 ## Full-day execution results
 

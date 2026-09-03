@@ -11,6 +11,12 @@ from tools.analyze_cplex_zero_flow import (
 )
 
 
+def test_corpus_scope_is_derived_from_inventory() -> None:
+    from tools.analyze_cplex_zero_flow import corpus_scope
+
+    assert corpus_scope(10) == "All 10 deterministic CPLEX reference-corpus days"
+
+
 def test_classifies_both_loss_kink_endpoints() -> None:
     parent = 100.0
     factor = 0.001

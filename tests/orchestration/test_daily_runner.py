@@ -46,6 +46,32 @@ def test_shortfall_transfer_resolves_and_records_each_transition() -> None:
     assert RunEventKind.SHORTFALL_TRANSFERRED in {event.kind for event in case.events}
 
 
+def test_disconnected_bus_state_persists_across_shortfall_resolve() -> None:
+    ca, dt = "C1", "01-JAN-2024 00:00"
+    b1, b2 = (ca, dt, "B1"), (ca, dt, "B2")
+    first = replace(
+        make_observation(shortfall=1.0),
+        bus_generation={b1: 0.0, b2: 20.0},
+        bus_load={b1: 0.3, b2: 20.0},
+        bus_electrical_island={b1: 0.0, b2: 1.0},
+    )
+    second = replace(
+        make_observation(shortfall=0.0),
+        bus_generation={b1: 0.3, b2: 20.0},
+        bus_load={b1: 0.3, b2: 20.0},
+        bus_electrical_island={b1: 0.0, b2: 1.0},
+    )
+
+    result = DailyRunner(SequenceExecutor([first, second])).run(
+        configuration(), (make_prepared(),)
+    )
+
+    prices = result.cases[0].prices
+    assert prices is not None
+    assert prices.repaired_bus[b1] == 0.0
+    assert b1 in prices.disconnected_buses
+
+
 def test_bounded_loop_exposes_degraded_result_instead_of_hanging() -> None:
     observation = make_observation(shortfall=1.0)
     executor = SequenceExecutor([observation, observation, observation])

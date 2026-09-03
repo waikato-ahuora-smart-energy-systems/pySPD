@@ -206,6 +206,7 @@ class SolveObservation:
     )
     node_market_island: Mapping[Key, str] = field(default_factory=dict)
     node_transfer: tuple[tuple[Key, Key], ...] = ()
+    persistent_disconnected_buses: frozenset[Key] = frozenset()
     bus_adjacency: frozenset[tuple[Key, Key]] = frozenset()
     connected_bus_flow: Mapping[Key, float] = field(default_factory=dict)
     cleared_offer_price: Mapping[Key, float] = field(default_factory=dict)
@@ -243,6 +244,11 @@ class SolveObservation:
             ),
         )
         object.__setattr__(self, "node_market_island", _proxy(self.node_market_island))
+        object.__setattr__(
+            self,
+            "persistent_disconnected_buses",
+            frozenset(self.persistent_disconnected_buses),
+        )
         object.__setattr__(self, "bus_adjacency", frozenset(self.bus_adjacency))
         object.__setattr__(self, "degraded_reasons", tuple(self.degraded_reasons))
 

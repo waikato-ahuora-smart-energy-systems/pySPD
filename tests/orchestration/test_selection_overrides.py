@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import pytest
+
 from pyspd.contracts import CaseData
 from pyspd.data import RawRecord, RawSymbol, RawSymbols, ScalarValue, SymbolType
 from pyspd.orchestration import (
@@ -52,6 +54,72 @@ def _with_empty_node_transfer(case: CaseData) -> CaseData:
             case.symbols.source_name,
             case.symbols.source_sha256,
             (*case.symbols.symbols, symbol),
+        ),
+    )
+
+
+def _with_shortfall_transfer(case: CaseData) -> CaseData:
+    symbols = []
+    for symbol in case.symbols.symbols:
+        if symbol.name != "i_dateTimeParameter":
+            symbols.append(symbol)
+            continue
+        symbols.append(
+            RawSymbol(
+                symbol.name,
+                symbol.symbol_type,
+                symbol.dimension,
+                symbol.domains,
+                symbol.description,
+                symbol.uel_orders,
+                (
+                    *symbol.records,
+                    RawRecord(
+                        ("C1", "D1", "enrgShortfallTransfer"),
+                        {"value": ScalarValue.finite(1.0)},
+                    ),
+                ),
+            )
+        )
+    return replace(
+        case,
+        symbols=RawSymbols(
+            case.symbols.source_name,
+            case.symbols.source_sha256,
+            tuple(symbols),
+        ),
+    )
+
+
+def _with_study_mode(case: CaseData, study_mode: int) -> CaseData:
+    symbols = []
+    for symbol in case.symbols.symbols:
+        if symbol.name != "i_runMode":
+            symbols.append(symbol)
+            continue
+        records = tuple(
+            RawRecord(record.keys, {"value": ScalarValue.finite(study_mode)})
+            if record.keys == ("C1", "studyMode")
+            else record
+            for record in symbol.records
+        )
+        symbols.append(
+            RawSymbol(
+                symbol.name,
+                symbol.symbol_type,
+                symbol.dimension,
+                symbol.domains,
+                symbol.description,
+                symbol.uel_orders,
+                records,
+            )
+        )
+    return replace(
+        case,
+        symbols=RawSymbols(
+            case.symbols.source_name,
+            case.symbols.source_sha256,
+            tuple(symbols),
         ),
     )
 
@@ -110,6 +178,31 @@ def test_daily_preparer_keeps_source_demand_for_rtd_daily_mode() -> None:
     assert prepared.required_load[("C1", "D1", "N1")] == 25.0
     assert prepared.required_load[("C1", "D1", "N2")] == 0.0
     assert not prepared.rtd_load_reconstruction_enabled
+
+
+@pytest.mark.parametrize(
+    ("study_mode", "daily_transfer_enabled"),
+    ((101, False), (201, False), (130, True)),
+)
+def test_daily_preparer_matches_vspd_shortfall_transfer_guard(
+    study_mode: int, daily_transfer_enabled: bool
+) -> None:
+    case = _with_study_mode(
+        _with_shortfall_transfer(
+            _with_empty_node_transfer(_with_publication(make_case()))
+        ),
+        study_mode,
+    )
+    selector = DailyCaseSelector()
+    selected = selector.select(case.symbols)[0]
+    isolated = selector.case_data(case.symbols, selected)
+
+    daily = DailyCasePreparer().prepare(isolated, selected, daily_mode=True)
+    non_daily = DailyCasePreparer().prepare(isolated, selected, daily_mode=False)
+
+    assert selected.study_mode == study_mode
+    assert daily.transfer_enabled is daily_transfer_enabled
+    assert non_daily.transfer_enabled
 
 
 def test_all_override_families_apply_and_are_audited() -> None:

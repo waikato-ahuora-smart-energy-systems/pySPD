@@ -69,6 +69,29 @@ def test_disconnected_bus_zero_and_dead_node_price_transfer() -> None:
     assert trace.dead_node_price_source[n1] == n2
 
 
+def test_persistent_pre_shortfall_disconnection_overrides_dead_bus_penalty() -> None:
+    observation = make_observation()
+    ca, dt = "C1", "01-JAN-2024 00:00"
+    b1 = (ca, dt, "B1")
+    n1 = (ca, dt, "N1")
+    observation = replace(
+        observation,
+        bus_generation={b1: 0.0, (ca, dt, "B2"): 20.0},
+        bus_load={b1: 0.3, (ca, dt, "B2"): 20.0},
+        bus_electrical_island={b1: 0.0, (ca, dt, "B2"): 1.0},
+        persistent_disconnected_buses=frozenset({b1}),
+    )
+
+    trace = MarketPricePostProcessor().process(
+        observation, price_transfer_enabled=False
+    )
+
+    assert trace.raw_bus[b1] == 50.0
+    assert trace.repaired_bus[b1] == 0.0
+    assert trace.node[n1] == 0.0
+    assert b1 in trace.disconnected_buses
+
+
 def test_dead_price_transfer_uses_market_not_electrical_island_identity() -> None:
     observation = make_observation()
     ca, dt = "C1", "01-JAN-2024 00:00"

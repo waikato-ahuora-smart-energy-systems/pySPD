@@ -173,7 +173,7 @@ def test_model_rows_use_fixed_pricing_state_and_complete_branch_domain() -> None
     assert {row["branch"] for row in rows["branch"]} == {"AC.1", "HVDC.1"}
 
 
-def test_bus_report_uses_allocated_transferred_price_for_dead_node_bus() -> None:
+def test_bus_report_keeps_zero_bus_price_after_dead_node_price_transfer() -> None:
     observation = make_observation()
     bus_keys = sorted(observation.raw_bus_prices)
     observation = replace(
@@ -185,7 +185,7 @@ def test_bus_report_uses_allocated_transferred_price_for_dead_node_bus() -> None
     rows = {row["bus"]: row for row in _bundle(observation).tables["bus"].rows}
 
     assert rows[bus_keys[0][-1]]["raw_price_nzd_per_mwh"] == "50"
-    assert rows[bus_keys[0][-1]]["repaired_price_nzd_per_mwh"] == "60"
+    assert rows[bus_keys[0][-1]]["repaired_price_nzd_per_mwh"] == "0"
 
 
 def test_price_interval_is_reported_only_where_analytic_interval_exists() -> None:
@@ -266,6 +266,9 @@ def test_v5_renderer_projects_complete_authority_risk_and_summary_rows() -> None
         ),
         "reserve_deficit_ece": variable(
             "deficit_ece", [(*period, island, reserve_class)], 0.0
+        ),
+        "energy_scarcity_node": variable(
+            "energy_scarcity_node", [(*period, "N1")], 0.25
         ),
         "balance_deficit": variable("balance_deficit", [(*period, "B1")], 0.1),
         "balance_surplus": variable("balance_surplus", [(*period, "B1")], 0.2),
@@ -354,7 +357,7 @@ def test_v5_renderer_projects_complete_authority_risk_and_summary_rows() -> None
     assert summary["system_cost_nzd"] == "20"
     assert summary["system_benefit_nzd"] == "1"
     assert summary["violation_cost_nzd"] == "0.5"
-    assert summary["deficit_generation_mw"] == "0.10000000000000001"
+    assert summary["deficit_generation_mw"] == "0.34999999999999998"
     assert summary["surplus_market_node_constraint_mw"] == "0.90000000000000002"
 
     case_data.study_mode[period] = 111.0
