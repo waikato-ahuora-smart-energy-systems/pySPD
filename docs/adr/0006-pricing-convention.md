@@ -62,6 +62,11 @@ loss kink.
   basis sequence where CPLEX selected the other endpoint on a degenerate face.
 - Passive zero-flow AC-loss leaves use the CPLEX-compatible export endpoint in
   the qualified PySPD path.
+- A source-topology-certified price lying between the analytic export and load
+  endpoints is dual-equivalent for optimization correctness. It has no effect
+  on primal feasibility, dispatch, or objective value. Any difference that
+  reaches a node or publication remains a separately reported CPLEX
+  output-parity difference.
 - Stage 7 repeats the complete pricing audit after NMIR/reserve binaries arrive.
 
 ## Rejected alternatives

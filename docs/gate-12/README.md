@@ -17,6 +17,8 @@ comparison are documented in the
 [`CPLEX reference corpus validation`](cplex-reference-corpus-validation.md).
 Both tested pathways are complete and optimal, but neither establishes exact
 CPLEX parity; SCIP→HiGHS remains the overall-fidelity default.
+The cross-corpus treatment of basis-dependent passive zero-flow prices is in
+the [`six-day CPLEX zero-flow analysis`](cplex-zero-flow-analysis-six-days.md).
 
 Gate 12 owns the exact end-to-end validation intentionally removed from the
 amended Gate 8 boundary. It does not reopen or duplicate the Stage 8

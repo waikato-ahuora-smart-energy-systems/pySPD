@@ -188,6 +188,12 @@ price is `773.0625328434725` versus CPLEX `773.0625333333334` (difference
 All six SCIP MIP and HiGHS fixed-RMIP solves were optimal. See
 [`wpt1101-cplex-parity-20230802.md`](wpt1101-cplex-parity-20230802.md).
 
+The corresponding all-six-day analysis finds 10,022 CPLEX load-endpoint
+choices, of which 9,857 have no nonzero node allocation and therefore affect
+only raw reporting. The 165 node-projected observations are bounded and remain
+explicit output-parity evidence; see
+[`cplex-zero-flow-analysis-six-days.md`](cplex-zero-flow-analysis-six-days.md).
+
 The HiGHS risk identity mismatch is a different risk-setter selection on an
 equal maximum-risk surface; CLP selected the CPLEX setter for those rows. Large
 island reserve-sharing differences similarly reflect different allocation on
