@@ -14,6 +14,7 @@ from pyspd.hvdc.data import SosRepresentation
 from pyspd.hvdc.formulation import HvdcSolvePolicy, WarmStartSnapshot
 from pyspd.preprocess.shortfall import ShortfallTransferResolver, ShortfallTransferState
 from pyspd.reserve import ReserveCase, ReservePricingEngine, reserve_formulation
+from pyspd.solver import SolverBackend
 from pyspd.v16.data import Spd16Case
 from pyspd.v16.formulation import Spd16PricingEngine, spd16_formulation
 
@@ -200,9 +201,13 @@ class ReserveCaseExecutor:
         *,
         warm_start_primary: bool = False,
         warm_start_pricing: bool = False,
+        primary_backend: SolverBackend | None = None,
+        pricing_backend: SolverBackend | None = None,
     ) -> None:
         self.warm_start_primary = bool(warm_start_primary)
         self.warm_start_pricing = bool(warm_start_pricing)
+        self.primary_backend = primary_backend
+        self.pricing_backend = pricing_backend
         self._previous_period_start: WarmStartSnapshot | None = None
 
     def solve(self, prepared: PreparedCase) -> SolveObservation:
@@ -215,6 +220,8 @@ class ReserveCaseExecutor:
             warm_start_primary=self.warm_start_primary,
             warm_start_pricing=self.warm_start_pricing,
             previous_period_start=self._previous_period_start,
+            primary_backend=self.primary_backend,
+            pricing_backend=self.pricing_backend,
         ).solve(built)
         if self.warm_start_primary:
             self._previous_period_start = outcome.next_warm_start

@@ -42,9 +42,12 @@ from pyspd.network.components import NetworkDomainsComponent
 from pyspd.network.formulation import NetworkPrices, NetworkPricingEngine
 from pyspd.preprocess import PreprocessingSettings, Vspd506Preprocessor
 from pyspd.solver import (
+    CbcBackend,
+    ClpBackend,
     HighsBackend,
     MipSolveResult,
     NativeScipBackend,
+    SolverBackend,
     SolverConfiguration,
     SolveResult,
 )
@@ -105,9 +108,7 @@ class WarmStartSnapshot:
     ) -> WarmStartSnapshot:
         values: dict[WarmStartKey, float] = {}
         for variable in model.component_data_objects(pyo.Var, active=True):
-            if discrete_only and not (
-                variable.is_binary() or variable.is_integer()
-            ):
+            if discrete_only and not (variable.is_binary() or variable.is_integer()):
                 continue
             value = pyo.value(variable, exception=False)
             if value is None or not math.isfinite(float(value)):
@@ -128,9 +129,7 @@ class WarmStartSnapshot:
         for variable in model.component_data_objects(pyo.Var, active=True):
             if variable.fixed:
                 continue
-            if discrete_only and not (
-                variable.is_binary() or variable.is_integer()
-            ):
+            if discrete_only and not (variable.is_binary() or variable.is_integer()):
                 continue
             value = self.values.get(_warm_start_key(variable))
             if value is None or not _warm_start_value_is_valid(variable, value):
@@ -164,6 +163,7 @@ class HvdcSolveOutcome:
     pricing_snapshot: SolutionSnapshot
     next_warm_start: WarmStartSnapshot
     warm_start: WarmStartAudit
+    solver_profile: str
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -185,10 +185,14 @@ class HvdcSolvePolicy(SolvePolicy):
         warm_start_primary: bool = False,
         warm_start_pricing: bool = False,
         previous_period_start: WarmStartSnapshot | None = None,
+        primary_backend: SolverBackend | None = None,
+        pricing_backend: SolverBackend | None = None,
     ) -> None:
         self.warm_start_primary = bool(warm_start_primary)
         self.warm_start_pricing = bool(warm_start_pricing)
         self.previous_period_start = previous_period_start
+        self.primary_backend = primary_backend
+        self.pricing_backend = pricing_backend
 
     def solve(self, built_model: BuiltModel) -> HvdcSolveOutcome:
         case = built_model.case_data
@@ -198,22 +202,16 @@ class HvdcSolvePolicy(SolvePolicy):
         prior = self.previous_period_start if self.warm_start_primary else None
         prior_value_count = len(prior.values) if prior is not None else 0
         primary_warm_count = (
-            prior.apply(primary.model, discrete_only=True)
-            if prior is not None
-            else 0
+            prior.apply(primary.model, discrete_only=True) if prior is not None else 0
         )
         discrete = _active_discrete(primary.model)
         if discrete:
-            initial: SolveResult | MipSolveResult = self._solve_scip(
+            initial: SolveResult | MipSolveResult = self._solve_primary_mip(
                 primary,
                 warm_start=primary_warm_count > 0,
             )
         else:
-            primary_warm_count = (
-                prior.apply(primary.model)
-                if prior is not None
-                else 0
-            )
+            primary_warm_count = prior.apply(primary.model) if prior is not None else 0
             initial = self._solve_highs(
                 primary,
                 warm_start=primary_warm_count > 0,
@@ -230,7 +228,7 @@ class HvdcSolvePolicy(SolvePolicy):
                 if prior is not None
                 else 0
             )
-            primary_mip = self._solve_scip(
+            primary_mip = self._solve_primary_mip(
                 primary,
                 warm_start=primary_warm_count > 0,
             )
@@ -248,7 +246,7 @@ class HvdcSolvePolicy(SolvePolicy):
         _set_continuous_state(primary.model, fixed_sos_members)
         pricing = ModelAssembler().assemble(self._formulation(), primary.case_data)
         pricing_warm_count = 0
-        if self.warm_start_pricing:
+        if self.warm_start_pricing and self.pricing_backend is None:
             pricing_warm_count = WarmStartSnapshot.capture(primary.model).apply(
                 pricing.model
             )
@@ -256,10 +254,7 @@ class HvdcSolvePolicy(SolvePolicy):
         _fix_continuous_state(pricing.model, fixed_sos_members)
         _deactivate_sos(pricing.model)
         _assert_continuous_pricing_model(pricing.model)
-        pricing_result = self._solve_highs(
-            pricing,
-            warm_start=pricing_warm_count > 0,
-        )
+        pricing_result = self._solve_pricing(pricing, warm_start=pricing_warm_count > 0)
         next_warm_start = (
             WarmStartSnapshot.capture(primary.model, discrete_only=True)
             if self.warm_start_primary
@@ -283,7 +278,60 @@ class HvdcSolvePolicy(SolvePolicy):
                 primary_warm_count,
                 pricing_warm_count,
             ),
+            self.solver_profile,
         )
+
+    @property
+    def solver_profile(self) -> str:
+        primary = self.primary_backend.name if self.primary_backend else "scip"
+        backend = self.pricing_backend.name if self.pricing_backend else "highs"
+        return f"{primary}-mip-fixed-{backend}-rmip"
+
+    def _solve_primary_mip(
+        self,
+        built: BuiltModel,
+        *,
+        warm_start: bool = False,
+    ) -> MipSolveResult:
+        if self.primary_backend is None:
+            return self._solve_scip(built, warm_start=warm_start)
+        if isinstance(self.primary_backend, CbcBackend):
+            return self.primary_backend.solve_mip(
+                built.model,
+                SolverConfiguration(
+                    {
+                        "time_limit_seconds": 300.0,
+                        "relative_gap": 0.0,
+                        "threads": 1,
+                    }
+                ),
+                warm_start_discrete=warm_start,
+            )
+        solve_mip = getattr(self.primary_backend, "solve_mip", None)
+        if solve_mip is None:
+            raise TypeError("primary backend must implement solve_mip")
+        return solve_mip(built.model, warm_start_discrete=warm_start)
+
+    def _solve_pricing(
+        self,
+        built: BuiltModel,
+        *,
+        warm_start: bool = False,
+    ) -> SolveResult:
+        if self.pricing_backend is None:
+            return self._solve_highs(built, warm_start=warm_start)
+        if isinstance(self.pricing_backend, ClpBackend):
+            return self.pricing_backend.solve(
+                built.model,
+                SolverConfiguration(
+                    {
+                        "primal_feasibility_tolerance": 1e-9,
+                        "dual_feasibility_tolerance": 1e-9,
+                        "log_level": 0,
+                    }
+                ),
+            )
+        return self.pricing_backend.solve(built.model)
 
     def _formulation(self) -> Formulation:
         return hvdc_formulation()
@@ -306,6 +354,13 @@ class HvdcSolvePolicy(SolvePolicy):
                     # SoPlex reject otherwise valid full-size vSPD cases; the
                     # fixed-HiGHS objective is retained separately for parity.
                     "numerics/feastol": _SCIP_PRIMAL_FEASIBILITY_TOLERANCE,
+                    "lp/initalgorithm": "d",
+                    "lp/resolvealgorithm": "d",
+                    # Legacy daily inputs contain large inactive-period
+                    # symmetries.  SCIP's symmetry cuts are unnecessary for
+                    # vSPD's small active binary surface and can make SoPlex
+                    # numerically unstable on those otherwise valid models.
+                    "misc/usesymmetry": 0,
                 }
             ),
             warm_start_discrete=warm_start,

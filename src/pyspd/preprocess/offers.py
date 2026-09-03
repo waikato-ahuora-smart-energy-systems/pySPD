@@ -110,8 +110,9 @@ class OfferBidLoadStep(PreprocessingStep):
         generation_start: dict[tuple[str, ...], float] = {}
         for key in offer_identities:
             case, datetime, offer = key
-            is_rtd = study_mode.get((case, datetime), 0.0) in {101.0, 201.0}
-            use_initial = is_rtd or not settings.daily_mode
+            mode = study_mode.get((case, datetime), 0.0)
+            is_rtd = mode in {101.0, 201.0}
+            use_initial = is_rtd or mode == 111.0 or not settings.daily_mode
             value = (
                 initial.get(key, 0.0) if use_initial else solved_initial.get(key, 0.0)
             )
@@ -396,12 +397,16 @@ class OfferBidLoadStep(PreprocessingStep):
             "intermittent_offer": SparseSet(
                 "intermittent_offer",
                 offer_dims,
-                frozenset(key for key in valid_offers if nonzero(intermittent.get(key, 0.0))),
+                frozenset(
+                    key for key in valid_offers if nonzero(intermittent.get(key, 0.0))
+                ),
             ),
             "price_responsive_offer": SparseSet(
                 "price_responsive_offer",
                 offer_dims,
-                frozenset(key for key in valid_offers if nonzero(responsive.get(key, 0.0))),
+                frozenset(
+                    key for key in valid_offers if nonzero(responsive.get(key, 0.0))
+                ),
             ),
             "potential_mw": SparseParameter("potential_mw", offer_dims, potential),
             "energy_offer_mw": SparseParameter(

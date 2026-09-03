@@ -12,6 +12,11 @@
 | Human approval | No separate independent reviewer required under project direction |
 
 The live criterion register is in [`gate-checklist.md`](gate-checklist.md).
+The six-day CPLEX corpus and the full 2019/2023 SCIP→HiGHS and SCIP→CLP
+comparison are documented in the
+[`CPLEX reference corpus validation`](cplex-reference-corpus-validation.md).
+Both tested pathways are complete and optimal, but neither establishes exact
+CPLEX parity; SCIP→HiGHS remains the overall-fidelity default.
 
 Gate 12 owns the exact end-to-end validation intentionally removed from the
 amended Gate 8 boundary. It does not reopen or duplicate the Stage 8
@@ -151,6 +156,16 @@ Together with the 2022-11-07, 2023-01-16, and 2023-01-18 correction
 certificates, all five paired dates now pass their recorded native-SOS
 execution profiles. Existing
 immutable certificates remain valid for their recorded profiles.
+
+An optional native-SCIP to fixed-CLP validation pathway has also been
+implemented without changing the qualified default. Its hash-bound WPT1101
+trial matches the fixed-RMIP objective within `2.70e-8 NZD` and reconstructed
+node prices within `2.84e-14 NZD/MWh`. CLP selects materially different raw
+duals on a degenerate zero-flow face, so it remains an independent validation
+profile rather than a certified replacement. See the
+[`full-day four-path benchmark`](four-solver-path-benchmark-20221106.md) and
+the
+[`SCIP-to-CLP validation trial`](scip-clp-validation-trial-20221106.md).
 
 The representative v16 RTD portable-profile run is recorded in
 [`v16-representative-parity.json`](v16-representative-parity.json). Both the
@@ -618,22 +633,18 @@ node `WPT1101`, and its `TP35` rolling publication. Risk and summary remain
 unimplemented row projections in each case. The compact evidence index is
 [`report-row-parity-20221106.json`](report-row-parity-20221106.json).
 
-The bus 816/820 and `WPT1101` differences in that immutable pre-correction
-artifact have since been diagnosed and eliminated in the production pricing
-path. They were opposite subgradient choices at passive, zero-flow AC-loss
-leaf buses. The full 196-case prefix has now been regenerated through PySPD
-and pinned GAMS. The target-case bus/node values match within `1.8e-14
-NZD/MWh`, and the fixed-RMIP objective matches within `3.23e-11 NZD`.
+The bus 816/820 and `WPT1101` differences in that immutable artifact were
+opposite subgradient choices at passive, zero-flow AC-loss leaf buses. The
+historical GAMS rerun selected the load endpoint for the target case and
+remains immutable evidence of the non-unique dual face.
 
-The refreshed run also establishes that pinned GAMS does not select the same
-side of every zero-flow loss kink: PySPD's documented `+1 MW load` convention
-changes 51 other final-case repaired bus marginals, one node price (`KIN1009`),
-and rolling publications at `KIN1009` and `WPT1101`. The latter differs by
-`0.00515 NZD/MWh`. The independent certificate proves these are exactly the
-documented load-side derivatives and reproduces all affected publications
-with zero residual. All 13,133 mapped report values now pass directly or by
-certificate at Authority precision; only eight unimplemented risk/summary
-tables keep complete E2E parity open. See
+The refreshed run also established that pinned GAMS does not select the same
+side of every zero-flow loss kink. Its source-topology certificate remains a
+valid classification of that historical run. Following the decision that the
+supplied CPLEX corpus is the gold standard, qualified PySPD pricing now selects
+the CPLEX-compatible export endpoint. A 2023-08-02 six-case rerun reduces the
+worst WPT1101 published difference from `0.49680` to `8.30e-6 NZD/MWh`; see
+[`wpt1101-cplex-parity-20230802.md`](wpt1101-cplex-parity-20230802.md). See also
 [`wpt1101-zero-flow-price.md`](wpt1101-zero-flow-price.md) and the hash-bound
 [`post-WPT rerun certificate`](post-wpt-rerun-certification-20221106.md).
 

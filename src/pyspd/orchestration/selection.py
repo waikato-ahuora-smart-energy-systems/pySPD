@@ -23,6 +23,7 @@ _STUDY_MODES = {
     201: ScheduleType.RTD,
     130: ScheduleType.PRSS,
     131: ScheduleType.PRSS,
+    111: ScheduleType.SPD,
 }
 
 

@@ -12,6 +12,12 @@ from pathlib import Path
 from pyspd import __version__
 from pyspd.data import SymbolCatalog
 from pyspd.data.gdx import GdxAdapter
+from pyspd.data.legacy import (
+    LEGACY_V3_INPUT_SCHEMA,
+    SUPPORTED_INPUT_SCHEMAS,
+    V5_INPUT_SCHEMA,
+    LegacyV3InputAdapter,
+)
 from pyspd.orchestration import (
     DailyCasePreparer,
     DailyCaseRunner,
@@ -34,10 +40,22 @@ from pyspd.reporting import (
     daily_report_registry,
 )
 from pyspd.reserve.data import RESERVE_FORMULATION_ID
+from pyspd.solver import CbcBackend, ClpBackend
 from pyspd.v16.compatibility import SPD16_FORMULATION_ID
 from pyspd.v16.preprocess import SPD16_SOURCE_PROFILE_ID
 
 PORTABLE_SOLVER_PROFILE = "scip-mip-fixed-highs-rmip"
+CLP_VALIDATION_SOLVER_PROFILE = "scip-mip-fixed-clp-rmip"
+CBC_HIGHS_VALIDATION_SOLVER_PROFILE = "cbc-mip-fixed-highs-rmip"
+CBC_CLP_VALIDATION_SOLVER_PROFILE = "cbc-mip-fixed-clp-rmip"
+SUPPORTED_SOLVER_PROFILES = frozenset(
+    {
+        PORTABLE_SOLVER_PROFILE,
+        CLP_VALIDATION_SOLVER_PROFILE,
+        CBC_HIGHS_VALIDATION_SOLVER_PROFILE,
+        CBC_CLP_VALIDATION_SOLVER_PROFILE,
+    }
+)
 
 
 class ConfigurationError(ValueError):
@@ -60,6 +78,7 @@ class ApplicationConfiguration:
     source_sha256: str
     gams_system_directory: Path
     solver_profile: str = PORTABLE_SOLVER_PROFILE
+    input_schema: str = V5_INPUT_SCHEMA
     case_ids: tuple[str, ...] = ()
     maximum_solve_loops: int = 5
     price_rounding_decimals: int = 5
@@ -74,9 +93,22 @@ class ApplicationConfiguration:
         object.__setattr__(self, "case_ids", tuple(self.case_ids))
         if not self.formulation_id.strip():
             raise ConfigurationError("formulation_id must be explicit")
-        if self.solver_profile != PORTABLE_SOLVER_PROFILE:
+        if self.solver_profile not in SUPPORTED_SOLVER_PROFILES:
             raise ConfigurationError(
-                "solver_profile must explicitly select " + PORTABLE_SOLVER_PROFILE
+                "solver_profile must explicitly select one of "
+                + ", ".join(sorted(SUPPORTED_SOLVER_PROFILES))
+            )
+        if self.input_schema not in SUPPORTED_INPUT_SCHEMAS:
+            raise ConfigurationError(
+                "input_schema must explicitly select one of "
+                + ", ".join(sorted(SUPPORTED_INPUT_SCHEMAS))
+            )
+        if (
+            self.input_schema == LEGACY_V3_INPUT_SCHEMA
+            and self.formulation_id == SPD16_FORMULATION_ID
+        ):
+            raise ConfigurationError(
+                "legacy v3 input is not valid for the SPD v16 formulation"
             )
         if not input_path.is_file():
             raise ConfigurationError(f"input file does not exist: {input_path}")
@@ -98,6 +130,7 @@ class ApplicationConfiguration:
         payload = {
             "formulation_id": self.formulation_id,
             "input_name": self.input_path.name,
+            "input_schema": self.input_schema,
             "case_ids": list(self.case_ids),
             "maximum_solve_loops": self.maximum_solve_loops,
             "price_rounding_decimals": self.price_rounding_decimals,
@@ -179,6 +212,8 @@ class PyspdApplication:
         )
         if symbols.source_sha256 != configuration.source_sha256:
             raise ConfigurationError("GDX adapter source hash mismatch")
+        if configuration.input_schema == LEGACY_V3_INPUT_SCHEMA:
+            symbols = LegacyV3InputAdapter().normalize(symbols)
         catalog = (
             SymbolCatalog.spd_v16()
             if configuration.formulation_id == SPD16_FORMULATION_ID
@@ -217,17 +252,42 @@ class PyspdApplication:
             maximum_solve_loops=configuration.maximum_solve_loops,
             price_rounding_decimals=configuration.price_rounding_decimals,
             environment_fingerprint=(
-                f"{platform.system()}-{platform.machine()}-native-scip-highs"
+                f"{platform.system()}-{platform.machine()}-"
+                + configuration.solver_profile.replace("scip-mip", "native-scip")
+                .replace("cbc-mip", "cbc")
+                .replace("-fixed-", "-")
+                .replace("-rmip", "")
             ),
             application_configuration_sha256=configuration.logical_sha256,
         )
 
     def case_executor(self, configuration: ApplicationConfiguration) -> CaseExecutor:
         self.validate_formulation(configuration.formulation_id)
+        pricing_backend = (
+            ClpBackend()
+            if configuration.solver_profile
+            in {CLP_VALIDATION_SOLVER_PROFILE, CBC_CLP_VALIDATION_SOLVER_PROFILE}
+            else None
+        )
+        primary_backend = (
+            CbcBackend()
+            if configuration.solver_profile
+            in {
+                CBC_HIGHS_VALIDATION_SOLVER_PROFILE,
+                CBC_CLP_VALIDATION_SOLVER_PROFILE,
+            }
+            else None
+        )
         return (
-            Spd16CaseExecutor()
+            Spd16CaseExecutor(
+                primary_backend=primary_backend,
+                pricing_backend=pricing_backend,
+            )
             if configuration.formulation_id == SPD16_FORMULATION_ID
-            else ReserveCaseExecutor()
+            else ReserveCaseExecutor(
+                primary_backend=primary_backend,
+                pricing_backend=pricing_backend,
+            )
         )
 
     def case_runner(self, configuration: ApplicationConfiguration) -> DailyCaseRunner:

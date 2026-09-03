@@ -29,12 +29,12 @@ jobs:
           python-version: "3.13"
           enable-cache: true
       - name: Synchronize locked dependencies
-        run: uv sync --frozen
+        run: uv sync --frozen --group clp --group cbc
       - name: Lint
         run: uv run ruff check .
       - name: Type check
         run: uv run mypy src tools
       - name: Test
-        run: uv run pytest -q
+        run: uv run --group clp --group cbc pytest -q
       - name: Audit probity evidence
         run: uv run python -m tools.probity_audit

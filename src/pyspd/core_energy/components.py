@@ -60,7 +60,6 @@ class CoreDomainsComponent(ModelComponent):
                 offer
                 for offer in data.primary_offers
                 if any(key[:3] == offer for key in data.offer_blocks)
-                and data.study_mode[offer[:2]] in {101.0, 201.0}
             ),
         )
         block.RtdOffer = pyo.Set(
@@ -89,9 +88,7 @@ class EnergyOffersComponent(ModelComponent):
     name = "energy_offers"
     supported_formulations = _SUPPORTED
     requires = frozenset({"core_data", "domains"})
-    provides = frozenset(
-        {"generation", "generation_block", "generation_definition"}
-    )
+    provides = frozenset({"generation", "generation_block", "generation_definition"})
 
     def build(self, context: BuildContext) -> Mapping[str, Any]:
         data = _data(context)
@@ -115,9 +112,7 @@ class EnergyOffersComponent(ModelComponent):
                     None
                     if (ca, dt, offer) not in data.offers
                     else data.generation_maximum.get((ca, dt, offer))
-                    if any(
-                        key[:3] == (ca, dt, offer) for key in data.offer_blocks
-                    )
+                    if any(key[:3] == (ca, dt, offer) for key in data.offer_blocks)
                     else 0.0
                 ),
             ),
@@ -196,9 +191,7 @@ class EnergyBalanceComponent(ModelComponent):
             "energy_scarcity_node",
         }
     )
-    provides = frozenset(
-        {"balance_deficit", "balance_surplus", "energy_balance"}
-    )
+    provides = frozenset({"balance_deficit", "balance_surplus", "energy_balance"})
 
     def build(self, context: BuildContext) -> Mapping[str, Any]:
         data = _data(context)
@@ -211,9 +204,7 @@ class EnergyBalanceComponent(ModelComponent):
         block.DeficitGeneration = pyo.Var(domains.Region, domain=pyo.NonNegativeReals)
         block.SurplusGeneration = pyo.Var(domains.Region, domain=pyo.NonNegativeReals)
 
-        def balance(
-            _block: pyo.Block, ca: str, dt: str, island: str
-        ) -> pyo.Constraint:
+        def balance(_block: pyo.Block, ca: str, dt: str, island: str) -> pyo.Constraint:
             region = (ca, dt, island)
             supply = sum(
                 generation[offer]
@@ -221,9 +212,7 @@ class EnergyBalanceComponent(ModelComponent):
                 if data.offer_region[offer] == region
             )
             dispatchable_load = sum(
-                purchase[bid]
-                for bid in domains.Bid
-                if data.bid_region[bid] == region
+                purchase[bid] for bid in domains.Bid if data.bid_region[bid] == region
             )
             scarcity_supply = sum(
                 scarcity[node]
@@ -327,8 +316,7 @@ class GenerationRampingComponent(ModelComponent):
             rule=lambda _b, ca, dt, offer: (
                 _b.GenerationUpDelta[ca, dt, offer]
                 - _b.GenerationDownDelta[ca, dt, offer]
-                == generation[ca, dt, offer]
-                - data.generation_start[(ca, dt, offer)]
+                == generation[ca, dt, offer] - data.generation_start[(ca, dt, offer)]
             ),
         )
 
@@ -343,8 +331,7 @@ class GenerationRampingComponent(ModelComponent):
         block.RampUp = pyo.Constraint(
             domains.RampOffer,
             rule=lambda _b, ca, dt, offer: (
-                total_generation((ca, dt, offer))
-                - _b.DeficitRampRate[ca, dt, offer]
+                total_generation((ca, dt, offer)) - _b.DeficitRampRate[ca, dt, offer]
                 <= data.generation_start[(ca, dt, offer)]
                 + data.ramp_rate_up[(ca, dt, offer)]
                 * data.interval_minutes[(ca, dt)]
@@ -354,8 +341,7 @@ class GenerationRampingComponent(ModelComponent):
         block.RampDown = pyo.Constraint(
             domains.RampOffer,
             rule=lambda _b, ca, dt, offer: (
-                total_generation((ca, dt, offer))
-                + _b.SurplusRampRate[ca, dt, offer]
+                total_generation((ca, dt, offer)) + _b.SurplusRampRate[ca, dt, offer]
                 >= data.generation_start[(ca, dt, offer)]
                 - data.ramp_rate_down[(ca, dt, offer)]
                 * data.interval_minutes[(ca, dt)]
@@ -519,10 +505,7 @@ class CoreEconomicsComponent(ModelComponent):
         )
         block.MovementCost = pyo.Expression(
             expr=data.movement_penalty
-            * sum(
-                up_delta[key] + down_delta[key]
-                for key in domains.RtdGenerationOffer
-            )
+            * sum(up_delta[key] + down_delta[key] for key in domains.RtdGenerationOffer)
         )
         block.ScarcityCost = pyo.Expression(
             expr=sum(block.ScarcityCostByPeriod[key] for key in domains.Period)

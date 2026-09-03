@@ -307,6 +307,31 @@ def _reported_bus_price(
     )
 
 
+def _branch_report_direction(flow: float) -> str:
+    """Choose the vSPD report direction without amplifying LP zero noise."""
+
+    return "forward" if flow >= -1.0e-9 else "backward"
+
+
+def _island_report_load(
+    network: Any,
+    period: tuple[str, str],
+    buses: set[str],
+    bid_load: float,
+) -> float:
+    """Project vSPD island load independently of duplicated bus bid rows."""
+
+    return (
+        sum(
+            float(network.node_bus_allocation.get((*period, node, bus), 0.0))
+            * float(network.node_load[*period, node])
+            for ca, dt, node, bus in network.node_bus
+            if (ca, dt) == period and bus in buses
+        )
+        + bid_load
+    )
+
+
 class V5DailyResultSchema(DailyResultSchema):
     supported_formulations = _V5
 
@@ -429,10 +454,20 @@ class V5SummaryReportProjector:
         values["deficit_reserve_mw"] = _component_sum(
             artifacts["reserve_deficit_ce"], period
         ) + _component_sum(artifacts["reserve_deficit_ece"], period)
+        legacy_spd = (
+            float(getattr(case, "study_mode", {}).get(period, 0.0)) == 111.0
+        )
+        system_ofv = (
+            _component_value(period_components["system_benefit_nzd"], period)
+            - _component_value(period_components["system_cost_nzd"], period)
+            - _component_value(period_components["violation_cost_nzd"], period)
+            if legacy_spd
+            else accepted.objective + scarcity_constant
+        )
         return {
             **base,
             "status_code": "1" if complete else "0",
-            "system_ofv_nzd": _number(accepted.objective + scarcity_constant),
+            "system_ofv_nzd": _number(system_ofv),
             "system_cost_nzd": _number(
                 _component_value(period_components["system_cost_nzd"], period)
             ),
@@ -867,7 +902,7 @@ class V5DetailedReportProjector:
             from_bus = "" if definition is None else definition[3]
             to_bus = "" if definition is None else definition[4]
             flow = float(row["flow_mw"])
-            direction = "forward" if flow >= 0.0 else "backward"
+            direction = _branch_report_direction(flow)
             capacity = network.branch_capacity.get((*key, direction), 0.0)
             if key in network.ac_branches:
                 loss = sum(
@@ -911,7 +946,7 @@ class V5DetailedReportProjector:
             duration = float(solved.case_data.interval_minutes[period]) / 60.0
             rentals = duration * (
                 to_price * (flow - loss - fixed) - from_price * flow
-                if flow >= 0.0
+                if direction == "forward"
                 else to_price * flow - from_price * (loss + fixed + flow)
             )
             row.update(
@@ -936,17 +971,21 @@ class V5DetailedReportProjector:
                 pyo.Constraint, active=True, descend_into=True
             )
         }
+        indexes = {
+            name: {
+                "|".join(
+                    str(part)
+                    for part in (
+                        index if isinstance(index, tuple) else (index,)
+                    )
+                ): index
+                for index in component
+            }
+            for name, component in components.items()
+        }
         for row in rows:
             component = components[row["constraint"]]
-            index = next(
-                index
-                for index in component
-                if "|".join(
-                    str(part)
-                    for part in (index if isinstance(index, tuple) else (index,))
-                )
-                == row["index"]
-            )
+            index = indexes[row["constraint"]][row["index"]]
             row["price_nzd_per_mwh"] = _number(
                 solved.model.dual.get(component[index], 0.0)
             )
@@ -1053,9 +1092,11 @@ class V5DetailedReportProjector:
                     _component_value(artifacts["purchase"], (*period, bid))
                     for bid in bids
                 )
-                base_load = sum(
-                    bus_values.get(bus, {}).get("load_mw", 0.0) for bus in buses
-                )
+                # Island load follows vSPD's ``sum(busLoad) + clearedBid``.
+                # Bus report load cannot be reused here because a bid attached
+                # to a node mapped to multiple buses is intentionally shown at
+                # every bus, whereas the island total counts that bid once.
+                base_load = _island_report_load(network, period, buses, bid_load)
                 ac_loss = 0.0
                 for branch in network.ac_branches:
                     to_bus = next(
@@ -1484,11 +1525,16 @@ def _model_rows(
                 {**base, identity: key.rsplit("|", 1)[-1], quantity: _number(value)}
             )
     network_data = artifacts.get("network_data")
-    reported_branch_identities = {row["branch"] for row in rows["branch"]}
-    for branch in sorted(getattr(network_data, "report_branches", ())):
-        identity = str(branch[-1])
-        if identity not in reported_branch_identities:
-            rows["branch"].append({**base, "branch": identity, "flow_mw": "0"})
+    study_mode = getattr(getattr(solved, "case_data", None), "study_mode", {})
+    period = (base["case_id"], base["date_time"])
+    if float(study_mode.get(period, 0.0)) != 111.0:
+        reported_branch_identities = {row["branch"] for row in rows["branch"]}
+        for branch in sorted(getattr(network_data, "report_branches", ())):
+            identity = str(branch[-1])
+            if identity not in reported_branch_identities:
+                rows["branch"].append(
+                    {**base, "branch": identity, "flow_mw": "0"}
+                )
     for component in solved.model.component_objects(
         pyo.Constraint, active=True, descend_into=True
     ):

@@ -21,6 +21,7 @@ class OrchestrationError(ValueError):
 class ScheduleType(StrEnum):
     RTD = "RTD"
     PRSS = "PRSS"
+    SPD = "SPD"
 
 
 class CaseRunStatus(StrEnum):
@@ -139,6 +140,7 @@ class DailyCase:
         compatible_modes = {
             ScheduleType.RTD: frozenset({101, 201}),
             ScheduleType.PRSS: frozenset({130, 131}),
+            ScheduleType.SPD: frozenset({111}),
         }
         if self.study_mode not in compatible_modes[self.schedule_type]:
             raise OrchestrationError(

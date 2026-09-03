@@ -1,5 +1,11 @@
 # WPT1101 zero-flow price diagnosis
 
+> **Historical GAMS evidence:** the load-side production convention described
+> below was superseded on 4 September 2026 when the supplied CPLEX corpus was
+> designated the gold standard. The qualified implementation and 2023 CPLEX
+> rerun are documented in
+> [`wpt1101-cplex-parity-20230802.md`](wpt1101-cplex-parity-20230802.md).
+
 ## Outcome
 
 The fixed-RMIP/node-price difference for case `61012022110425024` is resolved

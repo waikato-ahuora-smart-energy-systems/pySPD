@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Proposed; interim execution convention accepted by ADR-0008 |
+| Status | Accepted; amended for CPLEX-reference parity on 4 September 2026 |
 | Date | 28 August 2026 |
 | Deciders | Optimization lead, market SME, validation lead |
 
@@ -20,9 +20,11 @@ could reproduce neither the historical runtime nor published vSPD behavior.
 ## Decision
 
 Gate 1 must pin exact runtime versions and all effective options. Under
-ADR-0008, the active characterization runtime is SCIP MIP followed by an
-explicit fixed-discrete HiGHS RMIP; CPLEX characterization is deferred. Gate 1
-must demonstrate:
+ADR-0008, the active execution runtime is SCIP MIP followed by an explicit
+fixed-discrete HiGHS RMIP. The supplied historical CPLEX result corpus is now
+the authoritative correctness oracle. Full CPLEX is licensed through GAMSPy,
+but it is not yet integrated as a Pyomo fixed-RMIP backend; the standalone GAMS
+Solver Link remains demo-size limited. Gate 1 must demonstrate:
 
 - whether a final continuous model is solved after each relevant MIP;
 - the transformation from primary MIP to pricing problem;
@@ -44,21 +46,22 @@ If it is fixed-MIP pricing, PySPD:
 
 LP prices require accepted optimal termination, canonical signs/units, and
 finite-difference validation. Price-bearing ranged rows are mapped explicitly.
-At the nondifferentiable zero-flow point of a lossy AC branch, a passive leaf
-bus uses the one-sided `+1 MW load` sensitivity required by the stated pricing
-convention. This is calculated from the parent-bus dual, receiving-end loss
-share, and inward first-segment loss factor. All differentiable bus prices
-remain direct fixed-RMIP marginals. This removes solver-basis dependence
-without changing dispatch, the fixed-RMIP objective, or prices away from the
+Historical CPLEX vSPD results are the authoritative price oracle. At the
+nondifferentiable zero-flow point of a lossy AC branch, a passive leaf bus uses
+the CPLEX-compatible export-side endpoint. This is calculated from the
+parent-bus dual, receiving-end loss share, and inward first-segment loss factor.
+All differentiable bus prices remain direct fixed-RMIP marginals. This rule
+does not change dispatch, the fixed-RMIP objective, or prices away from the
 loss kink.
 
 ## Consequences
 
 - MIP pricing implementation waits until Gate 1 evidence exists.
 - Primary and pricing snapshots must be stored separately.
-- Strict historical prices may require a pinned solver method/basis profile.
-- Passive zero-flow AC-loss leaves have an explicit, solver-independent
-  one-sided load-derivative rule.
+- Strict historical prices may still require the original solver method and
+  basis sequence where CPLEX selected the other endpoint on a degenerate face.
+- Passive zero-flow AC-loss leaves use the CPLEX-compatible export endpoint in
+  the qualified PySPD path.
 - Stage 7 repeats the complete pricing audit after NMIR/reserve binaries arrive.
 
 ## Rejected alternatives
@@ -73,9 +76,11 @@ loss kink.
 
 - Gate 1 oracle runtime/effective-option evidence and matrix snapshots.
 - Analytic sign/unit/complementarity/reduced-cost cases.
-- Finite-difference demand and reserve perturbations.
+- Finite-difference demand and reserve perturbations away from kinks; explicit
+  endpoint tests at nondifferentiable zero-flow loss faces.
 - Gate 6 submodel and Gate 7 full-formulation pricing-model audits.
-- Exact PySPD-to-pinned-vSPD published-output comparison at reference precision.
+- PySPD-to-historical-CPLEX published-output comparison at reference precision,
+  with pinned-vSPD comparison retained as secondary diagnostic evidence.
 
 ## Revisit triggers
 

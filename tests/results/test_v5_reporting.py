@@ -5,6 +5,7 @@ from dataclasses import replace
 from types import SimpleNamespace
 
 import pyomo.environ as pyo
+import pytest
 
 from pyspd import reporting
 from pyspd.orchestration import DailyRunConfiguration, DailyRunner
@@ -107,6 +108,7 @@ def test_model_rows_use_fixed_pricing_state_and_complete_branch_domain() -> None
     model.hvdc_flow = pyo.Var([("case", "time", "HVDC.1")], initialize=25.0)
     primary = SimpleNamespace(
         model=model,
+        case_data=SimpleNamespace(study_mode={("case", "time"): 101.0}),
         artifacts=SimpleNamespace(
             values={
                 "branch_flow": model.ac_flow,
@@ -161,6 +163,15 @@ def test_model_rows_use_fixed_pricing_state_and_complete_branch_domain() -> None
         },
     ]
 
+    rows["branch"].clear()
+    primary.case_data.study_mode[("case", "time")] = 111.0
+    reporting._model_rows(
+        rows,
+        SimpleNamespace(primary_model=raw_primary, pricing_model=primary),
+        {"case_id": "case", "date_time": "time"},
+    )
+    assert {row["branch"] for row in rows["branch"]} == {"AC.1", "HVDC.1"}
+
 
 def test_bus_report_uses_allocated_transferred_price_for_dead_node_bus() -> None:
     observation = make_observation()
@@ -175,6 +186,29 @@ def test_bus_report_uses_allocated_transferred_price_for_dead_node_bus() -> None
 
     assert rows[bus_keys[0][-1]]["raw_price_nzd_per_mwh"] == "50"
     assert rows[bus_keys[0][-1]]["repaired_price_nzd_per_mwh"] == "60"
+
+
+def test_report_direction_treats_solver_noise_as_zero_forward_flow() -> None:
+    assert reporting._branch_report_direction(-2.99e-11) == "forward"
+    assert reporting._branch_report_direction(-1.0e-6) == "backward"
+
+
+def test_island_load_counts_allocated_fixed_load_and_cleared_bid_once() -> None:
+    network = SimpleNamespace(
+        node_bus={
+            ("C1", "T1", "N1", "B1"),
+            ("C1", "T1", "N1", "B2"),
+        },
+        node_bus_allocation={
+            ("C1", "T1", "N1", "B1"): 0.4,
+            ("C1", "T1", "N1", "B2"): 0.6,
+        },
+        node_load={("C1", "T1", "N1"): 100.0},
+    )
+
+    assert reporting._island_report_load(
+        network, ("C1", "T1"), {"B1", "B2"}, 12.5
+    ) == pytest.approx(112.5)
 
 
 def test_v5_renderer_projects_complete_authority_risk_and_summary_rows() -> None:
@@ -249,6 +283,7 @@ def test_v5_renderer_projects_complete_authority_risk_and_summary_rows() -> None
     )
     case_data = SimpleNamespace(
         reserve=reserve_data,
+        study_mode={period: 101.0},
         scarcity_blocks={(*period, "N1", "BLK1")},
         scarcity_limit={(*period, "N1", "BLK1"): 100.0},
         scarcity_price={(*period, "N1", "BLK1"): 10.0},
@@ -296,3 +331,7 @@ def test_v5_renderer_projects_complete_authority_risk_and_summary_rows() -> None
     assert summary["violation_cost_nzd"] == "0.5"
     assert summary["deficit_generation_mw"] == "0.10000000000000001"
     assert summary["surplus_market_node_constraint_mw"] == "0.90000000000000002"
+
+    case_data.study_mode[period] = 111.0
+    legacy_summary = _bundle(observation).tables["summary"].rows[0]
+    assert legacy_summary["system_ofv_nzd"] == "-19.5"

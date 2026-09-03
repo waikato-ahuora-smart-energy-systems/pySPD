@@ -129,7 +129,7 @@ def test_piecewise_losses_and_fixed_loss_allocation() -> None:
 @pytest.mark.parametrize(
     ("active_bus", "passive_leaf"), (("B1", "B2"), ("B2", "B1"))
 )
-def test_zero_flow_loss_branch_uses_gams_load_subgradient(
+def test_zero_flow_loss_branch_uses_cplex_export_subgradient(
     active_bus: str, passive_leaf: str
 ) -> None:
     case = make_network_case(
@@ -149,17 +149,17 @@ def test_zero_flow_loss_branch_uses_gams_load_subgradient(
         ("C1", "T1", "L1", "ls1", "backward"),
     ]
     assert prices.bus[("C1", "T1", active_bus)] == pytest.approx(10.0)
-    assert prices.bus[("C1", "T1", passive_leaf)] == pytest.approx(10.0 / 0.999)
+    assert prices.bus[("C1", "T1", passive_leaf)] == pytest.approx(10.0 * 0.999)
     assert prices.raw_bus_duals[("C1", "T1", passive_leaf)] == pytest.approx(
-        10.0 / 0.999
+        10.0 * 0.999
     )
     leaf_node = ("C1", "T1", f"N{passive_leaf[-1]}")
-    assert validate_nodal_price_finite_difference(
-        case, leaf_node, tolerance=1e-6
-    ).passed
+    load_derivative = validate_nodal_price_finite_difference(case, leaf_node)
+    assert load_derivative.finite_difference_price == pytest.approx(10.0 / 0.999)
+    assert not load_derivative.passed
 
 
-def test_zero_flow_load_subgradient_propagates_through_transformer_tree() -> None:
+def test_zero_flow_cplex_subgradient_propagates_through_transformer_tree() -> None:
     case = make_three_bus_case()
     assert case.network is not None
     period = ("C1", "T1")
@@ -188,7 +188,7 @@ def test_zero_flow_load_subgradient_propagates_through_transformer_tree() -> Non
     assert pyo.value(built.artifacts["branch_flow"][transformer]) == pytest.approx(
         0.0
     )
-    expected = 10.0 / 0.999
+    expected = 10.0 * 0.999
     assert prices.bus[(*period, "B2")] == pytest.approx(expected)
     assert prices.bus[(*period, "B3")] == pytest.approx(expected)
 

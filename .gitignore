@@ -13,3 +13,8 @@ __pycache__/
 # Build outputs
 /build/
 /dist/
+
+# Regenerable full-day solver records can exceed repository hosting limits.
+docs/gate-12/cplex-reference-paths-*.jsonl
+docs/gate-12/cplex-reference-paths-*-a.json
+docs/gate-12/cplex-reference-paths-*-b.json

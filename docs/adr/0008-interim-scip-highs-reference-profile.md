@@ -11,6 +11,14 @@
 > retained evidence, but is not an independent abort condition; native CPLEX
 > validation remains deferred.
 
+> Amended 4 September 2026: the supplied historical CPLEX result corpus is the
+> gold standard for numerical correctness. SCIP/HiGHS remains the qualified
+> execution pathway, but its mapped outputs must be driven toward CPLEX parity.
+> Full CPLEX is available through GAMSPy but is not yet integrated into the
+> Pyomo fixed-RMIP path; the standalone GAMS Solver Link is demo-size limited.
+> Basis-dependent dual residue remains explicit rather than being represented
+> as exact parity.
+
 ## Context
 
 The pinned vSPD model executes at full size with native GAMS/SCIP, and an
@@ -40,10 +48,13 @@ reference during the current development phase, provided that:
 Feasible, integer-feasible, locally optimal, time-limited, interrupted, or
 otherwise non-optimal statuses do not satisfy this profile.
 
-Native CPLEX validation is deferred cross-validation. It is no longer a
-prerequisite for continuing Gate 1 or later implementation work under this
-interim profile. A CPLEX comparison remains required before making any future
-claim specifically about CPLEX parity or historical CPLEX dual reproduction.
+The repository-local historical CPLEX result corpus is the authoritative
+cross-validation oracle. Material mapped differences must be investigated and
+corrected where a reproducible compatibility rule exists. The licensed GAMSPy
+CPLEX module is a future fixed-RMIP integration path, but it does not itself
+guarantee the same basis as the historical vSPD matrix and solve sequence.
+Claims of exact historical CPLEX dual reproduction remain prohibited where the
+stored dual is basis-dependent and no reproducible rule has been established.
 
 ## Consequences
 
@@ -54,8 +65,8 @@ claim specifically about CPLEX parity or historical CPLEX dual reproduction.
 - SCIP uses numerical emphasis with its `1e-6` primal-feasibility tolerance,
   consistent with ADR-0014. Binary values and inactive SOS members are fixed
   before HiGHS repricing; active SOS magnitudes remain continuous.
-- CPLEX option discrepancies remain recorded but are deferred rather than
-  blocking current development.
+- CPLEX option discrepancies remain recorded; material result differences are
+  no longer deferred merely because native CPLEX execution is unavailable.
 
 ## Verification
 

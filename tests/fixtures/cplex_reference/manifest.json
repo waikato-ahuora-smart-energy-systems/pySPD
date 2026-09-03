@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "profile": "pyspd-cplex-reference-day-corpus-v1",
+  "selection": {
+    "algorithm": "For each eligible input, sort ascending by SHA-256(seed|year|date|filename) and retain the first three per year.",
+    "seed": "pyspd-cplex-reference-sample-v1",
+    "eligible_2019_dates": "Dates having exactly one unambiguous final-pricing GDX after excluding collision-suffixed variants.",
+    "eligible_2023_dates": "Dates having exactly one Pricing_YYYYMMDD.gdx input."
+  },
+  "days": [
+    {
+      "year": 2019,
+      "date": "2019-06-22",
+      "execution_day": true,
+      "input_schema": "vspd-v3-final-pricing",
+      "input": "2019/20190622/input/FP_20190622_F.gdx",
+      "input_bytes": 5601304,
+      "input_sha256": "62cb85144a54ef87b48bac34281030a918fab174e2ccad06f341bf0b4b65b448",
+      "selection_score": "003332429843df5b6167e060962564366b9140f09b292db6fb833a972799f7d2",
+      "result_file_count": 14,
+      "summary_rows": 48,
+      "result_bytes": 10651667,
+      "result_tree_sha256": "946e0606a55eae0d7a72e9fda52e9a050ab9c7d2851ab40c3f5c0540cda44c65"
+    },
+    {
+      "year": 2019,
+      "date": "2019-02-18",
+      "execution_day": false,
+      "input_schema": "vspd-v3-final-pricing",
+      "input": "2019/20190218/input/FP_20190218_F.gdx",
+      "input_bytes": 5625910,
+      "input_sha256": "c45fd64b27c947e74ac05229f56843408ab68e89181fba905c2eebf433450ae0",
+      "selection_score": "00d35ad45656e3fc453108462b128defa2bba25029f749b34903f5e0715e34e2",
+      "result_file_count": 14,
+      "summary_rows": 48,
+      "result_bytes": 10607636,
+      "result_tree_sha256": "9864a8b584ea456b50e62610ee9720a43e9aa140a984954e463c36a1d12da403"
+    },
+    {
+      "year": 2019,
+      "date": "2019-06-05",
+      "execution_day": false,
+      "input_schema": "vspd-v3-final-pricing",
+      "input": "2019/20190605/input/FP_20190605_F.gdx",
+      "input_bytes": 5623247,
+      "input_sha256": "aa5f0df2f02b217df5e5c423b5afa0ca0603f68ec6bcd8915c521f192066e96e",
+      "selection_score": "01ea8a913eb18ad9e03fb8317b5e70d05e1ef31158a5cacdbbcdc3636ec187e7",
+      "result_file_count": 14,
+      "summary_rows": 48,
+      "result_bytes": 10607229,
+      "result_tree_sha256": "80dbab5951785c6e00e9bd4de387e9572b271c7ac5fde800e47fe41e84be5deb"
+    },
+    {
+      "year": 2023,
+      "date": "2023-08-02",
+      "execution_day": true,
+      "input_schema": "vspd-v5.0.6",
+      "input": "2023/20230802/input/Pricing_20230802.gdx",
+      "input_bytes": 42522980,
+      "input_sha256": "99a6dc5dd9d69dd49c497fe140ac4bfb26fe5ed2b79ab4f1b225363e7af62d08",
+      "selection_score": "004482a40d36fd7eadbbfb8189f279a68c13b2f6fbd415d9c08a9bd6d2656bd6",
+      "result_file_count": 13,
+      "summary_rows": 305,
+      "result_bytes": 79676938,
+      "result_tree_sha256": "a7baf613d0213dda568fab15d9bcf17ab69fcfeadaa07dc8688a2f6b2f9f4ef8"
+    },
+    {
+      "year": 2023,
+      "date": "2023-02-14",
+      "execution_day": false,
+      "input_schema": "vspd-v5.0.6",
+      "input": "2023/20230214/input/Pricing_20230214.gdx",
+      "input_bytes": 44601650,
+      "input_sha256": "9a4443cc8a811d958ca4e6f2aeee5ad87eca2723ddd56a391b3f6ca8f215baeb",
+      "selection_score": "011d9403bac1e4a2d067681de4731daf08c573e7cb2e71db824afcb3c8ecf065",
+      "result_file_count": 13,
+      "summary_rows": 321,
+      "result_bytes": 84397726,
+      "result_tree_sha256": "e76563461b7b42022f49dbc3fb845411d9144a2017f1f09aa003572bddbc6745"
+    },
+    {
+      "year": 2023,
+      "date": "2023-01-26",
+      "execution_day": false,
+      "input_schema": "vspd-v5.0.6",
+      "input": "2023/20230126/input/Pricing_20230126.gdx",
+      "input_bytes": 40843374,
+      "input_sha256": "60dcb983824af32f35e127c910e9dfeb1a1f5f2f54b11e9fff018a25a2fa82bc",
+      "selection_score": "0184947d7a265f2450115a90cb0e0107e1eeb7736193192570233c287f6afdfe",
+      "result_file_count": 13,
+      "summary_rows": 294,
+      "result_bytes": 77380939,
+      "result_tree_sha256": "7ff0591d871f6fdc57b877d406911be9d7aab2eca08e89991fdd30e1201bf43a"
+    }
+  ]
+}

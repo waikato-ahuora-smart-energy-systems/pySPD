@@ -27,7 +27,7 @@ from pyspd.hvdc.formulation import (
     _fix_continuous_state,
     pricing_model_belongs_to_request,
 )
-from pyspd.solver import HighsBackend, NativeScipBackend
+from pyspd.solver import CbcBackend, ClpBackend, HighsBackend, NativeScipBackend
 from tests.hvdc.conftest import make_hvdc_case
 
 
@@ -57,6 +57,9 @@ def test_primary_scip_uses_corpus_stable_feasibility_tolerance(monkeypatch) -> N
 
     assert HvdcSolvePolicy._solve_scip(build(make_hvdc_case(enforce=True))) is sentinel
     assert captured["numerics/feastol"] == 1e-6
+    assert captured["lp/initalgorithm"] == "d"
+    assert captured["lp/resolvealgorithm"] == "d"
+    assert captured["misc/usesymmetry"] == 0
     assert captured["warm_start_discrete"] is False
 
 
@@ -79,6 +82,53 @@ def test_fixed_rmip_uses_gams_highs_tolerances(monkeypatch) -> None:
     assert captured["warm_start"] is False
 
 
+def test_optional_clp_fixed_rmip_preserves_objective_and_prices() -> None:
+    built = build(make_hvdc_case(enforce=True))
+
+    highs = HvdcSolvePolicy().solve(built)
+    clp = HvdcSolvePolicy(pricing_backend=ClpBackend()).solve(
+        build(make_hvdc_case(enforce=True))
+    )
+
+    assert highs.solver_profile == "scip-mip-fixed-highs-rmip"
+    assert clp.solver_profile == "scip-mip-fixed-clp-rmip"
+    assert clp.pricing_lp.backend == "clp"
+    assert clp.pricing_snapshot.objective == pytest.approx(
+        highs.pricing_snapshot.objective, abs=1e-7
+    )
+    highs_prices = HvdcPricingEngine().price(built, highs)
+    clp_prices = HvdcPricingEngine().price(clp.primary_model, clp)
+    assert clp_prices.node == pytest.approx(highs_prices.node, abs=1e-7)
+    assert IndependentHvdcValidator().validate(clp, tolerance=1e-6).passed
+
+
+@pytest.mark.parametrize("pricing_backend", [None, ClpBackend()])
+def test_optional_cbc_primary_mip_preserves_objective_and_prices(
+    pricing_backend,
+) -> None:
+    case = make_hvdc_case(enforce=True, native_sos=True)
+    reference_built = build(case)
+    reference = HvdcSolvePolicy().solve(reference_built)
+    candidate_built = build(case)
+    candidate = HvdcSolvePolicy(
+        primary_backend=CbcBackend(),
+        pricing_backend=pricing_backend,
+    ).solve(candidate_built)
+
+    assert candidate.primary_mip is not None
+    assert candidate.primary_mip.solve.backend == "cbc"
+    assert candidate.primary_mip.solve.status.value == "optimal"
+    assert candidate.pricing_snapshot.objective == pytest.approx(
+        reference.pricing_snapshot.objective, abs=1e-7
+    )
+    reference_prices = HvdcPricingEngine().price(reference_built, reference)
+    candidate_prices = HvdcPricingEngine().price(candidate_built, candidate)
+    assert candidate_prices.node == pytest.approx(reference_prices.node, abs=1e-7)
+    # CBC 2.10's text solution file rounds the primary continuous state. The
+    # fixed RMIP restores full precision; retain a bounded primary diagnostic.
+    assert IndependentHvdcValidator().validate(candidate, tolerance=1e-5).passed
+
+
 def test_warm_start_remaps_period_identity_and_rejects_incompatible_values() -> None:
     previous = pyo.ConcreteModel()
     previous.dispatch = pyo.Var(
@@ -95,12 +145,8 @@ def test_warm_start_remaps_period_identity_and_rejects_incompatible_values() -> 
     assert len(discrete_snapshot.values) == 2
 
     candidate = pyo.ConcreteModel()
-    candidate.dispatch = pyo.Var(
-        [("CASE-2", "TIME-2", "GEN")], domain=pyo.Binary
-    )
-    candidate.flow = pyo.Var(
-        [("CASE-2", "TIME-2", "HVDC")], bounds=(-2.0, 2.0)
-    )
+    candidate.dispatch = pyo.Var([("CASE-2", "TIME-2", "GEN")], domain=pyo.Binary)
+    candidate.flow = pyo.Var([("CASE-2", "TIME-2", "HVDC")], bounds=(-2.0, 2.0))
     candidate.fixed = pyo.Var(
         [("CASE-2", "TIME-2", "FIXED")], domain=pyo.Binary, initialize=0.0
     )
@@ -141,9 +187,7 @@ def test_policy_records_cross_period_and_same_period_warm_starts(monkeypatch) ->
     first = HvdcSolvePolicy(
         warm_start_primary=True,
         warm_start_pricing=True,
-    ).solve(
-        build(make_hvdc_case(enforce=True))
-    )
+    ).solve(build(make_hvdc_case(enforce=True)))
     second = HvdcSolvePolicy(
         warm_start_primary=True,
         warm_start_pricing=True,

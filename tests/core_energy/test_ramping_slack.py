@@ -36,6 +36,26 @@ def test_generation_start_ramp_up_causes_balance_deficit() -> None:
     assert pyo.value(built.artifacts["ramp_deficit"]["C1", "T1", "GEN"]) == 0.0
 
 
+def test_prss_generation_is_subject_to_the_same_source_ramp_limit() -> None:
+    built = _solve(
+        make_core_case(
+            load=60.0,
+            offers=(("GEN", 100.0, 10.0),),
+            starts={"GEN": 40.0},
+            ramp_up={"GEN": 20.0},
+            ramp_down={"GEN": 20.0},
+            study_mode=130.0,
+        )
+    )
+
+    assert pyo.value(built.artifacts["generation"]["C1", "T1", "GEN"]) == pytest.approx(
+        50.0
+    )
+    assert pyo.value(
+        built.artifacts["balance_deficit"]["C1", "T1", "NI"]
+    ) == pytest.approx(10.0)
+
+
 def test_generation_start_ramp_down_causes_balance_surplus() -> None:
     built = _solve(
         make_core_case(

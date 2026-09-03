@@ -24,6 +24,7 @@ from pyomo.contrib.solver.common.results import (
 from pyomo.contrib.solver.solvers.scip.scip_direct import ScipDirect
 from pyomo.opt import SolverStatus as PyomoSolverStatus
 from pyomo.opt import TerminationCondition
+from pyomo.repn.standard_repn import generate_standard_repn
 
 
 class SolveStatus(StrEnum):
@@ -195,6 +196,367 @@ class HighsBackend(SolverBackend):
         if raw_status is PyomoSolverStatus.error:
             return SolveStatus.ERROR
         return SolveStatus.UNKNOWN
+
+
+class ClpBackend(SolverBackend):
+    """Optional CyLP-backed continuous LP solver with explicit dual loading."""
+
+    name = "clp"
+    interface = "cylp.cy.CyClpSimplex"
+
+    def solve(
+        self,
+        model: pyo.ConcreteModel,
+        configuration: SolverConfiguration = DEFAULT_SOLVER_CONFIGURATION,
+        *,
+        load_solution: bool = True,
+        accept_nonoptimal: bool = False,
+    ) -> SolveResult:
+        try:
+            import numpy as np
+            from cylp.cy import CyClpSimplex, CyCoinPackedMatrix
+        except ImportError as error:
+            raise SolverExecutionError(
+                "CLP is unavailable; install the uv 'clp' dependency group"
+            ) from error
+
+        variables = tuple(
+            variable
+            for variable in model.component_data_objects(pyo.Var, active=True)
+            if not variable.fixed
+        )
+        if any(variable.is_binary() or variable.is_integer() for variable in variables):
+            raise SolverExecutionError(
+                "CLP accepts continuous linear models only; fix or relax discrete variables"
+            )
+        if not variables:
+            raise SolverExecutionError("CLP requires at least one unfixed variable")
+        variable_index = {
+            id(variable): index for index, variable in enumerate(variables)
+        }
+
+        objectives = tuple(model.component_data_objects(pyo.Objective, active=True))
+        if len(objectives) != 1:
+            raise SolverExecutionError("CLP requires exactly one active objective")
+        objective = objectives[0]
+        objective_coefficients, _objective_constant = self._linear_expression(
+            objective.expr, variable_index
+        )
+
+        constraints = tuple(model.component_data_objects(pyo.Constraint, active=True))
+        row_coefficients: list[dict[int, float]] = []
+        row_lower: list[float] = []
+        row_upper: list[float] = []
+        infinity = 1e100
+        for constraint in constraints:
+            coefficients, constant = self._linear_expression(
+                constraint.body, variable_index
+            )
+            row_coefficients.append(coefficients)
+            row_lower.append(
+                -infinity
+                if constraint.lower is None
+                else float(pyo.value(constraint.lower)) - constant
+            )
+            row_upper.append(
+                infinity
+                if constraint.upper is None
+                else float(pyo.value(constraint.upper)) - constant
+            )
+
+        # CLP infers matrix dimensions from the largest coordinate. Explicit
+        # zero sentinels preserve empty trailing columns/rows without changing
+        # the mathematical model.
+        effective_row_count = max(1, len(constraints))
+        row_indices: list[int] = []
+        column_indices: list[int] = []
+        elements: list[float] = []
+        for row, coefficients in enumerate(row_coefficients):
+            for column, coefficient in coefficients.items():
+                if coefficient != 0.0:
+                    row_indices.append(row)
+                    column_indices.append(column)
+                    elements.append(coefficient)
+        row_indices.extend((0, effective_row_count - 1))
+        column_indices.extend((len(variables) - 1, 0))
+        elements.extend((0.0, 0.0))
+        matrix = CyCoinPackedMatrix(
+            colOrdered=True,
+            rowIndices=np.asarray(row_indices, dtype=np.int32),
+            colIndices=np.asarray(column_indices, dtype=np.int32),
+            elements=np.asarray(elements, dtype=np.float64),
+        )
+
+        if not constraints:
+            row_lower.append(-infinity)
+            row_upper.append(infinity)
+        lower = np.asarray(
+            [
+                -infinity if variable.lb is None else float(pyo.value(variable.lb))
+                for variable in variables
+            ],
+            dtype=np.float64,
+        )
+        upper = np.asarray(
+            [
+                infinity if variable.ub is None else float(pyo.value(variable.ub))
+                for variable in variables
+            ],
+            dtype=np.float64,
+        )
+        costs = np.zeros(len(variables), dtype=np.float64)
+        for index, coefficient in objective_coefficients.items():
+            costs[index] = coefficient
+
+        solver = CyClpSimplex()
+        solver.loadProblem(
+            matrix,
+            lower,
+            upper,
+            costs,
+            np.asarray(row_lower, dtype=np.float64),
+            np.asarray(row_upper, dtype=np.float64),
+        )
+        solver.optimizationDirection = (
+            "max" if objective.sense == pyo.maximize else "min"
+        )
+        self._apply_options(solver, configuration)
+        try:
+            solver.dual()
+        except Exception as error:
+            raise SolverExecutionError(f"CLP execution error: {error}") from error
+
+        status_code = int(solver.getStatusCode())
+        raw_status = str(solver.getStatusString())
+        status = self._normalize(status_code)
+        loaded = False
+        if status is SolveStatus.OPTIMAL and load_solution:
+            primal = solver.primalVariableSolution
+            for index, variable in enumerate(variables):
+                variable.set_value(float(primal[index]), skip_validation=True)
+            dual_suffix = getattr(model, "dual", None)
+            if dual_suffix is not None:
+                dual_suffix.clear()
+                row_duals = solver.dualConstraintSolution
+                for index, constraint in enumerate(constraints):
+                    dual_suffix[constraint] = float(row_duals[index])
+            loaded = True
+        elif status is not SolveStatus.OPTIMAL and not accept_nonoptimal:
+            raise SolverExecutionError(f"CLP returned {raw_status}")
+
+        return SolveResult(
+            backend=self.name,
+            interface=self.interface,
+            version=self._version(),
+            status=status,
+            raw_solver_status=raw_status,
+            raw_termination_condition=raw_status,
+            options=configuration.options,
+            solution_loaded=loaded,
+            raw_results=solver,
+        )
+
+    @staticmethod
+    def _linear_expression(
+        expression: Any,
+        variable_index: Mapping[int, int],
+    ) -> tuple[dict[int, float], float]:
+        representation = generate_standard_repn(expression, compute_values=True)
+        if representation.nonlinear_expr is not None or representation.quadratic_vars:
+            raise SolverExecutionError("CLP accepts continuous linear models only")
+        constant = float(pyo.value(representation.constant or 0.0))
+        coefficients: dict[int, float] = {}
+        for variable, raw_coefficient in zip(
+            representation.linear_vars,
+            representation.linear_coefs,
+            strict=True,
+        ):
+            coefficient = float(pyo.value(raw_coefficient))
+            if variable.fixed:
+                constant += coefficient * float(pyo.value(variable))
+                continue
+            index = variable_index[id(variable)]
+            coefficients[index] = coefficients.get(index, 0.0) + coefficient
+        return coefficients, constant
+
+    @staticmethod
+    def _apply_options(solver: Any, configuration: SolverConfiguration) -> None:
+        known = {
+            "primal_feasibility_tolerance",
+            "dual_feasibility_tolerance",
+            "log_level",
+            "max_iterations",
+        }
+        unknown = set(configuration.options) - known
+        if unknown:
+            raise SolverExecutionError(f"unsupported CLP options: {sorted(unknown)}")
+        if "primal_feasibility_tolerance" in configuration.options:
+            solver.primalTolerance = float(
+                configuration.options["primal_feasibility_tolerance"]
+            )
+        if "dual_feasibility_tolerance" in configuration.options:
+            solver.dualTolerance = float(
+                configuration.options["dual_feasibility_tolerance"]
+            )
+        solver.logLevel = int(configuration.options.get("log_level", 0))
+        if "max_iterations" in configuration.options:
+            solver.maxNumIteration = int(configuration.options["max_iterations"])
+
+    @staticmethod
+    def _normalize(status_code: int) -> SolveStatus:
+        return {
+            0: SolveStatus.OPTIMAL,
+            1: SolveStatus.INFEASIBLE,
+            2: SolveStatus.UNBOUNDED,
+            3: SolveStatus.LIMIT,
+            4: SolveStatus.ERROR,
+            5: SolveStatus.LIMIT,
+        }.get(status_code, SolveStatus.UNKNOWN)
+
+    @staticmethod
+    def _version() -> tuple[int, ...]:
+        try:
+            return tuple(int(part) for part in version("cylp").split("."))
+        except (PackageNotFoundError, ValueError):
+            return ()
+
+
+class CbcBackend(SolverBackend):
+    """PuLP-distributed CBC executable backend preserving native SOS sets."""
+
+    name = "cbc"
+    interface = "pyomo.solvers.plugins.solvers.CBCplugin.CBCSHELL"
+
+    def __init__(self, executable: str | None = None) -> None:
+        self._executable = executable
+
+    def solve_mip(
+        self,
+        model: pyo.ConcreteModel,
+        configuration: SolverConfiguration = DEFAULT_SOLVER_CONFIGURATION,
+        *,
+        load_solution: bool = True,
+        accept_nonoptimal_incumbent: bool = False,
+        warm_start_discrete: bool = False,
+    ) -> MipSolveResult:
+        executable = self._executable or self._bundled_executable()
+        solver = pyo.SolverFactory("cbc", executable=executable)
+        if solver is None or not solver.available(exception_flag=False):
+            raise SolverExecutionError(
+                "CBC is unavailable; install the uv 'cbc' dependency group"
+            )
+        options = self._cbc_options(configuration)
+        solve_options: dict[str, Any] = {
+            "load_solutions": False,
+            "options": options,
+        }
+        if warm_start_discrete:
+            solve_options["warmstart"] = True
+        discrete_count = sum(
+            variable.is_binary() or variable.is_integer()
+            for variable in model.component_data_objects(pyo.Var, active=True)
+            if not variable.fixed
+        )
+        try:
+            raw_results = solver.solve(model, **solve_options)
+        except Exception as error:
+            raise SolverExecutionError(f"CBC execution error: {error}") from error
+
+        raw_status = raw_results.solver.status
+        termination = raw_results.solver.termination_condition
+        status = HighsBackend._normalize(raw_status, termination)
+        solution_count = len(getattr(raw_results, "solution", ()))
+        has_incumbent = solution_count > 0
+        accepted = (status is SolveStatus.OPTIMAL and has_incumbent) or (
+            accept_nonoptimal_incumbent and has_incumbent
+        )
+        loaded = False
+        if accepted and load_solution:
+            model.solutions.load_from(raw_results)
+            loaded = True
+        elif not accepted:
+            raise SolverExecutionError(
+                "CBC returned a rejected state: "
+                f"status={raw_status}, termination={termination}, "
+                f"incumbent={has_incumbent}"
+            )
+
+        problem = next(iter(raw_results.problem), None)
+        lower = _finite_or_none(getattr(problem, "lower_bound", None))
+        upper = _finite_or_none(getattr(problem, "upper_bound", None))
+        sense = next(model.component_data_objects(pyo.Objective, active=True)).sense
+        incumbent = upper if sense == pyo.maximize else lower
+        bound = lower if sense == pyo.maximize else upper
+        gap = None
+        if incumbent is not None and bound is not None:
+            gap = abs(incumbent - bound) / max(1.0, abs(incumbent))
+        solve = SolveResult(
+            backend=self.name,
+            interface=self.interface,
+            version=tuple(int(part) for part in solver.version()),
+            status=status,
+            raw_solver_status=str(raw_status),
+            raw_termination_condition=str(termination),
+            options=configuration.options,
+            solution_loaded=loaded,
+            raw_results=raw_results,
+        )
+        return MipSolveResult(
+            solve,
+            has_incumbent,
+            incumbent,
+            bound,
+            gap,
+            discrete_count,
+        )
+
+    def solve(
+        self,
+        model: pyo.ConcreteModel,
+        configuration: SolverConfiguration = DEFAULT_SOLVER_CONFIGURATION,
+        *,
+        load_solution: bool = True,
+        accept_nonoptimal: bool = False,
+    ) -> SolveResult:
+        return self.solve_mip(
+            model,
+            configuration,
+            load_solution=load_solution,
+            accept_nonoptimal_incumbent=accept_nonoptimal,
+        ).solve
+
+    @staticmethod
+    def _bundled_executable() -> str:
+        try:
+            from pulp.apis.coin_api import pulp_cbc_path
+        except ImportError as error:
+            raise SolverExecutionError(
+                "CBC is unavailable; install the uv 'cbc' dependency group"
+            ) from error
+        return str(pulp_cbc_path)
+
+    @staticmethod
+    def _cbc_options(
+        configuration: SolverConfiguration,
+    ) -> dict[str, int | float | str]:
+        options = dict(configuration.options)
+        known = {"time_limit_seconds", "relative_gap", "absolute_gap", "threads"}
+        unknown = set(options) - known
+        if unknown:
+            raise SolverExecutionError(f"unsupported CBC options: {sorted(unknown)}")
+        # CBC's default solution-file format truncates values enough to create
+        # false primary-versus-RMIP residuals. Format 4 retains greater decimal
+        # precision while remaining parseable by Pyomo's CBC shell interface.
+        mapped: dict[str, int | float | str] = {"outputFormat": 4}
+        if "time_limit_seconds" in options:
+            mapped["seconds"] = float(options["time_limit_seconds"])
+        if "relative_gap" in options:
+            mapped["ratio"] = float(options["relative_gap"])
+        if "absolute_gap" in options:
+            mapped["allowableGap"] = float(options["absolute_gap"])
+        if "threads" in options:
+            mapped["threads"] = int(options["threads"])
+        return mapped
 
 
 class GamsScipBackend(SolverBackend):

@@ -89,7 +89,7 @@ class NetworkPrices:
     raw_bus_duals: Mapping[Key, float]
     dead_nodes: frozenset[Key]
     unit: str = "NZD/MWh"
-    convention: str = "negative objective sensitivity to +1 MW nodal load"
+    convention: str = "CPLEX-compatible LP equality marginal"
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "bus", MappingProxyType(dict(self.bus)))
@@ -104,19 +104,20 @@ class NetworkPricingEngine(PricingEngine):
     supported_formulations = _SUPPORTED
 
     @staticmethod
-    def _canonical_zero_flow_leaf_prices(
+    def _cplex_zero_flow_leaf_prices(
         built_model: BuiltModel,
         case: NetworkCase,
         prices: dict[Key, float],
         *,
         tolerance: float = 1e-9,
     ) -> None:
-        """Select the +load derivative on an anchored passive zero-flow tree.
+        """Select the CPLEX export derivative on a passive zero-flow tree.
 
         A passive zero-flow component behind one lossy boundary can have two
         valid LP duals: the derivatives for incremental export and load.
-        Normalize to the load-side derivative and propagate it through any
-        zero-loss transformer leaves.  Positive-loss boundaries anchor the
+        Historical vSPD/CPLEX result sets select the export-side endpoint for
+        WPT1101.  Normalize to that endpoint and propagate it through any
+        zero-loss transformer leaves. Positive-loss boundaries anchor the
         recursion; unanchored zero-loss cycles retain their solver duals.
         """
 
@@ -228,7 +229,7 @@ class NetworkPricingEngine(PricingEngine):
 
         memo: dict[Key, float] = {}
 
-        def load_price(bus: Key, visiting: frozenset[Key]) -> float:
+        def cplex_price(bus: Key, visiting: frozenset[Key]) -> float:
             if bus in memo:
                 return memo[bus]
             if bus in visiting or bus not in selected:
@@ -240,16 +241,16 @@ class NetworkPricingEngine(PricingEngine):
             parent_price = (
                 original[parent]
                 if factor > 0.0
-                else load_price(parent, visiting | {bus})
+                else cplex_price(parent, visiting | {bus})
             )
-            value = parent_price * (
+            value = parent_price * denominator / (
                 1.0 + (1.0 - receiving_share) * factor
-            ) / denominator
+            )
             memo[bus] = value
             return value
 
         for bus in selected:
-            prices[bus] = load_price(bus, frozenset())
+            prices[bus] = cplex_price(bus, frozenset())
 
     def price(self, built_model: BuiltModel, solve_result: SolveResult) -> NetworkPrices:
         if not solve_result.solution_loaded:
@@ -262,7 +263,7 @@ class NetworkPricingEngine(PricingEngine):
             tuple(index): float(built_model.model.dual[constraints[index]])
             for index in constraints
         }
-        self._canonical_zero_flow_leaf_prices(built_model, case, raw)
+        self._cplex_zero_flow_leaf_prices(built_model, case, raw)
         # In ACnodeNetInjectionDefinition2, required load appears with a
         # negative coefficient on the right-hand side.  The equality marginal
         # therefore already has the positive market-price sign used by vSPD.

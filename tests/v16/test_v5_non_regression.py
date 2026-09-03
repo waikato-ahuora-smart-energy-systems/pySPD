@@ -5,7 +5,7 @@ from pyspd.reserve import reserve_formulation
 from tests.reserve.conftest import make_reserve_case
 
 V5_STRUCTURAL_SIGNATURE = (
-    "592a972925b1d4b44d3253d7dd8f1a7c1ccdfa857b48b7b3aabb844837c47801"
+    "414d7c57c8078217bf0c557f5525ca0325e88c3a7c1183491d2b50b31d296ff8"
 )
 
 

@@ -19,7 +19,7 @@ build-backend = "hatchling.build"
 
 [tool.uv]
 package = true
-default-groups = ["dev", "highs"]
+default-groups = ["dev", "highs", "clp", "cbc"]
 
 [dependency-groups]
 dev = [
@@ -53,6 +53,12 @@ gurobi = [
 docs = [
     "mkdocs>=1.6,<2",
     "mkdocs-material>=9,<10",
+]
+clp = [
+    "cylp>=0.94,<1",
+]
+cbc = [
+    "pulp>=3.2,<4",
 ]
 
 [tool.ruff]

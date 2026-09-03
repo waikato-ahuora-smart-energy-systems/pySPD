@@ -10,9 +10,9 @@ replaces; accepted history is not rewritten.
 | [ADR-0003](0003-gdx-and-canonical-data-boundary.md) | Separate faithful GDX ingestion from canonical runtime data | Accepted by project direction |
 | [ADR-0004](0004-solver-profiles-and-sos.md) | Use CPLEX for parity and restrict HiGHS until SOS evidence passes | Proposed |
 | [ADR-0005](0005-oracle-and-evidence-retention.md) | Treat pinned GAMS vSPD as an instrumented, immutable oracle | Proposed |
-| [ADR-0006](0006-pricing-convention.md) | Characterize MIP pricing at Gate 1 before implementation | Proposed |
+| [ADR-0006](0006-pricing-convention.md) | CPLEX-authoritative fixed-RMIP pricing and zero-flow endpoint | Accepted |
 | [ADR-0007](0007-probity-tdd-evidence.md) | Pair Probity with immutable red/green CI evidence | Accepted by explicit project direction |
-| [ADR-0008](0008-interim-scip-highs-reference-profile.md) | Treat optimal SCIP MIP + HiGHS fixed RMIP as the active adequate reference; defer CPLEX | Accepted by project direction |
+| [ADR-0008](0008-interim-scip-highs-reference-profile.md) | Execute with optimal SCIP/HiGHS; validate against the CPLEX gold corpus | Accepted by project direction |
 | [ADR-0009](0009-gate-1-review-authority.md) | Gate 1 does not require an independent validation reviewer or approval | Accepted by project direction |
 | [ADR-0010](0010-gate-1-date-level-shortfall-qualification.md) | Qualify the shortfall population by 139 hash-bound dates and representative exact fixtures at Gate 1; replay all 546 intervals at Gate 8 | Accepted by project direction |
 | [ADR-0011](0011-linux-ci-deferred-after-gate-2.md) | Defer Linux x86_64 execution and restrict Gate 2 qualification to macOS arm64 | Accepted by explicit project direction |
