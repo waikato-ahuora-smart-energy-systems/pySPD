@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -175,6 +176,14 @@ def test_branch_endpoint_price_uses_governed_portable_price_tolerance() -> None:
 
     assert result.passed
     assert result.tables[0].certified_difference_count == 1
+
+
+def test_risk_dual_uses_governed_portable_price_tolerance() -> None:
+    tolerance = ReportRowParityValidator._acceptance_tolerance(
+        "risk-price", Decimal("0.00005")
+    )
+
+    assert tolerance == Decimal("0.0001")
 
 
 @pytest.mark.parametrize(
@@ -386,7 +395,9 @@ def test_binding_market_node_duals_may_reallocate_within_named_limit_family() ->
                             "date_time": "time",
                             "constraint": "NetworkSecurity.MNodeSecurityConstraintLE",
                             "index": f"case|time|{constraint}",
-                            "body": final_body if constraint.endswith("MW+60") else "85",
+                            "body": final_body
+                            if constraint.endswith("MW+60")
+                            else "85",
                             "lower": "",
                             "upper": "85",
                             "price_nzd_per_mwh": price,
@@ -420,6 +431,85 @@ def test_binding_market_node_duals_may_reallocate_within_named_limit_family() ->
     assert unequal_total.tables[0].above_precision_count == 2
     assert not nonbinding.passed
     assert nonbinding.tables[0].above_precision_count >= 1
+
+
+def test_nonbinding_zero_dual_market_node_activity_can_follow_alternate_optimum() -> (
+    None
+):
+    reference = _json(
+        {
+            "prefix_MNodeConstraintResults_TP": {
+                "fields": [
+                    "CaseID",
+                    "DateTime",
+                    "MNodeConstraint",
+                    "LHS (MW)",
+                    "Price ($/MWh)",
+                    "RHS (MW)",
+                    "Sense (-1:<=, 0:=, 1:>=)",
+                ],
+                "rows": [
+                    {
+                        "CaseID": "case",
+                        "DateTime": "time",
+                        "MNodeConstraint": "FK_WTO_MW+6",
+                        "LHS (MW)": "705.95600",
+                        "Price ($/MWh)": "0.00000",
+                        "RHS (MW)": "848.00000",
+                        "Sense (-1:<=, 0:=, 1:>=)": "-1.00000",
+                    }
+                ],
+            }
+        }
+    )
+
+    def candidate(*, body: str, price: str = "0") -> bytes:
+        return _json(
+            {
+                "constraint": {
+                    "field_order": [
+                        "case_id",
+                        "date_time",
+                        "constraint",
+                        "index",
+                        "body",
+                        "lower",
+                        "upper",
+                        "price_nzd_per_mwh",
+                    ],
+                    "fields": [],
+                    "rows": [
+                        {
+                            "case_id": "case",
+                            "date_time": "time",
+                            "constraint": "NetworkSecurity.MNodeSecurityConstraintLE",
+                            "index": "case|time|FK_WTO_MW+6",
+                            "body": body,
+                            "lower": "",
+                            "upper": "848",
+                            "price_nzd_per_mwh": price,
+                        }
+                    ],
+                }
+            }
+        )
+
+    equivalent = ReportRowParityValidator().compare(
+        case_id="case", reference=reference, candidate=candidate(body="686.095")
+    )
+    priced = ReportRowParityValidator().compare(
+        case_id="case",
+        reference=reference,
+        candidate=candidate(body="686.095", price="0.1"),
+    )
+    binding = ReportRowParityValidator().compare(
+        case_id="case", reference=reference, candidate=candidate(body="848")
+    )
+
+    assert equivalent.passed
+    assert equivalent.tables[0].certified_difference_count == 1
+    assert not priced.passed
+    assert not binding.passed
 
 
 def test_named_zero_flow_node_certificate_classifies_report_difference() -> None:

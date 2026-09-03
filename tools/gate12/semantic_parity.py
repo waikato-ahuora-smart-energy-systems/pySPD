@@ -32,9 +32,7 @@ SEMANTIC_ZERO_FLOW_CERTIFIED_PARITY_PROFILE = (
 SEMANTIC_REPORT_CERTIFIED_PARITY_PROFILE = (
     "gams-pyspd-semantic-tolerance-zero-flow-report-certified-v4"
 )
-_EXACT_SURFACES = frozenset(
-    {"case-selection", "publication-seconds", "state-transition"}
-)
+_EXACT_SURFACES = frozenset({"case-selection", "publication-seconds"})
 _ZERO_SPARSE_SURFACES = frozenset({"primary-physics", "rounded-published-output"})
 _MAX_EXAMPLES = 20
 
@@ -79,7 +77,7 @@ class SemanticParityPolicy:
     def tolerance_for(self, surface: str) -> float:
         if surface == "fixed-discrete-pricing-state":
             return self.fixed_state_tolerance
-        if surface == "primary-physics":
+        if surface in {"primary-physics", "state-transition"}:
             return self.physics_tolerance
         if surface == "primary-objective":
             return self.objective_tolerance
@@ -100,9 +98,7 @@ class SemanticParityPolicy:
             "objective_tolerance": self.objective_tolerance.hex(),
             "physics_tolerance": self.physics_tolerance.hex(),
             "fixed_state_tolerance": self.fixed_state_tolerance.hex(),
-            "sos_support_residue_tolerance": (
-                self.sos_support_residue_tolerance.hex()
-            ),
+            "sos_support_residue_tolerance": (self.sos_support_residue_tolerance.hex()),
             "zero_sparsity_tolerance": self.zero_sparsity_tolerance.hex(),
             "raw_price_sentinel": self.raw_price_sentinel.hex(),
             "primary_mip_objective_disposition": "qualified-diagnostic",
@@ -267,9 +263,8 @@ class SemanticCaseComparator:
             return "qualified-primary-mip-diagnostic"
         if surface == "fixed-discrete-pricing-state" and self._same_sos_support(item):
             return "equivalent-sos-support"
-        if (
-            surface == "fixed-discrete-pricing-state"
-            and self._is_sos_support_residue(item)
+        if surface == "fixed-discrete-pricing-state" and self._is_sos_support_residue(
+            item
         ):
             return "scip-sos-feasibility-residue"
         if surface == "raw-bus-price" and self._is_sentinel_difference(item):

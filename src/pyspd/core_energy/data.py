@@ -48,6 +48,8 @@ class CoreEnergyCase:
     primary_secondary: frozenset[PrimarySecondary] = frozenset()
     nodes: frozenset[Node] = frozenset()
     scarcity_blocks: frozenset[ScarcityBlock] = frozenset()
+    scarcity_fixed_limit_blocks: frozenset[ScarcityBlock] = frozenset()
+    scarcity_load_factor: Mapping[ScarcityBlock, float] = field(default_factory=dict)
     offer_region: Mapping[Offer, Region] = field(default_factory=dict)
     bid_region: Mapping[Bid, Region] = field(default_factory=dict)
     node_region: Mapping[Node, Region] = field(default_factory=dict)
@@ -89,6 +91,7 @@ class CoreEnergyCase:
             "primary_secondary",
             "nodes",
             "scarcity_blocks",
+            "scarcity_fixed_limit_blocks",
         )
         for name in set_fields:
             object.__setattr__(self, name, frozenset(getattr(self, name)))
@@ -110,6 +113,7 @@ class CoreEnergyCase:
             "study_mode",
             "generation_maximum",
             "scarcity_limit",
+            "scarcity_load_factor",
             "scarcity_price",
             "scarcity_enabled",
         )
@@ -127,7 +131,9 @@ class CoreEnergyCase:
         if not self.case_id.strip() or not self.periods or not self.regions:
             raise CoreEnergyDataError("case_id, periods, and regions are required")
         if {region[:2] for region in self.regions} != self.periods:
-            raise CoreEnergyDataError("every period must have exactly its declared regions")
+            raise CoreEnergyDataError(
+                "every period must have exactly its declared regions"
+            )
         if set(self.offer_region) != set(self.offers):
             raise CoreEnergyDataError("every offer must map to exactly one region")
         if set(self.bid_region) != set(self.bids):
@@ -157,9 +163,7 @@ class CoreEnergyCase:
                 secondary,
             ) not in self.offers:
                 raise CoreEnergyDataError("primary-secondary mapping is not closed")
-        required_maps: dict[
-            str, tuple[Mapping[Key, float], frozenset[Key]]
-        ] = {
+        required_maps: dict[str, tuple[Mapping[Key, float], frozenset[Key]]] = {
             "required_load": (self.required_load, self.regions),
             "offer_limit": (self.offer_limit, self.offer_blocks),
             "offer_price": (self.offer_price, self.offer_blocks),
@@ -181,10 +185,17 @@ class CoreEnergyCase:
             mapping for mapping, _domain in required_maps.values()
         ]
         numeric_maps.append(self.generation_maximum)
-        if any(not math.isfinite(float(value)) for mapping in numeric_maps for value in mapping.values()):
+        numeric_maps.append(self.scarcity_load_factor)
+        if any(
+            not math.isfinite(float(value))
+            for mapping in numeric_maps
+            for value in mapping.values()
+        ):
             raise CoreEnergyDataError("all numeric inputs must be finite")
         if any(value < 0 for value in self.offer_limit.values()):
-            raise CoreEnergyDataError("generation offer block limits must be nonnegative")
+            raise CoreEnergyDataError(
+                "generation offer block limits must be nonnegative"
+            )
         if any(value <= 0 for value in self.interval_minutes.values()):
             raise CoreEnergyDataError("interval duration must be positive")
         if any(value < 0 for value in self.generation_maximum.values()):
@@ -193,6 +204,14 @@ class CoreEnergyCase:
             raise CoreEnergyDataError("generation maximum has no parent offer")
         if {key[:3] for key in self.scarcity_blocks} - set(self.nodes):
             raise CoreEnergyDataError("scarcity block has no parent node")
+        if not self.scarcity_fixed_limit_blocks <= self.scarcity_blocks:
+            raise CoreEnergyDataError(
+                "fixed scarcity limit is outside the block domain"
+            )
+        if not set(self.scarcity_load_factor) <= self.scarcity_blocks:
+            raise CoreEnergyDataError(
+                "scarcity load factor is outside the block domain"
+            )
         if any(value < 0 for value in self.scarcity_limit.values()):
             raise CoreEnergyDataError("scarcity limits must be nonnegative")
 
@@ -261,6 +280,10 @@ class CoreEnergyCase:
             ),
             nodes=nodes,
             scarcity_blocks=result.set("scarcity_energy_block").members,
+            scarcity_fixed_limit_blocks=result.set(
+                "scarcity_energy_fixed_limit_block"
+            ).members,
+            scarcity_load_factor=result.parameter("scarcity_energy_load_factor").values,
             offer_region=offer_region,
             bid_region=bid_region,
             node_region=node_region,
@@ -277,8 +300,7 @@ class CoreEnergyCase:
                 key: result.parameter("demand_bid_mw").get(key) for key in bid_blocks
             },
             bid_price={
-                key: result.parameter("demand_bid_price").get(key)
-                for key in bid_blocks
+                key: result.parameter("demand_bid_price").get(key) for key in bid_blocks
             },
             generation_start={
                 key: result.parameter("generation_start").get(key)

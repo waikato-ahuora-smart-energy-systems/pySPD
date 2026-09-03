@@ -136,11 +136,7 @@ def test_fixed_sos_support_accepts_only_bounded_scip_feasibility_residue() -> No
     accepted = comparator.compare_surface(
         surface="fixed-discrete-pricing-state",
         reference=_json(
-            {
-                "fixed_sos_members": [
-                    {"identity": shared, "value": (1.0).hex()}
-                ]
-            }
+            {"fixed_sos_members": [{"identity": shared, "value": (1.0).hex()}]}
         ),
         candidate=_json(
             {
@@ -154,11 +150,7 @@ def test_fixed_sos_support_accepts_only_bounded_scip_feasibility_residue() -> No
     rejected = comparator.compare_surface(
         surface="fixed-discrete-pricing-state",
         reference=_json(
-            {
-                "fixed_sos_members": [
-                    {"identity": shared, "value": (1.0).hex()}
-                ]
-            }
+            {"fixed_sos_members": [{"identity": shared, "value": (1.0).hex()}]}
         ),
         candidate=_json(
             {
@@ -171,9 +163,7 @@ def test_fixed_sos_support_accepts_only_bounded_scip_feasibility_residue() -> No
     )
 
     assert accepted.passed
-    assert accepted.accepted_reason_counts == {
-        "scip-sos-feasibility-residue": 1
-    }
+    assert accepted.accepted_reason_counts == {"scip-sos-feasibility-residue": 1}
     assert not rejected.passed
 
 
@@ -394,7 +384,20 @@ def test_exact_control_surface_is_not_relaxed() -> None:
     )
 
     assert not result.passed
-    assert result.unresolved_reason_counts == {"exact-mismatch": 1}
+    assert result.unresolved_reason_counts == {"non-numeric-mismatch": 1}
+
+
+def test_state_transition_numeric_values_use_physics_tolerance() -> None:
+    reference = float.fromhex("0x1.fd4eaf53415cfp-2")
+    candidate = float.fromhex("0x1.fd4eaf53415d0p-2")
+    result = SemanticCaseComparator(SemanticParityPolicy()).compare_surface(
+        surface="state-transition",
+        reference=_json({"transferred_mw": reference.hex()}),
+        candidate=_json({"transferred_mw": candidate.hex()}),
+    )
+
+    assert result.passed
+    assert result.accepted_reason_counts == {"within-tolerance": 1}
 
 
 def test_report_surface_accepts_only_explicit_row_certification() -> None:

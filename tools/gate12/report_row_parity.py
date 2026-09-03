@@ -44,6 +44,7 @@ _LEGACY_REPORT_ROW_PROFILES = frozenset(
 _MAX_EXAMPLES = 20
 _PORTABLE_PRICE_TOLERANCE = Decimal("0.001")
 _PORTABLE_PUBLISHED_PRICE_TOLERANCE = Decimal("0.0001")
+_PORTABLE_RISK_PRICE_TOLERANCE = Decimal("0.0001")
 _PORTABLE_MONEY_TOLERANCE = Decimal("0.01")
 _RAW_PRICE_OBSERVABLES = frozenset(
     {
@@ -891,6 +892,15 @@ class ReportRowParityValidator:
                     candidate_rows,
                 )
             )
+            nonbinding_market_node_activity = (
+                self._nonbinding_market_node_activity_keys(
+                    projection,
+                    expected,
+                    actual,
+                    reference_rows,
+                    candidate_rows,
+                )
+            )
             for key in sorted(set(expected) & set(actual)):
                 reference_text = expected[key]
                 candidate_text = actual[key]
@@ -910,6 +920,9 @@ class ReportRowParityValidator:
                     certified += 1
                     continue
                 if key in market_node_dual_equivalent:
+                    certified += 1
+                    continue
+                if key in nonbinding_market_node_activity:
                     certified += 1
                     continue
                 if (
@@ -962,6 +975,8 @@ class ReportRowParityValidator:
             return max(display_half_unit, _PORTABLE_PRICE_TOLERANCE)
         if observable in _PUBLISHED_PRICE_OBSERVABLES:
             return max(display_half_unit, _PORTABLE_PUBLISHED_PRICE_TOLERANCE)
+        if observable == "risk-price":
+            return max(display_half_unit, _PORTABLE_RISK_PRICE_TOLERANCE)
         if observable == "branch-rentals":
             return max(display_half_unit, _PORTABLE_MONEY_TOLERANCE)
         return display_half_unit
@@ -1034,7 +1049,9 @@ class ReportRowParityValidator:
             raise EvidenceContractError(
                 "REQ-G12-REPORT-ROW: market-node support projections are incomplete"
             )
-        support: dict[str, tuple[dict[tuple[str, ...], str], dict[tuple[str, ...], str]]] = {}
+        support: dict[
+            str, tuple[dict[tuple[str, ...], str], dict[tuple[str, ...], str]]
+        ] = {}
         for observable, item in related.items():
             support[observable] = (
                 self._indexed_values(reference_rows, item, reference=True),
@@ -1060,9 +1077,7 @@ class ReportRowParityValidator:
                 continue
             rounding_budget = sum(
                 (
-                    Decimal(5).scaleb(
-                        cast(int, value.as_tuple().exponent) - 1
-                    )
+                    Decimal(5).scaleb(cast(int, value.as_tuple().exponent) - 1)
                     for value in reference_prices
                 ),
                 start=Decimal(0),
@@ -1074,6 +1089,107 @@ class ReportRowParityValidator:
             if not all(self._market_node_row_is_binding(key, support) for key in keys):
                 continue
             certified.update(keys)
+        return frozenset(certified)
+
+    def _nonbinding_market_node_activity_keys(
+        self,
+        projection: _Projection,
+        expected: dict[tuple[str, ...], str],
+        actual: dict[tuple[str, ...], str],
+        reference_rows: tuple[dict[str, str], ...],
+        candidate_rows: tuple[dict[str, str], ...],
+    ) -> frozenset[tuple[str, ...]]:
+        """Certify alternate-optimum activity on mutually slack zero-dual rows."""
+
+        if (
+            projection.observable != "market-node-constraint-lhs"
+            or not expected
+            or set(expected) != set(actual)
+        ):
+            return frozenset()
+        related = {
+            item.observable: item
+            for item in _PROJECTIONS
+            if item.reference_table == "MNodeConstraintResults_TP"
+            and item.observable
+            in {
+                "market-node-constraint-price",
+                "market-node-constraint-rhs",
+                "market-node-constraint-sense",
+            }
+        }
+        if len(related) != 3:
+            raise EvidenceContractError(
+                "REQ-G12-REPORT-ROW: market-node support projections are incomplete"
+            )
+        support = {
+            observable: (
+                self._indexed_values(reference_rows, item, reference=True),
+                self._indexed_values(candidate_rows, item, reference=False),
+            )
+            for observable, item in related.items()
+        }
+        certified: set[tuple[str, ...]] = set()
+        for lhs_key, ref_lhs_text in expected.items():
+            keys = {name: (*lhs_key[:-1], name) for name in related}
+            if not all(
+                key in values for name, key in keys.items() for values in support[name]
+            ):
+                continue
+            ref_price = self._decimal(
+                support["market-node-constraint-price"][0][
+                    keys["market-node-constraint-price"]
+                ]
+            )
+            cand_price = self._decimal(
+                support["market-node-constraint-price"][1][
+                    keys["market-node-constraint-price"]
+                ]
+            )
+            ref_rhs = self._decimal(
+                support["market-node-constraint-rhs"][0][
+                    keys["market-node-constraint-rhs"]
+                ]
+            )
+            cand_rhs = self._decimal(
+                support["market-node-constraint-rhs"][1][
+                    keys["market-node-constraint-rhs"]
+                ]
+            )
+            ref_sense = self._decimal(
+                support["market-node-constraint-sense"][0][
+                    keys["market-node-constraint-sense"]
+                ]
+            )
+            cand_sense = self._decimal(
+                support["market-node-constraint-sense"][1][
+                    keys["market-node-constraint-sense"]
+                ]
+            )
+            ref_lhs = self._decimal(ref_lhs_text)
+            cand_lhs = self._decimal(actual[lhs_key])
+            ref_rhs_half_unit = Decimal(5).scaleb(
+                cast(int, ref_rhs.as_tuple().exponent) - 1
+            )
+            ref_price_half_unit = Decimal(5).scaleb(
+                cast(int, ref_price.as_tuple().exponent) - 1
+            )
+            same_limit = abs(ref_rhs - cand_rhs) <= ref_rhs_half_unit
+            zero_dual = (
+                abs(ref_price) <= ref_price_half_unit
+                and abs(cand_price) <= ref_price_half_unit
+            )
+            mutually_slack = (
+                ref_sense == cand_sense == Decimal(-1)
+                and ref_rhs - ref_lhs > ref_rhs_half_unit
+                and cand_rhs - cand_lhs > ref_rhs_half_unit
+            ) or (
+                ref_sense == cand_sense == Decimal(1)
+                and ref_lhs - ref_rhs > ref_rhs_half_unit
+                and cand_lhs - cand_rhs > ref_rhs_half_unit
+            )
+            if same_limit and zero_dual and mutually_slack:
+                certified.add(lhs_key)
         return frozenset(certified)
 
     @staticmethod

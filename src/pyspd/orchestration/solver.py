@@ -349,7 +349,15 @@ def _updated_case(prepared: PreparedCase) -> ReserveCase:
             generation_start[offer] = prepared.generation_start[offer[2]]
     scarcity_limit = dict(case.scarcity_limit)
     for block in case.scarcity_blocks:
+        if block in case.scarcity_fixed_limit_blocks:
+            continue
         node = block[:3]
+        if block in case.scarcity_load_factor:
+            load = prepared.required_load.get(node, 0.0)
+            scarcity_limit[block] = (
+                case.scarcity_load_factor[block] * load if load > 0.0 else 0.0
+            )
+            continue
         old = case.network.node_load.get(node, 0.0)
         if old > 0.0:
             scarcity_limit[block] *= prepared.required_load.get(node, old) / old

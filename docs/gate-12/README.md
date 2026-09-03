@@ -129,14 +129,27 @@ bounded native-SCIP SOS residue rule governed by
 [ADR-0021](../adr/0021-bounded-scip-sos-support-residue.md). See the
 [`2023-01-16 replay certificate`](replay-certification-20230116.md).
 
+The fifth paired date, 2022-11-07, passes all 72 semantic surfaces across its
+six affected cases after the complete 210-case prefix. The largest fixed-RMIP
+objective difference is `5.61e-10 NZD`. The independent topology validator
+certifies 348 zero-flow bus observations, 22 node projections, and seven
+publications. The complete 13-table comparison covers 102,571 values with zero
+missing or extra identities, zero above-precision values, and zero
+unimplemented tables. The replay also corrects dynamic scarcity reconstruction
+when a zero-load node receives transferred load. Bounded transition and
+non-binding report equivalence is governed by
+[ADR-0022](../adr/0022-portable-transition-and-nonbinding-report-equivalence.md).
+See the [`2022-11-07 replay certificate`](replay-certification-20221107.md).
+
 Further replay continues incrementally from exact historical discovery.
 Candidate execution never promotes an analytic lower bound into an affected
 identity. The complete 2022-11-06 and 2023-01-17 prefixes have both passed
 regression under the native-SOS execution fingerprint; see
 [`native-sos-regression-20221106.md`](native-sos-regression-20221106.md) and
 [`native-sos-regression-20230117.md`](native-sos-regression-20230117.md).
-Together with the 2023-01-16 and 2023-01-18 correction certificates, all four
-paired dates now pass their recorded native-SOS execution profiles. Existing
+Together with the 2022-11-07, 2023-01-16, and 2023-01-18 correction
+certificates, all five paired dates now pass their recorded native-SOS
+execution profiles. Existing
 immutable certificates remain valid for their recorded profiles.
 
 The representative v16 RTD portable-profile run is recorded in

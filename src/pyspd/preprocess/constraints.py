@@ -50,6 +50,8 @@ class ConstraintRiskStep(PreprocessingStep):
             "bad_price_factor",
             "scarcity_energy_price_max",
             "scarcity_energy_block",
+            "scarcity_energy_fixed_limit_block",
+            "scarcity_energy_load_factor",
             "scarcity_energy_limit",
             "scarcity_energy_price",
             "scarcity_reserve_limit",
@@ -172,9 +174,7 @@ class ConstraintRiskStep(PreprocessingStep):
             key: value if nonzero(value) else 5.0 for key, value in bad_price.items()
         }
         national_price = source.component("i_dateTimeScarcityNationalFactor", "price")
-        national_factor = source.component(
-            "i_dateTimeScarcityNationalFactor", "factor"
-        )
+        national_factor = source.component("i_dateTimeScarcityNationalFactor", "factor")
         scarcity_price_max = {
             key: max(
                 (
@@ -206,7 +206,9 @@ class ConstraintRiskStep(PreprocessingStep):
             (*node, f"t{block}") for node in nodes for block in range(1, 21)
         )
         energy_limit_input: dict[tuple[str, ...], float] = {}
+        energy_load_factor: dict[tuple[str, ...], float] = {}
         energy_price_input: dict[tuple[str, ...], float] = {}
+        energy_fixed_limit_blocks: set[tuple[str, ...]] = set()
         for key in energy_blocks:
             case, datetime, _node, block = key
             enabled = nonzero(energy_scarcity.get((case, datetime), 0.0))
@@ -216,20 +218,23 @@ class ConstraintRiskStep(PreprocessingStep):
                 if enabled and load > 0.0
                 else 0.0
             )
-            price = (
-                national_price.get((case, datetime, block), 0.0)
-                if enabled and limit > 0.0
-                else 0.0
+            load_factor = (
+                national_factor.get((case, datetime, block), 0.0) if enabled else 0.0
             )
+            price = national_price.get((case, datetime, block), 0.0) if enabled else 0.0
             if enabled and load > 0.0 and nonzero(node_factor_input.get(key, 0.0)):
                 limit = node_factor_input[key] * load
+            if enabled and nonzero(node_factor_input.get(key, 0.0)):
+                load_factor = node_factor_input[key]
             if enabled and nonzero(node_factor_price.get(key, 0.0)):
                 price = node_factor_price[key]
             if enabled and nonzero(node_limit_input.get(key, 0.0)):
                 limit = node_limit_input[key]
+                energy_fixed_limit_blocks.add(key)
             if enabled and nonzero(node_limit_price.get(key, 0.0)):
                 price = node_limit_price[key]
             energy_limit_input[key] = limit
+            energy_load_factor[key] = load_factor
             energy_price_input[key] = price
 
         branch_dims = ("case", "datetime", "branch_constraint")
@@ -299,6 +304,16 @@ class ConstraintRiskStep(PreprocessingStep):
                 "scarcity_energy_block",
                 ("case", "datetime", "node", "block"),
                 energy_blocks,
+            ),
+            "scarcity_energy_fixed_limit_block": SparseSet(
+                "scarcity_energy_fixed_limit_block",
+                ("case", "datetime", "node", "block"),
+                frozenset(energy_fixed_limit_blocks),
+            ),
+            "scarcity_energy_load_factor": SparseParameter(
+                "scarcity_energy_load_factor",
+                ("case", "datetime", "node", "block"),
+                energy_load_factor,
             ),
             "scarcity_energy_limit": SparseParameter(
                 "scarcity_energy_limit",
