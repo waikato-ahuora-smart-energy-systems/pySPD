@@ -98,6 +98,54 @@ def test_base_node_rows_average_all_cases_in_each_trading_period() -> None:
     ]
 
 
+def test_base_node_rows_preserve_average_analytic_price_interval() -> None:
+    records = (
+        {
+            "trading_period": "TP1",
+            "reports": {
+                "node": [
+                    {
+                        "node": "N1",
+                        "generation_mw": "10",
+                        "load_mw": "4",
+                        "price_nzd_per_mwh": "50",
+                        "price_interval": "[50,54]",
+                    }
+                ]
+            },
+        },
+        {
+            "trading_period": "TP1",
+            "reports": {
+                "node": [
+                    {
+                        "node": "N1",
+                        "generation_mw": "14",
+                        "load_mw": "6",
+                        "price_nzd_per_mwh": "52",
+                        "price_interval": "",
+                    }
+                ]
+            },
+        },
+    )
+    reference_rows = (
+        {"DateTime": "02-Aug-2023 00:00", "TP": "TP1", "Node": "N1"},
+    )
+
+    assert _base_node_candidate_rows(records, reference_rows) == [
+        {
+            "case_id": "base",
+            "date_time": "02-Aug-2023 00:00",
+            "node": "N1",
+            "generation_mw": "12",
+            "load_mw": "5",
+            "price_nzd_per_mwh": "51",
+            "price_interval": "[51.0,53.0]",
+        }
+    ]
+
+
 def test_2023_base_node_reference_uses_governed_node_table_suffix(tmp_path) -> None:
     (tmp_path / "2023-08-02_base_node_results.csv").write_text(
         "DateTime,TP,Node,Generation (MW),Load (MW),Price ($/MWh)\n"

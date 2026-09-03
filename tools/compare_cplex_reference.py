@@ -6,6 +6,7 @@ import argparse
 import csv
 import hashlib
 import json
+import math
 from collections import defaultdict
 from decimal import Decimal
 from pathlib import Path
@@ -423,15 +424,47 @@ def _base_node_candidate_rows(
             "generation_mw": 0.0,
             "load_mw": 0.0,
             "price_nzd_per_mwh": 0.0,
+            "price_interval_lower": 0.0,
+            "price_interval_upper": 0.0,
         }
     )
+    interval_keys: set[tuple[str, str]] = set()
     for record in records:
         trading_period = record["trading_period"]
         case_count[trading_period] += 1
         for row in record["reports"]["node"]:
-            values = totals[(trading_period, row["node"])]
-            for field in values:
+            key = (trading_period, row["node"])
+            values = totals[key]
+            for field in ("generation_mw", "load_mw", "price_nzd_per_mwh"):
                 values[field] += float(row[field])
+            price = float(row["price_nzd_per_mwh"])
+            raw_interval = row.get("price_interval", "")
+            if raw_interval:
+                try:
+                    interval = json.loads(raw_interval)
+                except json.JSONDecodeError as error:
+                    raise ValueError(
+                        f"invalid node price interval for {row['node']}"
+                    ) from error
+                if not isinstance(interval, list) or len(interval) != 2:
+                    raise ValueError(f"invalid node price interval for {row['node']}")
+                try:
+                    lower, upper = float(interval[0]), float(interval[1])
+                except (TypeError, ValueError) as error:
+                    raise ValueError(
+                        f"invalid node price interval for {row['node']}"
+                    ) from error
+                if (
+                    not math.isfinite(lower)
+                    or not math.isfinite(upper)
+                    or lower > upper
+                ):
+                    raise ValueError(f"invalid node price interval for {row['node']}")
+                interval_keys.add(key)
+            else:
+                lower = upper = price
+            values["price_interval_lower"] += lower
+            values["price_interval_upper"] += upper
     output = []
     for reference in reference_rows:
         trading_period = reference["TP"]
@@ -440,17 +473,28 @@ def _base_node_candidate_rows(
         aggregate_values = totals.get((trading_period, node))
         if not divisor or aggregate_values is None:
             continue
-        output.append(
-            {
-                "case_id": "base",
-                "date_time": reference["DateTime"],
-                "node": node,
-                **{
-                    field: format(value / divisor, ".17g")
-                    for field, value in aggregate_values.items()
-                },
-            }
-        )
+        row = {
+            "case_id": "base",
+            "date_time": reference["DateTime"],
+            "node": node,
+            **{
+                field: format(aggregate_values[field] / divisor, ".17g")
+                for field in (
+                    "generation_mw",
+                    "load_mw",
+                    "price_nzd_per_mwh",
+                )
+            },
+        }
+        if (trading_period, node) in interval_keys:
+            row["price_interval"] = json.dumps(
+                [
+                    aggregate_values["price_interval_lower"] / divisor,
+                    aggregate_values["price_interval_upper"] / divisor,
+                ],
+                separators=(",", ":"),
+            )
+        output.append(row)
     return output
 
 
@@ -461,9 +505,21 @@ def _case_candidate(
     normalize_v4_island_load: bool,
 ) -> dict[str, dict[str, Any]]:
     candidate_names = {_TABLE_RULES[name][0] for name in reference}
-    reports = record["reports"]
+    reports = dict(record["reports"])
+    if "branch" in candidate_names:
+        bus_intervals = {
+            row["bus"]: row.get("price_interval", "")
+            for row in reports.get("bus", ())
+        }
+        reports["branch"] = [
+            {
+                **row,
+                "from_bus_price_interval": bus_intervals.get(row["from_bus"], ""),
+                "to_bus_price_interval": bus_intervals.get(row["to_bus"], ""),
+            }
+            for row in reports["branch"]
+        ]
     if normalize_v4_island_load and "island" in candidate_names:
-        reports = dict(reports)
         reports["island"] = [
             {
                 **row,

@@ -697,7 +697,9 @@ class V5DetailedReportProjector:
             "dynamic_loss_mw",
             "fixed_loss_mw",
             "from_bus_price_nzd_per_mwh",
+            "from_bus_price_interval",
             "to_bus_price_nzd_per_mwh",
+            "to_bus_price_interval",
             "branch_price_nzd_per_mwh",
             "branch_rentals_nzd",
         ),
@@ -963,7 +965,17 @@ class V5DetailedReportProjector:
                     "dynamic_loss_mw": _number(loss),
                     "fixed_loss_mw": _number(fixed),
                     "from_bus_price_nzd_per_mwh": _number(from_price),
+                    "from_bus_price_interval": _price_interval(
+                        prices.repaired_bus_intervals.get((*period, from_bus))
+                        if active and from_bus
+                        else None
+                    ),
                     "to_bus_price_nzd_per_mwh": _number(to_price),
+                    "to_bus_price_interval": _price_interval(
+                        prices.repaired_bus_intervals.get((*period, to_bus))
+                        if active and to_bus
+                        else None
+                    ),
                     "branch_price_nzd_per_mwh": _number(marginal),
                     "branch_rentals_nzd": _number(rentals),
                 }
@@ -1463,7 +1475,9 @@ def _daily_definitions(formulation_id: str) -> dict[str, ReportDefinition]:
             ("dynamic_loss_mw", "MW"),
             ("fixed_loss_mw", "MW"),
             ("from_bus_price_nzd_per_mwh", "NZD/MWh"),
+            ("from_bus_price_interval", "NZD/MWh"),
             ("to_bus_price_nzd_per_mwh", "NZD/MWh"),
+            ("to_bus_price_interval", "NZD/MWh"),
             ("branch_price_nzd_per_mwh", "NZD/MWh"),
             ("branch_rentals_nzd", "NZD"),
         ),

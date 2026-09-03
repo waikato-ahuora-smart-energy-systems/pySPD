@@ -212,6 +212,12 @@ def test_price_interval_is_reported_only_where_analytic_interval_exists() -> Non
     assert published["N1"]["price_interval"] == "[49.5,50.5]"
     assert published["N2"]["price_interval"] == ""
 
+    for row in bundle.tables["branch"].rows:
+        expected_from = "[49.5,50.5]" if row["from_bus"] == "B1" else ""
+        expected_to = "[49.5,50.5]" if row["to_bus"] == "B1" else ""
+        assert row["from_bus_price_interval"] == expected_from
+        assert row["to_bus_price_interval"] == expected_to
+
 
 def test_report_direction_treats_solver_noise_as_zero_forward_flow() -> None:
     assert reporting._branch_report_direction(-2.99e-11) == "forward"

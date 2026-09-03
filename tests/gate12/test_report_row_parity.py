@@ -186,6 +186,77 @@ def test_branch_endpoint_price_uses_governed_portable_price_tolerance() -> None:
     assert result.tables[0].certified_difference_count == 1
 
 
+def test_branch_endpoint_price_accepts_its_bus_analytic_interval() -> None:
+    reference = _json(
+        {
+            "prefix_BranchResults_TP": {
+                "fields": [
+                    "CaseID",
+                    "DateTime",
+                    "Branch",
+                    "FromBus",
+                    "ToBus",
+                    "FromBusPrice ($/MWh)",
+                ],
+                "rows": [
+                    {
+                        "CaseID": "case",
+                        "DateTime": "time",
+                        "Branch": "LINE",
+                        "FromBus": "A",
+                        "ToBus": "B",
+                        "FromBusPrice ($/MWh)": "102.22800",
+                    }
+                ],
+            }
+        }
+    )
+
+    def candidate(interval: str) -> bytes:
+        return _json(
+            {
+                "branch": {
+                    "field_order": [
+                        "case_id",
+                        "date_time",
+                        "branch",
+                        "from_bus",
+                        "to_bus",
+                        "from_bus_price_nzd_per_mwh",
+                        "from_bus_price_interval",
+                    ],
+                    "rows": [
+                        {
+                            "case_id": "case",
+                            "date_time": "time",
+                            "branch": "LINE",
+                            "from_bus": "A",
+                            "to_bus": "B",
+                            "from_bus_price_nzd_per_mwh": "101.17710",
+                            "from_bus_price_interval": interval,
+                        }
+                    ],
+                }
+            }
+        )
+
+    contained = ReportRowParityValidator().compare(
+        case_id="case",
+        reference=reference,
+        candidate=candidate("[101.17710,102.22834]"),
+    )
+    excluded = ReportRowParityValidator().compare(
+        case_id="case",
+        reference=reference,
+        candidate=candidate("[101.17710,102.00000]"),
+    )
+
+    assert contained.passed
+    assert contained.tables[0].certified_difference_count == 1
+    assert not excluded.passed
+    assert excluded.tables[0].above_precision_count == 1
+
+
 def test_risk_dual_uses_governed_portable_price_tolerance() -> None:
     tolerance = ReportRowParityValidator._acceptance_tolerance(
         "risk-price", Decimal("0.00005")
@@ -333,6 +404,101 @@ def test_published_energy_interval_certifies_reference_containment() -> None:
         case_id="case",
         reference=reference,
         candidate=candidate("[147.31281,147.40000]"),
+    )
+
+    assert contained.passed
+    assert contained.tables[0].certified_difference_count == 1
+    assert contained.tables[0].above_precision_count == 0
+    assert not excluded.passed
+    assert excluded.tables[0].above_precision_count == 1
+
+
+@pytest.mark.parametrize(
+    (
+        "reference_table",
+        "identity_field",
+        "candidate_table",
+        "candidate_identity_field",
+        "candidate_value_field",
+    ),
+    (
+        (
+            "BusResults_TP",
+            "Bus",
+            "bus",
+            "bus",
+            "repaired_price_nzd_per_mwh",
+        ),
+        (
+            "NodeResults_TP",
+            "Node",
+            "node",
+            "node",
+            "price_nzd_per_mwh",
+        ),
+    ),
+)
+def test_bus_and_node_intervals_certify_reference_containment(
+    reference_table: str,
+    identity_field: str,
+    candidate_table: str,
+    candidate_identity_field: str,
+    candidate_value_field: str,
+) -> None:
+    reference = _json(
+        {
+            f"prefix_{reference_table}": {
+                "fields": [
+                    "CaseID",
+                    "DateTime",
+                    identity_field,
+                    "Price ($/MWh)",
+                ],
+                "rows": [
+                    {
+                        "CaseID": "case",
+                        "DateTime": "time",
+                        identity_field: "LOCATION",
+                        "Price ($/MWh)": "102.22800",
+                    }
+                ],
+            }
+        }
+    )
+
+    def candidate(interval: str) -> bytes:
+        return _json(
+            {
+                candidate_table: {
+                    "field_order": [
+                        "case_id",
+                        "date_time",
+                        candidate_identity_field,
+                        candidate_value_field,
+                        "price_interval",
+                    ],
+                    "rows": [
+                        {
+                            "case_id": "case",
+                            "date_time": "time",
+                            candidate_identity_field: "LOCATION",
+                            candidate_value_field: "101.17710",
+                            "price_interval": interval,
+                        }
+                    ],
+                }
+            }
+        )
+
+    contained = ReportRowParityValidator().compare(
+        case_id="case",
+        reference=reference,
+        candidate=candidate("[101.17710,102.22834]"),
+    )
+    excluded = ReportRowParityValidator().compare(
+        case_id="case",
+        reference=reference,
+        candidate=candidate("[101.17710,102.00000]"),
     )
 
     assert contained.passed

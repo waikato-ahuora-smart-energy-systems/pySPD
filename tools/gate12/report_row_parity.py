@@ -24,12 +24,12 @@ from tools.gate12.zero_flow_price_convention import (
     ZeroFlowPriceConventionResult,
 )
 
-REPORT_ROW_PARITY_PROFILE = "authority-pyspd-mapped-report-row-parity-v6"
+REPORT_ROW_PARITY_PROFILE = "authority-pyspd-mapped-report-row-parity-v7"
 REPORT_ROW_BUS_CERTIFIED_PROFILE = (
-    "authority-pyspd-mapped-report-row-parity-bus-certified-v6"
+    "authority-pyspd-mapped-report-row-parity-bus-certified-v7"
 )
 REPORT_ROW_ZERO_FLOW_CERTIFIED_PROFILE = (
-    "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v6"
+    "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v7"
 )
 _LEGACY_REPORT_ROW_PROFILES = frozenset(
     {
@@ -42,6 +42,9 @@ _LEGACY_REPORT_ROW_PROFILES = frozenset(
         "authority-pyspd-mapped-report-row-parity-v5",
         "authority-pyspd-mapped-report-row-parity-bus-certified-v5",
         "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v5",
+        "authority-pyspd-mapped-report-row-parity-v6",
+        "authority-pyspd-mapped-report-row-parity-bus-certified-v6",
+        "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v6",
     }
 )
 _MAX_EXAMPLES = 20
@@ -237,13 +240,28 @@ _NODE_VALUES = (
     ("node-surplus", "Surplus(MW)", "surplus_mw"),
 )
 _BRANCH_VALUES = (
-    ("branch-capacity", "Capacity (MW)", "capacity_mw"),
-    ("branch-dynamic-loss", "DynamicLoss (MW)", "dynamic_loss_mw"),
-    ("branch-fixed-loss", "FixedLoss (MW)", "fixed_loss_mw"),
-    ("branch-from-price", "FromBusPrice ($/MWh)", "from_bus_price_nzd_per_mwh"),
-    ("branch-to-price", "ToBusPrice ($/MWh)", "to_bus_price_nzd_per_mwh"),
-    ("branch-marginal-price", "BranchPrice ($/MWh)", "branch_price_nzd_per_mwh"),
-    ("branch-rentals", "BranchRentals ($)", "branch_rentals_nzd"),
+    ("branch-capacity", "Capacity (MW)", "capacity_mw", None),
+    ("branch-dynamic-loss", "DynamicLoss (MW)", "dynamic_loss_mw", None),
+    ("branch-fixed-loss", "FixedLoss (MW)", "fixed_loss_mw", None),
+    (
+        "branch-from-price",
+        "FromBusPrice ($/MWh)",
+        "from_bus_price_nzd_per_mwh",
+        "from_bus_price_interval",
+    ),
+    (
+        "branch-to-price",
+        "ToBusPrice ($/MWh)",
+        "to_bus_price_nzd_per_mwh",
+        "to_bus_price_interval",
+    ),
+    (
+        "branch-marginal-price",
+        "BranchPrice ($/MWh)",
+        "branch_price_nzd_per_mwh",
+        None,
+    ),
+    ("branch-rentals", "BranchRentals ($)", "branch_rentals_nzd", None),
 )
 _ISLAND_COMMON_VALUES = (
     ("island-generation", "Gen (MW)", "generation_mw"),
@@ -339,8 +357,9 @@ _PROJECTIONS = (
             reference_value,
             candidate_value,
             candidate_identity_normalizer=_pipe_tail,
+            candidate_interval=candidate_interval,
         )
-        for observable, reference_value, candidate_value in _BRANCH_VALUES
+        for observable, reference_value, candidate_value, candidate_interval in _BRANCH_VALUES
     ),
     _projection(
         "BusResults_TP",
@@ -350,6 +369,7 @@ _PROJECTIONS = (
         (*_CASE_TIME_CANDIDATE, "bus"),
         "Price ($/MWh)",
         "repaired_price_nzd_per_mwh",
+        candidate_interval="price_interval",
     ),
     *(
         _projection(
@@ -515,6 +535,7 @@ _PROJECTIONS = (
         (*_CASE_TIME_CANDIDATE, "node"),
         "Price ($/MWh)",
         "price_nzd_per_mwh",
+        candidate_interval="price_interval",
     ),
     *(
         _projection(

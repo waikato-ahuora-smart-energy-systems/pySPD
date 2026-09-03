@@ -50,6 +50,14 @@ Malformed, reversed, duplicate, or non-finite intervals fail closed. The
 selected scalar convention remains `export`; no CPLEX-specific endpoint rule
 has been introduced.
 
+The same containment rule governs every canonical price surface that carries
+an analytic interval: repaired bus prices, branch endpoint bus prices, node
+prices, daily averaged node prices, and published energy prices. Any reference
+value inside the source-derived interval is accepted as dual-equivalent; a
+value outside it remains an unresolved failure. The governed price/display
+tolerance is allowed only at the interval boundaries. Empty intervals continue
+to require ordinary scalar parity.
+
 ## Cumulative boundary
 
 The cumulative partial-rerun stream remains complete at 274 cases by retaining
