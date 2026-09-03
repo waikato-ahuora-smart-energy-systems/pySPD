@@ -12,13 +12,15 @@
 | Human approval | No separate independent reviewer required under project direction |
 
 The live criterion register is in [`gate-checklist.md`](gate-checklist.md).
-The six-day CPLEX corpus and the full 2019/2023 SCIP→HiGHS and SCIP→CLP
+The ten-day CPLEX corpus and the full designated-day SCIP→HiGHS and SCIP→CLP
 comparison are documented in the
 [`CPLEX reference corpus validation`](cplex-reference-corpus-validation.md).
 Both tested pathways are complete and optimal, but neither establishes exact
 CPLEX parity; SCIP→HiGHS remains the overall-fidelity default.
+Four additional SCIP→HiGHS full-day runs are documented in the
+[`expanded CPLEX analysis`](cplex-reference-expanded-four-days.md).
 The cross-corpus treatment of basis-dependent passive zero-flow prices is in
-the [`six-day CPLEX zero-flow analysis`](cplex-zero-flow-analysis-six-days.md).
+the [`ten-day CPLEX zero-flow analysis`](cplex-zero-flow-analysis-ten-days.md).
 
 Gate 12 owns the exact end-to-end validation intentionally removed from the
 amended Gate 8 boundary. It does not reopen or duplicate the Stage 8

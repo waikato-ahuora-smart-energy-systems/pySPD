@@ -1,0 +1,660 @@
+{
+  "days": [
+    {
+      "affected_node_case_count": 32,
+      "affected_nodes": [
+        "KIN1009",
+        "WPT1101"
+      ],
+      "case_count": 48,
+      "date": "20190218",
+      "endpoint_counts": {
+        "ambiguous": 2084,
+        "export": 1331,
+        "load": 1161
+      },
+      "load_endpoint_bus_only_count": 1129,
+      "load_endpoint_fraction": 0.4658908507223114,
+      "load_endpoint_node_counts": {
+        "KIN1009": 18,
+        "WPT1101": 14
+      },
+      "load_endpoint_node_projected_count": 32,
+      "maximum_new_base_node_difference": {
+        "absolute_difference": 0.5220814226605626,
+        "identity": [
+          "TP44",
+          "WPT1101"
+        ],
+        "signed_difference": -0.5220814226605626
+      },
+      "maximum_new_bus_difference": {
+        "absolute_difference": 2.0831508354342816,
+        "identity": [
+          "20190218",
+          "",
+          "18-FEB-2019 21:00",
+          "TP43",
+          "FHL_WPW2.1",
+          "781",
+          "291"
+        ],
+        "signed_difference": -2.0831508354342816
+      },
+      "maximum_new_node_case_difference": {
+        "absolute_difference": 0.5220814226605626,
+        "identity": [
+          "",
+          "18-feb-2019 21:30",
+          "TP44",
+          "WPT1101"
+        ],
+        "signed_difference": -0.5220814226605626
+      },
+      "maximum_new_published_difference": null,
+      "passive_zero_flow_endpoint_count": 4576,
+      "projected_endpoint_counts": {
+        "ambiguous": 1412,
+        "export": 78,
+        "load": 32
+      },
+      "year": 2019
+    },
+    {
+      "affected_node_case_count": 28,
+      "affected_nodes": [
+        "KIN1009",
+        "WPT1101"
+      ],
+      "case_count": 48,
+      "date": "20190516",
+      "endpoint_counts": {
+        "ambiguous": 2006,
+        "export": 1549,
+        "load": 1186
+      },
+      "load_endpoint_bus_only_count": 1158,
+      "load_endpoint_fraction": 0.43363802559414993,
+      "load_endpoint_node_counts": {
+        "KIN1009": 23,
+        "WPT1101": 5
+      },
+      "load_endpoint_node_projected_count": 28,
+      "maximum_new_base_node_difference": {
+        "absolute_difference": 0.07250839934511077,
+        "identity": [
+          "TP38",
+          "WPT1101"
+        ],
+        "signed_difference": -0.07250839934511077
+      },
+      "maximum_new_bus_difference": {
+        "absolute_difference": 1.5269874584676018,
+        "identity": [
+          "20190516",
+          "",
+          "16-MAY-2019 20:00",
+          "TP41",
+          "HEN_MPE2.3",
+          "762",
+          "30"
+        ],
+        "signed_difference": -1.5269874584676018
+      },
+      "maximum_new_node_case_difference": {
+        "absolute_difference": 0.07250839934511077,
+        "identity": [
+          "",
+          "16-may-2019 18:30",
+          "TP38",
+          "WPT1101"
+        ],
+        "signed_difference": -0.07250839934511077
+      },
+      "maximum_new_published_difference": null,
+      "passive_zero_flow_endpoint_count": 4741,
+      "projected_endpoint_counts": {
+        "ambiguous": 1238,
+        "export": 68,
+        "load": 28
+      },
+      "year": 2019
+    },
+    {
+      "affected_node_case_count": 35,
+      "affected_nodes": [
+        "KIN1009",
+        "WPT1101"
+      ],
+      "case_count": 48,
+      "date": "20190605",
+      "endpoint_counts": {
+        "ambiguous": 1856,
+        "export": 1491,
+        "load": 1165
+      },
+      "load_endpoint_bus_only_count": 1130,
+      "load_endpoint_fraction": 0.43862951807228917,
+      "load_endpoint_node_counts": {
+        "KIN1009": 26,
+        "WPT1101": 9
+      },
+      "load_endpoint_node_projected_count": 35,
+      "maximum_new_base_node_difference": {
+        "absolute_difference": 0.28939370474824955,
+        "identity": [
+          "TP25",
+          "WPT1101"
+        ],
+        "signed_difference": -0.28939370474824955
+      },
+      "maximum_new_bus_difference": {
+        "absolute_difference": 3.277611302755929,
+        "identity": [
+          "20190605",
+          "",
+          "05-JUN-2019 11:30",
+          "TP24",
+          "FHL_WPW2.1",
+          "788",
+          "294"
+        ],
+        "signed_difference": -3.277611302755929
+      },
+      "maximum_new_node_case_difference": {
+        "absolute_difference": 0.28939370474824955,
+        "identity": [
+          "",
+          "05-jun-2019 12:00",
+          "TP25",
+          "WPT1101"
+        ],
+        "signed_difference": -0.28939370474824955
+      },
+      "maximum_new_published_difference": null,
+      "passive_zero_flow_endpoint_count": 4512,
+      "projected_endpoint_counts": {
+        "ambiguous": 1088,
+        "export": 61,
+        "load": 35
+      },
+      "year": 2019
+    },
+    {
+      "affected_node_case_count": 32,
+      "affected_nodes": [
+        "KIN1009",
+        "WPT1101"
+      ],
+      "case_count": 48,
+      "date": "20190606",
+      "endpoint_counts": {
+        "ambiguous": 1912,
+        "export": 1477,
+        "load": 1209
+      },
+      "load_endpoint_bus_only_count": 1177,
+      "load_endpoint_fraction": 0.45011169024571857,
+      "load_endpoint_node_counts": {
+        "KIN1009": 20,
+        "WPT1101": 12
+      },
+      "load_endpoint_node_projected_count": 32,
+      "maximum_new_base_node_difference": {
+        "absolute_difference": 0.08314992743476068,
+        "identity": [
+          "TP16",
+          "KIN1009"
+        ],
+        "signed_difference": -0.08314992743476068
+      },
+      "maximum_new_bus_difference": {
+        "absolute_difference": 1.9170125403962004,
+        "identity": [
+          "20190606",
+          "",
+          "06-JUN-2019 07:00",
+          "TP15",
+          "FHL_WPW2.1",
+          "788",
+          "294"
+        ],
+        "signed_difference": -1.9170125403962004
+      },
+      "maximum_new_node_case_difference": {
+        "absolute_difference": 0.08314992743476068,
+        "identity": [
+          "",
+          "06-jun-2019 07:30",
+          "TP16",
+          "KIN1009"
+        ],
+        "signed_difference": -0.08314992743476068
+      },
+      "maximum_new_published_difference": null,
+      "passive_zero_flow_endpoint_count": 4598,
+      "projected_endpoint_counts": {
+        "ambiguous": 1144,
+        "export": 64,
+        "load": 32
+      },
+      "year": 2019
+    },
+    {
+      "affected_node_case_count": 23,
+      "affected_nodes": [
+        "KIN1009",
+        "WPT1101"
+      ],
+      "case_count": 48,
+      "date": "20190622",
+      "endpoint_counts": {
+        "ambiguous": 1957,
+        "export": 1503,
+        "load": 1233
+      },
+      "load_endpoint_bus_only_count": 1210,
+      "load_endpoint_fraction": 0.4506578947368421,
+      "load_endpoint_node_counts": {
+        "KIN1009": 17,
+        "WPT1101": 6
+      },
+      "load_endpoint_node_projected_count": 23,
+      "maximum_new_base_node_difference": {
+        "absolute_difference": 0.06776915659450822,
+        "identity": [
+          "TP45",
+          "WPT1101"
+        ],
+        "signed_difference": -0.06776915659450822
+      },
+      "maximum_new_bus_difference": {
+        "absolute_difference": 1.4256779663446224,
+        "identity": [
+          "20190622",
+          "",
+          "22-JUN-2019 17:30",
+          "TP36",
+          "FHL_WPW2.1",
+          "788",
+          "294"
+        ],
+        "signed_difference": -1.4256779663446224
+      },
+      "maximum_new_node_case_difference": {
+        "absolute_difference": 0.06776915659450822,
+        "identity": [
+          "",
+          "22-jun-2019 22:00",
+          "TP45",
+          "WPT1101"
+        ],
+        "signed_difference": -0.06776915659450822
+      },
+      "maximum_new_published_difference": null,
+      "passive_zero_flow_endpoint_count": 4693,
+      "projected_endpoint_counts": {
+        "ambiguous": 1258,
+        "export": 73,
+        "load": 23
+      },
+      "year": 2019
+    },
+    {
+      "affected_node_case_count": 23,
+      "affected_nodes": [
+        "KIN1009",
+        "WPT1101"
+      ],
+      "case_count": 294,
+      "date": "20230126",
+      "endpoint_counts": {
+        "ambiguous": 20034,
+        "export": 14583,
+        "load": 1495
+      },
+      "load_endpoint_bus_only_count": 1472,
+      "load_endpoint_fraction": 0.09298420201517602,
+      "load_endpoint_node_counts": {
+        "KIN1009": 11,
+        "WPT1101": 12
+      },
+      "load_endpoint_node_projected_count": 23,
+      "maximum_new_base_node_difference": {
+        "absolute_difference": 0.04524990369766816,
+        "identity": [
+          "TP46",
+          "WPT1101"
+        ],
+        "signed_difference": -0.04524990369766816
+      },
+      "maximum_new_bus_difference": {
+        "absolute_difference": 2.912545907584615,
+        "identity": [
+          "20230126",
+          "251012023011115212",
+          "26-JAN-2023 00:15",
+          "TP1",
+          "FHL_WPW2.1",
+          "803",
+          "302"
+        ],
+        "signed_difference": -2.912545907584615
+      },
+      "maximum_new_node_case_difference": {
+        "absolute_difference": 0.19394897515672938,
+        "identity": [
+          "261302023010800656",
+          "26-jan-2023 21:30",
+          "TP44",
+          "WPT1101"
+        ],
+        "signed_difference": -0.19394897515672938
+      },
+      "maximum_new_published_difference": {
+        "absolute_difference": 0.04939019653441932,
+        "identity": [
+          "TP37",
+          "WPT1101"
+        ],
+        "signed_difference": -0.04939019653441932
+      },
+      "passive_zero_flow_endpoint_count": 36112,
+      "projected_endpoint_counts": {
+        "ambiguous": 6271,
+        "export": 566,
+        "load": 23
+      },
+      "year": 2023
+    },
+    {
+      "affected_node_case_count": 36,
+      "affected_nodes": [
+        "KIN1009",
+        "RFN1102",
+        "WPT1101"
+      ],
+      "case_count": 321,
+      "date": "20230214",
+      "endpoint_counts": {
+        "ambiguous": 28402,
+        "export": 14046,
+        "load": 3137
+      },
+      "load_endpoint_bus_only_count": 3101,
+      "load_endpoint_fraction": 0.18256416225338998,
+      "load_endpoint_node_counts": {
+        "KIN1009": 18,
+        "RFN1102": 1,
+        "WPT1101": 17
+      },
+      "load_endpoint_node_projected_count": 36,
+      "maximum_new_base_node_difference": {
+        "absolute_difference": 0.012864609019911674,
+        "identity": [
+          "TP4",
+          "WPT1101"
+        ],
+        "signed_difference": -0.012864609019911674
+      },
+      "maximum_new_bus_difference": {
+        "absolute_difference": 1.179202936372704,
+        "identity": [
+          "20230214",
+          "131012023021235992",
+          "14-FEB-2023 01:35",
+          "TP4",
+          "FHL_WPW2.1",
+          "805",
+          "302"
+        ],
+        "signed_difference": -1.179202936372704
+      },
+      "maximum_new_node_case_difference": {
+        "absolute_difference": 0.08392657382265156,
+        "identity": [
+          "141012023020800437",
+          "14-feb-2023 21:00",
+          "TP43",
+          "WPT1101"
+        ],
+        "signed_difference": -0.08392657382265156
+      },
+      "maximum_new_published_difference": {
+        "absolute_difference": 0.013722249621239118,
+        "identity": [
+          "TP4",
+          "WPT1101"
+        ],
+        "signed_difference": -0.013722249621239118
+      },
+      "passive_zero_flow_endpoint_count": 45585,
+      "projected_endpoint_counts": {
+        "ambiguous": 7834,
+        "export": 651,
+        "load": 36
+      },
+      "year": 2023
+    },
+    {
+      "affected_node_case_count": 16,
+      "affected_nodes": [
+        "BPT1101",
+        "KIN1009",
+        "WPT1101"
+      ],
+      "case_count": 305,
+      "date": "20230802",
+      "endpoint_counts": {
+        "ambiguous": 20557,
+        "export": 14620,
+        "load": 1831
+      },
+      "load_endpoint_bus_only_count": 1815,
+      "load_endpoint_fraction": 0.11130022491033979,
+      "load_endpoint_node_counts": {
+        "BPT1101": 2,
+        "KIN1009": 6,
+        "WPT1101": 8
+      },
+      "load_endpoint_node_projected_count": 16,
+      "maximum_new_base_node_difference": {
+        "absolute_difference": 0.01857988497441657,
+        "identity": [
+          "TP43",
+          "WPT1101"
+        ],
+        "signed_difference": -0.01857988497441657
+      },
+      "maximum_new_bus_difference": {
+        "absolute_difference": 9.170335170592011,
+        "identity": [
+          "20230802",
+          "21012023080605607",
+          "02-AUG-2023 18:05",
+          "TP37",
+          "FHL_WPW2.1",
+          "806",
+          "296"
+        ],
+        "signed_difference": -9.170335170592011
+      },
+      "maximum_new_node_case_difference": {
+        "absolute_difference": 0.130059194820916,
+        "identity": [
+          "21302023080830661",
+          "02-aug-2023 21:00",
+          "TP43",
+          "WPT1101"
+        ],
+        "signed_difference": -0.130059194820916
+      },
+      "maximum_new_published_difference": {
+        "absolute_difference": 0.016657335297566078,
+        "identity": [
+          "TP48",
+          "WPT1101"
+        ],
+        "signed_difference": -0.016657335297566078
+      },
+      "passive_zero_flow_endpoint_count": 37008,
+      "projected_endpoint_counts": {
+        "ambiguous": 4661,
+        "export": 884,
+        "load": 16
+      },
+      "year": 2023
+    },
+    {
+      "affected_node_case_count": 18,
+      "affected_nodes": [
+        "BPT1101",
+        "KIN1009"
+      ],
+      "case_count": 274,
+      "date": "20230922",
+      "endpoint_counts": {
+        "ambiguous": 22785,
+        "export": 11475,
+        "load": 2102
+      },
+      "load_endpoint_bus_only_count": 2084,
+      "load_endpoint_fraction": 0.15482065257420638,
+      "load_endpoint_node_counts": {
+        "BPT1101": 2,
+        "KIN1009": 16
+      },
+      "load_endpoint_node_projected_count": 18,
+      "maximum_new_base_node_difference": {
+        "absolute_difference": 0.023973881445281602,
+        "identity": [
+          "TP25",
+          "KIN1009"
+        ],
+        "signed_difference": -0.023973881445281602
+      },
+      "maximum_new_bus_difference": {
+        "absolute_difference": 1.9092541105319185,
+        "identity": [
+          "20230922",
+          "211012023091925603",
+          "22-SEP-2023 07:25",
+          "TP15",
+          "FHL_WPW2.1",
+          "804",
+          "295"
+        ],
+        "signed_difference": -1.9092541105319185
+      },
+      "maximum_new_node_case_difference": {
+        "absolute_difference": 0.0701118539537049,
+        "identity": [
+          "221012023090420792",
+          "22-sep-2023 16:20",
+          "TP33",
+          "KIN1009"
+        ],
+        "signed_difference": -0.0701118539537049
+      },
+      "maximum_new_published_difference": {
+        "absolute_difference": 0.02303787907459238,
+        "identity": [
+          "TP25",
+          "KIN1009"
+        ],
+        "signed_difference": -0.02303787907459238
+      },
+      "passive_zero_flow_endpoint_count": 36362,
+      "projected_endpoint_counts": {
+        "ambiguous": 5061,
+        "export": 639,
+        "load": 18
+      },
+      "year": 2023
+    },
+    {
+      "affected_node_case_count": 13,
+      "affected_nodes": [
+        "KIN1009"
+      ],
+      "case_count": 297,
+      "date": "20231124",
+      "endpoint_counts": {
+        "ambiguous": 23012,
+        "export": 14368,
+        "load": 2113
+      },
+      "load_endpoint_bus_only_count": 2100,
+      "load_endpoint_fraction": 0.1282082397912748,
+      "load_endpoint_node_counts": {
+        "KIN1009": 13
+      },
+      "load_endpoint_node_projected_count": 13,
+      "maximum_new_base_node_difference": {
+        "absolute_difference": 0.0252827774962116,
+        "identity": [
+          "TP25",
+          "KIN1009"
+        ],
+        "signed_difference": -0.0252827774962116
+      },
+      "maximum_new_bus_difference": {
+        "absolute_difference": 3.727092594490557,
+        "identity": [
+          "20231124",
+          "231012023112020826",
+          "24-NOV-2023 09:20",
+          "TP19",
+          "HEN_MPE1.3",
+          "779",
+          "29"
+        ],
+        "signed_difference": -3.727092594490557
+      },
+      "maximum_new_node_case_difference": {
+        "absolute_difference": 0.09340914890577778,
+        "identity": [
+          "231012023112200869",
+          "24-nov-2023 11:00",
+          "TP23",
+          "KIN1009"
+        ],
+        "signed_difference": -0.09340914890577778
+      },
+      "maximum_new_published_difference": {
+        "absolute_difference": 0.030707555305726893,
+        "identity": [
+          "TP25",
+          "KIN1009"
+        ],
+        "signed_difference": -0.030707555305726893
+      },
+      "passive_zero_flow_endpoint_count": 39493,
+      "projected_endpoint_counts": {
+        "ambiguous": 6929,
+        "export": 338,
+        "load": 13
+      },
+      "year": 2023
+    }
+  ],
+  "profile": "cplex-passive-zero-flow-endpoint-analysis-v1",
+  "schema_version": 1,
+  "scope": "All six deterministic CPLEX reference-corpus days",
+  "totals": {
+    "affected_node_case_count": 256,
+    "affected_nodes": [
+      "BPT1101",
+      "KIN1009",
+      "RFN1102",
+      "WPT1101"
+    ],
+    "ambiguous_endpoint_count": 124605,
+    "case_count": 1731,
+    "export_endpoint_count": 76443,
+    "load_endpoint_bus_only_count": 16376,
+    "load_endpoint_count": 16632,
+    "load_endpoint_node_projected_count": 256,
+    "passive_zero_flow_endpoint_count": 217680
+  }
+}

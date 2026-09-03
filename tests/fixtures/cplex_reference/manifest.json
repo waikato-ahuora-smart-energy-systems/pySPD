@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "profile": "pyspd-cplex-reference-day-corpus-v1",
+  "profile": "pyspd-cplex-reference-day-corpus-v2",
   "selection": {
-    "algorithm": "For each eligible input, sort ascending by SHA-256(seed|year|date|filename) and retain the first three per year.",
+    "algorithm": "For each eligible input, sort ascending by SHA-256(seed|year|date|filename) and retain the first five per year.",
     "seed": "pyspd-cplex-reference-sample-v1",
     "eligible_2019_dates": "Dates having exactly one unambiguous final-pricing GDX after excluding collision-suffixed variants.",
     "eligible_2023_dates": "Dates having exactly one Pricing_YYYYMMDD.gdx input."
@@ -51,6 +51,34 @@
       "result_tree_sha256": "80dbab5951785c6e00e9bd4de387e9572b271c7ac5fde800e47fe41e84be5deb"
     },
     {
+      "year": 2019,
+      "date": "2019-05-16",
+      "execution_day": true,
+      "input_schema": "vspd-v3-final-pricing",
+      "input": "2019/20190516/input/FP_20190516_F.gdx",
+      "input_bytes": 5601229,
+      "input_sha256": "44636b4f211af080bf03185c714c41ffddd96c6012da0904e440703c595aee17",
+      "selection_score": "01faf75eae2dba3a78cf845a8446aed2f6fc038037135ff69ccd01f91a313174",
+      "result_file_count": 14,
+      "summary_rows": 48,
+      "result_bytes": 10583793,
+      "result_tree_sha256": "fe9e557347562cf66de771dca3f571119604b0b55564b80295b39142491f26a3"
+    },
+    {
+      "year": 2019,
+      "date": "2019-06-06",
+      "execution_day": true,
+      "input_schema": "vspd-v3-final-pricing",
+      "input": "2019/20190606/input/FP_20190606_F.gdx",
+      "input_bytes": 5584774,
+      "input_sha256": "385d33e1e041a998802acd3228907f8367fa714274fea8701156efa265b8e8dc",
+      "selection_score": "0212361782c6fdbd837367d909941b92e961bd9885ebdc18951581f24c4adcb1",
+      "result_file_count": 14,
+      "summary_rows": 48,
+      "result_bytes": 10592659,
+      "result_tree_sha256": "2fa7c343dd94ae95bb039f9d2888f8ebd07d807aec0b1e0aa746946ba743c42b"
+    },
+    {
       "year": 2023,
       "date": "2023-08-02",
       "execution_day": true,
@@ -91,6 +119,34 @@
       "summary_rows": 294,
       "result_bytes": 77380939,
       "result_tree_sha256": "7ff0591d871f6fdc57b877d406911be9d7aab2eca08e89991fdd30e1201bf43a"
+    },
+    {
+      "year": 2023,
+      "date": "2023-11-24",
+      "execution_day": true,
+      "input_schema": "vspd-v5.0.6",
+      "input": "2023/20231124/input/Pricing_20231124.gdx",
+      "input_bytes": 41505262,
+      "input_sha256": "90578d17d7f3cb2d3b1844afbd4ac7cc68e4b1422aa2ddd35046d67ff3949424",
+      "selection_score": "02f88751f56fb50ec0159a7b668e39ef19c3711e96880b4a1daa136a7873445f",
+      "result_file_count": 13,
+      "summary_rows": 297,
+      "result_bytes": 78650015,
+      "result_tree_sha256": "e205d5b3b75eb2dd00a4117a7f916d29e67f6e0d4d9a88263d3cad83d487fa0c"
+    },
+    {
+      "year": 2023,
+      "date": "2023-09-22",
+      "execution_day": true,
+      "input_schema": "vspd-v5.0.6",
+      "input": "2023/20230922/input/Pricing_20230922.gdx",
+      "input_bytes": 38124385,
+      "input_sha256": "70dffe5c416eed90ffb31925d48293fc785a063dcbacb3367fca815587c9e5fc",
+      "selection_score": "038275ab5555e786a5b3f4a3f009ef1f639600b6c0b41fba02359a756da3479c",
+      "result_file_count": 13,
+      "summary_rows": 274,
+      "result_bytes": 72146083,
+      "result_tree_sha256": "6672c7761d44c614e4856c021a91c213e199c57e6109eaa4e7425ce57da4c190"
     }
   ]
 }

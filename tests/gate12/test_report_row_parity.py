@@ -71,6 +71,14 @@ def test_node_rows_compare_at_authority_display_precision() -> None:
     assert result.passed
     assert result.tables[0].compared_value_count == 1
     assert result.tables[0].maximum_absolute_error == "0.00004"
+    assert result.tables[0].maximum_difference is not None
+    assert result.tables[0].maximum_difference.observable == "node-price"
+    assert result.tables[0].maximum_difference.identity == (
+        "case",
+        "time",
+        "NODE",
+        "node-price",
+    )
 
 
 def test_node_row_above_half_display_unit_fails() -> None:

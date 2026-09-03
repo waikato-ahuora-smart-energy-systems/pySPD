@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Historical CPLEX authority evidence is hash-bound byte-for-byte. Preserve
+# its source line endings so clean checkouts reproduce the manifest hashes.
+tests/fixtures/cplex_reference/**/results/*.csv -text

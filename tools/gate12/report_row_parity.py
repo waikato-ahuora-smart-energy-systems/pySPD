@@ -680,6 +680,7 @@ class ReportRowTableResult:
     certified_difference_count: int
     above_precision_count: int
     maximum_absolute_error: str
+    maximum_difference: ReportValueDifference | None
     missing_identity_examples: tuple[tuple[str, ...], ...]
     extra_identity_examples: tuple[tuple[str, ...], ...]
     differences: tuple[ReportValueDifference, ...]
@@ -704,6 +705,11 @@ class ReportRowTableResult:
             "certified_difference_count": self.certified_difference_count,
             "above_precision_count": self.above_precision_count,
             "maximum_absolute_error": self.maximum_absolute_error,
+            "maximum_difference": (
+                self.maximum_difference.to_dict()
+                if self.maximum_difference is not None
+                else None
+            ),
             "missing_identity_examples": [
                 list(identity) for identity in self.missing_identity_examples
             ],
@@ -864,6 +870,7 @@ class ReportRowParityValidator:
         candidate_rows = self._rows(candidate_table, "candidate")
         compared = missing = extra = certified = above = 0
         maximum = Decimal(0)
+        maximum_difference: ReportValueDifference | None = None
         missing_examples: list[tuple[str, ...]] = []
         extra_examples: list[tuple[str, ...]] = []
         differences: list[ReportValueDifference] = []
@@ -907,10 +914,19 @@ class ReportRowParityValidator:
                 reference_value = self._decimal(reference_text)
                 candidate_value = self._decimal(candidate_text)
                 absolute_error = abs(reference_value - candidate_value)
-                maximum = max(maximum, absolute_error)
                 exponent = cast(int, reference_value.as_tuple().exponent)
                 half_unit = Decimal(5).scaleb(exponent - 1)
                 tolerance = self._acceptance_tolerance(projection.observable, half_unit)
+                if absolute_error > maximum:
+                    maximum = absolute_error
+                    maximum_difference = ReportValueDifference(
+                        projection.observable,
+                        key,
+                        reference_text,
+                        candidate_text,
+                        format(absolute_error, "f"),
+                        format(tolerance, "f"),
+                    )
                 compared += 1
                 if absolute_error <= tolerance:
                     if absolute_error > half_unit:
@@ -964,6 +980,7 @@ class ReportRowParityValidator:
             certified_difference_count=certified,
             above_precision_count=above,
             maximum_absolute_error=format(maximum, "f"),
+            maximum_difference=maximum_difference,
             missing_identity_examples=tuple(missing_examples),
             extra_identity_examples=tuple(extra_examples),
             differences=tuple(differences),

@@ -26,17 +26,28 @@ def _result_tree_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def test_six_day_cplex_reference_corpus_is_complete_and_hash_bound() -> None:
+def test_ten_day_cplex_reference_corpus_is_complete_and_hash_bound() -> None:
     manifest = json.loads((CORPUS / "manifest.json").read_text(encoding="utf-8"))
 
-    assert manifest["profile"] == "pyspd-cplex-reference-day-corpus-v1"
-    assert len(manifest["days"]) == 6
-    assert [day["year"] for day in manifest["days"]].count(2019) == 3
-    assert [day["year"] for day in manifest["days"]].count(2023) == 3
+    assert manifest["profile"] == "pyspd-cplex-reference-day-corpus-v2"
+    assert len(manifest["days"]) == 10
+    assert [day["year"] for day in manifest["days"]].count(2019) == 5
+    assert [day["year"] for day in manifest["days"]].count(2023) == 5
     assert [day["year"] for day in manifest["days"] if day["execution_day"]] == [
         2019,
+        2019,
+        2019,
+        2023,
+        2023,
         2023,
     ]
+    for year in (2019, 2023):
+        scores = [
+            day["selection_score"]
+            for day in manifest["days"]
+            if day["year"] == year
+        ]
+        assert scores == sorted(scores)
 
     for day in manifest["days"]:
         input_path = CORPUS / day["input"]

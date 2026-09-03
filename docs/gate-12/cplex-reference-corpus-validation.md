@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Evidence date | 2026-09-03 |
+| Evidence date | 2026-09-04 |
 | Environment | macOS arm64 |
 | CPLEX authority | User-supplied vSPD solved-result archive |
 | Candidate pathways | SCIP MIP → HiGHS fixed-RMIP; SCIP MIP → CLP fixed-RMIP |
@@ -28,7 +28,7 @@ on the count of published-energy prices and on the worst 2023 summary-cost
 difference, so the evidence does not support claiming that either backend
 dominates on every output surface.
 
-## Immutable six-day corpus
+## Immutable ten-day corpus
 
 The repository-local corpus is in
 [`tests/fixtures/cplex_reference`](../../tests/fixtures/cplex_reference). Its
@@ -38,13 +38,15 @@ verified by `tests/data/test_cplex_reference_corpus.py`.
 
 | Year | Selected dates | Execution date | Schema |
 |---|---|---|---|
-| 2019 | 2019-02-18, 2019-06-05, 2019-06-22 | 2019-06-22 | `vspd-v3-final-pricing` |
-| 2023 | 2023-01-26, 2023-02-14, 2023-08-02 | 2023-08-02 | `vspd-v5.0.6` |
+| 2019 | 2019-02-18, 2019-05-16, 2019-06-05, 2019-06-06, 2019-06-22 | 2019-06-22 | `vspd-v3-final-pricing` |
+| 2023 | 2023-01-26, 2023-02-14, 2023-08-02, 2023-09-22, 2023-11-24 | 2023-08-02 | `vspd-v5.0.6` |
 
-The deterministic random sample contains 87 authority files: six input GDX
-files and 81 result CSV files. Their combined size is 418,140,600 bytes
-(398.77 MiB). Every one of the 1,064 sampled CPLEX summary rows reports solve
-status 1.
+The deterministic random sample contains 145 authority files: ten input GDX
+files and 135 result CSV files. Their combined size is 680,928,800 bytes
+(649.38 MiB). Every one of the 1,731 sampled CPLEX summary rows reports solve
+status 1. The fourth- and fifth-ranked dates in each year were subsequently
+replayed through SCIP → HiGHS; see
+[`cplex-reference-expanded-four-days.md`](cplex-reference-expanded-four-days.md).
 
 ## Validation boundary
 
@@ -188,11 +190,11 @@ price is `773.0625328434725` versus CPLEX `773.0625333333334` (difference
 All six SCIP MIP and HiGHS fixed-RMIP solves were optimal. See
 [`wpt1101-cplex-parity-20230802.md`](wpt1101-cplex-parity-20230802.md).
 
-The corresponding all-six-day analysis finds 10,022 CPLEX load-endpoint
-choices, of which 9,857 have no nonzero node allocation and therefore affect
-only raw reporting. The 165 node-projected observations are bounded and remain
+The expanded ten-day analysis finds 16,632 CPLEX load-endpoint choices, of
+which 16,376 have no nonzero node allocation and therefore affect only raw
+reporting. The 256 node-projected observations are bounded and remain
 explicit output-parity evidence; see
-[`cplex-zero-flow-analysis-six-days.md`](cplex-zero-flow-analysis-six-days.md).
+[`cplex-zero-flow-analysis-ten-days.md`](cplex-zero-flow-analysis-ten-days.md).
 
 The HiGHS risk identity mismatch is a different risk-setter selection on an
 equal maximum-risk surface; CLP selected the CPLEX setter for those rows. Large

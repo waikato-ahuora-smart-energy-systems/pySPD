@@ -257,6 +257,7 @@ def _accumulate_table_total(totals: dict[str, dict[str, Any]], table: Any) -> No
             "certified_difference_count": 0,
             "above_precision_count": 0,
             "maximum_absolute_error": "0",
+            "maximum_difference": None,
         },
     )
     for name in (
@@ -267,13 +268,14 @@ def _accumulate_table_total(totals: dict[str, dict[str, Any]], table: Any) -> No
         "above_precision_count",
     ):
         total[name] += int(getattr(table, name))
-    total["maximum_absolute_error"] = format(
-        max(
-            Decimal(total["maximum_absolute_error"]),
-            Decimal(table.maximum_absolute_error),
-        ),
-        "f",
-    )
+    table_maximum = Decimal(table.maximum_absolute_error)
+    if table_maximum > Decimal(total["maximum_absolute_error"]):
+        total["maximum_absolute_error"] = format(table_maximum, "f")
+        total["maximum_difference"] = (
+            table.maximum_difference.to_dict()
+            if table.maximum_difference is not None
+            else None
+        )
 
 
 def _case_reference(

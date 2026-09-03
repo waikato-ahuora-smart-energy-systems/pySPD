@@ -4,11 +4,13 @@ This directory is a repository-local, immutable correctness corpus copied from
 the user-supplied vSPD archive. Each sampled day contains the original input
 GDX and the complete set of CPLEX-produced CSV results available for that day.
 
-The six dates were selected reproducibly: eligible dates were scored with
+The ten dates were selected reproducibly: eligible dates were scored with
 SHA-256 over `pyspd-cplex-reference-sample-v1|year|YYYYMMDD|input_filename`, then
-the three lowest scores in each year were retained. For 2019, only dates with
+the five lowest scores in each year were retained. For 2019, only dates with
 one unambiguous final-pricing GDX were eligible. The lowest-scoring day in each
-year is the designated two-path execution day.
+year is the designated two-path execution day. The fourth- and fifth-ranked
+days in each year are designated SCIP-to-HiGHS execution days for the expanded
+validation.
 
 `manifest.json` records the selection scores, byte sizes, input hashes, result
 tree hashes, and expected result-file counts. A result tree hash is SHA-256 over

@@ -50,6 +50,7 @@ from pyspd.solver import (
     SolverBackend,
     SolverConfiguration,
     SolveResult,
+    SolverExecutionError,
 )
 
 type Key = tuple[str, ...]
@@ -342,29 +343,39 @@ class HvdcSolvePolicy(SolvePolicy):
         *,
         warm_start: bool = False,
     ) -> MipSolveResult:
-        return NativeScipBackend().solve_mip(
-            built.model,
-            SolverConfiguration(
-                {
-                    "time_limit_seconds": 300.0,
-                    "relative_gap": 0.0,
-                    "threads": 1,
-                    # The complete historical prefix establishes 1e-6 as the
-                    # stable qualified SCIP setting. Tighter settings can make
-                    # SoPlex reject otherwise valid full-size vSPD cases; the
-                    # fixed-HiGHS objective is retained separately for parity.
-                    "numerics/feastol": _SCIP_PRIMAL_FEASIBILITY_TOLERANCE,
-                    "lp/initalgorithm": "d",
-                    "lp/resolvealgorithm": "d",
-                    # Legacy daily inputs contain large inactive-period
-                    # symmetries.  SCIP's symmetry cuts are unnecessary for
-                    # vSPD's small active binary surface and can make SoPlex
-                    # numerically unstable on those otherwise valid models.
-                    "misc/usesymmetry": 0,
-                }
-            ),
-            warm_start_discrete=warm_start,
-        )
+        options: dict[str, int | float | str] = {
+            "time_limit_seconds": 300.0,
+            "relative_gap": 0.0,
+            "threads": 1,
+            # The complete historical prefix establishes 1e-6 as the stable
+            # qualified SCIP setting. Tighter settings can make SoPlex reject
+            # otherwise valid full-size vSPD cases; the fixed-HiGHS objective
+            # is retained separately for parity.
+            "numerics/feastol": _SCIP_PRIMAL_FEASIBILITY_TOLERANCE,
+            "lp/initalgorithm": "d",
+            "lp/resolvealgorithm": "d",
+            # Legacy daily inputs contain large inactive-period symmetries.
+            # SCIP's symmetry cuts are unnecessary for vSPD's small active
+            # binary surface and can make SoPlex numerically unstable.
+            "misc/usesymmetry": 0,
+        }
+        try:
+            return NativeScipBackend().solve_mip(
+                built.model,
+                SolverConfiguration(options),
+                warm_start_discrete=warm_start,
+            )
+        except SolverExecutionError as error:
+            if "LP solver" not in str(error):
+                raise
+            # Some legacy matrices make SoPlex fail after SCIP presolve even
+            # though the original matrix solves to optimality. Retry the same
+            # model without presolve; no formulation data or tolerances change.
+            return NativeScipBackend().solve_mip(
+                built.model,
+                SolverConfiguration(options | {"presolving/maxrounds": 0}),
+                warm_start_discrete=warm_start,
+            )
 
     @staticmethod
     def _solve_highs(

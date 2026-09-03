@@ -27,7 +27,13 @@ from pyspd.hvdc.formulation import (
     _fix_continuous_state,
     pricing_model_belongs_to_request,
 )
-from pyspd.solver import CbcBackend, ClpBackend, HighsBackend, NativeScipBackend
+from pyspd.solver import (
+    CbcBackend,
+    ClpBackend,
+    HighsBackend,
+    NativeScipBackend,
+    SolverExecutionError,
+)
 from tests.hvdc.conftest import make_hvdc_case
 
 
@@ -61,6 +67,42 @@ def test_primary_scip_uses_corpus_stable_feasibility_tolerance(monkeypatch) -> N
     assert captured["lp/resolvealgorithm"] == "d"
     assert captured["misc/usesymmetry"] == 0
     assert captured["warm_start_discrete"] is False
+
+
+def test_primary_scip_retries_lp_solver_error_without_presolve(monkeypatch) -> None:
+    captured = []
+    sentinel = object()
+
+    def capture(_backend, _model, configuration, *, warm_start_discrete=False):
+        captured.append((dict(configuration.options), warm_start_discrete))
+        if len(captured) == 1:
+            raise SolverExecutionError("native SCIP execution error: LP solver")
+        return sentinel
+
+    monkeypatch.setattr(NativeScipBackend, "solve_mip", capture)
+
+    assert HvdcSolvePolicy._solve_scip(
+        build(make_hvdc_case(enforce=True)), warm_start=True
+    ) is sentinel
+    assert "presolving/maxrounds" not in captured[0][0]
+    assert captured[1][0]["presolving/maxrounds"] == 0
+    assert captured[0][1] is True
+    assert captured[1][1] is True
+
+
+def test_primary_scip_does_not_retry_unrelated_execution_error(monkeypatch) -> None:
+    calls = 0
+
+    def capture(_backend, _model, _configuration, *, warm_start_discrete=False):
+        nonlocal calls
+        calls += 1
+        raise SolverExecutionError("native SCIP execution error: invalid option")
+
+    monkeypatch.setattr(NativeScipBackend, "solve_mip", capture)
+
+    with pytest.raises(SolverExecutionError, match="invalid option"):
+        HvdcSolvePolicy._solve_scip(build(make_hvdc_case(enforce=True)))
+    assert calls == 1
 
 
 def test_fixed_rmip_uses_gams_highs_tolerances(monkeypatch) -> None:

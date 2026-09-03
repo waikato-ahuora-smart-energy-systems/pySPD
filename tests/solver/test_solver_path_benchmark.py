@@ -6,7 +6,12 @@ from tools.benchmark_solver_paths import (
     _finish_payload,
     _published_price_rows,
 )
-from tools.compare_cplex_reference import _base_node_candidate_rows, _load_reference
+from tools.compare_cplex_reference import (
+    _accumulate_table_total,
+    _base_node_candidate_rows,
+    _load_reference,
+)
+from tools.gate12.report_row_parity import ReportValueDifference
 
 
 def test_case_execution_retries_only_orchestration_failures() -> None:
@@ -174,3 +179,37 @@ def test_published_price_rows_preserve_energy_reserve_weights_and_identity() -> 
             "date_time": "01-JAN-2024 00:00",
         },
     ]
+
+
+def test_cplex_table_total_retains_auditable_maximum_identity() -> None:
+    difference = ReportValueDifference(
+        observable="system-ofv",
+        identity=("case", "time", "system-ofv"),
+        reference_value="100",
+        candidate_value="103",
+        absolute_error="3",
+        authority_half_unit="0.5",
+    )
+    table = SimpleNamespace(
+        reference_table="SummaryResults_TP",
+        candidate_table="summary",
+        compared_value_count=1,
+        missing_identity_count=0,
+        extra_identity_count=0,
+        certified_difference_count=0,
+        above_precision_count=1,
+        maximum_absolute_error="3",
+        maximum_difference=difference,
+    )
+    totals = {}
+
+    _accumulate_table_total(totals, table)
+
+    assert totals["SummaryResults_TP"]["maximum_difference"] == {
+        "observable": "system-ofv",
+        "identity": ["case", "time", "system-ofv"],
+        "reference_value": "100",
+        "candidate_value": "103",
+        "absolute_error": "3",
+        "authority_half_unit": "0.5",
+    }
