@@ -9,6 +9,9 @@ from tools.merge_solver_path_shards import _accumulate_published, _validate
 
 def test_shard_publication_accumulator_preserves_authoritative_weights() -> None:
     energy: dict[tuple[str, str], float] = defaultdict(float)
+    energy_lower: dict[tuple[str, str], float] = defaultdict(float)
+    energy_upper: dict[tuple[str, str], float] = defaultdict(float)
+    interval_keys: set[tuple[str, str]] = set()
     reserve: dict[tuple[str, str, str], float] = defaultdict(float)
     seconds: dict[str, float] = defaultdict(float)
     date_time: dict[str, str] = {}
@@ -20,11 +23,31 @@ def test_shard_publication_accumulator_preserves_authoritative_weights() -> None
             "node": [[["C1", "D1", "N1"], 20.0.hex()]],
             "reserve": [[["C1", "D1", "NI", "FIR"], 2.0.hex()]],
         },
+        "reports": {
+            "node": [
+                {
+                    "node": "N1",
+                    "price_interval": "[19.0,21.0]",
+                }
+            ]
+        },
     }
 
-    _accumulate_published(record, energy, reserve, seconds, date_time)
+    _accumulate_published(
+        record,
+        energy,
+        reserve,
+        seconds,
+        date_time,
+        energy_lower_numerator=energy_lower,
+        energy_upper_numerator=energy_upper,
+        energy_interval_keys=interval_keys,
+    )
 
     assert energy == {("TP1", "N1"): 6000.0}
+    assert energy_lower == {("TP1", "N1"): 5700.0}
+    assert energy_upper == {("TP1", "N1"): 6300.0}
+    assert interval_keys == {("TP1", "N1")}
     assert reserve == {("TP1", "NI", "FIR"): 600.0}
     assert seconds == {"TP1": 300.0}
     assert date_time == {"TP1": "01-JAN-2024 00:00"}

@@ -26,14 +26,40 @@ from tools.merge_solver_path_shards import _accumulate_published
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", required=True, type=Path)
-    parser.add_argument("--replacement", required=True, type=Path)
+    parser.add_argument(
+        "--replacement",
+        action="append",
+        required=True,
+        type=Path,
+        help="targeted summary to apply; repeat for disjoint replacement sets",
+    )
     parser.add_argument("--output", required=True, type=Path)
     arguments = parser.parse_args()
 
     base = json.loads(arguments.base.read_text(encoding="utf-8"))
-    replacement = json.loads(arguments.replacement.read_text(encoding="utf-8"))
-    base_run, replacement_run = _compatible_runs(base, replacement)
-    replacement_records = _load_unique_records(Path(replacement_run["records_path"]))
+    replacements = [
+        (path, json.loads(path.read_text(encoding="utf-8")))
+        for path in arguments.replacement
+    ]
+    base_run = base["runs"][0]
+    replacement_records: dict[str, dict[str, Any]] = {}
+    replacement_manifests: list[dict[str, Any]] = []
+    for path, replacement in replacements:
+        _, replacement_run = _compatible_runs(base, replacement)
+        records = _load_unique_records(Path(replacement_run["records_path"]))
+        duplicate = sorted(set(replacement_records) & set(records))
+        if duplicate:
+            raise ValueError(
+                "replacement summaries overlap cases: " + ", ".join(duplicate)
+            )
+        replacement_records.update(records)
+        replacement_manifests.append(
+            {
+                "summary": str(path),
+                "summary_sha256": _file_sha256(path),
+                "case_ids": sorted(records),
+            }
+        )
 
     profile = base_run["profile"]
     records_path = _records_path(arguments.output, profile)
@@ -71,13 +97,22 @@ def main() -> None:
         if key not in {"runs", "logical_sha256"}
     }
     payload["runs"] = [run]
-    payload["record_substitution"] = {
+    substitution: dict[str, Any] = {
         "base_summary": str(arguments.base),
         "base_summary_sha256": _file_sha256(arguments.base),
-        "replacement_summary": str(arguments.replacement),
-        "replacement_summary_sha256": _file_sha256(arguments.replacement),
         "case_ids": sorted(replacement_records),
     }
+    if len(replacement_manifests) == 1:
+        manifest = replacement_manifests[0]
+        substitution.update(
+            {
+                "replacement_summary": manifest["summary"],
+                "replacement_summary_sha256": manifest["summary_sha256"],
+            }
+        )
+    else:
+        substitution["replacement_summaries"] = replacement_manifests
+    payload["record_substitution"] = substitution
     _finish_payload(payload)
     _write(arguments.output, payload)
     print(
@@ -134,6 +169,9 @@ def _replace_stream(
 ) -> dict[str, Any]:
     used: set[str] = set()
     energy_numerator: dict[tuple[str, str], float] = defaultdict(float)
+    energy_lower_numerator: dict[tuple[str, str], float] = defaultdict(float)
+    energy_upper_numerator: dict[tuple[str, str], float] = defaultdict(float)
+    energy_interval_keys: set[tuple[str, str]] = set()
     reserve_numerator: dict[tuple[str, str, str], float] = defaultdict(float)
     total_seconds: dict[str, float] = defaultdict(float)
     date_time: dict[str, str] = {}
@@ -151,6 +189,9 @@ def _replace_stream(
             reserve_numerator,
             total_seconds,
             date_time,
+            energy_lower_numerator=energy_lower_numerator,
+            energy_upper_numerator=energy_upper_numerator,
+            energy_interval_keys=energy_interval_keys,
         )
         _update_parity(parity, record, record)
 
@@ -188,6 +229,13 @@ def _replace_stream(
         reserve={
             key: round(value / total_seconds[key[0]], 5)
             for key, value in reserve_numerator.items()
+        },
+        energy_intervals={
+            key: (
+                round(energy_lower_numerator[key] / total_seconds[key[0]], 5),
+                round(energy_upper_numerator[key] / total_seconds[key[0]], 5),
+            )
+            for key in energy_interval_keys
         },
         total_seconds=total_seconds,
         date_time=date_time,

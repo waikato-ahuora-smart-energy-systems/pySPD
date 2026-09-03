@@ -24,12 +24,12 @@ from tools.gate12.zero_flow_price_convention import (
     ZeroFlowPriceConventionResult,
 )
 
-REPORT_ROW_PARITY_PROFILE = "authority-pyspd-mapped-report-row-parity-v5"
+REPORT_ROW_PARITY_PROFILE = "authority-pyspd-mapped-report-row-parity-v6"
 REPORT_ROW_BUS_CERTIFIED_PROFILE = (
-    "authority-pyspd-mapped-report-row-parity-bus-certified-v5"
+    "authority-pyspd-mapped-report-row-parity-bus-certified-v6"
 )
 REPORT_ROW_ZERO_FLOW_CERTIFIED_PROFILE = (
-    "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v5"
+    "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v6"
 )
 _LEGACY_REPORT_ROW_PROFILES = frozenset(
     {
@@ -39,6 +39,9 @@ _LEGACY_REPORT_ROW_PROFILES = frozenset(
         "authority-pyspd-mapped-report-row-parity-v4",
         "authority-pyspd-mapped-report-row-parity-bus-certified-v4",
         "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v4",
+        "authority-pyspd-mapped-report-row-parity-v5",
+        "authority-pyspd-mapped-report-row-parity-bus-certified-v5",
+        "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v5",
     }
 )
 _MAX_EXAMPLES = 20
@@ -91,6 +94,7 @@ class _Projection:
     candidate_support_fields: tuple[str, ...] = ()
     candidate_value_resolver: Callable[[dict[str, str]], str] | None = None
     candidate_identity_normalizer: Callable[[str], str] = _identity
+    candidate_interval: str | None = None
 
 
 def _projection(
@@ -107,6 +111,7 @@ def _projection(
     candidate_support_fields: tuple[str, ...] = (),
     candidate_value_resolver: Callable[[dict[str, str]], str] | None = None,
     candidate_identity_normalizer: Callable[[str], str] = _identity,
+    candidate_interval: str | None = None,
 ) -> _Projection:
     return _Projection(
         reference_table,
@@ -121,6 +126,7 @@ def _projection(
         candidate_support_fields,
         candidate_value_resolver,
         candidate_identity_normalizer,
+        candidate_interval,
     )
 
 
@@ -552,6 +558,7 @@ _PROJECTIONS = (
         "vSPDDollarsPerMegawattHour",
         "price_nzd_per_mwh",
         candidate_filter=("product", "energy"),
+        candidate_interval="price_interval",
     ),
     _projection(
         "PublishedReservePrices_TP",
@@ -877,6 +884,9 @@ class ReportRowParityValidator:
         for projection in projections:
             expected = self._indexed_values(reference_rows, projection, reference=True)
             actual = self._indexed_values(candidate_rows, projection, reference=False)
+            candidate_intervals = self._indexed_intervals(
+                candidate_rows, projection
+            )
             missing_keys = sorted(set(expected) - set(actual))
             extra_keys = sorted(set(actual) - set(expected))
             missing += len(missing_keys)
@@ -933,6 +943,14 @@ class ReportRowParityValidator:
                         certified += 1
                     continue
                 if allocation_equivalent:
+                    certified += 1
+                    continue
+                interval = candidate_intervals.get(key)
+                if interval is not None and (
+                    interval[0] - tolerance
+                    <= reference_value
+                    <= interval[1] + tolerance
+                ):
                     certified += 1
                     continue
                 if key in market_node_dual_equivalent:
@@ -1326,6 +1344,60 @@ class ReportRowParityValidator:
                     "REQ-G12-REPORT-ROW: duplicate projected row identity"
                 )
             indexed[key] = value
+        return indexed
+
+    def _indexed_intervals(
+        self,
+        rows: tuple[dict[str, str], ...],
+        projection: _Projection,
+    ) -> dict[tuple[str, ...], tuple[Decimal, Decimal]]:
+        if projection.candidate_interval is None:
+            return {}
+        indexed: dict[tuple[str, ...], tuple[Decimal, Decimal]] = {}
+        for row in rows:
+            if projection.candidate_filter is not None:
+                filter_field, filter_value = projection.candidate_filter
+                if row.get(filter_field) != filter_value:
+                    continue
+            if projection.candidate_filter_prefix is not None:
+                filter_field, filter_prefix = projection.candidate_filter_prefix
+                if not row.get(filter_field, "").startswith(filter_prefix):
+                    continue
+            raw = row.get(projection.candidate_interval, "")
+            if not raw:
+                continue
+            try:
+                parsed = json.loads(raw)
+            except json.JSONDecodeError as error:
+                raise EvidenceContractError(
+                    "REQ-G12-REPORT-ROW: projected interval is invalid JSON"
+                ) from error
+            if not isinstance(parsed, list) or len(parsed) != 2:
+                raise EvidenceContractError(
+                    "REQ-G12-REPORT-ROW: projected interval must contain two bounds"
+                )
+            lower = self._decimal(str(parsed[0]))
+            upper = self._decimal(str(parsed[1]))
+            if lower > upper:
+                raise EvidenceContractError(
+                    "REQ-G12-REPORT-ROW: projected interval bounds are reversed"
+                )
+            try:
+                identity = tuple(row[field] for field in projection.candidate_identity)
+            except KeyError as error:
+                raise EvidenceContractError(
+                    "REQ-G12-REPORT-ROW: projected interval identity is unavailable"
+                ) from error
+            identity = (
+                *identity[:-1],
+                projection.candidate_identity_normalizer(identity[-1]),
+            )
+            key = (*identity, projection.observable)
+            if key in indexed:
+                raise EvidenceContractError(
+                    "REQ-G12-REPORT-ROW: duplicate projected interval identity"
+                )
+            indexed[key] = (lower, upper)
         return indexed
 
     @staticmethod

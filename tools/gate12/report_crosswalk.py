@@ -495,7 +495,7 @@ _TABLE_RULES: dict[str, tuple[str, tuple[_FieldRule, ...]]] = {
 _SUPPLEMENTAL_CANDIDATE_FIELDS: dict[str, frozenset[str]] = {
     "bus": frozenset({"raw_price_nzd_per_mwh", "disconnected", "invalid"}),
     "node": frozenset({"dead", "price_source"}),
-    "published_price": frozenset({"publication_seconds"}),
+    "published_price": frozenset({"price_interval", "publication_seconds"}),
 }
 _SUPPLEMENTAL_CANDIDATE_TABLES = frozenset({"audit"})
 

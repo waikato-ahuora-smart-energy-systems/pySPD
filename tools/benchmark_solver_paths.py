@@ -446,13 +446,22 @@ def _mapping(values: Mapping[Any, float]) -> list[list[Any]]:
 
 def _published_price_rows(published: Any) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
+    energy_intervals = getattr(published, "energy_intervals", {})
     for (period, node), price in sorted(published.energy.items()):
+        interval = energy_intervals.get((period, node))
         rows.append(
             {
                 "trading_period": period,
                 "location": node,
                 "product": "energy",
                 "price_nzd_per_mwh": format(float(price), ".17g"),
+                "price_interval": (
+                    ""
+                    if interval is None
+                    else "["
+                    + ",".join(format(float(bound), ".17g") for bound in interval)
+                    + "]"
+                ),
                 "publication_seconds": format(
                     float(published.total_seconds[period]), ".17g"
                 ),
@@ -468,6 +477,7 @@ def _published_price_rows(published: Any) -> list[dict[str, str]]:
                 "location": island,
                 "product": reserve_class,
                 "price_nzd_per_mwh": format(float(price), ".17g"),
+                "price_interval": "",
                 "publication_seconds": format(
                     float(published.total_seconds[period]), ".17g"
                 ),

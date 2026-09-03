@@ -72,12 +72,17 @@ only an acyclic passive component with exactly one live boundary and propagates
 the selected export endpoint through every edge. Components with cycles or
 multiple live boundaries remain solver-selected.
 
-All five TP29 cases were rerun. Their summary and every published-energy row
-match CPLEX at stored precision; ORO1101 is exactly 100.12922 NZD/MWh. A
-record-substituted 274-case comparison reduces above-precision values from
-34,438 to 34,411 and moves the remaining published-energy maximum to ORO1101
-TP12 at 0.38293 NZD/MWh. That artifact is explicitly TP29-only; a complete-day
-rerun is still required to apply and measure the generic correction elsewhere.
+The progressive replay now covers 59 cases across TP10, TP12, TP14, TP15,
+TP16, TP19, TP20, TP25, TP29, and TP33. Nine periods have no unresolved
+published-energy, published-reserve, or summary difference. TP12 retains one
+unrelated 0.06490 NZD/MWh ATU1101 publication residual. The evidence path now
+preserves weighted analytic intervals through daily aggregation: this
+classifies basis-dependent CPLEX prices without changing the governed export
+scalar. The cumulative substitution reduces above-precision values from
+34,438 to 34,237, and the next unresolved published-energy maximum is TP21
+ORO1101 at 0.17462 NZD/MWh. See the
+[`progressive validation record`](cplex-reference-passive-tree-progress-20230922.md).
+A complete-day rerun is still required.
 
 ### 2023-11-24
 
@@ -153,6 +158,8 @@ Compact run summaries bind the ignored full JSONL streams by SHA-256:
   and [`cplex-reference-comparison-20230922-tp29-passive-tree-five-cases.json`](cplex-reference-comparison-20230922-tp29-passive-tree-five-cases.json)
 - [`cplex-reference-paths-20230922-highs-tp29-corrected.json`](cplex-reference-paths-20230922-highs-tp29-corrected.json)
   and [`cplex-reference-comparison-20230922-highs-tp29-corrected.json`](cplex-reference-comparison-20230922-highs-tp29-corrected.json)
+- [`cplex-reference-paths-20230922-highs-passive-tree-partial.json`](cplex-reference-paths-20230922-highs-passive-tree-partial.json)
+  and [`cplex-reference-comparison-20230922-highs-passive-tree-partial.json`](cplex-reference-comparison-20230922-highs-passive-tree-partial.json)
 - [`cplex-reference-paths-20231124-highs-corrected.json`](cplex-reference-paths-20231124-highs-corrected.json)
   and [`cplex-reference-comparison-20231124-highs-corrected.json`](cplex-reference-comparison-20231124-highs-corrected.json)
 - [`cplex-reference-paths-20231124-tp16-source-disconnection-three-cases.json`](cplex-reference-paths-20231124-tp16-source-disconnection-three-cases.json)

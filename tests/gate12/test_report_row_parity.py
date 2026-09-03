@@ -276,6 +276,72 @@ def test_published_price_rows_use_governed_portable_price_tolerance(
     assert above.tables[0].above_precision_count == 1
 
 
+def test_published_energy_interval_certifies_reference_containment() -> None:
+    reference = _json(
+        {
+            "prefix_PublishedEnergyPrices_TP": {
+                "fields": [
+                    "DateTime",
+                    "TradingPeriod",
+                    "Pnodename",
+                    "vSPDDollarsPerMegawattHour",
+                ],
+                "rows": [
+                    {
+                        "DateTime": "time",
+                        "TradingPeriod": "TP33",
+                        "Pnodename": "ORO1101",
+                        "vSPDDollarsPerMegawattHour": "147.56994",
+                    }
+                ],
+            }
+        }
+    )
+
+    def candidate(interval: str) -> bytes:
+        return _json(
+            {
+                "published_price": {
+                    "field_order": [
+                        "date_time",
+                        "trading_period",
+                        "location",
+                        "product",
+                        "price_nzd_per_mwh",
+                        "price_interval",
+                    ],
+                    "rows": [
+                        {
+                            "date_time": "time",
+                            "trading_period": "TP33",
+                            "location": "ORO1101",
+                            "product": "energy",
+                            "price_nzd_per_mwh": "147.31281",
+                            "price_interval": interval,
+                        }
+                    ],
+                }
+            }
+        )
+
+    contained = ReportRowParityValidator().compare(
+        case_id="case",
+        reference=reference,
+        candidate=candidate("[147.31281,148.51970]"),
+    )
+    excluded = ReportRowParityValidator().compare(
+        case_id="case",
+        reference=reference,
+        candidate=candidate("[147.31281,147.40000]"),
+    )
+
+    assert contained.passed
+    assert contained.tables[0].certified_difference_count == 1
+    assert contained.tables[0].above_precision_count == 0
+    assert not excluded.passed
+    assert excluded.tables[0].above_precision_count == 1
+
+
 def test_offer_reserve_alternative_allocation_requires_equal_aggregate() -> None:
     reference = _json(
         {

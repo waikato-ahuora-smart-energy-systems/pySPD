@@ -32,12 +32,14 @@ Its complete-day evidence is bound by
 [`cplex-reference-paths-20231124-highs-corrected.json`](cplex-reference-paths-20231124-highs-corrected.json)
 and
 [`cplex-reference-comparison-20231124-highs-corrected.json`](cplex-reference-comparison-20231124-highs-corrected.json).
-For 2023-09-22, a five-case TP29 rerun generalizes the export endpoint from a
-single lossy leaf to uniquely anchored passive trees with consecutive lossy
-branches. It reproduces every TP29 published-energy row at stored CPLEX
-precision, including ORO1101 at 100.12922 NZD/MWh. See the
-[`expanded CPLEX analysis`](cplex-reference-expanded-four-days.md) for the
-bounded result and remaining complete-day rerun obligation.
+For 2023-09-22, the passive-tree replay now covers 59 cases across ten trading
+periods. Nine periods have zero unresolved published-energy,
+published-reserve, and summary differences; TP12 retains one unrelated
+ATU1101 publication residual. Weighted analytic intervals are now preserved
+through solver-path serialization and stream aggregation, while the governed
+scalar remains the export endpoint. See the
+[`progressive validation record`](cplex-reference-passive-tree-progress-20230922.md)
+for the current boundary and remaining complete-day obligation.
 
 Gate 12 owns the exact end-to-end validation intentionally removed from the
 amended Gate 8 boundary. It does not reopen or duplicate the Stage 8

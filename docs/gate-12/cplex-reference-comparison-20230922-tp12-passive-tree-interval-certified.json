@@ -1,0 +1,5188 @@
+{
+  "benchmark_sha256": "8b3e2c3ff4011cb48c8cec79779bff62d1954d5866aaaed584c6c87ce1c205e2",
+  "logical_sha256": "9feb40a5a6ef56fa1da0140fe0d4ffbda53b538485766fef5718ef9cb817c73b",
+  "profile": "pyspd-cplex-mapped-complete-day-comparison-v1",
+  "profiles": [
+    {
+      "above_precision_count": 740,
+      "all_solves_optimal": true,
+      "case_count": 6,
+      "certified_difference_count": 21,
+      "compared_value_count": 87312,
+      "complete": true,
+      "extra_identity_count": 0,
+      "failure_examples": [
+        {
+          "above_precision_count": 42,
+          "candidate_report_sha256": "3aa7da4517f54791e23362cde2ab1a5494555d00cd17a9f560ff1e6ae02775ce",
+          "case_id": "211012023091730566",
+          "certified_difference_count": 0,
+          "extra_identity_count": 0,
+          "missing_identity_count": 0,
+          "passed": false,
+          "reference_report_sha256": "ecd089f2a5ae92924f0c59c7cde87ac1bf7d3f81a1a086f40fdcffaabe1d1489",
+          "tables": [
+            {
+              "above_precision_count": 0,
+              "candidate_table": "bid",
+              "certified_difference_count": 0,
+              "compared_value_count": 4,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000000000000002",
+              "maximum_difference": {
+                "absolute_error": "0.000000000000002",
+                "authority_half_unit": "0.00005",
+                "candidate_value": "20.760000000000002",
+                "identity": [
+                  "211012023091730566",
+                  "22-SEP-2023 05:30",
+                  "TAK0331 SZR0",
+                  "SZRO",
+                  "cleared-bid-mw"
+                ],
+                "observable": "cleared-bid-mw",
+                "reference_value": "20.7600"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "cleared-bid-mw",
+                "total-bid-mw"
+              ],
+              "passed": true,
+              "reference_table": "BidResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "constraint",
+              "certified_difference_count": 0,
+              "compared_value_count": 84,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000004048763599",
+              "maximum_difference": {
+                "absolute_error": "0.000004048763599",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "-85.749505951236401",
+                "identity": [
+                  "211012023091730566",
+                  "22-SEP-2023 05:30",
+                  "WELLINGTON_STABILITY_P_1D",
+                  "branch-constraint-lhs"
+                ],
+                "observable": "branch-constraint-lhs",
+                "reference_value": "-85.74951"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "branch-constraint-lhs",
+                "branch-constraint-rhs",
+                "branch-constraint-sense",
+                "branch-constraint-price"
+              ],
+              "passed": true,
+              "reference_table": "BrConstraintResults_TP"
+            },
+            {
+              "above_precision_count": 19,
+              "candidate_table": "branch",
+              "certified_difference_count": 0,
+              "compared_value_count": 8768,
+              "differences": [
+                {
+                  "absolute_error": "0.7003366666666657",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-7.7333333333333343",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "TUI_T1.T1",
+                    "308",
+                    "305",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.43367"
+                },
+                {
+                  "absolute_error": "0.7003366666666657",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-7.7333333333333343",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "TUI_T2.T2",
+                    "308",
+                    "307",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.43367"
+                },
+                {
+                  "absolute_error": "0.7003366666666657",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-7.7333333333333343",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "TUI_T3.T3",
+                    "308",
+                    "306",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.43367"
+                },
+                {
+                  "absolute_error": "4.0994999999999996",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-6.9000000000000004",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "TUI_T4.T4",
+                    "308",
+                    "303",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-10.99950"
+                },
+                {
+                  "absolute_error": "4.0994999999999996",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-6.9000000000000004",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "TUI_T5.T5",
+                    "308",
+                    "304",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-10.99950"
+                },
+                {
+                  "absolute_error": "5.15000",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-9",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "TUI_T6.T6",
+                    "308",
+                    "302",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-3.85000"
+                },
+                {
+                  "absolute_error": "5.15000",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-9",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "TUI_T7.T7",
+                    "308",
+                    "301",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-3.85000"
+                },
+                {
+                  "absolute_error": "0.057188985184184",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "90.806661014815816",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "BOB_T4.L4",
+                    "781",
+                    "51",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "90.86385"
+                },
+                {
+                  "absolute_error": "0.044318458743104",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "82.123131541256896",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "BPE_T2.L2",
+                    "808",
+                    "371",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "82.16745"
+                },
+                {
+                  "absolute_error": "0.058823331164632",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "81.530896668835368",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "HAY_T1.L1",
+                    "448",
+                    "456",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "81.58972"
+                },
+                {
+                  "absolute_error": "0.058823331164632",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "81.530896668835368",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "HAY_T2.L2",
+                    "445",
+                    "457",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "81.58972"
+                },
+                {
+                  "absolute_error": "0.050808856558804",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "91.631181143441196",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "HEN_T1.L1",
+                    "776",
+                    "14",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "91.68199"
+                },
+                {
+                  "absolute_error": "0.039419588048754",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "78.011050411951246",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "HWB_T6.L6",
+                    "833",
+                    "715",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "78.05047"
+                },
+                {
+                  "absolute_error": "0.017543935528379",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "84.228876064471621",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "KIK_T1.L1",
+                    "812",
+                    "511",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "84.24642"
+                },
+                {
+                  "absolute_error": "0.037997941717272",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "84.218652058282728",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "KIK_T1.M1",
+                    "813",
+                    "511",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "84.25665"
+                },
+                {
+                  "absolute_error": "0.041430461530956",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "87.319449538469044",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "KMO_T2.L2",
+                    "797",
+                    "192",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "87.36088"
+                },
+                {
+                  "absolute_error": "0.045988332301881",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "91.807051667698119",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "PEN_T10.L10",
+                    "787",
+                    "89",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "91.85304"
+                },
+                {
+                  "absolute_error": "0.102010055707453",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "84.674449944292547",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "STK_T3.L3",
+                    "814",
+                    "529",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "84.77646"
+                },
+                {
+                  "absolute_error": "0.058293847020739",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "86.424546152979261",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "TRK_T3.L3",
+                    "800",
+                    "267",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "86.48284"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "5.15000",
+              "maximum_difference": {
+                "absolute_error": "5.15000",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "-9",
+                "identity": [
+                  "211012023091730566",
+                  "22-SEP-2023 05:30",
+                  "TUI_T6.T6",
+                  "308",
+                  "302",
+                  "branch-flow-mw"
+                ],
+                "observable": "branch-flow-mw",
+                "reference_value": "-3.85000"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "branch-flow-mw",
+                "branch-capacity",
+                "branch-dynamic-loss",
+                "branch-fixed-loss",
+                "branch-from-price",
+                "branch-to-price",
+                "branch-marginal-price",
+                "branch-rentals"
+              ],
+              "passed": false,
+              "reference_table": "BranchResults_TP"
+            },
+            {
+              "above_precision_count": 19,
+              "candidate_table": "bus",
+              "certified_difference_count": 0,
+              "compared_value_count": 4900,
+              "differences": [
+                {
+                  "absolute_error": "0.059103331164632",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "81.530896668835368",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "445",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "81.590"
+                },
+                {
+                  "absolute_error": "0.059103331164632",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "81.530896668835368",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "448",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "81.590"
+                },
+                {
+                  "absolute_error": "0.050818856558804",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "91.631181143441196",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "776",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "91.682"
+                },
+                {
+                  "absolute_error": "0.057338985184184",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "90.806661014815816",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "781",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "90.864"
+                },
+                {
+                  "absolute_error": "0.045948332301881",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "91.807051667698119",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "787",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "91.853"
+                },
+                {
+                  "absolute_error": "0.041550461530956",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "87.319449538469044",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "797",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "87.361"
+                },
+                {
+                  "absolute_error": "0.058453847020739",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "86.424546152979261",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "800",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "86.483"
+                },
+                {
+                  "absolute_error": "0.043868458743104",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "82.123131541256896",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "808",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "82.167"
+                },
+                {
+                  "absolute_error": "0.017123935528379",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "84.228876064471621",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "812",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "84.246"
+                },
+                {
+                  "absolute_error": "0.038347941717272",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "84.218652058282728",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "813",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "84.257"
+                },
+                {
+                  "absolute_error": "0.101550055707453",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "84.674449944292547",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "814",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "84.776"
+                },
+                {
+                  "absolute_error": "0.038949588048754",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "78.011050411951246",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "833",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "78.050"
+                },
+                {
+                  "absolute_error": "5.150",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "9",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "301",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "3.850"
+                },
+                {
+                  "absolute_error": "5.150",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "9",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "302",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "3.850"
+                },
+                {
+                  "absolute_error": "4.0989999999999996",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "6.9000000000000004",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "303",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "10.999"
+                },
+                {
+                  "absolute_error": "4.0989999999999996",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "6.9000000000000004",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "304",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "10.999"
+                },
+                {
+                  "absolute_error": "0.7006666666666657",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "7.7333333333333343",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "305",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.434"
+                },
+                {
+                  "absolute_error": "0.7006666666666657",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "7.7333333333333343",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "306",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.434"
+                },
+                {
+                  "absolute_error": "0.7006666666666657",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "7.7333333333333343",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "307",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.434"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "5.150",
+              "maximum_difference": {
+                "absolute_error": "5.150",
+                "authority_half_unit": "0.0005",
+                "candidate_value": "9",
+                "identity": [
+                  "211012023091730566",
+                  "22-SEP-2023 05:30",
+                  "301",
+                  "bus-generation"
+                ],
+                "observable": "bus-generation",
+                "reference_value": "3.850"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "repaired-bus-price",
+                "bus-generation",
+                "bus-load",
+                "bus-deficit",
+                "bus-surplus"
+              ],
+              "passed": false,
+              "reference_table": "BusResults_TP"
+            },
+            {
+              "above_precision_count": 1,
+              "candidate_table": "island",
+              "certified_difference_count": 0,
+              "compared_value_count": 42,
+              "differences": [
+                {
+                  "absolute_error": "13.54306845438799",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "111.10725845438799",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "NI",
+                    "SIR-shared"
+                  ],
+                  "observable": "SIR-shared",
+                  "reference_value": "97.56419"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "13.54306845438799",
+              "maximum_difference": {
+                "absolute_error": "13.54306845438799",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "111.10725845438799",
+                "identity": [
+                  "211012023091730566",
+                  "22-SEP-2023 05:30",
+                  "NI",
+                  "SIR-shared"
+                ],
+                "observable": "SIR-shared",
+                "reference_value": "97.56419"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "FIR-price",
+                "SIR-price",
+                "island-generation",
+                "island-load",
+                "island-bid-load",
+                "island-ac-loss",
+                "island-hvdc-flow",
+                "island-hvdc-loss",
+                "island-reference-price",
+                "FIR-required",
+                "FIR-cleared",
+                "FIR-shared",
+                "FIR-received",
+                "FIR-effective-ce",
+                "FIR-effective-ece",
+                "SIR-required",
+                "SIR-cleared",
+                "SIR-shared",
+                "SIR-received",
+                "SIR-effective-ce",
+                "SIR-effective-ece"
+              ],
+              "passed": false,
+              "reference_table": "IslandResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "constraint",
+              "certified_difference_count": 0,
+              "compared_value_count": 32,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00000354139308",
+              "maximum_difference": {
+                "absolute_error": "0.00000354139308",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "-124.67323645860692",
+                "identity": [
+                  "211012023091730566",
+                  "22-SEP-2023 05:30",
+                  "FK_WKA_CTRLMIN",
+                  "market-node-constraint-price"
+                ],
+                "observable": "market-node-constraint-price",
+                "reference_value": "-124.67324"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "market-node-constraint-lhs",
+                "market-node-constraint-price",
+                "market-node-constraint-rhs",
+                "market-node-constraint-sense"
+              ],
+              "passed": true,
+              "reference_table": "MNodeConstraintResults_TP"
+            },
+            {
+              "above_precision_count": 3,
+              "candidate_table": "offer",
+              "certified_difference_count": 0,
+              "compared_value_count": 294,
+              "differences": [
+                {
+                  "absolute_error": "10.3000",
+                  "authority_half_unit": "0.00005",
+                  "candidate_value": "18",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "TUI1101 KTW0",
+                    "GENE",
+                    "generation-mw"
+                  ],
+                  "observable": "generation-mw",
+                  "reference_value": "7.7000"
+                },
+                {
+                  "absolute_error": "8.198999999999999",
+                  "authority_half_unit": "0.00005",
+                  "candidate_value": "13.800000000000001",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "TUI1101 PRI0",
+                    "GENE",
+                    "generation-mw"
+                  ],
+                  "observable": "generation-mw",
+                  "reference_value": "21.9990"
+                },
+                {
+                  "absolute_error": "2.100999999999997",
+                  "authority_half_unit": "0.00005",
+                  "candidate_value": "23.200000000000003",
+                  "identity": [
+                    "211012023091730566",
+                    "22-SEP-2023 05:30",
+                    "TUI1101 TUI0",
+                    "GENE",
+                    "generation-mw"
+                  ],
+                  "observable": "generation-mw",
+                  "reference_value": "25.3010"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "10.3000",
+              "maximum_difference": {
+                "absolute_error": "10.3000",
+                "authority_half_unit": "0.00005",
+                "candidate_value": "18",
+                "identity": [
+                  "211012023091730566",
+                  "22-SEP-2023 05:30",
+                  "TUI1101 KTW0",
+                  "GENE",
+                  "generation-mw"
+                ],
+                "observable": "generation-mw",
+                "reference_value": "7.7000"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "generation-mw",
+                "offer-FIR",
+                "offer-SIR"
+              ],
+              "passed": false,
+              "reference_table": "OfferResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "reserve",
+              "certified_difference_count": 0,
+              "compared_value_count": 12,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00044710000001",
+              "maximum_difference": {
+                "absolute_error": "0.00044710000001",
+                "authority_half_unit": "0.0005",
+                "candidate_value": "77.16755289999999",
+                "identity": [
+                  "211012023091730566",
+                  "22-SEP-2023 05:30",
+                  "SI",
+                  "FIR-required"
+                ],
+                "observable": "FIR-required",
+                "reference_value": "77.168"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "FIR-price",
+                "SIR-price",
+                "FIR-required",
+                "FIR-violation",
+                "SIR-required",
+                "SIR-violation"
+              ],
+              "passed": true,
+              "reference_table": "ReserveResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "risk",
+              "certified_difference_count": 0,
+              "compared_value_count": 45,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000049841390006085193",
+              "maximum_difference": {
+                "absolute_error": "0.000049841390006085193",
+                "authority_half_unit": "0.0001",
+                "candidate_value": "4.9841390006085193e-05",
+                "identity": [
+                  "211012023091730566",
+                  "22-SEP-2023 05:30",
+                  "SI",
+                  "SIR",
+                  "CE",
+                  "MANUAL",
+                  "MANUAL",
+                  "risk-price"
+                ],
+                "observable": "risk-price",
+                "reference_value": "0.0000"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "covered-energy",
+                "covered-reserve",
+                "covered-fk-band",
+                "risk-subtractor",
+                "risk-reserve",
+                "risk-shortfall",
+                "risk-deficit",
+                "risk-reserve-price",
+                "risk-price"
+              ],
+              "passed": true,
+              "reference_table": "RiskResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "summary",
+              "certified_difference_count": 0,
+              "compared_value_count": 15,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00000305465712361",
+              "maximum_difference": {
+                "absolute_error": "0.00000305465712361",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "0.28998694534287639",
+                "identity": [
+                  "211012023091730566",
+                  "22-SEP-2023 05:30",
+                  "violation-cost"
+                ],
+                "observable": "violation-cost",
+                "reference_value": "0.28999"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "solve-status",
+                "system-ofv",
+                "system-cost",
+                "system-benefit",
+                "violation-cost",
+                "deficit-generation",
+                "surplus-generation",
+                "deficit-reserve",
+                "surplus-branch-flow",
+                "deficit-ramp-rate",
+                "surplus-ramp-rate",
+                "deficit-branch-constraint",
+                "surplus-branch-constraint",
+                "deficit-market-node-constraint",
+                "surplus-market-node-constraint"
+              ],
+              "passed": true,
+              "reference_table": "SummaryResults_TP"
+            }
+          ],
+          "unimplemented_reference_tables": []
+        },
+        {
+          "above_precision_count": 39,
+          "candidate_report_sha256": "ac8191b5d75dc138f33dbc4062e888076126c0cb46b1f0fd12ec26a46a17ab3e",
+          "case_id": "211012023091735571",
+          "certified_difference_count": 3,
+          "extra_identity_count": 0,
+          "missing_identity_count": 0,
+          "passed": false,
+          "reference_report_sha256": "b38050251635c9af9574d53a6d595b0b1c0f7b580edfd7f9f974facfe466108c",
+          "tables": [
+            {
+              "above_precision_count": 0,
+              "candidate_table": "bid",
+              "certified_difference_count": 0,
+              "compared_value_count": 4,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000000000000002",
+              "maximum_difference": {
+                "absolute_error": "0.000000000000002",
+                "authority_half_unit": "0.00005",
+                "candidate_value": "20.760000000000002",
+                "identity": [
+                  "211012023091735571",
+                  "22-SEP-2023 05:35",
+                  "TAK0331 SZR0",
+                  "SZRO",
+                  "cleared-bid-mw"
+                ],
+                "observable": "cleared-bid-mw",
+                "reference_value": "20.7600"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "cleared-bid-mw",
+                "total-bid-mw"
+              ],
+              "passed": true,
+              "reference_table": "BidResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "constraint",
+              "certified_difference_count": 0,
+              "compared_value_count": 80,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00000313187214",
+              "maximum_difference": {
+                "absolute_error": "0.00000313187214",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "292.81650313187214",
+                "identity": [
+                  "211012023091735571",
+                  "22-SEP-2023 05:35",
+                  "GZ14_EXPORT_FREQUENCY_LIMIT_P_1",
+                  "branch-constraint-lhs"
+                ],
+                "observable": "branch-constraint-lhs",
+                "reference_value": "292.81650"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "branch-constraint-lhs",
+                "branch-constraint-rhs",
+                "branch-constraint-sense",
+                "branch-constraint-price"
+              ],
+              "passed": true,
+              "reference_table": "BrConstraintResults_TP"
+            },
+            {
+              "above_precision_count": 19,
+              "candidate_table": "branch",
+              "certified_difference_count": 0,
+              "compared_value_count": 8768,
+              "differences": [
+                {
+                  "absolute_error": "2.1326633333333333",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-6.4266666666666667",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "TUI_T1.T1",
+                    "308",
+                    "305",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.55933"
+                },
+                {
+                  "absolute_error": "2.1326633333333333",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-6.4266666666666667",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "TUI_T2.T2",
+                    "308",
+                    "307",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.55933"
+                },
+                {
+                  "absolute_error": "2.1326633333333333",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-6.4266666666666667",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "TUI_T3.T3",
+                    "308",
+                    "306",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.55933"
+                },
+                {
+                  "absolute_error": "3.1989999999999995",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-7.0489999999999995",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "TUI_T6.T6",
+                    "308",
+                    "302",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-3.85000"
+                },
+                {
+                  "absolute_error": "3.1989999999999995",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-7.0489999999999995",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "TUI_T7.T7",
+                    "308",
+                    "301",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-3.85000"
+                },
+                {
+                  "absolute_error": "0.05724789816703",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "90.90180210183297",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "BOB_T4.L4",
+                    "781",
+                    "51",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "90.95905"
+                },
+                {
+                  "absolute_error": "0.100732292181038",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "82.022737707818962",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "GOR_T11.L11",
+                    "831",
+                    "708",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "82.12347"
+                },
+                {
+                  "absolute_error": "0.060169914331676",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "83.395610085668324",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "HAY_T2.L2",
+                    "445",
+                    "457",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "83.45578"
+                },
+                {
+                  "absolute_error": "0.060169914331676",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "83.395610085668324",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "HAY_T5.L5",
+                    "446",
+                    "458",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "83.45578"
+                },
+                {
+                  "absolute_error": "0.040584254053903",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "80.320115745946097",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "HWB_T6.L6",
+                    "833",
+                    "715",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "80.36070"
+                },
+                {
+                  "absolute_error": "0.709677318768725",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "86.067412681231275",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "IGH_ROB1.2",
+                    "517",
+                    "521",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "86.77709"
+                },
+                {
+                  "absolute_error": "0.020651982615993",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "85.323708017384007",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "ISL_T7.L7",
+                    "817",
+                    "544",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "85.34436"
+                },
+                {
+                  "absolute_error": "0.017937751049834",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "86.100822248950166",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "KIK_T1.L1",
+                    "812",
+                    "511",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "86.11876"
+                },
+                {
+                  "absolute_error": "0.042964528798245",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "92.923475471201755",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "MDN_T5.L5",
+                    "21",
+                    "24",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "92.96644"
+                },
+                {
+                  "absolute_error": "0.011349057666506",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "79.075330942333494",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "ROX_T10.L10",
+                    "835",
+                    "746",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "79.08668"
+                },
+                {
+                  "absolute_error": "0.045129530693559",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "84.546960469306441",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "SFD_T9.L9",
+                    "805",
+                    "352",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "84.59209"
+                },
+                {
+                  "absolute_error": "0.03860188673209",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "80.80583811326791",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "WTK_T23.L23",
+                    "830",
+                    "686",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "80.84444"
+                },
+                {
+                  "absolute_error": "0.709677318768725",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "86.067412681231275",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "IGH_ROB1.1",
+                    "509",
+                    "517",
+                    "branch-to-price"
+                  ],
+                  "observable": "branch-to-price",
+                  "reference_value": "86.77709"
+                },
+                {
+                  "absolute_error": "0.709660383901485",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "86.064809616098515",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "IGH_ROB1.2",
+                    "517",
+                    "521",
+                    "branch-to-price"
+                  ],
+                  "observable": "branch-to-price",
+                  "reference_value": "86.77447"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "3.1989999999999995",
+              "maximum_difference": {
+                "absolute_error": "3.1989999999999995",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "-7.0489999999999995",
+                "identity": [
+                  "211012023091735571",
+                  "22-SEP-2023 05:35",
+                  "TUI_T6.T6",
+                  "308",
+                  "302",
+                  "branch-flow-mw"
+                ],
+                "observable": "branch-flow-mw",
+                "reference_value": "-3.85000"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "branch-flow-mw",
+                "branch-capacity",
+                "branch-dynamic-loss",
+                "branch-fixed-loss",
+                "branch-from-price",
+                "branch-to-price",
+                "branch-marginal-price",
+                "branch-rentals"
+              ],
+              "passed": false,
+              "reference_table": "BranchResults_TP"
+            },
+            {
+              "above_precision_count": 18,
+              "candidate_table": "bus",
+              "certified_difference_count": 0,
+              "compared_value_count": 4900,
+              "differences": [
+                {
+                  "absolute_error": "0.042524528798245",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "92.923475471201755",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "21",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "92.966"
+                },
+                {
+                  "absolute_error": "0.060389914331676",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "83.395610085668324",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "445",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "83.456"
+                },
+                {
+                  "absolute_error": "0.060389914331676",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "83.395610085668324",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "446",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "83.456"
+                },
+                {
+                  "absolute_error": "0.709587318768725",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "86.067412681231275",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "517",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "86.777"
+                },
+                {
+                  "absolute_error": "0.709190383901485",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "86.064809616098515",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "521",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "86.774"
+                },
+                {
+                  "absolute_error": "0.05719789816703",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "90.90180210183297",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "781",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "90.959"
+                },
+                {
+                  "absolute_error": "0.045039530693559",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "84.546960469306441",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "805",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "84.592"
+                },
+                {
+                  "absolute_error": "0.018177751049834",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "86.100822248950166",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "812",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "86.119"
+                },
+                {
+                  "absolute_error": "0.020291982615993",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "85.323708017384007",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "817",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "85.344"
+                },
+                {
+                  "absolute_error": "0.03816188673209",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "80.80583811326791",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "830",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "80.844"
+                },
+                {
+                  "absolute_error": "0.100262292181038",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "82.022737707818962",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "831",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "82.123"
+                },
+                {
+                  "absolute_error": "0.040884254053903",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "80.320115745946097",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "833",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "80.361"
+                },
+                {
+                  "absolute_error": "0.011669057666506",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "79.075330942333494",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "835",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "79.087"
+                },
+                {
+                  "absolute_error": "3.1989999999999995",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "7.0489999999999995",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "301",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "3.850"
+                },
+                {
+                  "absolute_error": "3.1989999999999995",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "7.0489999999999995",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "302",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "3.850"
+                },
+                {
+                  "absolute_error": "2.1323333333333333",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "6.4266666666666667",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "305",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.559"
+                },
+                {
+                  "absolute_error": "2.1323333333333333",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "6.4266666666666667",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "306",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.559"
+                },
+                {
+                  "absolute_error": "2.1323333333333333",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "6.4266666666666667",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "307",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.559"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "3.1989999999999995",
+              "maximum_difference": {
+                "absolute_error": "3.1989999999999995",
+                "authority_half_unit": "0.0005",
+                "candidate_value": "7.0489999999999995",
+                "identity": [
+                  "211012023091735571",
+                  "22-SEP-2023 05:35",
+                  "301",
+                  "bus-generation"
+                ],
+                "observable": "bus-generation",
+                "reference_value": "3.850"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "repaired-bus-price",
+                "bus-generation",
+                "bus-load",
+                "bus-deficit",
+                "bus-surplus"
+              ],
+              "passed": false,
+              "reference_table": "BusResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "island",
+              "certified_difference_count": 0,
+              "compared_value_count": 42,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000004738966956",
+              "maximum_difference": {
+                "absolute_error": "0.000004738966956",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "80.765424738966956",
+                "identity": [
+                  "211012023091735571",
+                  "22-SEP-2023 05:35",
+                  "SI",
+                  "island-reference-price"
+                ],
+                "observable": "island-reference-price",
+                "reference_value": "80.76542"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "FIR-price",
+                "SIR-price",
+                "island-generation",
+                "island-load",
+                "island-bid-load",
+                "island-ac-loss",
+                "island-hvdc-flow",
+                "island-hvdc-loss",
+                "island-reference-price",
+                "FIR-required",
+                "FIR-cleared",
+                "FIR-shared",
+                "FIR-received",
+                "FIR-effective-ce",
+                "FIR-effective-ece",
+                "SIR-required",
+                "SIR-cleared",
+                "SIR-shared",
+                "SIR-received",
+                "SIR-effective-ce",
+                "SIR-effective-ece"
+              ],
+              "passed": true,
+              "reference_table": "IslandResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "constraint",
+              "certified_difference_count": 1,
+              "compared_value_count": 32,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "2.87491",
+              "maximum_difference": {
+                "absolute_error": "2.87491",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "651.375",
+                "identity": [
+                  "211012023091735571",
+                  "22-SEP-2023 05:35",
+                  "FK_WTR_MW+60",
+                  "market-node-constraint-lhs"
+                ],
+                "observable": "market-node-constraint-lhs",
+                "reference_value": "654.24991"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "market-node-constraint-lhs",
+                "market-node-constraint-price",
+                "market-node-constraint-rhs",
+                "market-node-constraint-sense"
+              ],
+              "passed": true,
+              "reference_table": "MNodeConstraintResults_TP"
+            },
+            {
+              "above_precision_count": 2,
+              "candidate_table": "offer",
+              "certified_difference_count": 2,
+              "compared_value_count": 294,
+              "differences": [
+                {
+                  "absolute_error": "6.397999999999999",
+                  "authority_half_unit": "0.00005",
+                  "candidate_value": "14.097999999999999",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "TUI1101 KTW0",
+                    "GENE",
+                    "generation-mw"
+                  ],
+                  "observable": "generation-mw",
+                  "reference_value": "7.7000"
+                },
+                {
+                  "absolute_error": "6.397999999999999",
+                  "authority_half_unit": "0.00005",
+                  "candidate_value": "19.280000000000001",
+                  "identity": [
+                    "211012023091735571",
+                    "22-SEP-2023 05:35",
+                    "TUI1101 TUI0",
+                    "GENE",
+                    "generation-mw"
+                  ],
+                  "observable": "generation-mw",
+                  "reference_value": "25.6780"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "6.397999999999999",
+              "maximum_difference": {
+                "absolute_error": "6.397999999999999",
+                "authority_half_unit": "0.00005",
+                "candidate_value": "14.097999999999999",
+                "identity": [
+                  "211012023091735571",
+                  "22-SEP-2023 05:35",
+                  "TUI1101 KTW0",
+                  "GENE",
+                  "generation-mw"
+                ],
+                "observable": "generation-mw",
+                "reference_value": "7.7000"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "generation-mw",
+                "offer-FIR",
+                "offer-SIR"
+              ],
+              "passed": false,
+              "reference_table": "OfferResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "reserve",
+              "certified_difference_count": 0,
+              "compared_value_count": 12,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00049821331505768",
+              "maximum_difference": {
+                "absolute_error": "0.00049821331505768",
+                "authority_half_unit": "0.0005",
+                "candidate_value": "0.10349821331505768",
+                "identity": [
+                  "211012023091735571",
+                  "22-SEP-2023 05:35",
+                  "NI",
+                  "SIR-price"
+                ],
+                "observable": "SIR-price",
+                "reference_value": "0.103"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "FIR-price",
+                "SIR-price",
+                "FIR-required",
+                "FIR-violation",
+                "SIR-required",
+                "SIR-violation"
+              ],
+              "passed": true,
+              "reference_table": "ReserveResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "risk",
+              "certified_difference_count": 0,
+              "compared_value_count": 63,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000049841390006085193",
+              "maximum_difference": {
+                "absolute_error": "0.000049841390006085193",
+                "authority_half_unit": "0.0001",
+                "candidate_value": "4.9841390006085193e-05",
+                "identity": [
+                  "211012023091735571",
+                  "22-SEP-2023 05:35",
+                  "SI",
+                  "SIR",
+                  "CE",
+                  "MANUAL",
+                  "MANUAL",
+                  "risk-price"
+                ],
+                "observable": "risk-price",
+                "reference_value": "0.0000"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "covered-energy",
+                "covered-reserve",
+                "covered-fk-band",
+                "risk-subtractor",
+                "risk-reserve",
+                "risk-shortfall",
+                "risk-deficit",
+                "risk-reserve-price",
+                "risk-price"
+              ],
+              "passed": true,
+              "reference_table": "RiskResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "summary",
+              "certified_difference_count": 0,
+              "compared_value_count": 15,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00000471874098797",
+              "maximum_difference": {
+                "absolute_error": "0.00000471874098797",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "0.16599528125901203",
+                "identity": [
+                  "211012023091735571",
+                  "22-SEP-2023 05:35",
+                  "violation-cost"
+                ],
+                "observable": "violation-cost",
+                "reference_value": "0.16600"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "solve-status",
+                "system-ofv",
+                "system-cost",
+                "system-benefit",
+                "violation-cost",
+                "deficit-generation",
+                "surplus-generation",
+                "deficit-reserve",
+                "surplus-branch-flow",
+                "deficit-ramp-rate",
+                "surplus-ramp-rate",
+                "deficit-branch-constraint",
+                "surplus-branch-constraint",
+                "deficit-market-node-constraint",
+                "surplus-market-node-constraint"
+              ],
+              "passed": true,
+              "reference_table": "SummaryResults_TP"
+            }
+          ],
+          "unimplemented_reference_tables": []
+        },
+        {
+          "above_precision_count": 16,
+          "candidate_report_sha256": "097264848148e496d71dd745f513e6066b5fee49eee1c5a660149f49c987148d",
+          "case_id": "211012023091740572",
+          "certified_difference_count": 0,
+          "extra_identity_count": 0,
+          "missing_identity_count": 0,
+          "passed": false,
+          "reference_report_sha256": "4df0840eb918e8959d73b9f17d0b06d374ceb65fb5747bf9857bfabec666c994",
+          "tables": [
+            {
+              "above_precision_count": 0,
+              "candidate_table": "bid",
+              "certified_difference_count": 0,
+              "compared_value_count": 4,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000000000000002",
+              "maximum_difference": {
+                "absolute_error": "0.000000000000002",
+                "authority_half_unit": "0.00005",
+                "candidate_value": "20.760000000000002",
+                "identity": [
+                  "211012023091740572",
+                  "22-SEP-2023 05:40",
+                  "TAK0331 SZR0",
+                  "SZRO",
+                  "cleared-bid-mw"
+                ],
+                "observable": "cleared-bid-mw",
+                "reference_value": "20.7600"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "cleared-bid-mw",
+                "total-bid-mw"
+              ],
+              "passed": true,
+              "reference_table": "BidResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "constraint",
+              "certified_difference_count": 0,
+              "compared_value_count": 80,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000003434681881",
+              "maximum_difference": {
+                "absolute_error": "0.000003434681881",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "71.484673434681881",
+                "identity": [
+                  "211012023091740572",
+                  "22-SEP-2023 05:40",
+                  "SOUTHLAND_STABILITY_P_1D",
+                  "branch-constraint-lhs"
+                ],
+                "observable": "branch-constraint-lhs",
+                "reference_value": "71.48467"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "branch-constraint-lhs",
+                "branch-constraint-rhs",
+                "branch-constraint-sense",
+                "branch-constraint-price"
+              ],
+              "passed": true,
+              "reference_table": "BrConstraintResults_TP"
+            },
+            {
+              "above_precision_count": 7,
+              "candidate_table": "branch",
+              "certified_difference_count": 0,
+              "compared_value_count": 8768,
+              "differences": [
+                {
+                  "absolute_error": "2.59833",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-10.609",
+                  "identity": [
+                    "211012023091740572",
+                    "22-SEP-2023 05:40",
+                    "TUI_T1.T1",
+                    "308",
+                    "305",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.01067"
+                },
+                {
+                  "absolute_error": "2.59833",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-10.609",
+                  "identity": [
+                    "211012023091740572",
+                    "22-SEP-2023 05:40",
+                    "TUI_T2.T2",
+                    "308",
+                    "307",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.01067"
+                },
+                {
+                  "absolute_error": "2.59833",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-10.609",
+                  "identity": [
+                    "211012023091740572",
+                    "22-SEP-2023 05:40",
+                    "TUI_T3.T3",
+                    "308",
+                    "306",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.01067"
+                },
+                {
+                  "absolute_error": "3.8975000000000003",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-4.6864999999999997",
+                  "identity": [
+                    "211012023091740572",
+                    "22-SEP-2023 05:40",
+                    "TUI_T6.T6",
+                    "308",
+                    "302",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.58400"
+                },
+                {
+                  "absolute_error": "3.8975000000000003",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-4.6864999999999997",
+                  "identity": [
+                    "211012023091740572",
+                    "22-SEP-2023 05:40",
+                    "TUI_T7.T7",
+                    "308",
+                    "301",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.58400"
+                },
+                {
+                  "absolute_error": "0.38939128215604",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "103.00593128215604",
+                  "identity": [
+                    "211012023091740572",
+                    "22-SEP-2023 05:40",
+                    "ATU_DOB1.1",
+                    "500",
+                    "605",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "102.61654"
+                },
+                {
+                  "absolute_error": "0.38939128215604",
+                  "authority_half_unit": "0.001",
+                  "candidate_value": "103.00593128215604",
+                  "identity": [
+                    "211012023091740572",
+                    "22-SEP-2023 05:40",
+                    "ATU_RFN_IGH1.1",
+                    "500",
+                    "520",
+                    "branch-from-price"
+                  ],
+                  "observable": "branch-from-price",
+                  "reference_value": "102.61654"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "3.8975000000000003",
+              "maximum_difference": {
+                "absolute_error": "3.8975000000000003",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "-4.6864999999999997",
+                "identity": [
+                  "211012023091740572",
+                  "22-SEP-2023 05:40",
+                  "TUI_T6.T6",
+                  "308",
+                  "302",
+                  "branch-flow-mw"
+                ],
+                "observable": "branch-flow-mw",
+                "reference_value": "-8.58400"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "branch-flow-mw",
+                "branch-capacity",
+                "branch-dynamic-loss",
+                "branch-fixed-loss",
+                "branch-from-price",
+                "branch-to-price",
+                "branch-marginal-price",
+                "branch-rentals"
+              ],
+              "passed": false,
+              "reference_table": "BranchResults_TP"
+            },
+            {
+              "above_precision_count": 7,
+              "candidate_table": "bus",
+              "certified_difference_count": 0,
+              "compared_value_count": 4900,
+              "differences": [
+                {
+                  "absolute_error": "0.38893128215604",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "103.00593128215604",
+                  "identity": [
+                    "211012023091740572",
+                    "22-SEP-2023 05:40",
+                    "500",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "102.617"
+                },
+                {
+                  "absolute_error": "0.000500000000004",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "95.530500000000004",
+                  "identity": [
+                    "211012023091740572",
+                    "22-SEP-2023 05:40",
+                    "595",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "95.530"
+                },
+                {
+                  "absolute_error": "3.8975000000000003",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "4.6864999999999997",
+                  "identity": [
+                    "211012023091740572",
+                    "22-SEP-2023 05:40",
+                    "301",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.584"
+                },
+                {
+                  "absolute_error": "3.8975000000000003",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "4.6864999999999997",
+                  "identity": [
+                    "211012023091740572",
+                    "22-SEP-2023 05:40",
+                    "302",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.584"
+                },
+                {
+                  "absolute_error": "2.598",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "10.609",
+                  "identity": [
+                    "211012023091740572",
+                    "22-SEP-2023 05:40",
+                    "305",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.011"
+                },
+                {
+                  "absolute_error": "2.598",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "10.609",
+                  "identity": [
+                    "211012023091740572",
+                    "22-SEP-2023 05:40",
+                    "306",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.011"
+                },
+                {
+                  "absolute_error": "2.598",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "10.609",
+                  "identity": [
+                    "211012023091740572",
+                    "22-SEP-2023 05:40",
+                    "307",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.011"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "3.8975000000000003",
+              "maximum_difference": {
+                "absolute_error": "3.8975000000000003",
+                "authority_half_unit": "0.0005",
+                "candidate_value": "4.6864999999999997",
+                "identity": [
+                  "211012023091740572",
+                  "22-SEP-2023 05:40",
+                  "301",
+                  "bus-generation"
+                ],
+                "observable": "bus-generation",
+                "reference_value": "8.584"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "repaired-bus-price",
+                "bus-generation",
+                "bus-load",
+                "bus-deficit",
+                "bus-surplus"
+              ],
+              "passed": false,
+              "reference_table": "BusResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "island",
+              "certified_difference_count": 0,
+              "compared_value_count": 42,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.0000044930372066",
+              "maximum_difference": {
+                "absolute_error": "0.0000044930372066",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "4.0978044930372066",
+                "identity": [
+                  "211012023091740572",
+                  "22-SEP-2023 05:40",
+                  "NI",
+                  "island-hvdc-loss"
+                ],
+                "observable": "island-hvdc-loss",
+                "reference_value": "4.09780"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "FIR-price",
+                "SIR-price",
+                "island-generation",
+                "island-load",
+                "island-bid-load",
+                "island-ac-loss",
+                "island-hvdc-flow",
+                "island-hvdc-loss",
+                "island-reference-price",
+                "FIR-required",
+                "FIR-cleared",
+                "FIR-shared",
+                "FIR-received",
+                "FIR-effective-ce",
+                "FIR-effective-ece",
+                "SIR-required",
+                "SIR-cleared",
+                "SIR-shared",
+                "SIR-received",
+                "SIR-effective-ce",
+                "SIR-effective-ece"
+              ],
+              "passed": true,
+              "reference_table": "IslandResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "constraint",
+              "certified_difference_count": 0,
+              "compared_value_count": 32,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00000453138281",
+              "maximum_difference": {
+                "absolute_error": "0.00000453138281",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "-107.22426453138281",
+                "identity": [
+                  "211012023091740572",
+                  "22-SEP-2023 05:40",
+                  "FK_WKA_CTRLMIN",
+                  "market-node-constraint-price"
+                ],
+                "observable": "market-node-constraint-price",
+                "reference_value": "-107.22426"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "market-node-constraint-lhs",
+                "market-node-constraint-price",
+                "market-node-constraint-rhs",
+                "market-node-constraint-sense"
+              ],
+              "passed": true,
+              "reference_table": "MNodeConstraintResults_TP"
+            },
+            {
+              "above_precision_count": 2,
+              "candidate_table": "offer",
+              "certified_difference_count": 0,
+              "compared_value_count": 294,
+              "differences": [
+                {
+                  "absolute_error": "7.7950000000000007",
+                  "authority_half_unit": "0.00005",
+                  "candidate_value": "9.3729999999999993",
+                  "identity": [
+                    "211012023091740572",
+                    "22-SEP-2023 05:40",
+                    "TUI1101 KTW0",
+                    "GENE",
+                    "generation-mw"
+                  ],
+                  "observable": "generation-mw",
+                  "reference_value": "17.1680"
+                },
+                {
+                  "absolute_error": "7.795000000000002",
+                  "authority_half_unit": "0.00005",
+                  "candidate_value": "31.827000000000002",
+                  "identity": [
+                    "211012023091740572",
+                    "22-SEP-2023 05:40",
+                    "TUI1101 TUI0",
+                    "GENE",
+                    "generation-mw"
+                  ],
+                  "observable": "generation-mw",
+                  "reference_value": "24.0320"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "7.795000000000002",
+              "maximum_difference": {
+                "absolute_error": "7.795000000000002",
+                "authority_half_unit": "0.00005",
+                "candidate_value": "31.827000000000002",
+                "identity": [
+                  "211012023091740572",
+                  "22-SEP-2023 05:40",
+                  "TUI1101 TUI0",
+                  "GENE",
+                  "generation-mw"
+                ],
+                "observable": "generation-mw",
+                "reference_value": "24.0320"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "generation-mw",
+                "offer-FIR",
+                "offer-SIR"
+              ],
+              "passed": false,
+              "reference_table": "OfferResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "reserve",
+              "certified_difference_count": 0,
+              "compared_value_count": 12,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00049821331505768",
+              "maximum_difference": {
+                "absolute_error": "0.00049821331505768",
+                "authority_half_unit": "0.0005",
+                "candidate_value": "0.10349821331505768",
+                "identity": [
+                  "211012023091740572",
+                  "22-SEP-2023 05:40",
+                  "NI",
+                  "SIR-price"
+                ],
+                "observable": "SIR-price",
+                "reference_value": "0.103"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "FIR-price",
+                "SIR-price",
+                "FIR-required",
+                "FIR-violation",
+                "SIR-required",
+                "SIR-violation"
+              ],
+              "passed": true,
+              "reference_table": "ReserveResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "risk",
+              "certified_difference_count": 0,
+              "compared_value_count": 63,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000049841390006085193",
+              "maximum_difference": {
+                "absolute_error": "0.000049841390006085193",
+                "authority_half_unit": "0.0001",
+                "candidate_value": "4.9841390006085193e-05",
+                "identity": [
+                  "211012023091740572",
+                  "22-SEP-2023 05:40",
+                  "SI",
+                  "SIR",
+                  "CE",
+                  "MANUAL",
+                  "MANUAL",
+                  "risk-price"
+                ],
+                "observable": "risk-price",
+                "reference_value": "0.0000"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "covered-energy",
+                "covered-reserve",
+                "covered-fk-band",
+                "risk-subtractor",
+                "risk-reserve",
+                "risk-shortfall",
+                "risk-deficit",
+                "risk-reserve-price",
+                "risk-price"
+              ],
+              "passed": true,
+              "reference_table": "RiskResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "summary",
+              "certified_difference_count": 0,
+              "compared_value_count": 15,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00000361307056568",
+              "maximum_difference": {
+                "absolute_error": "0.00000361307056568",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "0.16892638692943432",
+                "identity": [
+                  "211012023091740572",
+                  "22-SEP-2023 05:40",
+                  "violation-cost"
+                ],
+                "observable": "violation-cost",
+                "reference_value": "0.16893"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "solve-status",
+                "system-ofv",
+                "system-cost",
+                "system-benefit",
+                "violation-cost",
+                "deficit-generation",
+                "surplus-generation",
+                "deficit-reserve",
+                "surplus-branch-flow",
+                "deficit-ramp-rate",
+                "surplus-ramp-rate",
+                "deficit-branch-constraint",
+                "surplus-branch-constraint",
+                "deficit-market-node-constraint",
+                "surplus-market-node-constraint"
+              ],
+              "passed": true,
+              "reference_table": "SummaryResults_TP"
+            }
+          ],
+          "unimplemented_reference_tables": []
+        },
+        {
+          "above_precision_count": 12,
+          "candidate_report_sha256": "a50a0260668883560f96f447e0ecbedaf053fa470994cfefd6c1986a2ce63fe6",
+          "case_id": "211012023091745574",
+          "certified_difference_count": 2,
+          "extra_identity_count": 0,
+          "missing_identity_count": 0,
+          "passed": false,
+          "reference_report_sha256": "a78d22fcdf29281d06aa51e2e8932f90549ed9b69344326375cb96cdc3b10fe2",
+          "tables": [
+            {
+              "above_precision_count": 0,
+              "candidate_table": "bid",
+              "certified_difference_count": 0,
+              "compared_value_count": 4,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000000000000002",
+              "maximum_difference": {
+                "absolute_error": "0.000000000000002",
+                "authority_half_unit": "0.00005",
+                "candidate_value": "20.760000000000002",
+                "identity": [
+                  "211012023091745574",
+                  "22-SEP-2023 05:45",
+                  "TAK0331 SZR0",
+                  "SZRO",
+                  "cleared-bid-mw"
+                ],
+                "observable": "cleared-bid-mw",
+                "reference_value": "20.7600"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "cleared-bid-mw",
+                "total-bid-mw"
+              ],
+              "passed": true,
+              "reference_table": "BidResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "constraint",
+              "certified_difference_count": 0,
+              "compared_value_count": 80,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00000445879424",
+              "maximum_difference": {
+                "absolute_error": "0.00000445879424",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "318.35121554120576",
+                "identity": [
+                  "211012023091745574",
+                  "22-SEP-2023 05:45",
+                  "GZ14_EXPORT_FREQUENCY_LIMIT_P_1",
+                  "branch-constraint-lhs"
+                ],
+                "observable": "branch-constraint-lhs",
+                "reference_value": "318.35122"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "branch-constraint-lhs",
+                "branch-constraint-rhs",
+                "branch-constraint-sense",
+                "branch-constraint-price"
+              ],
+              "passed": true,
+              "reference_table": "BrConstraintResults_TP"
+            },
+            {
+              "above_precision_count": 5,
+              "candidate_table": "branch",
+              "certified_difference_count": 0,
+              "compared_value_count": 8768,
+              "differences": [
+                {
+                  "absolute_error": "2.229666666666665",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-10.501666666666665",
+                  "identity": [
+                    "211012023091745574",
+                    "22-SEP-2023 05:45",
+                    "TUI_T1.T1",
+                    "308",
+                    "305",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.27200"
+                },
+                {
+                  "absolute_error": "2.229666666666665",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-10.501666666666665",
+                  "identity": [
+                    "211012023091745574",
+                    "22-SEP-2023 05:45",
+                    "TUI_T2.T2",
+                    "308",
+                    "307",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.27200"
+                },
+                {
+                  "absolute_error": "2.229666666666665",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-10.501666666666665",
+                  "identity": [
+                    "211012023091745574",
+                    "22-SEP-2023 05:45",
+                    "TUI_T3.T3",
+                    "308",
+                    "306",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.27200"
+                },
+                {
+                  "absolute_error": "3.3444999999999999",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-4.8475000000000001",
+                  "identity": [
+                    "211012023091745574",
+                    "22-SEP-2023 05:45",
+                    "TUI_T6.T6",
+                    "308",
+                    "302",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.19200"
+                },
+                {
+                  "absolute_error": "3.3444999999999999",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-4.8475000000000001",
+                  "identity": [
+                    "211012023091745574",
+                    "22-SEP-2023 05:45",
+                    "TUI_T7.T7",
+                    "308",
+                    "301",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.19200"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "3.3444999999999999",
+              "maximum_difference": {
+                "absolute_error": "3.3444999999999999",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "-4.8475000000000001",
+                "identity": [
+                  "211012023091745574",
+                  "22-SEP-2023 05:45",
+                  "TUI_T6.T6",
+                  "308",
+                  "302",
+                  "branch-flow-mw"
+                ],
+                "observable": "branch-flow-mw",
+                "reference_value": "-8.19200"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "branch-flow-mw",
+                "branch-capacity",
+                "branch-dynamic-loss",
+                "branch-fixed-loss",
+                "branch-from-price",
+                "branch-to-price",
+                "branch-marginal-price",
+                "branch-rentals"
+              ],
+              "passed": false,
+              "reference_table": "BranchResults_TP"
+            },
+            {
+              "above_precision_count": 5,
+              "candidate_table": "bus",
+              "certified_difference_count": 0,
+              "compared_value_count": 4900,
+              "differences": [
+                {
+                  "absolute_error": "3.3444999999999999",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "4.8475000000000001",
+                  "identity": [
+                    "211012023091745574",
+                    "22-SEP-2023 05:45",
+                    "301",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.192"
+                },
+                {
+                  "absolute_error": "3.3444999999999999",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "4.8475000000000001",
+                  "identity": [
+                    "211012023091745574",
+                    "22-SEP-2023 05:45",
+                    "302",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.192"
+                },
+                {
+                  "absolute_error": "2.229666666666665",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "10.501666666666665",
+                  "identity": [
+                    "211012023091745574",
+                    "22-SEP-2023 05:45",
+                    "305",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.272"
+                },
+                {
+                  "absolute_error": "2.229666666666665",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "10.501666666666665",
+                  "identity": [
+                    "211012023091745574",
+                    "22-SEP-2023 05:45",
+                    "306",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.272"
+                },
+                {
+                  "absolute_error": "2.229666666666665",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "10.501666666666665",
+                  "identity": [
+                    "211012023091745574",
+                    "22-SEP-2023 05:45",
+                    "307",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.272"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "3.3444999999999999",
+              "maximum_difference": {
+                "absolute_error": "3.3444999999999999",
+                "authority_half_unit": "0.0005",
+                "candidate_value": "4.8475000000000001",
+                "identity": [
+                  "211012023091745574",
+                  "22-SEP-2023 05:45",
+                  "301",
+                  "bus-generation"
+                ],
+                "observable": "bus-generation",
+                "reference_value": "8.192"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "repaired-bus-price",
+                "bus-generation",
+                "bus-load",
+                "bus-deficit",
+                "bus-surplus"
+              ],
+              "passed": false,
+              "reference_table": "BusResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "island",
+              "certified_difference_count": 0,
+              "compared_value_count": 42,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000004903895593",
+              "maximum_difference": {
+                "absolute_error": "0.000004903895593",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "57.620974903895593",
+                "identity": [
+                  "211012023091745574",
+                  "22-SEP-2023 05:45",
+                  "NI",
+                  "island-ac-loss"
+                ],
+                "observable": "island-ac-loss",
+                "reference_value": "57.62097"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "FIR-price",
+                "SIR-price",
+                "island-generation",
+                "island-load",
+                "island-bid-load",
+                "island-ac-loss",
+                "island-hvdc-flow",
+                "island-hvdc-loss",
+                "island-reference-price",
+                "FIR-required",
+                "FIR-cleared",
+                "FIR-shared",
+                "FIR-received",
+                "FIR-effective-ce",
+                "FIR-effective-ece",
+                "SIR-required",
+                "SIR-cleared",
+                "SIR-shared",
+                "SIR-received",
+                "SIR-effective-ce",
+                "SIR-effective-ece"
+              ],
+              "passed": true,
+              "reference_table": "IslandResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "constraint",
+              "certified_difference_count": 0,
+              "compared_value_count": 32,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00000357476847",
+              "maximum_difference": {
+                "absolute_error": "0.00000357476847",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "-105.44099357476847",
+                "identity": [
+                  "211012023091745574",
+                  "22-SEP-2023 05:45",
+                  "FK_WKA_CTRLMIN",
+                  "market-node-constraint-price"
+                ],
+                "observable": "market-node-constraint-price",
+                "reference_value": "-105.44099"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "market-node-constraint-lhs",
+                "market-node-constraint-price",
+                "market-node-constraint-rhs",
+                "market-node-constraint-sense"
+              ],
+              "passed": true,
+              "reference_table": "MNodeConstraintResults_TP"
+            },
+            {
+              "above_precision_count": 2,
+              "candidate_table": "offer",
+              "certified_difference_count": 2,
+              "compared_value_count": 294,
+              "differences": [
+                {
+                  "absolute_error": "6.6889999999999997",
+                  "authority_half_unit": "0.00005",
+                  "candidate_value": "9.6950000000000003",
+                  "identity": [
+                    "211012023091745574",
+                    "22-SEP-2023 05:45",
+                    "TUI1101 KTW0",
+                    "GENE",
+                    "generation-mw"
+                  ],
+                  "observable": "generation-mw",
+                  "reference_value": "16.3840"
+                },
+                {
+                  "absolute_error": "6.688999999999999",
+                  "authority_half_unit": "0.00005",
+                  "candidate_value": "31.504999999999999",
+                  "identity": [
+                    "211012023091745574",
+                    "22-SEP-2023 05:45",
+                    "TUI1101 TUI0",
+                    "GENE",
+                    "generation-mw"
+                  ],
+                  "observable": "generation-mw",
+                  "reference_value": "24.8160"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "12.28004142987521",
+              "maximum_difference": {
+                "absolute_error": "12.28004142987521",
+                "authority_half_unit": "0.00005",
+                "candidate_value": "36.83114142987521",
+                "identity": [
+                  "211012023091745574",
+                  "22-SEP-2023 05:45",
+                  "BEN2202 BEN0",
+                  "MERI",
+                  "offer-SIR"
+                ],
+                "observable": "offer-SIR",
+                "reference_value": "24.5511"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "generation-mw",
+                "offer-FIR",
+                "offer-SIR"
+              ],
+              "passed": false,
+              "reference_table": "OfferResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "reserve",
+              "certified_difference_count": 0,
+              "compared_value_count": 12,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00049821331505768",
+              "maximum_difference": {
+                "absolute_error": "0.00049821331505768",
+                "authority_half_unit": "0.0005",
+                "candidate_value": "0.10349821331505768",
+                "identity": [
+                  "211012023091745574",
+                  "22-SEP-2023 05:45",
+                  "NI",
+                  "SIR-price"
+                ],
+                "observable": "SIR-price",
+                "reference_value": "0.103"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "FIR-price",
+                "SIR-price",
+                "FIR-required",
+                "FIR-violation",
+                "SIR-required",
+                "SIR-violation"
+              ],
+              "passed": true,
+              "reference_table": "ReserveResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "risk",
+              "certified_difference_count": 0,
+              "compared_value_count": 45,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000049841390006085193",
+              "maximum_difference": {
+                "absolute_error": "0.000049841390006085193",
+                "authority_half_unit": "0.0001",
+                "candidate_value": "4.9841390006085193e-05",
+                "identity": [
+                  "211012023091745574",
+                  "22-SEP-2023 05:45",
+                  "SI",
+                  "SIR",
+                  "CE",
+                  "MANUAL",
+                  "MANUAL",
+                  "risk-price"
+                ],
+                "observable": "risk-price",
+                "reference_value": "0.0000"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "covered-energy",
+                "covered-reserve",
+                "covered-fk-band",
+                "risk-subtractor",
+                "risk-reserve",
+                "risk-shortfall",
+                "risk-deficit",
+                "risk-reserve-price",
+                "risk-price"
+              ],
+              "passed": true,
+              "reference_table": "RiskResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "summary",
+              "certified_difference_count": 0,
+              "compared_value_count": 15,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00000449679124112",
+              "maximum_difference": {
+                "absolute_error": "0.00000449679124112",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "0.16076550320875888",
+                "identity": [
+                  "211012023091745574",
+                  "22-SEP-2023 05:45",
+                  "violation-cost"
+                ],
+                "observable": "violation-cost",
+                "reference_value": "0.16077"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "solve-status",
+                "system-ofv",
+                "system-cost",
+                "system-benefit",
+                "violation-cost",
+                "deficit-generation",
+                "surplus-generation",
+                "deficit-reserve",
+                "surplus-branch-flow",
+                "deficit-ramp-rate",
+                "surplus-ramp-rate",
+                "deficit-branch-constraint",
+                "surplus-branch-constraint",
+                "deficit-market-node-constraint",
+                "surplus-market-node-constraint"
+              ],
+              "passed": true,
+              "reference_table": "SummaryResults_TP"
+            }
+          ],
+          "unimplemented_reference_tables": []
+        },
+        {
+          "above_precision_count": 4,
+          "candidate_report_sha256": "a50a8f8af05ff3cc72a4f0fc18c76cf32720649dc7c96206379144885de79608",
+          "case_id": "211012023091750575",
+          "certified_difference_count": 6,
+          "extra_identity_count": 0,
+          "missing_identity_count": 0,
+          "passed": false,
+          "reference_report_sha256": "c23655add0ce528390546756765e0c0ee0f6398d15bc1a2dca5c0c2723138620",
+          "tables": [
+            {
+              "above_precision_count": 0,
+              "candidate_table": "bid",
+              "certified_difference_count": 0,
+              "compared_value_count": 4,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000000000000002",
+              "maximum_difference": {
+                "absolute_error": "0.000000000000002",
+                "authority_half_unit": "0.00005",
+                "candidate_value": "20.760000000000002",
+                "identity": [
+                  "211012023091750575",
+                  "22-SEP-2023 05:50",
+                  "TAK0331 SZR0",
+                  "SZRO",
+                  "cleared-bid-mw"
+                ],
+                "observable": "cleared-bid-mw",
+                "reference_value": "20.7600"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "cleared-bid-mw",
+                "total-bid-mw"
+              ],
+              "passed": true,
+              "reference_table": "BidResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "constraint",
+              "certified_difference_count": 0,
+              "compared_value_count": 80,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00000453504163",
+              "maximum_difference": {
+                "absolute_error": "0.00000453504163",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "335.66111453504163",
+                "identity": [
+                  "211012023091750575",
+                  "22-SEP-2023 05:50",
+                  "GZ14_EXPORT_FREQUENCY_LIMIT_P_1",
+                  "branch-constraint-lhs"
+                ],
+                "observable": "branch-constraint-lhs",
+                "reference_value": "335.66111"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "branch-constraint-lhs",
+                "branch-constraint-rhs",
+                "branch-constraint-sense",
+                "branch-constraint-price"
+              ],
+              "passed": true,
+              "reference_table": "BrConstraintResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "branch",
+              "certified_difference_count": 0,
+              "compared_value_count": 8768,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000004997872795369",
+              "maximum_difference": {
+                "absolute_error": "0.000004997872795369",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "0.014955002127204631",
+                "identity": [
+                  "211012023091750575",
+                  "22-SEP-2023 05:50",
+                  "KAI_SBK2.1",
+                  "547",
+                  "554",
+                  "branch-dynamic-loss"
+                ],
+                "observable": "branch-dynamic-loss",
+                "reference_value": "0.01496"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "branch-flow-mw",
+                "branch-capacity",
+                "branch-dynamic-loss",
+                "branch-fixed-loss",
+                "branch-from-price",
+                "branch-to-price",
+                "branch-marginal-price",
+                "branch-rentals"
+              ],
+              "passed": true,
+              "reference_table": "BranchResults_TP"
+            },
+            {
+              "above_precision_count": 4,
+              "candidate_table": "bus",
+              "certified_difference_count": 0,
+              "compared_value_count": 4900,
+              "differences": [
+                {
+                  "absolute_error": "0.00050000000002",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "110.03050000000002",
+                  "identity": [
+                    "211012023091750575",
+                    "22-SEP-2023 05:50",
+                    "103",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "110.030"
+                },
+                {
+                  "absolute_error": "0.00050000000002",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "110.03050000000002",
+                  "identity": [
+                    "211012023091750575",
+                    "22-SEP-2023 05:50",
+                    "105",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "110.030"
+                },
+                {
+                  "absolute_error": "0.00050000000006",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "110.02950000000006",
+                  "identity": [
+                    "211012023091750575",
+                    "22-SEP-2023 05:50",
+                    "205",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "110.029"
+                },
+                {
+                  "absolute_error": "0.00050000000002",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "110.03050000000002",
+                  "identity": [
+                    "211012023091750575",
+                    "22-SEP-2023 05:50",
+                    "759",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "110.030"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00050000000006",
+              "maximum_difference": {
+                "absolute_error": "0.00050000000006",
+                "authority_half_unit": "0.0005",
+                "candidate_value": "110.02950000000006",
+                "identity": [
+                  "211012023091750575",
+                  "22-SEP-2023 05:50",
+                  "205",
+                  "repaired-bus-price"
+                ],
+                "observable": "repaired-bus-price",
+                "reference_value": "110.029"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "repaired-bus-price",
+                "bus-generation",
+                "bus-load",
+                "bus-deficit",
+                "bus-surplus"
+              ],
+              "passed": false,
+              "reference_table": "BusResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "island",
+              "certified_difference_count": 0,
+              "compared_value_count": 42,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.0000049",
+              "maximum_difference": {
+                "absolute_error": "0.0000049",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "129.3344649",
+                "identity": [
+                  "211012023091750575",
+                  "22-SEP-2023 05:50",
+                  "NI",
+                  "FIR-required"
+                ],
+                "observable": "FIR-required",
+                "reference_value": "129.33446"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "FIR-price",
+                "SIR-price",
+                "island-generation",
+                "island-load",
+                "island-bid-load",
+                "island-ac-loss",
+                "island-hvdc-flow",
+                "island-hvdc-loss",
+                "island-reference-price",
+                "FIR-required",
+                "FIR-cleared",
+                "FIR-shared",
+                "FIR-received",
+                "FIR-effective-ce",
+                "FIR-effective-ece",
+                "SIR-required",
+                "SIR-cleared",
+                "SIR-shared",
+                "SIR-received",
+                "SIR-effective-ce",
+                "SIR-effective-ece"
+              ],
+              "passed": true,
+              "reference_table": "IslandResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "constraint",
+              "certified_difference_count": 1,
+              "compared_value_count": 32,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.38826",
+              "maximum_difference": {
+                "absolute_error": "0.38826",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "641.375",
+                "identity": [
+                  "211012023091750575",
+                  "22-SEP-2023 05:50",
+                  "FK_WTR_MW+6",
+                  "market-node-constraint-lhs"
+                ],
+                "observable": "market-node-constraint-lhs",
+                "reference_value": "641.76326"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "market-node-constraint-lhs",
+                "market-node-constraint-price",
+                "market-node-constraint-rhs",
+                "market-node-constraint-sense"
+              ],
+              "passed": true,
+              "reference_table": "MNodeConstraintResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "offer",
+              "certified_difference_count": 5,
+              "compared_value_count": 294,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "20.330945823073792",
+              "maximum_difference": {
+                "absolute_error": "20.330945823073792",
+                "authority_half_unit": "0.00005",
+                "candidate_value": "27.240054176926208",
+                "identity": [
+                  "211012023091750575",
+                  "22-SEP-2023 05:50",
+                  "BEN2202 BEN0",
+                  "MERI",
+                  "offer-SIR"
+                ],
+                "observable": "offer-SIR",
+                "reference_value": "47.5710"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "generation-mw",
+                "offer-FIR",
+                "offer-SIR"
+              ],
+              "passed": true,
+              "reference_table": "OfferResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "reserve",
+              "certified_difference_count": 0,
+              "compared_value_count": 12,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00049821331505768",
+              "maximum_difference": {
+                "absolute_error": "0.00049821331505768",
+                "authority_half_unit": "0.0005",
+                "candidate_value": "0.10349821331505768",
+                "identity": [
+                  "211012023091750575",
+                  "22-SEP-2023 05:50",
+                  "NI",
+                  "SIR-price"
+                ],
+                "observable": "SIR-price",
+                "reference_value": "0.103"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "FIR-price",
+                "SIR-price",
+                "FIR-required",
+                "FIR-violation",
+                "SIR-required",
+                "SIR-violation"
+              ],
+              "passed": true,
+              "reference_table": "ReserveResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "risk",
+              "certified_difference_count": 0,
+              "compared_value_count": 45,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000049841390006085193",
+              "maximum_difference": {
+                "absolute_error": "0.000049841390006085193",
+                "authority_half_unit": "0.0001",
+                "candidate_value": "4.9841390006085193e-05",
+                "identity": [
+                  "211012023091750575",
+                  "22-SEP-2023 05:50",
+                  "SI",
+                  "SIR",
+                  "CE",
+                  "MANUAL",
+                  "MANUAL",
+                  "risk-price"
+                ],
+                "observable": "risk-price",
+                "reference_value": "0.0000"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "covered-energy",
+                "covered-reserve",
+                "covered-fk-band",
+                "risk-subtractor",
+                "risk-reserve",
+                "risk-shortfall",
+                "risk-deficit",
+                "risk-reserve-price",
+                "risk-price"
+              ],
+              "passed": true,
+              "reference_table": "RiskResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "summary",
+              "certified_difference_count": 0,
+              "compared_value_count": 15,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000003441322",
+              "maximum_difference": {
+                "absolute_error": "0.000003441322",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "35362.107636558678",
+                "identity": [
+                  "211012023091750575",
+                  "22-SEP-2023 05:50",
+                  "system-cost"
+                ],
+                "observable": "system-cost",
+                "reference_value": "35362.10764"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "solve-status",
+                "system-ofv",
+                "system-cost",
+                "system-benefit",
+                "violation-cost",
+                "deficit-generation",
+                "surplus-generation",
+                "deficit-reserve",
+                "surplus-branch-flow",
+                "deficit-ramp-rate",
+                "surplus-ramp-rate",
+                "deficit-branch-constraint",
+                "surplus-branch-constraint",
+                "deficit-market-node-constraint",
+                "surplus-market-node-constraint"
+              ],
+              "passed": true,
+              "reference_table": "SummaryResults_TP"
+            }
+          ],
+          "unimplemented_reference_tables": []
+        },
+        {
+          "above_precision_count": 13,
+          "candidate_report_sha256": "a83d9dc054f3048df3b3926bec13d3667bb700ebde07604cc8b2c54e3513346b",
+          "case_id": "211012023091755576",
+          "certified_difference_count": 9,
+          "extra_identity_count": 0,
+          "missing_identity_count": 0,
+          "passed": false,
+          "reference_report_sha256": "be8690341465a0210f462288a7c2a5b0e7914a5f735362ebdcd93fd89c9dfb94",
+          "tables": [
+            {
+              "above_precision_count": 0,
+              "candidate_table": "bid",
+              "certified_difference_count": 0,
+              "compared_value_count": 4,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000000000000002",
+              "maximum_difference": {
+                "absolute_error": "0.000000000000002",
+                "authority_half_unit": "0.00005",
+                "candidate_value": "20.760000000000002",
+                "identity": [
+                  "211012023091755576",
+                  "22-SEP-2023 05:55",
+                  "TAK0331 SZR0",
+                  "SZRO",
+                  "cleared-bid-mw"
+                ],
+                "observable": "cleared-bid-mw",
+                "reference_value": "20.7600"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "cleared-bid-mw",
+                "total-bid-mw"
+              ],
+              "passed": true,
+              "reference_table": "BidResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "constraint",
+              "certified_difference_count": 0,
+              "compared_value_count": 80,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00000455887713",
+              "maximum_difference": {
+                "absolute_error": "0.00000455887713",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "-256.46808544112287",
+                "identity": [
+                  "211012023091755576",
+                  "22-SEP-2023 05:55",
+                  "GZ14_IMPORT_STABILITY_P_1A",
+                  "branch-constraint-lhs"
+                ],
+                "observable": "branch-constraint-lhs",
+                "reference_value": "-256.46809"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "branch-constraint-lhs",
+                "branch-constraint-rhs",
+                "branch-constraint-sense",
+                "branch-constraint-price"
+              ],
+              "passed": true,
+              "reference_table": "BrConstraintResults_TP"
+            },
+            {
+              "above_precision_count": 4,
+              "candidate_table": "branch",
+              "certified_difference_count": 0,
+              "compared_value_count": 8768,
+              "differences": [
+                {
+                  "absolute_error": "3.183499999999999",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-10.094999999999999",
+                  "identity": [
+                    "211012023091755576",
+                    "22-SEP-2023 05:55",
+                    "TUI_T4.T4",
+                    "308",
+                    "303",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-6.91150"
+                },
+                {
+                  "absolute_error": "3.183499999999999",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-10.094999999999999",
+                  "identity": [
+                    "211012023091755576",
+                    "22-SEP-2023 05:55",
+                    "TUI_T5.T5",
+                    "308",
+                    "304",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-6.91150"
+                },
+                {
+                  "absolute_error": "3.18350",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-5.069",
+                  "identity": [
+                    "211012023091755576",
+                    "22-SEP-2023 05:55",
+                    "TUI_T6.T6",
+                    "308",
+                    "302",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.25250"
+                },
+                {
+                  "absolute_error": "3.18350",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "-5.069",
+                  "identity": [
+                    "211012023091755576",
+                    "22-SEP-2023 05:55",
+                    "TUI_T7.T7",
+                    "308",
+                    "301",
+                    "branch-flow-mw"
+                  ],
+                  "observable": "branch-flow-mw",
+                  "reference_value": "-8.25250"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "3.18350",
+              "maximum_difference": {
+                "absolute_error": "3.18350",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "-5.069",
+                "identity": [
+                  "211012023091755576",
+                  "22-SEP-2023 05:55",
+                  "TUI_T6.T6",
+                  "308",
+                  "302",
+                  "branch-flow-mw"
+                ],
+                "observable": "branch-flow-mw",
+                "reference_value": "-8.25250"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "branch-flow-mw",
+                "branch-capacity",
+                "branch-dynamic-loss",
+                "branch-fixed-loss",
+                "branch-from-price",
+                "branch-to-price",
+                "branch-marginal-price",
+                "branch-rentals"
+              ],
+              "passed": false,
+              "reference_table": "BranchResults_TP"
+            },
+            {
+              "above_precision_count": 7,
+              "candidate_table": "bus",
+              "certified_difference_count": 0,
+              "compared_value_count": 4900,
+              "differences": [
+                {
+                  "absolute_error": "0.00050000000002",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "110.03050000000002",
+                  "identity": [
+                    "211012023091755576",
+                    "22-SEP-2023 05:55",
+                    "103",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "110.030"
+                },
+                {
+                  "absolute_error": "0.00050000000002",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "110.03050000000002",
+                  "identity": [
+                    "211012023091755576",
+                    "22-SEP-2023 05:55",
+                    "105",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "110.030"
+                },
+                {
+                  "absolute_error": "0.00050000000002",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "110.03050000000002",
+                  "identity": [
+                    "211012023091755576",
+                    "22-SEP-2023 05:55",
+                    "759",
+                    "repaired-bus-price"
+                  ],
+                  "observable": "repaired-bus-price",
+                  "reference_value": "110.030"
+                },
+                {
+                  "absolute_error": "3.183",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "5.069",
+                  "identity": [
+                    "211012023091755576",
+                    "22-SEP-2023 05:55",
+                    "301",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.252"
+                },
+                {
+                  "absolute_error": "3.183",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "5.069",
+                  "identity": [
+                    "211012023091755576",
+                    "22-SEP-2023 05:55",
+                    "302",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "8.252"
+                },
+                {
+                  "absolute_error": "3.182999999999999",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "10.094999999999999",
+                  "identity": [
+                    "211012023091755576",
+                    "22-SEP-2023 05:55",
+                    "303",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "6.912"
+                },
+                {
+                  "absolute_error": "3.182999999999999",
+                  "authority_half_unit": "0.0005",
+                  "candidate_value": "10.094999999999999",
+                  "identity": [
+                    "211012023091755576",
+                    "22-SEP-2023 05:55",
+                    "304",
+                    "bus-generation"
+                  ],
+                  "observable": "bus-generation",
+                  "reference_value": "6.912"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "3.183",
+              "maximum_difference": {
+                "absolute_error": "3.183",
+                "authority_half_unit": "0.0005",
+                "candidate_value": "5.069",
+                "identity": [
+                  "211012023091755576",
+                  "22-SEP-2023 05:55",
+                  "301",
+                  "bus-generation"
+                ],
+                "observable": "bus-generation",
+                "reference_value": "8.252"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "repaired-bus-price",
+                "bus-generation",
+                "bus-load",
+                "bus-deficit",
+                "bus-surplus"
+              ],
+              "passed": false,
+              "reference_table": "BusResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "island",
+              "certified_difference_count": 0,
+              "compared_value_count": 42,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000004124222437",
+              "maximum_difference": {
+                "absolute_error": "0.000004124222437",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "43.274184124222437",
+                "identity": [
+                  "211012023091755576",
+                  "22-SEP-2023 05:55",
+                  "SI",
+                  "FIR-received"
+                ],
+                "observable": "FIR-received",
+                "reference_value": "43.27418"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "FIR-price",
+                "SIR-price",
+                "island-generation",
+                "island-load",
+                "island-bid-load",
+                "island-ac-loss",
+                "island-hvdc-flow",
+                "island-hvdc-loss",
+                "island-reference-price",
+                "FIR-required",
+                "FIR-cleared",
+                "FIR-shared",
+                "FIR-received",
+                "FIR-effective-ce",
+                "FIR-effective-ece",
+                "SIR-required",
+                "SIR-cleared",
+                "SIR-shared",
+                "SIR-received",
+                "SIR-effective-ce",
+                "SIR-effective-ece"
+              ],
+              "passed": true,
+              "reference_table": "IslandResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "constraint",
+              "certified_difference_count": 2,
+              "compared_value_count": 32,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "10.00000399937794",
+              "maximum_difference": {
+                "absolute_error": "10.00000399937794",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "648.67454600062206",
+                "identity": [
+                  "211012023091755576",
+                  "22-SEP-2023 05:55",
+                  "FK_WTR_MW+6",
+                  "market-node-constraint-lhs"
+                ],
+                "observable": "market-node-constraint-lhs",
+                "reference_value": "658.67455"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "market-node-constraint-lhs",
+                "market-node-constraint-price",
+                "market-node-constraint-rhs",
+                "market-node-constraint-sense"
+              ],
+              "passed": true,
+              "reference_table": "MNodeConstraintResults_TP"
+            },
+            {
+              "above_precision_count": 2,
+              "candidate_table": "offer",
+              "certified_difference_count": 7,
+              "compared_value_count": 294,
+              "differences": [
+                {
+                  "absolute_error": "6.3670",
+                  "authority_half_unit": "0.00005",
+                  "candidate_value": "10.138",
+                  "identity": [
+                    "211012023091755576",
+                    "22-SEP-2023 05:55",
+                    "TUI1101 KTW0",
+                    "GENE",
+                    "generation-mw"
+                  ],
+                  "observable": "generation-mw",
+                  "reference_value": "16.5050"
+                },
+                {
+                  "absolute_error": "6.366999999999998",
+                  "authority_half_unit": "0.00005",
+                  "candidate_value": "20.189999999999998",
+                  "identity": [
+                    "211012023091755576",
+                    "22-SEP-2023 05:55",
+                    "TUI1101 PRI0",
+                    "GENE",
+                    "generation-mw"
+                  ],
+                  "observable": "generation-mw",
+                  "reference_value": "13.8230"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "17.299499999999999",
+              "maximum_difference": {
+                "absolute_error": "17.299499999999999",
+                "authority_half_unit": "0.00005",
+                "candidate_value": "11.893000000000001",
+                "identity": [
+                  "211012023091755576",
+                  "22-SEP-2023 05:55",
+                  "BEN2202 BEN0",
+                  "MERI",
+                  "offer-FIR"
+                ],
+                "observable": "offer-FIR",
+                "reference_value": "29.1925"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "generation-mw",
+                "offer-FIR",
+                "offer-SIR"
+              ],
+              "passed": false,
+              "reference_table": "OfferResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "reserve",
+              "certified_difference_count": 0,
+              "compared_value_count": 12,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00049821331505768",
+              "maximum_difference": {
+                "absolute_error": "0.00049821331505768",
+                "authority_half_unit": "0.0005",
+                "candidate_value": "0.10349821331505768",
+                "identity": [
+                  "211012023091755576",
+                  "22-SEP-2023 05:55",
+                  "NI",
+                  "SIR-price"
+                ],
+                "observable": "SIR-price",
+                "reference_value": "0.103"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "FIR-price",
+                "SIR-price",
+                "FIR-required",
+                "FIR-violation",
+                "SIR-required",
+                "SIR-violation"
+              ],
+              "passed": true,
+              "reference_table": "ReserveResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "risk",
+              "certified_difference_count": 0,
+              "compared_value_count": 45,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.000049841390006085193",
+              "maximum_difference": {
+                "absolute_error": "0.000049841390006085193",
+                "authority_half_unit": "0.0001",
+                "candidate_value": "4.9841390006085193e-05",
+                "identity": [
+                  "211012023091755576",
+                  "22-SEP-2023 05:55",
+                  "SI",
+                  "SIR",
+                  "CE",
+                  "MANUAL",
+                  "MANUAL",
+                  "risk-price"
+                ],
+                "observable": "risk-price",
+                "reference_value": "0.0000"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "covered-energy",
+                "covered-reserve",
+                "covered-fk-band",
+                "risk-subtractor",
+                "risk-reserve",
+                "risk-shortfall",
+                "risk-deficit",
+                "risk-reserve-price",
+                "risk-price"
+              ],
+              "passed": true,
+              "reference_table": "RiskResults_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "summary",
+              "certified_difference_count": 0,
+              "compared_value_count": 15,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00000438",
+              "maximum_difference": {
+                "absolute_error": "0.00000438",
+                "authority_half_unit": "0.000005",
+                "candidate_value": "78198876.85772562",
+                "identity": [
+                  "211012023091755576",
+                  "22-SEP-2023 05:55",
+                  "system-ofv"
+                ],
+                "observable": "system-ofv",
+                "reference_value": "78198876.85773"
+              },
+              "missing_identity_count": 0,
+              "missing_identity_examples": [],
+              "observables": [
+                "solve-status",
+                "system-ofv",
+                "system-cost",
+                "system-benefit",
+                "violation-cost",
+                "deficit-generation",
+                "surplus-generation",
+                "deficit-reserve",
+                "surplus-branch-flow",
+                "deficit-ramp-rate",
+                "surplus-ramp-rate",
+                "deficit-branch-constraint",
+                "surplus-branch-constraint",
+                "deficit-market-node-constraint",
+                "surplus-market-node-constraint"
+              ],
+              "passed": true,
+              "reference_table": "SummaryResults_TP"
+            }
+          ],
+          "unimplemented_reference_tables": []
+        },
+        {
+          "above_precision_count": 613,
+          "candidate_report_sha256": "f12ae5a435bd18fc1f5b99a9cd526c8740dfbf1452981a8fb88ef7b4f2dfa9b7",
+          "case_id": "base-node-day",
+          "certified_difference_count": 0,
+          "extra_identity_count": 0,
+          "missing_identity_count": 74589,
+          "passed": false,
+          "reference_report_sha256": "8e0c8b46d135cd8ad670cf38c1adbe0974cb77e58d87ce013e95654af5a48722",
+          "tables": [
+            {
+              "above_precision_count": 613,
+              "candidate_table": "node",
+              "certified_difference_count": 0,
+              "compared_value_count": 1587,
+              "differences": [
+                {
+                  "absolute_error": "0.00001370391809",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "94.76074703725142",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ABY0111",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "94.76073333333333"
+                },
+                {
+                  "absolute_error": "0.00000477747390",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "94.65943811080723",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ABY1101",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "94.65943333333333"
+                },
+                {
+                  "absolute_error": "0.00001193681283",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "107.10672139652051",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ALB0331",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "107.10673333333334"
+                },
+                {
+                  "absolute_error": "0.00000922332143",
+                  "authority_half_unit": "0.000005",
+                  "candidate_value": "107.06074077667857",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ALB1101",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "107.06075"
+                },
+                {
+                  "absolute_error": "0.00000303338840",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "106.94318636672172",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ALB2201",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "106.94318333333332"
+                },
+                {
+                  "absolute_error": "0.000014507264535",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "95.296347840597875",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "APS0111",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "95.29633333333334"
+                },
+                {
+                  "absolute_error": "0.000006007494446",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "95.131193992505544",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "APS0661",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "95.13119999999999"
+                },
+                {
+                  "absolute_error": "0.000022211565413",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "99.602688878232073",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ARA2201",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "99.60266666666666"
+                },
+                {
+                  "absolute_error": "0.000022211565413",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "99.602688878232073",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ARA2201 ARA0",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "99.60266666666666"
+                },
+                {
+                  "absolute_error": "0.00000479071247",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "101.52968812404579",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ARI1101",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "101.52968333333332"
+                },
+                {
+                  "absolute_error": "0.00000479071247",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "101.52968812404579",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ARI1101 ARI0",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "101.52968333333332"
+                },
+                {
+                  "absolute_error": "0.00000070398339",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "105.97508403731672",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ARI1102",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "105.97508333333333"
+                },
+                {
+                  "absolute_error": "0.00000070398339",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "105.97508403731672",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ARI1102 ARI0",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "105.97508333333333"
+                },
+                {
+                  "absolute_error": "0.000022756922148",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "96.602843909744522",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ASB0661",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "96.60286666666667"
+                },
+                {
+                  "absolute_error": "0.000022756922148",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "96.602843909744522",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ASB0661 HBK0",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "96.60286666666667"
+                },
+                {
+                  "absolute_error": "0.000011494222431",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "96.381978160889091",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ASB2201",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "96.38196666666666"
+                },
+                {
+                  "absolute_error": "0.00000428567651",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "101.11528761900983",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ASY0111",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "101.11528333333332"
+                },
+                {
+                  "absolute_error": "0.00000708381353",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "101.04360958285314",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ASY0661",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "101.04361666666667"
+                },
+                {
+                  "absolute_error": "0.000012141467214",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "99.929178808133884",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ATI2201",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "99.92916666666667"
+                },
+                {
+                  "absolute_error": "0.000012141467214",
+                  "authority_half_unit": "0.000000000000005",
+                  "candidate_value": "99.929178808133884",
+                  "identity": [
+                    "base",
+                    "22-Sep-2023 05:30",
+                    "ATI2201 ATI0",
+                    "node-price"
+                  ],
+                  "observable": "node-price",
+                  "reference_value": "99.92916666666667"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.997499999999999",
+              "maximum_difference": {
+                "absolute_error": "0.997499999999999",
+                "authority_half_unit": "0.0000000000000005",
+                "candidate_value": "26.141666666666666",
+                "identity": [
+                  "base",
+                  "22-Sep-2023 05:30",
+                  "TUI1101 TUI0",
+                  "node-generation"
+                ],
+                "observable": "node-generation",
+                "reference_value": "25.144166666666667"
+              },
+              "missing_identity_count": 74589,
+              "missing_identity_examples": [
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ABY0111",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ABY1101",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ALB0331",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ALB1101",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ALB2201",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "APS0111",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "APS0661",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ARA2201",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ARA2201 ARA0",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ARG1101",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ARG1101 BRR0",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ARI1101",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ARI1101 ARI0",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ARI1102",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ARI1102 ARI0",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ASB0661",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ASB0661 HBK0",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ASB2201",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ASY0111",
+                  "node-price"
+                ],
+                [
+                  "base",
+                  "22-Sep-2023 00:00",
+                  "ASY0661",
+                  "node-price"
+                ]
+              ],
+              "observables": [
+                "node-price",
+                "node-generation",
+                "node-load"
+              ],
+              "passed": false,
+              "reference_table": "NodeResults_TP"
+            }
+          ],
+          "unimplemented_reference_tables": []
+        },
+        {
+          "above_precision_count": 1,
+          "candidate_report_sha256": "73b3524725c04e0dd2c3a07c4982b12ccf7cff515d70370b84e43c585b0a6b6d",
+          "case_id": "published-day",
+          "certified_difference_count": 1,
+          "extra_identity_count": 0,
+          "missing_identity_count": 25051,
+          "passed": false,
+          "reference_report_sha256": "b708753d698acb146487e35ba5c723a3ed81f4b305fd77371b181b71aa9a6234",
+          "tables": [
+            {
+              "above_precision_count": 1,
+              "candidate_table": "published_price",
+              "certified_difference_count": 1,
+              "compared_value_count": 529,
+              "differences": [
+                {
+                  "absolute_error": "0.064899999999995",
+                  "authority_half_unit": "0.0001",
+                  "candidate_value": "99.951899999999995",
+                  "identity": [
+                    "22-SEP-2023 05:30",
+                    "TP12",
+                    "ATU1101",
+                    "published-energy-price"
+                  ],
+                  "observable": "published-energy-price",
+                  "reference_value": "99.88700"
+                }
+              ],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.121040000000006",
+              "maximum_difference": {
+                "absolute_error": "0.121040000000006",
+                "authority_half_unit": "0.0001",
+                "candidate_value": "99.172079999999994",
+                "identity": [
+                  "22-SEP-2023 05:30",
+                  "TP12",
+                  "ORO1102",
+                  "published-energy-price"
+                ],
+                "observable": "published-energy-price",
+                "reference_value": "99.29312"
+              },
+              "missing_identity_count": 24863,
+              "missing_identity_examples": [
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ABY0111",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ABY1101",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ALB0331",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ALB1101",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ALB2201",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "APS0111",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "APS0661",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ARA2201",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ARA2201 ARA0",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ARG1101",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ARG1101 BRR0",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ARI1101",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ARI1101 ARI0",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ARI1102",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ARI1102 ARI0",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ASB0661",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ASB0661 HBK0",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ASB2201",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ASY0111",
+                  "published-energy-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "ASY0661",
+                  "published-energy-price"
+                ]
+              ],
+              "observables": [
+                "published-energy-price"
+              ],
+              "passed": false,
+              "reference_table": "PublishedEnergyPrices_TP"
+            },
+            {
+              "above_precision_count": 0,
+              "candidate_table": "published_price",
+              "certified_difference_count": 0,
+              "compared_value_count": 4,
+              "differences": [],
+              "extra_identity_count": 0,
+              "extra_identity_examples": [],
+              "maximum_absolute_error": "0.00000000000000001",
+              "maximum_difference": {
+                "absolute_error": "0.00000000000000001",
+                "authority_half_unit": "0.0001",
+                "candidate_value": "0.10138999999999999",
+                "identity": [
+                  "22-SEP-2023 05:30",
+                  "TP12",
+                  "NI",
+                  "published-SIR-price"
+                ],
+                "observable": "published-SIR-price",
+                "reference_value": "0.10139"
+              },
+              "missing_identity_count": 188,
+              "missing_identity_examples": [
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "NI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 00:00",
+                  "TP1",
+                  "SI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 00:30",
+                  "TP2",
+                  "NI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 00:30",
+                  "TP2",
+                  "SI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 01:00",
+                  "TP3",
+                  "NI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 01:00",
+                  "TP3",
+                  "SI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 01:30",
+                  "TP4",
+                  "NI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 01:30",
+                  "TP4",
+                  "SI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 02:00",
+                  "TP5",
+                  "NI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 02:00",
+                  "TP5",
+                  "SI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 02:30",
+                  "TP6",
+                  "NI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 02:30",
+                  "TP6",
+                  "SI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 03:00",
+                  "TP7",
+                  "NI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 03:00",
+                  "TP7",
+                  "SI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 03:30",
+                  "TP8",
+                  "NI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 03:30",
+                  "TP8",
+                  "SI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 04:00",
+                  "TP9",
+                  "NI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 04:00",
+                  "TP9",
+                  "SI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 04:30",
+                  "TP10",
+                  "NI",
+                  "published-FIR-price"
+                ],
+                [
+                  "22-SEP-2023 04:30",
+                  "TP10",
+                  "SI",
+                  "published-FIR-price"
+                ]
+              ],
+              "observables": [
+                "published-FIR-price",
+                "published-SIR-price"
+              ],
+              "passed": false,
+              "reference_table": "PublishedReservePrices_TP"
+            }
+          ],
+          "unimplemented_reference_tables": []
+        }
+      ],
+      "independent_validation_passed": false,
+      "maximum_absolute_error": "20.330945823073792",
+      "missing_identity_count": 99640,
+      "passed": false,
+      "profile": "scip-mip-fixed-highs-rmip",
+      "tables": [
+        {
+          "above_precision_count": 0,
+          "candidate_table": "bid",
+          "certified_difference_count": 0,
+          "compared_value_count": 24,
+          "extra_identity_count": 0,
+          "maximum_absolute_error": "0.000000000000002",
+          "maximum_difference": {
+            "absolute_error": "0.000000000000002",
+            "authority_half_unit": "0.00005",
+            "candidate_value": "20.760000000000002",
+            "identity": [
+              "211012023091730566",
+              "22-SEP-2023 05:30",
+              "TAK0331 SZR0",
+              "SZRO",
+              "cleared-bid-mw"
+            ],
+            "observable": "cleared-bid-mw",
+            "reference_value": "20.7600"
+          },
+          "missing_identity_count": 0,
+          "reference_table": "BidResults_TP"
+        },
+        {
+          "above_precision_count": 0,
+          "candidate_table": "constraint",
+          "certified_difference_count": 0,
+          "compared_value_count": 484,
+          "extra_identity_count": 0,
+          "maximum_absolute_error": "0.00000455887713",
+          "maximum_difference": {
+            "absolute_error": "0.00000455887713",
+            "authority_half_unit": "0.000005",
+            "candidate_value": "-256.46808544112287",
+            "identity": [
+              "211012023091755576",
+              "22-SEP-2023 05:55",
+              "GZ14_IMPORT_STABILITY_P_1A",
+              "branch-constraint-lhs"
+            ],
+            "observable": "branch-constraint-lhs",
+            "reference_value": "-256.46809"
+          },
+          "missing_identity_count": 0,
+          "reference_table": "BrConstraintResults_TP"
+        },
+        {
+          "above_precision_count": 54,
+          "candidate_table": "branch",
+          "certified_difference_count": 0,
+          "compared_value_count": 52608,
+          "extra_identity_count": 0,
+          "maximum_absolute_error": "5.15000",
+          "maximum_difference": {
+            "absolute_error": "5.15000",
+            "authority_half_unit": "0.000005",
+            "candidate_value": "-9",
+            "identity": [
+              "211012023091730566",
+              "22-SEP-2023 05:30",
+              "TUI_T6.T6",
+              "308",
+              "302",
+              "branch-flow-mw"
+            ],
+            "observable": "branch-flow-mw",
+            "reference_value": "-3.85000"
+          },
+          "missing_identity_count": 0,
+          "reference_table": "BranchResults_TP"
+        },
+        {
+          "above_precision_count": 60,
+          "candidate_table": "bus",
+          "certified_difference_count": 0,
+          "compared_value_count": 29400,
+          "extra_identity_count": 0,
+          "maximum_absolute_error": "5.150",
+          "maximum_difference": {
+            "absolute_error": "5.150",
+            "authority_half_unit": "0.0005",
+            "candidate_value": "9",
+            "identity": [
+              "211012023091730566",
+              "22-SEP-2023 05:30",
+              "301",
+              "bus-generation"
+            ],
+            "observable": "bus-generation",
+            "reference_value": "3.850"
+          },
+          "missing_identity_count": 0,
+          "reference_table": "BusResults_TP"
+        },
+        {
+          "above_precision_count": 1,
+          "candidate_table": "island",
+          "certified_difference_count": 0,
+          "compared_value_count": 252,
+          "extra_identity_count": 0,
+          "maximum_absolute_error": "13.54306845438799",
+          "maximum_difference": {
+            "absolute_error": "13.54306845438799",
+            "authority_half_unit": "0.000005",
+            "candidate_value": "111.10725845438799",
+            "identity": [
+              "211012023091730566",
+              "22-SEP-2023 05:30",
+              "NI",
+              "SIR-shared"
+            ],
+            "observable": "SIR-shared",
+            "reference_value": "97.56419"
+          },
+          "missing_identity_count": 0,
+          "reference_table": "IslandResults_TP"
+        },
+        {
+          "above_precision_count": 0,
+          "candidate_table": "constraint",
+          "certified_difference_count": 4,
+          "compared_value_count": 192,
+          "extra_identity_count": 0,
+          "maximum_absolute_error": "10.00000399937794",
+          "maximum_difference": {
+            "absolute_error": "10.00000399937794",
+            "authority_half_unit": "0.000005",
+            "candidate_value": "648.67454600062206",
+            "identity": [
+              "211012023091755576",
+              "22-SEP-2023 05:55",
+              "FK_WTR_MW+6",
+              "market-node-constraint-lhs"
+            ],
+            "observable": "market-node-constraint-lhs",
+            "reference_value": "658.67455"
+          },
+          "missing_identity_count": 0,
+          "reference_table": "MNodeConstraintResults_TP"
+        },
+        {
+          "above_precision_count": 613,
+          "candidate_table": "node",
+          "certified_difference_count": 0,
+          "compared_value_count": 1587,
+          "extra_identity_count": 0,
+          "maximum_absolute_error": "0.997499999999999",
+          "maximum_difference": {
+            "absolute_error": "0.997499999999999",
+            "authority_half_unit": "0.0000000000000005",
+            "candidate_value": "26.141666666666666",
+            "identity": [
+              "base",
+              "22-Sep-2023 05:30",
+              "TUI1101 TUI0",
+              "node-generation"
+            ],
+            "observable": "node-generation",
+            "reference_value": "25.144166666666667"
+          },
+          "missing_identity_count": 74589,
+          "reference_table": "NodeResults_TP"
+        },
+        {
+          "above_precision_count": 11,
+          "candidate_table": "offer",
+          "certified_difference_count": 16,
+          "compared_value_count": 1764,
+          "extra_identity_count": 0,
+          "maximum_absolute_error": "20.330945823073792",
+          "maximum_difference": {
+            "absolute_error": "20.330945823073792",
+            "authority_half_unit": "0.00005",
+            "candidate_value": "27.240054176926208",
+            "identity": [
+              "211012023091750575",
+              "22-SEP-2023 05:50",
+              "BEN2202 BEN0",
+              "MERI",
+              "offer-SIR"
+            ],
+            "observable": "offer-SIR",
+            "reference_value": "47.5710"
+          },
+          "missing_identity_count": 0,
+          "reference_table": "OfferResults_TP"
+        },
+        {
+          "above_precision_count": 1,
+          "candidate_table": "published_price",
+          "certified_difference_count": 1,
+          "compared_value_count": 529,
+          "extra_identity_count": 0,
+          "maximum_absolute_error": "0.121040000000006",
+          "maximum_difference": {
+            "absolute_error": "0.121040000000006",
+            "authority_half_unit": "0.0001",
+            "candidate_value": "99.172079999999994",
+            "identity": [
+              "22-SEP-2023 05:30",
+              "TP12",
+              "ORO1102",
+              "published-energy-price"
+            ],
+            "observable": "published-energy-price",
+            "reference_value": "99.29312"
+          },
+          "missing_identity_count": 24863,
+          "reference_table": "PublishedEnergyPrices_TP"
+        },
+        {
+          "above_precision_count": 0,
+          "candidate_table": "published_price",
+          "certified_difference_count": 0,
+          "compared_value_count": 4,
+          "extra_identity_count": 0,
+          "maximum_absolute_error": "0.00000000000000001",
+          "maximum_difference": {
+            "absolute_error": "0.00000000000000001",
+            "authority_half_unit": "0.0001",
+            "candidate_value": "0.10138999999999999",
+            "identity": [
+              "22-SEP-2023 05:30",
+              "TP12",
+              "NI",
+              "published-SIR-price"
+            ],
+            "observable": "published-SIR-price",
+            "reference_value": "0.10139"
+          },
+          "missing_identity_count": 188,
+          "reference_table": "PublishedReservePrices_TP"
+        },
+        {
+          "above_precision_count": 0,
+          "candidate_table": "reserve",
+          "certified_difference_count": 0,
+          "compared_value_count": 72,
+          "extra_identity_count": 0,
+          "maximum_absolute_error": "0.00049821331505768",
+          "maximum_difference": {
+            "absolute_error": "0.00049821331505768",
+            "authority_half_unit": "0.0005",
+            "candidate_value": "0.10349821331505768",
+            "identity": [
+              "211012023091735571",
+              "22-SEP-2023 05:35",
+              "NI",
+              "SIR-price"
+            ],
+            "observable": "SIR-price",
+            "reference_value": "0.103"
+          },
+          "missing_identity_count": 0,
+          "reference_table": "ReserveResults_TP"
+        },
+        {
+          "above_precision_count": 0,
+          "candidate_table": "risk",
+          "certified_difference_count": 0,
+          "compared_value_count": 306,
+          "extra_identity_count": 0,
+          "maximum_absolute_error": "0.000049841390006085193",
+          "maximum_difference": {
+            "absolute_error": "0.000049841390006085193",
+            "authority_half_unit": "0.0001",
+            "candidate_value": "4.9841390006085193e-05",
+            "identity": [
+              "211012023091730566",
+              "22-SEP-2023 05:30",
+              "SI",
+              "SIR",
+              "CE",
+              "MANUAL",
+              "MANUAL",
+              "risk-price"
+            ],
+            "observable": "risk-price",
+            "reference_value": "0.0000"
+          },
+          "missing_identity_count": 0,
+          "reference_table": "RiskResults_TP"
+        },
+        {
+          "above_precision_count": 0,
+          "candidate_table": "summary",
+          "certified_difference_count": 0,
+          "compared_value_count": 90,
+          "extra_identity_count": 0,
+          "maximum_absolute_error": "0.00000471874098797",
+          "maximum_difference": {
+            "absolute_error": "0.00000471874098797",
+            "authority_half_unit": "0.000005",
+            "candidate_value": "0.16599528125901203",
+            "identity": [
+              "211012023091735571",
+              "22-SEP-2023 05:35",
+              "violation-cost"
+            ],
+            "observable": "violation-cost",
+            "reference_value": "0.16600"
+          },
+          "missing_identity_count": 0,
+          "reference_table": "SummaryResults_TP"
+        }
+      ]
+    }
+  ],
+  "results_directory": "tests/fixtures/cplex_reference/2023/20230922/results",
+  "schema_version": 1,
+  "scope": "All CPLEX rows and fields having an implemented PySPD report crosswalk, plus independent model validation and solver-path parity.",
+  "year": 2023
+}

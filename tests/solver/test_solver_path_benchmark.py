@@ -155,6 +155,7 @@ def test_published_price_rows_preserve_energy_reserve_weights_and_identity() -> 
     rows = _published_price_rows(
         SimpleNamespace(
             energy={("TP1", "NODE"): 12.34568},
+            energy_intervals={("TP1", "NODE"): (12.3, 12.4)},
             reserve={("TP1", "NI", "FIR"): 0.125},
             total_seconds={"TP1": 300.0},
             date_time={"TP1": "01-JAN-2024 00:00"},
@@ -167,6 +168,7 @@ def test_published_price_rows_preserve_energy_reserve_weights_and_identity() -> 
             "location": "NODE",
             "product": "energy",
             "price_nzd_per_mwh": "12.34568",
+            "price_interval": "[12.300000000000001,12.4]",
             "publication_seconds": "300",
             "date_time": "01-JAN-2024 00:00",
         },
@@ -175,6 +177,7 @@ def test_published_price_rows_preserve_energy_reserve_weights_and_identity() -> 
             "location": "NI",
             "product": "FIR",
             "price_nzd_per_mwh": "0.125",
+            "price_interval": "",
             "publication_seconds": "300",
             "date_time": "01-JAN-2024 00:00",
         },

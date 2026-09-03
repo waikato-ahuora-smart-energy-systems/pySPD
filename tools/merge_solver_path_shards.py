@@ -36,6 +36,9 @@ def main() -> None:
     records_path.parent.mkdir(parents=True, exist_ok=True)
 
     energy_numerator: dict[tuple[str, str], float] = defaultdict(float)
+    energy_lower_numerator: dict[tuple[str, str], float] = defaultdict(float)
+    energy_upper_numerator: dict[tuple[str, str], float] = defaultdict(float)
+    energy_interval_keys: set[tuple[str, str]] = set()
     reserve_numerator: dict[tuple[str, str, str], float] = defaultdict(float)
     total_seconds: dict[str, float] = defaultdict(float)
     date_time: dict[str, str] = {}
@@ -67,6 +70,9 @@ def main() -> None:
                             reserve_numerator,
                             total_seconds,
                             date_time,
+                            energy_lower_numerator=energy_lower_numerator,
+                            energy_upper_numerator=energy_upper_numerator,
+                            energy_interval_keys=energy_interval_keys,
                         )
                         if reference is not None:
                             reference_line = reference.readline()
@@ -92,6 +98,13 @@ def main() -> None:
         reserve={
             key: round(value / total_seconds[key[0]], 5)
             for key, value in reserve_numerator.items()
+        },
+        energy_intervals={
+            key: (
+                round(energy_lower_numerator[key] / total_seconds[key[0]], 5),
+                round(energy_upper_numerator[key] / total_seconds[key[0]], 5),
+            )
+            for key in energy_interval_keys
         },
         total_seconds=total_seconds,
         date_time=date_time,
@@ -194,6 +207,10 @@ def _accumulate_published(
     reserve_numerator: dict[tuple[str, str, str], float],
     total_seconds: dict[str, float],
     date_time: dict[str, str],
+    *,
+    energy_lower_numerator: dict[tuple[str, str], float] | None = None,
+    energy_upper_numerator: dict[tuple[str, str], float] | None = None,
+    energy_interval_keys: set[tuple[str, str]] | None = None,
 ) -> None:
     period = record["trading_period"]
     seconds = float.fromhex(record["publication_seconds"])
@@ -201,8 +218,28 @@ def _accumulate_published(
     if seconds <= 0.0:
         return
     total_seconds[period] += seconds
+    intervals = {
+        row["node"]: json.loads(raw)
+        for row in record.get("reports", {}).get("node", ())
+        if (raw := row.get("price_interval", ""))
+    }
     for key, value in record["prices"]["node"]:
-        energy_numerator[(period, key[-1])] += float.fromhex(value) * seconds
+        published_key = (period, key[-1])
+        price = float.fromhex(value)
+        energy_numerator[published_key] += price * seconds
+        if energy_lower_numerator is None or energy_upper_numerator is None:
+            continue
+        bounds = intervals.get(key[-1], (price, price))
+        if (
+            not isinstance(bounds, list | tuple)
+            or len(bounds) != 2
+            or float(bounds[0]) > float(bounds[1])
+        ):
+            raise ValueError(f"invalid node price interval for {key[-1]}")
+        energy_lower_numerator[published_key] += float(bounds[0]) * seconds
+        energy_upper_numerator[published_key] += float(bounds[1]) * seconds
+        if key[-1] in intervals and energy_interval_keys is not None:
+            energy_interval_keys.add(published_key)
     for key, value in record["prices"]["reserve"]:
         reserve_numerator[(period, key[-2], key[-1])] += (
             float.fromhex(value) * seconds
