@@ -138,3 +138,11 @@ their total generation and marginal block cost agree, and the actual difference
 is a 3.486 MW redistribution of identical-price second-block energy. All raw
 numeric differences remain visible and the certificate fails closed outside
 the fourteen proven identities.
+
+The certificate has also been rebound to the complete 274-case stream. Across
+3,964,736 mapped values it moves exactly fourteen rows from unresolved to
+certified: 10,058 differences are certified and 29,617 remain above precision.
+This corrects the six-case diagnostic boundary without claiming the older
+full-day stream incorporates later targeted model and interval corrections.
+See
+[`cplex-reference-comparison-20230922-highs-root-boundary-interval-tp24-allocation.json`](cplex-reference-comparison-20230922-highs-root-boundary-interval-tp24-allocation.json).

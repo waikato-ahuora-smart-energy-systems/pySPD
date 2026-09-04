@@ -34,3 +34,16 @@ six-case benchmark stream, benchmark manifest, and four CPLEX result files.
 
 The immutable evidence is
 [`cplex-tp24-energy-allocation-20230922.json`](cplex-tp24-energy-allocation-20230922.json).
+
+## Complete-day application
+
+The same fourteen identities are separately hash-bound to the latest complete
+274-case stream by
+[`cplex-tp24-energy-allocation-20230922-full-day.json`](cplex-tp24-energy-allocation-20230922-full-day.json).
+Applying it to all 3,964,736 mapped values increases certified differences
+from 10,044 to 10,058 and decreases above-precision differences from 29,631
+to 29,617. No other table count changes. The complete comparison remains
+fail-closed because it predates later targeted corrections and still contains
+the broader known price, reporting, and identity population; the TP24
+allocation itself is fully certified. The durable result is
+[`cplex-reference-comparison-20230922-highs-root-boundary-interval-tp24-allocation.json`](cplex-reference-comparison-20230922-highs-root-boundary-interval-tp24-allocation.json).

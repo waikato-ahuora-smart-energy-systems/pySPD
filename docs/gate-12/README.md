@@ -29,6 +29,9 @@ redistribution between equal-price 210.07 NZD/MWh blocks across a lossless,
 unconstrained transformer star. The certificate admits only the fourteen
 directly affected offer, bus, branch, and daily-node identities; see the
 [`TP24 equal-price allocation`](cplex-tp24-energy-allocation-20230922.md).
+The certificate is also bound to the complete 274-case stream; it certifies
+exactly fourteen additional rows without masking any of the broader known
+full-day differences.
 
 The cross-corpus treatment of basis-dependent passive zero-flow prices is in
 the [`ten-day CPLEX zero-flow analysis`](cplex-zero-flow-analysis-ten-days.md).

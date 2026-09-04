@@ -39,6 +39,26 @@ _RECORDS = (
 _CERTIFICATE = (
     _ROOT / "docs/gate-12/cplex-tp24-energy-allocation-20230922.json"
 )
+_FULL_BENCHMARK = (
+    _ROOT
+    / "docs/gate-12/cplex-reference-paths-20230922-highs-root-boundary-interval.json"
+)
+_FULL_RECORDS = (
+    _ROOT
+    / "docs/gate-12/cplex-reference-paths-20230922-highs-root-boundary-interval-scip-mip-fixed-highs-rmip.jsonl"
+)
+_FULL_CERTIFICATE = (
+    _ROOT
+    / "docs/gate-12/cplex-tp24-energy-allocation-20230922-full-day.json"
+)
+_FULL_COMPARISON = (
+    _ROOT
+    / "docs/gate-12/cplex-reference-comparison-20230922-highs-root-boundary-interval-tp24-allocation.json"
+)
+_UNCERTIFIED_FULL_COMPARISON = (
+    _ROOT
+    / "docs/gate-12/cplex-reference-comparison-20230922-highs-root-boundary-interval.json"
+)
 _CASE_ID = "211012023092330682"
 _DATETIME = "22-SEP-2023 11:30"
 
@@ -104,6 +124,34 @@ def test_tp24_certificate_fails_closed_when_tampered(tmp_path: Path) -> None:
 
     with pytest.raises(EvidenceContractError, match="certificate hash mismatch"):
         EnergyAllocationCertificateStore().load(tampered)
+
+
+def test_tp24_full_day_certificate_and_comparison_are_bound() -> None:
+    sample = EnergyAllocationCertificateStore().load(_CERTIFICATE)
+    certificate = EnergyAllocationCertificateStore().load(_FULL_CERTIFICATE)
+    benchmark = json.loads(_FULL_BENCHMARK.read_text(encoding="utf-8"))
+    comparison = json.loads(_FULL_COMPARISON.read_text(encoding="utf-8"))
+    uncertified = json.loads(
+        _UNCERTIFIED_FULL_COMPARISON.read_text(encoding="utf-8")
+    )
+    profile = comparison["profiles"][0]
+    uncertified_profile = uncertified["profiles"][0]
+
+    assert certificate.source_sha256 == _sha256(_INPUT)
+    assert certificate.benchmark_sha256 == _sha256(_FULL_BENCHMARK)
+    assert certificate.records_sha256 == _sha256(_FULL_RECORDS)
+    assert certificate.records_sha256 == benchmark["runs"][0]["records_sha256"]
+    assert certificate.accepted_identities == sample.accepted_identities
+    assert profile["complete"]
+    assert profile["case_count"] == 274
+    assert profile["all_solves_optimal"]
+    assert profile["compared_value_count"] == 3_964_736
+    assert profile["certified_difference_count"] == (
+        uncertified_profile["certified_difference_count"] + 14
+    )
+    assert profile["above_precision_count"] == (
+        uncertified_profile["above_precision_count"] - 14
+    )
 
 
 @pytest.mark.oracle
