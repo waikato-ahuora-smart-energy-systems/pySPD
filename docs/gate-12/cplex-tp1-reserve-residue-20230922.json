@@ -1,0 +1,112 @@
+{
+  "cases": [
+    {
+      "archive": {
+        "hvdc_flow_mw": 175.07606,
+        "si_fir_nzd_per_mwh": 0.07398,
+        "si_generation_mw": 1774.77027,
+        "si_sir_nzd_per_mwh": 0.08696,
+        "system_cost_nzd": 1214.75829
+      },
+      "case_id": "211012023091220476",
+      "current_fixed_rmip": {
+        "hvdc_flow_mw": 167.966482572455,
+        "objective_nzd": 567185.0821512471,
+        "si_fir_nzd_per_mwh": 0.07143999609140698,
+        "si_generation_mw": 1767.50501,
+        "si_sir_nzd_per_mwh": 0.08931633433238031,
+        "system_cost_nzd": 1214.75588
+      },
+      "date_time": "22-SEP-2023 00:20",
+      "forced_archive_flow": {
+        "objective_delta_nzd": -0.044846012373,
+        "si_fir_nzd_per_mwh": 0.01,
+        "si_sir_nzd_per_mwh": 0.01,
+        "system_cost_nzd": 1214.800765158531
+      },
+      "matrix_sha256": "7a1837148efbf2df553ce32270279ea8f3d503f262ce0d3a416f2c98c116b515"
+    },
+    {
+      "archive": {
+        "hvdc_flow_mw": 175.1573,
+        "si_fir_nzd_per_mwh": 0.07398,
+        "si_generation_mw": 1766.51234,
+        "si_sir_nzd_per_mwh": 0.08696,
+        "system_cost_nzd": 1106.61228
+      },
+      "case_id": "211012023091225478",
+      "current_fixed_rmip": {
+        "hvdc_flow_mw": 167.068665651619,
+        "objective_nzd": 567293.2911038192,
+        "si_fir_nzd_per_mwh": 0.07143999609140698,
+        "si_generation_mw": 1758.24764,
+        "si_sir_nzd_per_mwh": 0.08931633433238031,
+        "system_cost_nzd": 1106.608781
+      },
+      "date_time": "22-SEP-2023 00:25",
+      "forced_archive_flow": {
+        "objective_delta_nzd": -0.051708013052,
+        "si_fir_nzd_per_mwh": 0.01,
+        "si_sir_nzd_per_mwh": 0.01,
+        "system_cost_nzd": 1106.660998826528
+      },
+      "matrix_sha256": "312a8527ed8136dbf293098e3a54f980d68f8b2d4c2e8944cfed41c386f787db"
+    }
+  ],
+  "conclusion": {
+    "accepted": false,
+    "classification": "historical-cplex-residue-current-matrix-not-reproduced",
+    "next_action": "retain scalar failure and require a historical executable/matrix provenance breakthrough"
+  },
+  "diagnostics": {
+    "cplex_algorithm_sweep": {
+      "algorithms": [
+        "primal-simplex",
+        "dual-simplex",
+        "barrier",
+        "scaling-disabled",
+        "aggressive-scaling"
+      ],
+      "dual_optimality_tolerances": [
+        1e-09,
+        1e-06,
+        0.0001
+      ],
+      "fir_archive_reproduced": false
+    },
+    "native_cplex_solvefinal": {
+      "case_220476_si_fir": 0.07143999609140698,
+      "case_220476_si_sir": 0.08931633433238031,
+      "case_225478_si_fir": 0.07143999609140698,
+      "case_225478_si_sir": 0.08931633433238031
+    },
+    "reserve_zone_enumeration": {
+      "archive_reproduced": false,
+      "optimal_si_fir": 0.07143999609140698,
+      "optimal_si_sir": 0.08931633433238031
+    },
+    "two_sided_finite_difference": {
+      "archive_inside_current_scalar_interval": false,
+      "stable_perturbation_mw": 0.001
+    },
+    "vspd_502_daily_mode_zero": {
+      "case_220476_first_loss_mw": {
+        "NI": 52.90536,
+        "SI": 44.65372
+      },
+      "case_220476_spd_loss_mw": {
+        "NI": 52.85705,
+        "SI": 44.84293
+      },
+      "final_objective_nzd": 567185.0822,
+      "used_spd_loss_override": true
+    }
+  },
+  "logical_sha256": "ce7550a7f813d710d7f04faebd3616efe0a5c58260d9f8569d88a60521c423de",
+  "profile": "cplex-tp1-reserve-residue-v1",
+  "source": {
+    "input_sha256": "70dffe5c416eed90ffb31925d48293fc785a063dcbacb3367fca815587c9e5fc",
+    "island_results_sha256": "95ee761dea8a4c7ae900700a0c8faedb2a11f979cf74ee8498ae19bc7e5853dd",
+    "summary_results_sha256": "842740af9c81b73690f8b12b77f26807fafdbf0b89356a749caf903dd6efbaf5"
+  }
+}

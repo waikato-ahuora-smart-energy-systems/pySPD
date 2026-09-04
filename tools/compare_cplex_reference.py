@@ -14,6 +14,10 @@ from typing import Any
 
 from pyspd.reporting import _daily_definitions
 from pyspd.reserve import RESERVE_FORMULATION_ID
+from tools.gate12.energy_allocation import (
+    EnergyAllocationCertificate,
+    EnergyAllocationCertificateStore,
+)
 from tools.gate12.report_crosswalk import _TABLE_RULES
 from tools.gate12.report_row_parity import ReportRowParityValidator
 
@@ -44,10 +48,40 @@ def main() -> None:
     parser.add_argument("--results", required=True, type=Path)
     parser.add_argument("--year", required=True, type=int, choices=(2019, 2023))
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--energy-allocation-certificate", type=Path)
     args = parser.parse_args()
 
     benchmark = json.loads(args.benchmark.read_text(encoding="utf-8"))
     reference = _load_reference(args.results, year=args.year)
+    allocation_certificate = (
+        None
+        if args.energy_allocation_certificate is None
+        else EnergyAllocationCertificateStore().load(
+            args.energy_allocation_certificate.resolve()
+        )
+    )
+    if allocation_certificate is not None:
+        expected_reference_hashes = {
+            path.name: _sha256(path)
+            for path in args.results.iterdir()
+            if path.name in allocation_certificate.reference_sha256
+        }
+        if (
+            allocation_certificate.source_sha256 != benchmark["source_sha256"]
+            or allocation_certificate.benchmark_sha256 != _sha256(args.benchmark)
+            or expected_reference_hashes
+            != allocation_certificate.reference_sha256
+        ):
+            raise ValueError("energy-allocation certificate provenance mismatch")
+        matching_runs = tuple(
+            run
+            for run in benchmark["runs"]
+            if run.get("records_sha256") == allocation_certificate.records_sha256
+        )
+        if len(matching_runs) != 1 or _sha256(
+            Path(matching_runs[0]["records_path"])
+        ) != allocation_certificate.records_sha256:
+            raise ValueError("energy-allocation certificate records mismatch")
     profiles = []
     for run in benchmark["runs"]:
         records = tuple(
@@ -64,6 +98,13 @@ def main() -> None:
                 year=args.year,
                 benchmark_schema_version=(
                     int(benchmark["schema_version"]) if args.year == 2019 else 5
+                ),
+                energy_allocation_certificate=(
+                    allocation_certificate
+                    if allocation_certificate is not None
+                    and allocation_certificate.records_sha256
+                    == run["records_sha256"]
+                    else None
                 ),
             )
         )
@@ -171,6 +212,7 @@ def _compare_profile(
     *,
     year: int,
     benchmark_schema_version: int = 5,
+    energy_allocation_certificate: EnergyAllocationCertificate | None = None,
 ) -> dict[str, Any]:
     validator = ReportRowParityValidator()
     compared = missing = extra = above = certified = 0
@@ -188,6 +230,7 @@ def _compare_profile(
             case_id=record["case_id"],
             reference=json.dumps(reference_payload, sort_keys=True).encode(),
             candidate=json.dumps(candidate_payload, sort_keys=True).encode(),
+            energy_allocation_certificate=energy_allocation_certificate,
         )
         for table in result.tables:
             compared += table.compared_value_count
@@ -201,7 +244,11 @@ def _compare_profile(
             case_failures.append(result.to_dict())
     published_result = _compare_published(run, reference)
     daily_results = (
-        _compare_base_node(records, reference),
+        _compare_base_node(
+            records,
+            reference,
+            energy_allocation_certificate=energy_allocation_certificate,
+        ),
         published_result,
     )
     for daily_result in daily_results:
@@ -372,7 +419,10 @@ def _compare_published(
 
 
 def _compare_base_node(
-    records: tuple[dict[str, Any], ...], reference: dict[str, dict[str, Any]]
+    records: tuple[dict[str, Any], ...],
+    reference: dict[str, dict[str, Any]],
+    *,
+    energy_allocation_certificate: EnergyAllocationCertificate | None = None,
 ) -> Any | None:
     raw = reference.get("Base_NodeResults_TP")
     if raw is None:
@@ -411,6 +461,7 @@ def _compare_base_node(
         case_id="base-node-day",
         reference=json.dumps(reference_payload, sort_keys=True).encode(),
         candidate=json.dumps(candidate_payload, sort_keys=True).encode(),
+        energy_allocation_certificate=energy_allocation_certificate,
     )
 
 

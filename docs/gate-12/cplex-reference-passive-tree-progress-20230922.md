@@ -91,6 +91,13 @@ TP1's seven-case rerun is bound by
 [`cplex-reference-paths-20230922-tp1-root-boundary-interval.json`](cplex-reference-paths-20230922-tp1-root-boundary-interval.json)
 and
 [`cplex-reference-comparison-20230922-tp1-root-boundary-interval.json`](cplex-reference-comparison-20230922-tp1-root-boundary-interval.json).
+The two remaining TP1 reserve publications have now been isolated as a
+fail-closed historical residue. Same-matrix current CPLEX, native CPLEX
+`solvefinal`, all reserve-zone combinations, two-sided finite differences,
+and a bounded CPLEX algorithm/tolerance sweep do not reproduce the archived
+pair. See
+[`cplex-tp1-reserve-residue-20230922.md`](cplex-tp1-reserve-residue-20230922.md).
+
 The updated complete stream is bound by
 [`cplex-reference-paths-20230922-highs-root-boundary-interval.json`](cplex-reference-paths-20230922-highs-root-boundary-interval.json)
 and
@@ -124,8 +131,10 @@ bounded reserve-loss breakpoint canonicalization documented in
 [`cplex-tp4-reserve-kink-20230922.md`](cplex-tp4-reserve-kink-20230922.md).
 The 25-case prefix has zero unresolved TP4 differences in published energy,
 published reserve, island, and summary results. Continue with TP1's two SI
-reserve publications. TP24's two TUI offers also require a narrow source-backed
-alternate-energy-allocation certificate: their total generation and marginal
-block cost agree, but CPLEX and SCIP split 4.7 MW of identical-price
-second-block energy differently. All certifications must preserve the raw
-numeric differences and fail closed outside their proven equivalence class.
+reserve publications. TP24's two TUI offers are now covered by the narrow,
+source-backed certificate documented in
+[`cplex-tp24-energy-allocation-20230922.md`](cplex-tp24-energy-allocation-20230922.md):
+their total generation and marginal block cost agree, and the actual difference
+is a 3.486 MW redistribution of identical-price second-block energy. All raw
+numeric differences remain visible and the certificate fails closed outside
+the fourteen proven identities.

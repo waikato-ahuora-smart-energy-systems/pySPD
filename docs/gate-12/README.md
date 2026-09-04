@@ -19,6 +19,17 @@ Both tested pathways are complete and optimal, but neither establishes exact
 CPLEX parity; SCIP→HiGHS remains the overall-fidelity default.
 Four additional SCIP→HiGHS full-day runs are documented in the
 [`expanded CPLEX analysis`](cplex-reference-expanded-four-days.md).
+The two remaining 2023-09-22 TP1 SI reserve publications are retained as a
+fail-closed historical residue after same-matrix CPLEX, native `solvefinal`,
+reserve-zone, two-sided derivative, algorithm, and daily-mode diagnostics. See
+the [`TP1 reserve-price residue`](cplex-tp1-reserve-residue-20230922.md).
+
+TP24's alternate TUI generation is independently certified as a 3.486 MW
+redistribution between equal-price 210.07 NZD/MWh blocks across a lossless,
+unconstrained transformer star. The certificate admits only the fourteen
+directly affected offer, bus, branch, and daily-node identities; see the
+[`TP24 equal-price allocation`](cplex-tp24-energy-allocation-20230922.md).
+
 The cross-corpus treatment of basis-dependent passive zero-flow prices is in
 the [`ten-day CPLEX zero-flow analysis`](cplex-zero-flow-analysis-ten-days.md).
 The distinct 2023-09-22 TP4 reserve-loss breakpoint diagnosis and bounded

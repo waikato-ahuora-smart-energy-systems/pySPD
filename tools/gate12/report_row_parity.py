@@ -14,6 +14,7 @@ from tools.gate12.bus_price_degeneracy import (
     BusPriceCaseCertificate,
     BusPriceDegeneracyResult,
 )
+from tools.gate12.energy_allocation import EnergyAllocationCertificate
 from tools.gate12.evidence import EvidenceContractError
 from tools.gate12.replay_artifacts import CanonicalReplayBundleStore
 from tools.gate12.report_crosswalk import (
@@ -806,6 +807,7 @@ class ReportRowParityValidator:
         candidate: bytes,
         bus_price_certificate: BusPriceCaseCertificate | None = None,
         zero_flow_price_certificate: ZeroFlowPriceConventionResult | None = None,
+        energy_allocation_certificate: EnergyAllocationCertificate | None = None,
     ) -> ReportCaseRowParity:
         if bus_price_certificate is not None and (
             not bus_price_certificate.passed or bus_price_certificate.case_id != case_id
@@ -820,6 +822,8 @@ class ReportRowParityValidator:
             raise EvidenceContractError(
                 "REQ-G12-REPORT-ROW: invalid zero-flow price certificate"
             )
+        if energy_allocation_certificate is not None:
+            energy_allocation_certificate.validate()
         schema = ReportSchemaCrosswalkValidator().compare(
             case_id=case_id, reference=reference, candidate=candidate
         )
@@ -851,6 +855,7 @@ class ReportRowParityValidator:
                     candidate_payload.get(projections[0].candidate_table),
                     bus_price_certificate,
                     zero_flow_price_certificate,
+                    energy_allocation_certificate,
                 )
             )
         return ReportCaseRowParity(
@@ -892,6 +897,7 @@ class ReportRowParityValidator:
         candidate_table: object,
         bus_price_certificate: BusPriceCaseCertificate | None,
         zero_flow_price_certificate: ZeroFlowPriceConventionResult | None,
+        energy_allocation_certificate: EnergyAllocationCertificate | None,
     ) -> ReportRowTableResult:
         candidate_name = projections[0].candidate_table
         reference_rows = self._rows(reference_table, "reference")
@@ -964,6 +970,12 @@ class ReportRowParityValidator:
                         certified += 1
                     continue
                 if allocation_equivalent:
+                    certified += 1
+                    continue
+                if (
+                    energy_allocation_certificate is not None
+                    and energy_allocation_certificate.certifies(key)
+                ):
                     certified += 1
                     continue
                 interval = candidate_intervals.get(key)
