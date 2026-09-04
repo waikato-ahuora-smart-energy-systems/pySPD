@@ -259,6 +259,143 @@ def test_zero_flow_interval_uses_each_directional_loss_factor() -> None:
     )
 
 
+def test_zero_flow_transit_bus_intersects_live_boundary_intervals() -> None:
+    case = make_three_bus_case()
+    assert case.network is not None
+    period = ("C1", "T1")
+    factors = {
+        (*period, "L1", "ls1", direction): 0.01
+        for direction in ("forward", "backward")
+    } | {
+        (*period, "L2", "ls1", direction): 0.005
+        for direction in ("forward", "backward")
+    }
+    case = replace(
+        case,
+        network=replace(case.network, ac_loss_segment_factor=factors),
+    )
+    built = ModelAssembler().assemble(ac_network_formulation(), case)
+    result = NetworkSolvePolicy().solve(built)
+    assert result.solution_loaded
+    for branch in built.artifacts["branch_flow"]:
+        built.artifacts["branch_flow"][branch].set_value(0.0)
+    for branch_direction in built.artifacts["directed_branch_flow"]:
+        built.artifacts["directed_branch_flow"][branch_direction].set_value(0.0)
+
+    center = (*period, "B2")
+    candidate_prices = {
+        (*period, "B1"): 100.0,
+        center: 100.7,
+        (*period, "B3"): 100.5,
+    }
+    intervals = NetworkPricingEngine._zero_flow_leaf_prices(
+        built, case, candidate_prices
+    )
+
+    assert candidate_prices[center] == 100.7
+    assert intervals[center] == pytest.approx(
+        (100.5 * 0.995, 100.5 / 0.995)
+    )
+
+
+def test_zero_flow_transit_bus_empty_boundary_intersection_fails_closed() -> None:
+    case = make_three_bus_case()
+    assert case.network is not None
+    factors = {
+        (*branch, "ls1", direction): 0.001
+        for branch in (("C1", "T1", "L1"), ("C1", "T1", "L2"))
+        for direction in ("forward", "backward")
+    }
+    case = replace(
+        case,
+        network=replace(case.network, ac_loss_segment_factor=factors),
+    )
+    built = ModelAssembler().assemble(ac_network_formulation(), case)
+    result = NetworkSolvePolicy().solve(built)
+    assert result.solution_loaded
+    for branch in built.artifacts["branch_flow"]:
+        built.artifacts["branch_flow"][branch].set_value(0.0)
+    for branch_direction in built.artifacts["directed_branch_flow"]:
+        built.artifacts["directed_branch_flow"][branch_direction].set_value(0.0)
+
+    center = ("C1", "T1", "B2")
+    candidate_prices = {
+        ("C1", "T1", "B1"): 100.0,
+        center: 110.0,
+        ("C1", "T1", "B3"): 120.0,
+    }
+    intervals = NetworkPricingEngine._zero_flow_leaf_prices(
+        built, case, candidate_prices
+    )
+
+    assert candidate_prices[center] == 110.0
+    assert center not in intervals
+
+
+def test_zero_flow_tree_intersects_parallel_root_boundaries() -> None:
+    case = make_three_bus_case()
+    assert case.network is not None
+    period = ("C1", "T1")
+    parallel = (*period, "L3")
+    branches = case.network.branches | {parallel}
+    loss_segments = case.network.valid_ac_loss_segments | {
+        (*parallel, "ls1", direction)
+        for direction in ("forward", "backward")
+    }
+    factors = {
+        (*period, "L1", "ls1", direction): 0.01
+        for direction in ("forward", "backward")
+    } | {
+        (*period, "L2", "ls1", direction): 0.0
+        for direction in ("forward", "backward")
+    } | {
+        (*parallel, "ls1", direction): 0.005
+        for direction in ("forward", "backward")
+    }
+    network = replace(
+        case.network,
+        branches=branches,
+        ac_branches=branches,
+        branch_from_bus=case.network.branch_from_bus | {(*parallel, "B1")},
+        branch_to_bus=case.network.branch_to_bus | {(*parallel, "B2")},
+        branch_bus_connect=case.network.branch_bus_connect
+        | {(*parallel, "B1"), (*parallel, "B2")},
+        valid_ac_loss_segments=loss_segments,
+        node_load={
+            (*period, "N1"): 50.0,
+            (*period, "N2"): 0.0,
+            (*period, "N3"): 0.0,
+        },
+        branch_capacity=case.network.branch_capacity
+        | {
+            (*parallel, direction): 100.0
+            for direction in ("forward", "backward")
+        },
+        branch_susceptance=case.network.branch_susceptance | {parallel: 100.0},
+        branch_fixed_loss=case.network.branch_fixed_loss | {parallel: 0.0},
+        ac_loss_segment_mw=case.network.ac_loss_segment_mw
+        | {
+            (*parallel, "ls1", direction): 100.0
+            for direction in ("forward", "backward")
+        },
+        ac_loss_segment_factor=factors,
+    )
+
+    built, prices, _report = solve(replace(case, network=network))
+
+    root = (*period, "B2")
+    child = (*period, "B3")
+    for branch in ("L1", "L2", "L3"):
+        assert pyo.value(
+            built.artifacts["branch_flow"][*period, branch]
+        ) == pytest.approx(0.0, abs=1e-8)
+    expected = (10.0 * 0.995, 10.0 / 0.995)
+    assert prices.bus[root] == prices.raw_bus_duals[root]
+    assert prices.bus[child] == prices.raw_bus_duals[child]
+    assert prices.bus_price_intervals[root] == pytest.approx(expected)
+    assert prices.bus_price_intervals[child] == pytest.approx(expected)
+
+
 def test_loss_segment_boundary_and_reverse_direction_are_exact() -> None:
     segments = (("ls1", 20.0, 0.05), ("ls2", 100.0, 0.10))
     forward, _prices, _report = solve(

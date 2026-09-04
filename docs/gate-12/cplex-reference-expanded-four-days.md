@@ -72,17 +72,16 @@ only an acyclic passive component with exactly one live boundary and propagates
 the selected export endpoint through every edge. Components with cycles or
 multiple live boundaries remain solver-selected.
 
-The progressive replay now covers 59 cases across TP10, TP12, TP14, TP15,
-TP16, TP19, TP20, TP25, TP29, and TP33. Nine periods have no unresolved
-published-energy, published-reserve, or summary difference. TP12 retains one
-unrelated 0.06490 NZD/MWh ATU1101 publication residual. The evidence path now
-preserves weighted analytic intervals through daily aggregation: this
-classifies basis-dependent CPLEX prices without changing the governed export
-scalar. The cumulative substitution reduces above-precision values from
-34,438 to 34,237, and the next unresolved published-energy maximum is TP21
-ORO1101 at 0.17462 NZD/MWh. See the
+The progressive replay now covers all 274 cases and 48 trading periods.
+Forty-seven periods have no unresolved published-energy difference. TP12's
+former 0.06490 NZD/MWh ATU1101 scalar residual is certified by intersecting
+the analytical intervals imposed by its two live zero-flow boundaries; the
+HiGHS scalar is retained. TP1's two ARI rows are likewise certified by the
+intersection at the shared root of a passive transformer tree with two
+parallel live boundaries. The current TP1/TP12-substituted complete stream has
+29,631 unresolved and 10,044 certified mapped differences. Published energy
+has 167 unresolved rows, all in TP4. See the
 [`progressive validation record`](cplex-reference-passive-tree-progress-20230922.md).
-A complete-day rerun is still required.
 
 ### 2023-11-24
 
@@ -160,6 +159,20 @@ Compact run summaries bind the ignored full JSONL streams by SHA-256:
   and [`cplex-reference-comparison-20230922-highs-tp29-corrected.json`](cplex-reference-comparison-20230922-highs-tp29-corrected.json)
 - [`cplex-reference-paths-20230922-highs-passive-tree-partial.json`](cplex-reference-paths-20230922-highs-passive-tree-partial.json)
   and [`cplex-reference-comparison-20230922-highs-passive-tree-partial.json`](cplex-reference-comparison-20230922-highs-passive-tree-partial.json)
+- [`cplex-reference-paths-20230922-highs-passive-tree-tp21.json`](cplex-reference-paths-20230922-highs-passive-tree-tp21.json)
+  and [`cplex-reference-comparison-20230922-highs-passive-tree-tp21.json`](cplex-reference-comparison-20230922-highs-passive-tree-tp21.json)
+- [`cplex-reference-paths-20230922-highs-passive-tree-priority.json`](cplex-reference-paths-20230922-highs-passive-tree-priority.json)
+  and [`cplex-reference-comparison-20230922-highs-passive-tree-priority.json`](cplex-reference-comparison-20230922-highs-passive-tree-priority.json)
+- [`cplex-reference-paths-20230922-highs-passive-tree-complete.json`](cplex-reference-paths-20230922-highs-passive-tree-complete.json)
+  and [`cplex-reference-comparison-20230922-highs-passive-tree-complete.json`](cplex-reference-comparison-20230922-highs-passive-tree-complete.json)
+- [`cplex-reference-paths-20230922-tp12-transit-interval.json`](cplex-reference-paths-20230922-tp12-transit-interval.json)
+  and [`cplex-reference-comparison-20230922-tp12-transit-interval.json`](cplex-reference-comparison-20230922-tp12-transit-interval.json)
+- [`cplex-reference-paths-20230922-highs-transit-interval.json`](cplex-reference-paths-20230922-highs-transit-interval.json)
+  and [`cplex-reference-comparison-20230922-highs-transit-interval.json`](cplex-reference-comparison-20230922-highs-transit-interval.json)
+- [`cplex-reference-paths-20230922-tp1-root-boundary-interval.json`](cplex-reference-paths-20230922-tp1-root-boundary-interval.json)
+  and [`cplex-reference-comparison-20230922-tp1-root-boundary-interval.json`](cplex-reference-comparison-20230922-tp1-root-boundary-interval.json)
+- [`cplex-reference-paths-20230922-highs-root-boundary-interval.json`](cplex-reference-paths-20230922-highs-root-boundary-interval.json)
+  and [`cplex-reference-comparison-20230922-highs-root-boundary-interval.json`](cplex-reference-comparison-20230922-highs-root-boundary-interval.json)
 - [`cplex-reference-paths-20231124-highs-corrected.json`](cplex-reference-paths-20231124-highs-corrected.json)
   and [`cplex-reference-comparison-20231124-highs-corrected.json`](cplex-reference-comparison-20231124-highs-corrected.json)
 - [`cplex-reference-paths-20231124-tp16-source-disconnection-three-cases.json`](cplex-reference-paths-20231124-tp16-source-disconnection-three-cases.json)

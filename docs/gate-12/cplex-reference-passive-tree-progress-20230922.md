@@ -2,28 +2,37 @@
 
 ## Outcome
 
-The generalized passive zero-flow tree correction has been replayed for 59 of
-the 274 cases on 2023-09-22. The refreshed inventory covers TP10, TP12, TP14,
-TP15, TP16, TP19, TP20, TP25, TP29, and TP33. Every case reports an optimal
-SCIP MIP followed by HiGHS fixed-RMIP solve.
+The generalized passive zero-flow tree correction has now been replayed in
+canonical order for all 274 cases and all 48 trading periods on 2023-09-22.
+Every case reports an optimal SCIP MIP followed by HiGHS fixed-RMIP solve;
+there were no retries. Solver time was 3,202.66 seconds and wall time was
+3,872.95 seconds.
 
-Nine of the ten targeted periods have zero unresolved published-energy,
-published-reserve, and summary differences at the Authority's stored
-precision. TP12 retains one unrelated published-energy residual at ATU1101 of
-0.06490 NZD/MWh. Its original ORO1101 error is removed, and its ORO1102 value
-is independently contained by the analytic interval.
+Forty-seven of the 48 periods have zero unresolved published-energy differences
+at the Authority's stored precision. All 167 unresolved published-energy rows
+are confined to TP4. TP1 retains two SI reserve-price differences; TP4 retains
+one SI FIR-price difference; nine summary values remain above stored
+precision. TP12 ATU1101's scalar differs from CPLEX by
+0.06490 NZD/MWh, but the difference is independently certified by the
+multi-boundary passive-transit interval.
 
 | Period | Cases | Energy unresolved | Energy interval-certified | Maximum scalar energy difference (NZD/MWh) | Reserve unresolved | Summary unresolved |
 |---|---:|---:|---:|---:|---:|---:|
+| TP1 | 7 | 0 | 363 | 0.02355 | 2 | 6 |
 | TP10 | 6 | 0 | 2 | 0.18343 | 0 | 0 |
-| TP12 | 6 | 1 | 1 | 0.12104 | 0 | 0 |
+| TP12 | 6 | 0 | 2 | 0.12104 | 0 | 0 |
+| TP13 | 6 | 0 | 1 | 0.14727 | 0 | 0 |
 | TP14 | 6 | 0 | 2 | 0.25478 | 0 | 0 |
 | TP15 | 6 | 0 | 1 | 0.19278 | 0 | 0 |
 | TP16 | 6 | 0 | 1 | 0.01143 | 0 | 0 |
 | TP19 | 6 | 0 | 0 | <0.00001 | 0 | 0 |
 | TP20 | 6 | 0 | 0 | <0.00001 | 0 | 0 |
+| TP21 | 6 | 0 | 1 | 0.17462 | 0 | 0 |
+| TP24 | 6 | 0 | 0 | <0.00001 | 0 | 0 |
 | TP25 | 6 | 0 | 1 | 0.02304 | 0 | 0 |
+| TP26 | 6 | 0 | 1 | 0.00886 | 0 | 0 |
 | TP29 | 5 | 0 | 0 | <0.00001 | 0 | 0 |
+| TP30 | 6 | 0 | 0 | <0.00001 | 0 | 0 |
 | TP33 | 6 | 0 | 2 | 0.25713 | 0 | 0 |
 
 The maximum scalar difference is retained even when certified. It is not an
@@ -66,16 +75,56 @@ the earlier records for periods not yet replayed. It is bound by
 and compared in
 [`cplex-reference-comparison-20230922-highs-passive-tree-partial.json`](cplex-reference-comparison-20230922-highs-passive-tree-partial.json).
 
-Relative to the original complete-day comparison, the total above-precision
-count falls from 34,438 to 34,237. At the published-energy boundary, 522
-differences are interval-certified and 188 remain unresolved in periods that
-mostly still contain pre-correction records. The next unresolved published
-maximum is TP21 ORO1101 at 0.17462 NZD/MWh. A complete 274-case rerun is still
-required before the day can be certified as a current-model result.
+Under the current v7 interval-aware validator, the TP1/TP12-substituted
+complete stream has 29,631 above-precision rows and 10,044 certified
+differences across 3,964,736 mapped values. At the published-energy boundary,
+536 differences are interval-certified and 167 remain unresolved. TP21
+ORO1101 is no longer
+unresolved: CPLEX's 112.04301 NZD/MWh lies inside the weighted analytic
+interval [111.86839, 113.03644] NZD/MWh.
+
+TP12's six-case rerun is bound by
+[`cplex-reference-paths-20230922-tp12-transit-interval.json`](cplex-reference-paths-20230922-tp12-transit-interval.json)
+and
+[`cplex-reference-comparison-20230922-tp12-transit-interval.json`](cplex-reference-comparison-20230922-tp12-transit-interval.json).
+TP1's seven-case rerun is bound by
+[`cplex-reference-paths-20230922-tp1-root-boundary-interval.json`](cplex-reference-paths-20230922-tp1-root-boundary-interval.json)
+and
+[`cplex-reference-comparison-20230922-tp1-root-boundary-interval.json`](cplex-reference-comparison-20230922-tp1-root-boundary-interval.json).
+The updated complete stream is bound by
+[`cplex-reference-paths-20230922-highs-root-boundary-interval.json`](cplex-reference-paths-20230922-highs-root-boundary-interval.json)
+and
+[`cplex-reference-comparison-20230922-highs-root-boundary-interval.json`](cplex-reference-comparison-20230922-highs-root-boundary-interval.json).
+It substitutes only those thirteen freshly solved TP1 and TP12 records into
+the prior complete 274-case stream and inherits the other 261 solves and the
+recorded timing.
+
+The six-case result and its cumulative substitution are bound by
+[`cplex-reference-paths-20230922-tp21-passive-tree-six-cases.json`](cplex-reference-paths-20230922-tp21-passive-tree-six-cases.json),
+[`cplex-reference-comparison-20230922-tp21-passive-tree-six-cases.json`](cplex-reference-comparison-20230922-tp21-passive-tree-six-cases.json),
+[`cplex-reference-paths-20230922-highs-passive-tree-tp21.json`](cplex-reference-paths-20230922-highs-passive-tree-tp21.json),
+and
+[`cplex-reference-comparison-20230922-highs-passive-tree-tp21.json`](cplex-reference-comparison-20230922-highs-passive-tree-tp21.json).
+
+The four-period priority batch and its cumulative substitution are bound by
+the TP13, TP24, TP26, and TP30 `paths`/`comparison` pairs and by
+[`cplex-reference-paths-20230922-highs-passive-tree-priority.json`](cplex-reference-paths-20230922-highs-passive-tree-priority.json)
+and
+[`cplex-reference-comparison-20230922-highs-passive-tree-priority.json`](cplex-reference-comparison-20230922-highs-passive-tree-priority.json).
+
+The authoritative full-day replay is bound by
+[`cplex-reference-paths-20230922-highs-passive-tree-complete.json`](cplex-reference-paths-20230922-highs-passive-tree-complete.json)
+and
+[`cplex-reference-comparison-20230922-highs-passive-tree-complete.json`](cplex-reference-comparison-20230922-highs-passive-tree-complete.json).
 
 ## Next execution
 
-Continue the compare-as-you-go replay with TP21, TP24, TP26, TP30, and TP13,
-then run the remaining periods and replace the partial stream with one complete
-current-model solve. Reassess TP12 ATU1101 and the three published-reserve and
-nine summary residuals only after that complete rerun.
+Diagnose the remaining coupled price cluster: TP1's two SI reserve
+publications, and TP4's 167 energy and one SI FIR publication. Unlike the
+zero-flow energy certificates, the TP4 difference also changes reserve
+sharing and summary cost and must not be classified as a node-only dual
+interval. TP24's two TUI offers also require a narrow source-backed
+alternate-energy-allocation certificate: their total generation and marginal
+block cost agree, but CPLEX and SCIP split 4.7 MW of identical-price
+second-block energy differently. All certifications must preserve the raw
+numeric differences and fail closed outside their proven equivalence class.

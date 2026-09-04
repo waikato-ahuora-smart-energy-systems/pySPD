@@ -32,12 +32,17 @@ Its complete-day evidence is bound by
 [`cplex-reference-paths-20231124-highs-corrected.json`](cplex-reference-paths-20231124-highs-corrected.json)
 and
 [`cplex-reference-comparison-20231124-highs-corrected.json`](cplex-reference-comparison-20231124-highs-corrected.json).
-For 2023-09-22, the passive-tree replay now covers 59 cases across ten trading
-periods. Nine periods have zero unresolved published-energy,
-published-reserve, and summary differences; TP12 retains one unrelated
-ATU1101 publication residual. Weighted analytic intervals are now preserved
-through solver-path serialization and stream aggregation, while the governed
-scalar remains the export endpoint. See the
+For 2023-09-22, the passive-tree replay now covers all 274 cases across all 48
+trading periods, with every SCIP MIP and HiGHS fixed-RMIP solve optimal.
+Forty-seven periods have zero unresolved published-energy differences; all 167
+remaining rows are confined to TP4. Weighted analytic intervals
+are preserved through solver-path serialization and stream aggregation, while
+the governed scalar remains the export endpoint. A passive singleton with
+multiple live boundaries now retains its solver scalar and exposes only the
+non-empty intersection of its boundary intervals; this certifies TP12
+ATU1101 without selecting a CPLEX-specific value. The same construction
+handles TP1's passive ARI transformer tree because its two live parallel
+boundaries meet at one root. See the
 [`progressive validation record`](cplex-reference-passive-tree-progress-20230922.md)
 for the current boundary and remaining complete-day obligation.
 

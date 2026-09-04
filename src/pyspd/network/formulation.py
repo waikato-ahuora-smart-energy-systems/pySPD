@@ -133,7 +133,10 @@ class NetworkPricingEngine(PricingEngine):
         Historical vSPD/CPLEX result sets select the export-side endpoint for
         WPT1101.  Normalize to that endpoint and propagate it through any
         zero-loss transformer leaves. Positive-loss boundaries anchor the
-        recursion; unanchored zero-loss cycles retain their solver duals.
+        recursion.  A passive tree whose multiple live boundaries meet at one
+        root retains its solver duals and receives the intersection of the
+        boundary intervals when that intersection is non-empty.
+        Unanchored zero-loss cycles retain their solver duals.
         """
 
         network = case.network
@@ -189,13 +192,13 @@ class NetworkPricingEngine(PricingEngine):
             if any(
                 abs(float(pyo.value(generation[(*prefix, offer)]))) > tolerance
                 for *prefix, offer, node in network.offer_node
-                if tuple(prefix) == bus[:2] and node in nodes
+                if tuple(prefix) == bus[:2] and (*prefix, node) in nodes
             ):
                 return False
             return not any(
                 abs(float(pyo.value(purchase[(*prefix, bid)]))) > tolerance
                 for *prefix, bid, node in network.bid_node
-                if tuple(prefix) == bus[:2] and node in nodes
+                if tuple(prefix) == bus[:2] and (*prefix, node) in nodes
             )
 
         endpoints = {
@@ -219,8 +222,10 @@ class NetworkPricingEngine(PricingEngine):
             if passive(bus, tuple(raw_branches))
         }
         selected: dict[Key, tuple[Key, Key, float, float]] = {}
+        boundary_intervals: dict[Key, tuple[float, float]] = {}
+        preserve_scalar: set[Key] = set()
 
-        def select(bus: Key, branch: Key, parent: Key) -> None:
+        def edge_factors(bus: Key, branch: Key) -> tuple[float, float] | None:
             from_bus = next(
                 key[3] for key in network.branch_from_bus if key[:3] == branch
             )
@@ -234,13 +239,50 @@ class NetworkPricingEngine(PricingEngine):
                 inward_direction = "backward"
                 outward_direction = "forward"
             else:  # pragma: no cover - guarded by the network-data contract
-                return
-            selected[bus] = (
-                branch,
-                parent,
+                return None
+            return (
                 first_factor(branch, inward_direction),
                 first_factor(branch, outward_direction),
             )
+
+        def select(bus: Key, branch: Key, parent: Key) -> None:
+            factors = edge_factors(bus, branch)
+            if factors is None:  # pragma: no cover - guarded above
+                return
+            inward_factor, outward_factor = factors
+            selected[bus] = (
+                branch,
+                parent,
+                inward_factor,
+                outward_factor,
+            )
+
+        def local_interval(
+            parent_price: float,
+            inward_factor: float,
+            outward_factor: float,
+        ) -> tuple[float, float]:
+            inward_denominator = 1.0 - receiving_share * inward_factor
+            outward_denominator = 1.0 + (
+                1.0 - receiving_share
+            ) * outward_factor
+            if (
+                min(inward_factor, outward_factor) < 0.0
+                or inward_denominator <= 0.0
+                or outward_denominator <= 0.0
+            ):
+                raise ValueError("AC loss factor makes incremental delivery invalid")
+            export_ratio = (
+                1.0 - receiving_share * outward_factor
+            ) / outward_denominator
+            load_ratio = (
+                1.0 + (1.0 - receiving_share) * inward_factor
+            ) / inward_denominator
+            endpoints = (
+                parent_price * export_ratio,
+                parent_price * load_ratio,
+            )
+            return min(endpoints), max(endpoints)
 
         # A passive zero-injection tree has one live boundary. Orient every
         # branch away from that boundary so an export-side choice propagates
@@ -275,6 +317,41 @@ class NetworkPricingEngine(PricingEngine):
                 for left, right in (endpoints[branch],)
                 if (right if left == bus else left) not in component
             }
+            boundary_roots = {bus for bus, _branch, _parent in boundary}
+            if (
+                len(boundary) > 1
+                and len(internal) == len(component) - 1
+                and len(boundary_roots) == 1
+            ):
+                root = next(iter(boundary_roots))
+                candidates = []
+                for _bus, branch, parent in boundary:
+                    factors = edge_factors(root, branch)
+                    if factors is None:  # pragma: no cover - guarded above
+                        continue
+                    candidates.append(local_interval(original[parent], *factors))
+                if candidates:
+                    intersection = (
+                        max(bounds[0] for bounds in candidates),
+                        min(bounds[1] for bounds in candidates),
+                    )
+                    if intersection[0] <= intersection[1] + tolerance:
+                        boundary_intervals[root] = intersection
+                        preserve_scalar.update(component)
+                        root_queue: list[Key] = [root]
+                        root_visited: set[Key] = set()
+                        while root_queue:
+                            bus = root_queue.pop(0)
+                            if bus in root_visited:
+                                continue
+                            root_visited.add(bus)
+                            for branch in incident[bus]:
+                                left, right = endpoints[branch]
+                                child = right if left == bus else left
+                                if child in component and child not in root_visited:
+                                    select(child, branch, bus)
+                                    root_queue.append(child)
+                continue
             if len(boundary) != 1 or len(internal) != len(component) - 1:
                 continue
             root, root_branch, root_parent = next(iter(boundary))
@@ -326,46 +403,38 @@ class NetworkPricingEngine(PricingEngine):
             parent_interval = (
                 analytic_interval(parent, visiting | {bus})
                 if parent in selected
-                else None
+                else boundary_intervals.get(parent)
             )
             if inward_factor == 0.0 and outward_factor == 0.0:
                 value = parent_interval
                 interval_memo[bus] = value
                 return value
-            inward_denominator = 1.0 - receiving_share * inward_factor
-            outward_denominator = 1.0 + (
-                1.0 - receiving_share
-            ) * outward_factor
-            if (
-                min(inward_factor, outward_factor) < 0.0
-                or inward_denominator <= 0.0
-                or outward_denominator <= 0.0
-            ):
-                raise ValueError("AC loss factor makes incremental delivery invalid")
             parent_price = cplex_price(parent, visiting | {bus})
             parent_bounds = parent_interval or (parent_price, parent_price)
-            export_ratio = (
-                1.0 - receiving_share * outward_factor
-            ) / outward_denominator
-            load_ratio = (
-                1.0 + (1.0 - receiving_share) * inward_factor
-            ) / inward_denominator
             endpoints = tuple(
-                bound * ratio
+                endpoint
                 for bound in parent_bounds
-                for ratio in (export_ratio, load_ratio)
+                for endpoint in local_interval(
+                    bound, inward_factor, outward_factor
+                )
             )
             value = (min(endpoints), max(endpoints))
             interval_memo[bus] = value
             return value
 
         for bus in selected:
-            prices[bus] = cplex_price(bus, frozenset())
+            if bus not in preserve_scalar:
+                prices[bus] = cplex_price(bus, frozenset())
             analytic_interval(bus, frozenset())
-        return {
+        intervals = boundary_intervals | {
             bus: interval
             for bus, interval in interval_memo.items()
             if interval is not None and interval[1] - interval[0] > tolerance
+        }
+        return {
+            bus: interval
+            for bus, interval in intervals.items()
+            if interval[1] - interval[0] > tolerance
         }
 
     def price(self, built_model: BuiltModel, solve_result: SolveResult) -> NetworkPrices:
