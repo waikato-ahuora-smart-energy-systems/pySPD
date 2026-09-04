@@ -58,7 +58,9 @@ class IndependentReserveValidator:
         *,
         tolerance: float = 1e-6,
     ) -> ReserveValidationReport:
-        built = outcome.primary_model
+        # The fixed RMIP is the accepted continuous solve used for reports;
+        # SCIP's primary MIP supplies only the discrete/SOS decisions.
+        built = outcome.pricing_model
         case = built.case_data
         if not isinstance(case, ReserveCase) or case.reserve is None:
             raise TypeError("reserve validation requires ReserveCase")
@@ -122,6 +124,7 @@ class IndependentReserveValidator:
         self._shortfall_residuals(artifacts, residuals)
         self._risk_residuals(case, artifacts, residuals)
         self._sharing_residuals(case, artifacts, residuals, tolerance)
+        self._support_polishing_residuals(outcome, residuals)
         self._canonicalization_residuals(outcome, residuals)
         self._objective_residuals(case, artifacts, residuals)
         passed = all(
@@ -131,6 +134,26 @@ class IndependentReserveValidator:
         return ReserveValidationReport(residuals, tolerance, passed)
 
     @staticmethod
+    def _support_polishing_residuals(
+        outcome: HvdcSolveOutcome,
+        residuals: dict[str, float],
+    ) -> None:
+        audit = outcome.sos_support_polishing
+        if audit is None:
+            return
+        final_support_objective = (
+            outcome.pricing_canonicalization.baseline_objective
+            if outcome.pricing_canonicalization is not None
+            else outcome.pricing_snapshot.objective
+        )
+        residuals["sos_support_polishing_objective"] = abs(
+            final_support_objective - audit.polished_objective
+        )
+        residuals["sos_support_polishing_regression"] = (
+            max(0.0, -audit.objective_improvement) if audit.accepted else 0.0
+        )
+
+    @staticmethod
     def _canonicalization_residuals(
         outcome: HvdcSolveOutcome,
         residuals: dict[str, float],
@@ -138,11 +161,16 @@ class IndependentReserveValidator:
         audit = outcome.pricing_canonicalization
         if audit is None:
             return
-        reserve_sent = outcome.pricing_model.artifacts["hvdc_reserve_sent"]
         for name, target in audit.accepted_targets.items():
-            key = tuple(name.split("|"))
+            parts = tuple(name.split("|"))
+            if parts[0] == "hvdc_sent":
+                artifact_name = parts[0]
+                key = parts[1:]
+            else:
+                artifact_name = "hvdc_reserve_sent"
+                key = parts
             residuals[f"pricing_canonicalization_target:{key}"] = abs(
-                _value(reserve_sent[key]) - target
+                _value(outcome.pricing_model.artifacts[artifact_name][key]) - target
             )
 
     @staticmethod

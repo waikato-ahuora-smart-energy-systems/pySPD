@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pyomo.environ as pyo
 import pytest
 
@@ -46,7 +48,11 @@ def test_pricing_preserves_native_sos_support_and_reoptimises_active_weights() -
 
     expected_names = {
         variable.name
-        for artifact in ("lambda_hvdc_energy", "lambda_hvdc_reserve")
+        for artifact in (
+            "hvdc_lambda",
+            "lambda_hvdc_energy",
+            "lambda_hvdc_reserve",
+        )
         for variable in built.artifacts[artifact].values()
     }
     assert set(outcome.fixed_sos_members) == expected_names
@@ -76,3 +82,25 @@ def test_sos_member_fixing_is_separate_from_binary_fix_map() -> None:
         for artifact in ("lambda_hvdc_energy", "lambda_hvdc_reserve")
         for variable in outcome.primary_model.artifacts[artifact].values()
     )
+
+
+def test_native_pricing_records_objective_guarded_sos_support_polishing() -> None:
+    case = make_reserve_case()
+    assert case.hvdc is not None
+    case = replace(
+        case,
+        hvdc=replace(
+            case.hvdc,
+            sos_representation=SosRepresentation.NATIVE,
+        ),
+    )
+    built = ModelAssembler().assemble(reserve_formulation(), case)
+
+    outcome = ReserveSolvePolicy().solve(built)
+
+    audit = outcome.sos_support_polishing
+    assert audit is not None
+    assert audit.policy == "objective-improving-adjacent-sos-support-v1"
+    assert audit.discovery_objective >= audit.baseline_objective - 1e-8
+    assert audit.polished_objective >= audit.baseline_objective - 1e-8
+    assert audit.objective_improvement >= -1e-8

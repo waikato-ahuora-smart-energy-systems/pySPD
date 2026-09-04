@@ -197,6 +197,43 @@ def test_publication_weights_analytic_intervals_and_omits_scalar_only_nodes() ->
     ).passed
 
 
+def test_publication_weights_reserve_price_intervals() -> None:
+    first = make_daily_case(seconds=100.0)
+    second = make_daily_case("C2", "01-JAN-2024 00:05", ordinal=1, seconds=200.0)
+    processor = MarketPricePostProcessor()
+
+    def result(case, price, interval):
+        observation = make_observation(case)
+        reserve_key = next(iter(observation.reserve_prices))
+        observation = replace(
+            observation,
+            reserve_prices={reserve_key: price},
+            reserve_price_intervals={reserve_key: interval} if interval else {},
+        )
+        return CaseRunResult(
+            case,
+            CaseRunStatus.COMPLETE,
+            1,
+            observation,
+            processor.process(observation, price_transfer_enabled=False),
+            (),
+            {},
+            {},
+            frozenset(),
+        )
+
+    cases = (
+        result(first, 0.0075, (0.0075, 0.01)),
+        result(second, 0.01, None),
+    )
+    published = PublishedPriceAggregator().aggregate(cases, decimals=5)
+
+    key = ("TP1", "NI", "FIR")
+    assert published.reserve[key] == 0.00917
+    assert published.reserve_intervals[key] == (0.00917, 0.01)
+    assert IndependentPublicationValidator().validate(cases, published).passed
+
+
 def test_publication_accumulator_resumes_without_retaining_case_results() -> None:
     first = make_daily_case(seconds=100.0)
     second = make_daily_case("C2", "01-JAN-2024 00:05", ordinal=1, seconds=200.0)

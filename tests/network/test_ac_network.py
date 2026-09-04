@@ -259,7 +259,63 @@ def test_zero_flow_interval_uses_each_directional_loss_factor() -> None:
     )
 
 
-def test_zero_flow_transit_bus_intersects_live_boundary_intervals() -> None:
+def test_zero_flow_interval_covers_locally_balanced_generation_leaf() -> None:
+    case = make_three_bus_case()
+    assert case.network is not None
+    period = ("C1", "T1")
+    region = (*period, "NI")
+    local_offer = (*period, "LOCAL")
+    local_block = (*local_offer, "1")
+    network = replace(
+        case.network,
+        offer_node=case.network.offer_node | {(*local_offer, "N3")},
+        positive_offers=case.network.positive_offers | {local_offer},
+        node_load={
+            (*period, "N1"): 0.0,
+            (*period, "N2"): 50.0,
+            (*period, "N3"): 20.0,
+        },
+        ac_loss_segment_factor={
+            (*period, branch, "ls1", direction): 0.001 if branch == "L2" else 0.0
+            for branch in ("L1", "L2")
+            for direction in ("forward", "backward")
+        },
+    )
+    case = replace(
+        case,
+        offers=case.offers | {local_offer},
+        offer_blocks=case.offer_blocks | {local_block},
+        generation_offers=case.generation_offers | {local_offer},
+        primary_offers=case.primary_offers | {local_offer},
+        offer_region=case.offer_region | {local_offer: region},
+        offer_limit=case.offer_limit | {local_block: 20.0},
+        offer_price=case.offer_price | {local_block: 0.001},
+        generation_start=case.generation_start | {local_offer: 0.0},
+        ramp_rate_up=case.ramp_rate_up | {local_offer: 10_000.0},
+        ramp_rate_down=case.ramp_rate_down | {local_offer: 10_000.0},
+        required_load={region: 70.0},
+        network=network,
+    )
+
+    built, prices, _report = solve(case)
+
+    leaf = (*period, "B3")
+    assert pyo.value(built.artifacts["branch_flow"][*period, "L2"]) == pytest.approx(
+        0.0, abs=1e-9
+    )
+    assert pyo.value(built.artifacts["net_injection"][leaf]) == pytest.approx(
+        0.0, abs=1e-9
+    )
+    assert prices.bus[leaf] == prices.raw_bus_duals[leaf]
+    assert prices.bus_price_intervals[leaf] == pytest.approx(
+        (10.0 * 0.999, 10.0 / 0.999)
+    )
+    assert prices.node_price_intervals[(*period, "N3")] == pytest.approx(
+        (10.0 * 0.999, 10.0 / 0.999)
+    )
+
+
+def test_zero_flow_transit_bus_projects_outlying_scalar_into_intersection() -> None:
     case = make_three_bus_case()
     assert case.network is not None
     period = ("C1", "T1")
@@ -285,17 +341,16 @@ def test_zero_flow_transit_bus_intersects_live_boundary_intervals() -> None:
     center = (*period, "B2")
     candidate_prices = {
         (*period, "B1"): 100.0,
-        center: 100.7,
+        center: 99.0,
         (*period, "B3"): 100.5,
     }
     intervals = NetworkPricingEngine._zero_flow_leaf_prices(
         built, case, candidate_prices
     )
 
-    assert candidate_prices[center] == 100.7
-    assert intervals[center] == pytest.approx(
-        (100.5 * 0.995, 100.5 / 0.995)
-    )
+    expected = (100.5 * 0.995, 100.5 / 0.995)
+    assert candidate_prices[center] == pytest.approx(expected[0])
+    assert intervals[center] == pytest.approx(expected)
 
 
 def test_zero_flow_transit_bus_empty_boundary_intersection_fails_closed() -> None:
@@ -332,7 +387,7 @@ def test_zero_flow_transit_bus_empty_boundary_intersection_fails_closed() -> Non
     assert center not in intervals
 
 
-def test_zero_flow_tree_intersects_parallel_root_boundaries() -> None:
+def test_zero_flow_tree_aggregates_parallel_root_boundaries_by_susceptance() -> None:
     case = make_three_bus_case()
     assert case.network is not None
     period = ("C1", "T1")
@@ -371,7 +426,7 @@ def test_zero_flow_tree_intersects_parallel_root_boundaries() -> None:
             (*parallel, direction): 100.0
             for direction in ("forward", "backward")
         },
-        branch_susceptance=case.network.branch_susceptance | {parallel: 100.0},
+        branch_susceptance=case.network.branch_susceptance | {parallel: 300.0},
         branch_fixed_loss=case.network.branch_fixed_loss | {parallel: 0.0},
         ac_loss_segment_mw=case.network.ac_loss_segment_mw
         | {
@@ -389,7 +444,11 @@ def test_zero_flow_tree_intersects_parallel_root_boundaries() -> None:
         assert pyo.value(
             built.artifacts["branch_flow"][*period, branch]
         ) == pytest.approx(0.0, abs=1e-8)
-    expected = (10.0 * 0.995, 10.0 / 0.995)
+    effective_factor = (100.0 * 0.01 + 300.0 * 0.005) / 400.0
+    expected = (
+        10.0 * (1.0 - effective_factor),
+        10.0 / (1.0 - effective_factor),
+    )
     assert prices.bus[root] == prices.raw_bus_duals[root]
     assert prices.bus[child] == prices.raw_bus_duals[child]
     assert prices.bus_price_intervals[root] == pytest.approx(expected)
@@ -398,7 +457,7 @@ def test_zero_flow_tree_intersects_parallel_root_boundaries() -> None:
 
 def test_loss_segment_boundary_and_reverse_direction_are_exact() -> None:
     segments = (("ls1", 20.0, 0.05), ("ls2", 100.0, 0.10))
-    forward, _prices, _report = solve(
+    forward, forward_prices, _report = solve(
         make_network_case(load=19.0, loss_segments=segments)
     )
     assert pyo.value(
@@ -411,7 +470,14 @@ def test_loss_segment_boundary_and_reverse_direction_are_exact() -> None:
             "C1", "T1", "L1", "ls2", "forward"
         ]
     ) == pytest.approx(0.0)
-    reverse, _prices, _report = solve(
+    assert forward_prices.bus_price_intervals["C1", "T1", "B2"] == pytest.approx(
+        (10.0 / 0.95, 10.0 / 0.90)
+    )
+    assert forward_prices.node_price_intervals["C1", "T1", "N2"] == pytest.approx(
+        (10.0 / 0.95, 10.0 / 0.90)
+    )
+    assert ("C1", "T1", "B1") not in forward_prices.bus_price_intervals
+    reverse, reverse_prices, _report = solve(
         make_network_case(
             load=19.0,
             generation_bus="B2",
@@ -424,6 +490,13 @@ def test_loss_segment_boundary_and_reverse_direction_are_exact() -> None:
             "C1", "T1", "L1", "ls1", "backward"
         ]
     ) == pytest.approx(20.0)
+    assert reverse_prices.bus_price_intervals["C1", "T1", "B1"] == pytest.approx(
+        (10.0 / 0.95, 10.0 / 0.90)
+    )
+    assert reverse_prices.node_price_intervals["C1", "T1", "N1"] == pytest.approx(
+        (10.0 / 0.95, 10.0 / 0.90)
+    )
+    assert ("C1", "T1", "B2") not in reverse_prices.bus_price_intervals
 
 
 def test_all_security_constraint_senses_bind_or_remain_slack() -> None:

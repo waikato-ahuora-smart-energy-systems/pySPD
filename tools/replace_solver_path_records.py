@@ -173,6 +173,9 @@ def _replace_stream(
     energy_upper_numerator: dict[tuple[str, str], float] = defaultdict(float)
     energy_interval_keys: set[tuple[str, str]] = set()
     reserve_numerator: dict[tuple[str, str, str], float] = defaultdict(float)
+    reserve_lower_numerator: dict[tuple[str, str, str], float] = defaultdict(float)
+    reserve_upper_numerator: dict[tuple[str, str, str], float] = defaultdict(float)
+    reserve_interval_keys: set[tuple[str, str, str]] = set()
     total_seconds: dict[str, float] = defaultdict(float)
     date_time: dict[str, str] = {}
     parity = _empty_parity(profile)
@@ -192,6 +195,9 @@ def _replace_stream(
             energy_lower_numerator=energy_lower_numerator,
             energy_upper_numerator=energy_upper_numerator,
             energy_interval_keys=energy_interval_keys,
+            reserve_lower_numerator=reserve_lower_numerator,
+            reserve_upper_numerator=reserve_upper_numerator,
+            reserve_interval_keys=reserve_interval_keys,
         )
         _update_parity(parity, record, record)
 
@@ -236,6 +242,13 @@ def _replace_stream(
                 round(energy_upper_numerator[key] / total_seconds[key[0]], 5),
             )
             for key in energy_interval_keys
+        },
+        reserve_intervals={
+            key: (
+                round(reserve_lower_numerator[key] / total_seconds[key[0]], 5),
+                round(reserve_upper_numerator[key] / total_seconds[key[0]], 5),
+            )
+            for key in reserve_interval_keys
         },
         total_seconds=total_seconds,
         date_time=date_time,

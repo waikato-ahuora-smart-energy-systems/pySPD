@@ -13,6 +13,9 @@ def test_shard_publication_accumulator_preserves_authoritative_weights() -> None
     energy_upper: dict[tuple[str, str], float] = defaultdict(float)
     interval_keys: set[tuple[str, str]] = set()
     reserve: dict[tuple[str, str, str], float] = defaultdict(float)
+    reserve_lower: dict[tuple[str, str, str], float] = defaultdict(float)
+    reserve_upper: dict[tuple[str, str, str], float] = defaultdict(float)
+    reserve_interval_keys: set[tuple[str, str, str]] = set()
     seconds: dict[str, float] = defaultdict(float)
     date_time: dict[str, str] = {}
     record = {
@@ -31,6 +34,14 @@ def test_shard_publication_accumulator_preserves_authoritative_weights() -> None
                 }
             ]
         },
+        "price_intervals": {
+            "reserve": [
+                [
+                    ["C1", "D1", "NI", "FIR"],
+                    [1.5.hex(), 2.5.hex()],
+                ]
+            ]
+        },
     }
 
     _accumulate_published(
@@ -42,6 +53,9 @@ def test_shard_publication_accumulator_preserves_authoritative_weights() -> None
         energy_lower_numerator=energy_lower,
         energy_upper_numerator=energy_upper,
         energy_interval_keys=interval_keys,
+        reserve_lower_numerator=reserve_lower,
+        reserve_upper_numerator=reserve_upper,
+        reserve_interval_keys=reserve_interval_keys,
     )
 
     assert energy == {("TP1", "N1"): 6000.0}
@@ -49,6 +63,9 @@ def test_shard_publication_accumulator_preserves_authoritative_weights() -> None
     assert energy_upper == {("TP1", "N1"): 6300.0}
     assert interval_keys == {("TP1", "N1")}
     assert reserve == {("TP1", "NI", "FIR"): 600.0}
+    assert reserve_lower == {("TP1", "NI", "FIR"): 450.0}
+    assert reserve_upper == {("TP1", "NI", "FIR"): 750.0}
+    assert reserve_interval_keys == {("TP1", "NI", "FIR")}
     assert seconds == {"TP1": 300.0}
     assert date_time == {"TP1": "01-JAN-2024 00:00"}
 

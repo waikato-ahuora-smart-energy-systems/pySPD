@@ -204,6 +204,9 @@ class SolveObservation:
     raw_bus_price_intervals: Mapping[Key, tuple[float, float]] = field(
         default_factory=dict
     )
+    reserve_price_intervals: Mapping[Key, tuple[float, float]] = field(
+        default_factory=dict
+    )
     node_market_island: Mapping[Key, str] = field(default_factory=dict)
     node_transfer: tuple[tuple[Key, Key], ...] = ()
     persistent_disconnected_buses: frozenset[Key] = frozenset()
@@ -243,6 +246,15 @@ class SolveObservation:
                 name="raw_bus_price_intervals",
             ),
         )
+        object.__setattr__(
+            self,
+            "reserve_price_intervals",
+            _price_interval_proxy(
+                self.reserve_price_intervals,
+                valid_keys=self.reserve_prices,
+                name="reserve_price_intervals",
+            ),
+        )
         object.__setattr__(self, "node_market_island", _proxy(self.node_market_island))
         object.__setattr__(
             self,
@@ -270,6 +282,7 @@ class PriceTrace:
         default_factory=dict
     )
     node_intervals: Mapping[Key, tuple[float, float]] = field(default_factory=dict)
+    reserve_intervals: Mapping[Key, tuple[float, float]] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         for name in (
@@ -289,6 +302,7 @@ class PriceTrace:
             ("raw_bus_intervals", self.raw_bus),
             ("repaired_bus_intervals", self.repaired_bus),
             ("node_intervals", self.node),
+            ("reserve_intervals", self.reserve),
         ):
             object.__setattr__(
                 self,
@@ -351,6 +365,9 @@ class PublishedPrices:
     energy_intervals: Mapping[tuple[str, str], tuple[float, float]] = field(
         default_factory=dict
     )
+    reserve_intervals: Mapping[
+        tuple[str, str, str], tuple[float, float]
+    ] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "energy", _proxy(self.energy))
@@ -364,6 +381,15 @@ class PublishedPrices:
                 self.energy_intervals,
                 valid_keys=self.energy,
                 name="energy_intervals",
+            ),
+        )
+        object.__setattr__(
+            self,
+            "reserve_intervals",
+            _price_interval_proxy(
+                self.reserve_intervals,
+                valid_keys=self.reserve,
+                name="reserve_intervals",
             ),
         )
 

@@ -1264,6 +1264,9 @@ class V5DailyReportRenderer(DailyReportRenderer):
                     "island": island,
                     "reserve_class": reserve_class,
                     "price_nzd_per_mwh": _number(value),
+                    "price_interval": _price_interval(
+                        prices.reserve_intervals.get(reserve_key)
+                    ),
                 }
                 rows["reserve"].append(reserve_row)
                 rows["island"].append(reserve_row.copy())
@@ -1310,7 +1313,11 @@ class V5DailyReportRenderer(DailyReportRenderer):
                         "location": island,
                         "product": reserve_class,
                         "price_nzd_per_mwh": _number(value),
-                        "price_interval": "",
+                        "price_interval": _price_interval(
+                            run.published.reserve_intervals.get(
+                                (period, island, reserve_class)
+                            )
+                        ),
                         "publication_seconds": _number(
                             run.published.total_seconds[period]
                         ),
@@ -1386,6 +1393,7 @@ def _daily_definitions(formulation_id: str) -> dict[str, ReportDefinition]:
             ("island", "id"),
             ("reserve_class", "id"),
             ("price_nzd_per_mwh", "NZD/MWh"),
+            ("price_interval", "NZD/MWh"),
             ("generation_mw", "MW"),
             ("load_mw", "MW"),
             ("bid_load_mw", "MW"),
@@ -1445,6 +1453,7 @@ def _daily_definitions(formulation_id: str) -> dict[str, ReportDefinition]:
             ("island", "id"),
             ("reserve_class", "id"),
             ("price_nzd_per_mwh", "NZD/MWh"),
+            ("price_interval", "NZD/MWh"),
             ("required_mw", "MW"),
             ("violation_mw", "MW"),
         ),

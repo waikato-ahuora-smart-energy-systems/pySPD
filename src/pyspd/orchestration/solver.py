@@ -315,6 +315,7 @@ class ReserveCaseExecutor:
             raw_bus_prices=prices.energy.raw_bus_duals,
             raw_bus_price_intervals=prices.energy.bus_price_intervals,
             reserve_prices=reserve_prices,
+            reserve_price_intervals=prices.reserve_price_intervals,
             node_bus_allocation=network.node_bus_allocation,
             bus_electrical_island=network.bus_electrical_island,
             node_electrical_island=node_island,

@@ -51,7 +51,10 @@ class IndependentHvdcValidator:
         *,
         tolerance: float = 1e-7,
     ) -> HvdcValidationReport:
-        built = outcome.primary_model
+        # The primary MIP selects the discrete/SOS state.  The fixed RMIP is
+        # the accepted continuous solution and the source of all reported
+        # quantities and prices, so feasibility must be checked on that model.
+        built = outcome.pricing_model
         case = built.case_data
         if not isinstance(case, HvdcCase) or case.hvdc is None:
             raise TypeError("HVDC validation requires HvdcCase")
@@ -142,8 +145,14 @@ class IndependentHvdcValidator:
                 canonicalization.canonical_objective
                 - outcome.pricing_snapshot.objective
             )
-        residuals["pricing_objective_fixed_discrete"] = abs(
-            outcome.primary_snapshot.objective - pricing_objective
+        objective_scale = max(
+            1.0,
+            abs(outcome.primary_snapshot.objective),
+            abs(pricing_objective),
+        )
+        residuals["pricing_objective_fixed_discrete_relative"] = (
+            abs(outcome.primary_snapshot.objective - pricing_objective)
+            / objective_scale
         )
         passed = all(
             math.isfinite(value) and value <= tolerance

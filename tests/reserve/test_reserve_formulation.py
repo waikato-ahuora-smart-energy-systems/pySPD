@@ -217,6 +217,41 @@ def test_reserve_kink_objective_loss_respects_objective_sense() -> None:
     assert loss(pyo.maximize, 10.0, 10.001) == 0.0
 
 
+def test_round_power_zone_boundary_is_a_bounded_canonicalization_candidate() -> None:
+    case = make_reserve_case()
+    assert case.reserve is not None
+    reserve = replace(
+        case.reserve,
+        reserve_round_power={
+            ("C1", "T1", reserve_class): float(reserve_class == "FIR")
+            for reserve_class in RESERVE_CLASSES
+        },
+        round_power_zone_exit={
+            ("C1", "T1", reserve_class): 50.0
+            for reserve_class in RESERVE_CLASSES
+        },
+    )
+    built = ModelAssembler().assemble(
+        reserve_formulation(), replace(case, reserve=reserve)
+    )
+    sent = built.artifacts["hvdc_sent"]
+    zones = built.artifacts["in_zone_binary"]
+    for key in sent:
+        sent[key].set_value(0.0)
+    for key in zones:
+        zones[key].set_value(0.0)
+    sent["C1", "T1", "SI"].set_value(50.4)
+    zones["C1", "T1", "SI", "FIR", "RZ"].set_value(1.0)
+
+    canonicalizer = ReserveKinkCanonicalizer(maximum_round_power_distance_mw=1.0)
+
+    assert canonicalizer._round_power_targets(built) == {
+        ("hvdc_sent", ("C1", "T1", "SI")): 50.0
+    }
+    sent["C1", "T1", "SI"].set_value(51.1)
+    assert canonicalizer._round_power_targets(built) == {}
+
+
 def test_exact_reserve_share_perturbation_coefficients() -> None:
     built = build()
     definition = built.artifacts["sharing_constraints"]
@@ -313,3 +348,29 @@ def test_reserve_price_matches_fixed_rmip_rhs_perturbation() -> None:
     key = ("C1", "T1", "NI", "FIR")
     check = validate_reserve_price_finite_difference(outcome, key)
     assert check.passed, check
+
+
+def test_zero_reserve_kink_exposes_verified_marginal_price_interval() -> None:
+    case = make_reserve_case()
+    assert case.reserve is not None
+    data = replace(
+        case.reserve,
+        offer_island=frozenset({("C1", "T1", "GEN", "SI")}),
+        risk_minimum={key: 0.0 for key in case.reserve.risk_minimum},
+        risk_adjustment_factor={
+            key: 0.0 for key in case.reserve.risk_adjustment_factor
+        },
+        reserve_share_enabled={
+            key: 0.0 for key in case.reserve.reserve_share_enabled
+        },
+    )
+    built = ModelAssembler().assemble(
+        reserve_formulation(), replace(case, reserve=data)
+    )
+    outcome = ReserveSolvePolicy().solve(built)
+
+    prices = ReservePricingEngine().price(built, outcome)
+
+    key = ("C1", "T1", "SI", "FIR")
+    assert prices.reserve[key] == pytest.approx(0.0)
+    assert prices.reserve_price_intervals[key] == pytest.approx((0.0, 1.0))

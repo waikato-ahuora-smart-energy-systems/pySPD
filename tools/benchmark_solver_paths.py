@@ -402,6 +402,9 @@ def _case_record(
             name: _mapping(getattr(accepted, name)) for name in PHYSICS_SURFACES
         },
         "prices": {name: _mapping(getattr(prices, name)) for name in PRICE_SURFACES},
+        "price_intervals": {
+            "reserve": _interval_mapping(prices.reserve_intervals),
+        },
         "reports": reports,
     }
 
@@ -444,9 +447,25 @@ def _mapping(values: Mapping[Any, float]) -> list[list[Any]]:
     return sorted(records, key=lambda item: item[0])
 
 
+def _interval_mapping(
+    values: Mapping[Any, tuple[float, float]],
+) -> list[list[Any]]:
+    records = []
+    for raw_key, raw_bounds in values.items():
+        key = raw_key if isinstance(raw_key, tuple) else (raw_key,)
+        records.append(
+            [
+                list(map(str, key)),
+                [float(raw_bounds[0]).hex(), float(raw_bounds[1]).hex()],
+            ]
+        )
+    return sorted(records, key=lambda item: item[0])
+
+
 def _published_price_rows(published: Any) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
     energy_intervals = getattr(published, "energy_intervals", {})
+    reserve_intervals = getattr(published, "reserve_intervals", {})
     for (period, node), price in sorted(published.energy.items()):
         interval = energy_intervals.get((period, node))
         rows.append(
@@ -471,13 +490,20 @@ def _published_price_rows(published: Any) -> list[dict[str, str]]:
     for (period, island, reserve_class), price in sorted(
         published.reserve.items()
     ):
+        interval = reserve_intervals.get((period, island, reserve_class))
         rows.append(
             {
                 "trading_period": period,
                 "location": island,
                 "product": reserve_class,
                 "price_nzd_per_mwh": format(float(price), ".17g"),
-                "price_interval": "",
+                "price_interval": (
+                    ""
+                    if interval is None
+                    else "["
+                    + ",".join(format(float(bound), ".17g") for bound in interval)
+                    + "]"
+                ),
                 "publication_seconds": format(
                     float(published.total_seconds[period]), ".17g"
                 ),

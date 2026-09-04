@@ -119,6 +119,176 @@ class NetworkPricingEngine(PricingEngine):
     supported_formulations = _SUPPORTED
 
     @staticmethod
+    def _loss_kink_leaf_prices(
+        built_model: BuiltModel,
+        case: NetworkCase,
+        prices: Mapping[Key, float],
+        *,
+        tolerance: float = 1e-7,
+    ) -> dict[Key, tuple[float, float]]:
+        """Return the analytic dual interval at a radial AC-loss breakpoint.
+
+        When a radial branch flow is exactly the cumulative width of one or
+        more loss blocks, either adjacent loss slope is a valid subgradient.
+        A leaf without an interior marginal energy variable can therefore take
+        either corresponding balance dual.  Exposing both endpoints prevents
+        an LP-basis choice from being mistaken for an energy-price mismatch.
+        """
+
+        network = case.network
+        assert network is not None
+        incident: dict[Key, list[Key]] = defaultdict(list)
+        for branch in network.ac_branches:
+            for key in network.branch_bus_connect:
+                if key[:3] == branch:
+                    incident[(*branch[:2], key[3])].append(branch)
+
+        artifacts = built_model.artifacts
+        directed_flow = artifacts["directed_branch_flow"]
+        flow_block = artifacts["branch_flow_block"]
+        generation_block = artifacts["generation_block"]
+        purchase_block = artifacts["purchase_block"]
+        scarcity = artifacts["energy_scarcity_node"]
+        deficit = artifacts["balance_deficit"]
+        surplus = artifacts["balance_surplus"]
+        receiving_share = network.receiving_end_loss_proportion
+
+        def nodes_at(bus: Key) -> set[Key]:
+            return {
+                (*bus[:2], key[2])
+                for key in network.node_bus
+                if (*key[:2], key[3]) == bus
+                and abs(network.node_bus_allocation.get(key, 0.0)) > tolerance
+            }
+
+        def has_interior_marginal(bus: Key) -> bool:
+            nodes = nodes_at(bus)
+            if (
+                abs(float(pyo.value(deficit[bus]))) > tolerance
+                or abs(float(pyo.value(surplus[bus]))) > tolerance
+                or any(
+                    abs(float(pyo.value(scarcity[node]))) > tolerance
+                    for node in nodes
+                )
+            ):
+                return True
+            for *prefix, offer, node in network.offer_node:
+                if tuple(prefix) != bus[:2] or (*prefix, node) not in nodes:
+                    continue
+                for block_key in case.offer_blocks:
+                    if block_key[:3] != (*prefix, offer):
+                        continue
+                    value = float(pyo.value(generation_block[block_key]))
+                    limit = case.offer_limit[block_key]
+                    if tolerance < value < limit - tolerance:
+                        return True
+            for *prefix, bid, node in network.bid_node:
+                if tuple(prefix) != bus[:2] or (*prefix, node) not in nodes:
+                    continue
+                for block_key in case.bid_blocks:
+                    if block_key[:3] != (*prefix, bid):
+                        continue
+                    value = float(pyo.value(purchase_block[block_key]))
+                    limit = case.bid_limit[block_key]
+                    if tolerance < value < limit - tolerance:
+                        return True
+            return False
+
+        def ratio(factor: float) -> float | None:
+            numerator = 1.0 - receiving_share * factor
+            denominator = 1.0 + (1.0 - receiving_share) * factor
+            if factor < 0.0 or numerator <= 0.0 or denominator <= 0.0:
+                return None
+            return numerator / denominator
+
+        intervals: dict[Key, tuple[float, float]] = {}
+        for branch in network.ac_branches:
+            from_bus_name = next(
+                key[3] for key in network.branch_from_bus if key[:3] == branch
+            )
+            to_bus_name = next(
+                key[3] for key in network.branch_to_bus if key[:3] == branch
+            )
+            from_bus = (*branch[:2], from_bus_name)
+            to_bus = (*branch[:2], to_bus_name)
+            for direction, sender, receiver in (
+                ("forward", from_bus, to_bus),
+                ("backward", to_bus, from_bus),
+            ):
+                active_flow = float(pyo.value(directed_flow[*branch, direction]))
+                reverse = "backward" if direction == "forward" else "forward"
+                if (
+                    active_flow <= tolerance
+                    or abs(float(pyo.value(directed_flow[*branch, reverse])))
+                    > tolerance
+                ):
+                    continue
+                segments = sorted(
+                    (
+                        key
+                        for key in network.valid_ac_loss_segments
+                        if key[:3] == branch and key[4] == direction
+                    ),
+                    key=lambda key: (network.ac_loss_segment_factor[key], key[3]),
+                )
+                boundary: tuple[float, float] | None = None
+                cumulative = 0.0
+                for index, key in enumerate(segments[:-1]):
+                    width = network.ac_loss_segment_mw[key]
+                    cumulative += width
+                    next_key = segments[index + 1]
+                    filled = abs(float(pyo.value(flow_block[key])) - width)
+                    next_empty = abs(float(pyo.value(flow_block[next_key])))
+                    scale = max(1.0, abs(active_flow), abs(cumulative))
+                    if (
+                        filled <= tolerance * scale
+                        and next_empty <= tolerance * scale
+                        and abs(active_flow - cumulative) <= tolerance * scale
+                    ):
+                        boundary = (
+                            network.ac_loss_segment_factor[key],
+                            network.ac_loss_segment_factor[next_key],
+                        )
+                        break
+                if boundary is None:
+                    continue
+                radial_leaves = [
+                    bus for bus in (sender, receiver) if len(incident[bus]) == 1
+                ]
+                candidates = (
+                    radial_leaves
+                    if len(radial_leaves) == 1
+                    else [
+                        bus
+                        for bus in radial_leaves
+                        if not has_interior_marginal(bus)
+                    ]
+                )
+                for leaf in candidates:
+                    parent = receiver if leaf == sender else sender
+                    endpoint_values: list[float] = []
+                    for factor in boundary:
+                        marginal_ratio = ratio(factor)
+                        if marginal_ratio is None:
+                            endpoint_values = []
+                            break
+                        endpoint_values.append(
+                            prices[parent] * marginal_ratio
+                            if leaf == sender
+                            else prices[parent] / marginal_ratio
+                        )
+                    if len(endpoint_values) != 2:
+                        continue
+                    bounds = (min(endpoint_values), max(endpoint_values))
+                    raw = prices[leaf]
+                    endpoint_tolerance = tolerance * max(1.0, abs(raw))
+                    if min(abs(raw - value) for value in endpoint_values) <= (
+                        endpoint_tolerance
+                    ):
+                        intervals[leaf] = bounds
+        return intervals
+
+    @staticmethod
     def _zero_flow_leaf_prices(
         built_model: BuiltModel,
         case: NetworkCase,
@@ -134,8 +304,9 @@ class NetworkPricingEngine(PricingEngine):
         WPT1101.  Normalize to that endpoint and propagate it through any
         zero-loss transformer leaves. Positive-loss boundaries anchor the
         recursion.  A passive tree whose multiple live boundaries meet at one
-        root retains its solver duals and receives the intersection of the
-        boundary intervals when that intersection is non-empty.
+        root retains a solver dual already inside the intersection of the
+        boundary intervals. An outlying basis dual is projected to the nearest
+        analytic endpoint so the scalar and its certificate remain consistent.
         Unanchored zero-loss cycles retain their solver duals.
         """
 
@@ -149,9 +320,12 @@ class NetworkPricingEngine(PricingEngine):
 
         branch_flow = built_model.artifacts["branch_flow"]
         directed_flow = built_model.artifacts["directed_branch_flow"]
+        net_injection = built_model.artifacts["net_injection"]
         generation = built_model.artifacts["generation"]
         purchase = built_model.artifacts["purchase"]
         scarcity = built_model.artifacts["energy_scarcity_node"]
+        deficit = built_model.artifacts["balance_deficit"]
+        surplus = built_model.artifacts["balance_surplus"]
         receiving_share = network.receiving_end_loss_proportion
         original = dict(prices)
 
@@ -163,10 +337,10 @@ class NetworkPricingEngine(PricingEngine):
             ]
             return min(factors, default=0.0)
 
-        def passive(bus: Key, branches: tuple[Key, ...]) -> bool:
+        def zero_flow_bus(bus: Key, branches: tuple[Key, ...]) -> bool:
             if network.bus_electrical_island.get(bus, 0.0) == 0.0:
                 return False
-            if any(
+            return not any(
                 abs(float(pyo.value(branch_flow[branch]))) > tolerance
                 or abs(network.branch_fixed_loss.get(branch, 0.0)) > tolerance
                 or any(
@@ -175,7 +349,10 @@ class NetworkPricingEngine(PricingEngine):
                     for direction in ("forward", "backward")
                 )
                 for branch in branches
-            ):
+            )
+
+        def passive(bus: Key, branches: tuple[Key, ...]) -> bool:
+            if not zero_flow_bus(bus, branches):
                 return False
             nodes = {
                 (*bus[:2], key[2])
@@ -284,6 +461,9 @@ class NetworkPricingEngine(PricingEngine):
             )
             return min(endpoints), max(endpoints)
 
+        def project(value: float, interval: tuple[float, float]) -> float:
+            return min(max(value, interval[0]), interval[1])
+
         # A passive zero-injection tree has one live boundary. Orient every
         # branch away from that boundary so an export-side choice propagates
         # through chains containing more than one lossy branch. Components
@@ -325,11 +505,26 @@ class NetworkPricingEngine(PricingEngine):
             ):
                 root = next(iter(boundary_roots))
                 candidates = []
+                parallel_boundaries: dict[Key, list[Key]] = defaultdict(list)
                 for _bus, branch, parent in boundary:
-                    factors = edge_factors(root, branch)
-                    if factors is None:  # pragma: no cover - guarded above
+                    parallel_boundaries[parent].append(branch)
+                for parent, parallel_branches in parallel_boundaries.items():
+                    weighted_factors = []
+                    for branch in parallel_branches:
+                        factors = edge_factors(root, branch)
+                        if factors is None:  # pragma: no cover - guarded above
+                            continue
+                        weight = abs(float(network.branch_susceptance[branch]))
+                        weighted_factors.append((weight, factors))
+                    total_weight = sum(weight for weight, _factors in weighted_factors)
+                    if total_weight <= tolerance:
                         continue
-                    candidates.append(local_interval(original[parent], *factors))
+                    aggregate = tuple(
+                        sum(weight * factors[index] for weight, factors in weighted_factors)
+                        / total_weight
+                        for index in range(2)
+                    )
+                    candidates.append(local_interval(original[parent], *aggregate))
                 if candidates:
                     intersection = (
                         max(bounds[0] for bounds in candidates),
@@ -338,6 +533,7 @@ class NetworkPricingEngine(PricingEngine):
                     if intersection[0] <= intersection[1] + tolerance:
                         boundary_intervals[root] = intersection
                         preserve_scalar.update(component)
+                        prices[root] = project(original[root], intersection)
                         root_queue: list[Key] = [root]
                         root_visited: set[Key] = set()
                         while root_queue:
@@ -368,6 +564,48 @@ class NetworkPricingEngine(PricingEngine):
                     child = right if left == bus else left
                     if child in component and child not in visited:
                         queue.append((child, child_branch, bus))
+
+        # A leaf can also be locally balanced by fixed/limited generation and
+        # equal load. Its net injection and sole branch flow are both zero, so
+        # the two one-sided loss derivatives still bound valid balance duals.
+        # Preserve the solver scalar, but expose the same analytical interval
+        # used for an empty passive leaf. Exclude scarcity, balance slack, and
+        # cleared demand bids because those can impose a tighter local bound.
+        balanced_leaf_candidates: dict[Key, tuple[Key, Key]] = {}
+        for bus, raw_branches in incident.items():
+            branches = tuple(raw_branches)
+            if (
+                bus in passive_buses
+                or len(branches) != 1
+                or not zero_flow_bus(bus, branches)
+                or abs(float(pyo.value(net_injection[bus]))) > tolerance
+                or abs(float(pyo.value(deficit[bus]))) > tolerance
+                or abs(float(pyo.value(surplus[bus]))) > tolerance
+            ):
+                continue
+            nodes = {
+                (*bus[:2], key[2])
+                for key in network.node_bus
+                if (*key[:2], key[3]) == bus
+                and abs(network.node_bus_allocation.get(key, 0.0)) > tolerance
+            }
+            if any(
+                abs(float(pyo.value(scarcity[node]))) > tolerance for node in nodes
+            ) or any(
+                abs(float(pyo.value(purchase[(*prefix, bid)]))) > tolerance
+                for *prefix, bid, node in network.bid_node
+                if tuple(prefix) == bus[:2] and (*prefix, node) in nodes
+            ):
+                continue
+            branch = branches[0]
+            left, right = endpoints[branch]
+            parent = right if left == bus else left
+            balanced_leaf_candidates[bus] = (branch, parent)
+        for bus, (branch, parent) in balanced_leaf_candidates.items():
+            if parent in balanced_leaf_candidates or parent in passive_buses:
+                continue
+            select(bus, branch, parent)
+            preserve_scalar.add(bus)
 
         memo: dict[Key, float] = {}
         interval_memo: dict[Key, tuple[float, float] | None] = {}
@@ -425,7 +663,9 @@ class NetworkPricingEngine(PricingEngine):
         for bus in selected:
             if bus not in preserve_scalar:
                 prices[bus] = cplex_price(bus, frozenset())
-            analytic_interval(bus, frozenset())
+            interval = analytic_interval(bus, frozenset())
+            if bus in preserve_scalar and interval is not None:
+                prices[bus] = project(original[bus], interval)
         intervals = boundary_intervals | {
             bus: interval
             for bus, interval in interval_memo.items()
@@ -449,6 +689,9 @@ class NetworkPricingEngine(PricingEngine):
             for index in constraints
         }
         bus_intervals = self._zero_flow_leaf_prices(built_model, case, raw)
+        bus_intervals.update(
+            self._loss_kink_leaf_prices(built_model, case, raw)
+        )
         # In ACnodeNetInjectionDefinition2, required load appears with a
         # negative coefficient on the right-hand side.  The equality marginal
         # therefore already has the positive market-price sign used by vSPD.

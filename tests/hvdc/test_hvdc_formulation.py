@@ -69,6 +69,63 @@ def test_primary_scip_uses_corpus_stable_feasibility_tolerance(monkeypatch) -> N
     assert captured["warm_start_discrete"] is False
 
 
+def test_native_sos_primary_uses_support_stable_feasibility_tolerance(
+    monkeypatch,
+) -> None:
+    captured = {}
+    sentinel = object()
+
+    def capture(_backend, _model, configuration, *, warm_start_discrete=False):
+        captured.update(configuration.options)
+        return sentinel
+
+    monkeypatch.setattr(NativeScipBackend, "solve_mip", capture)
+
+    case = make_hvdc_case(enforce=True, native_sos=True)
+    assert HvdcSolvePolicy._solve_scip(build(case)) is sentinel
+    assert captured["numerics/feastol"] == 1e-7
+
+
+def test_native_sos_strict_lp_error_uses_stable_fallback(monkeypatch) -> None:
+    captured = []
+    sentinel = object()
+
+    def capture(_backend, _model, configuration, *, warm_start_discrete=False):
+        captured.append(dict(configuration.options))
+        if len(captured) == 1:
+            raise SolverExecutionError("native SCIP execution error: LP solver")
+        return sentinel
+
+    monkeypatch.setattr(NativeScipBackend, "solve_mip", capture)
+
+    case = make_hvdc_case(enforce=True, native_sos=True)
+    assert HvdcSolvePolicy._solve_scip(build(case)) is sentinel
+    assert captured[0]["numerics/feastol"] == 1e-7
+    assert captured[1]["numerics/feastol"] == 1e-6
+    assert "presolving/maxrounds" not in captured[1]
+
+
+def test_native_sos_objective_mismatch_triggers_support_polishing() -> None:
+    assert HvdcSolvePolicy._support_polishing_required(
+        native_sos=True,
+        used_stable_scip_fallback=False,
+        primary_objective=100.01,
+        pricing_objective=100.0,
+    )
+    assert not HvdcSolvePolicy._support_polishing_required(
+        native_sos=True,
+        used_stable_scip_fallback=False,
+        primary_objective=100.0,
+        pricing_objective=100.0 + 1e-8,
+    )
+    assert not HvdcSolvePolicy._support_polishing_required(
+        native_sos=False,
+        used_stable_scip_fallback=True,
+        primary_objective=101.0,
+        pricing_objective=100.0,
+    )
+
+
 def test_primary_scip_retries_lp_solver_error_without_presolve(monkeypatch) -> None:
     captured = []
     sentinel = object()

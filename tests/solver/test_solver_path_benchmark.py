@@ -205,6 +205,7 @@ def test_published_price_rows_preserve_energy_reserve_weights_and_identity() -> 
             energy={("TP1", "NODE"): 12.34568},
             energy_intervals={("TP1", "NODE"): (12.3, 12.4)},
             reserve={("TP1", "NI", "FIR"): 0.125},
+            reserve_intervals={("TP1", "NI", "FIR"): (0.1, 0.15)},
             total_seconds={"TP1": 300.0},
             date_time={"TP1": "01-JAN-2024 00:00"},
         )
@@ -225,7 +226,7 @@ def test_published_price_rows_preserve_energy_reserve_weights_and_identity() -> 
             "location": "NI",
             "product": "FIR",
             "price_nzd_per_mwh": "0.125",
-            "price_interval": "",
+            "price_interval": "[0.10000000000000001,0.14999999999999999]",
             "publication_seconds": "300",
             "date_time": "01-JAN-2024 00:00",
         },

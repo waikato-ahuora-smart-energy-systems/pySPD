@@ -35,6 +35,9 @@ class IndependentPublicationValidator:
         energy_upper_sum: dict[tuple[str, str], float] = defaultdict(float)
         energy_interval_keys: set[tuple[str, str]] = set()
         reserve_sum: dict[tuple[str, str, str], float] = defaultdict(float)
+        reserve_lower_sum: dict[tuple[str, str, str], float] = defaultdict(float)
+        reserve_upper_sum: dict[tuple[str, str, str], float] = defaultdict(float)
+        reserve_interval_keys: set[tuple[str, str, str]] = set()
         seconds_sum: dict[str, float] = defaultdict(float)
         for result in cases:
             if result.prices is None or result.accepted is None:
@@ -113,7 +116,13 @@ class IndependentPublicationValidator:
                 if node in prices.node_intervals:
                     energy_interval_keys.add(key)
             for key, price in prices.reserve.items():
-                reserve_sum[(period, key[2], key[3])] += price * seconds
+                published_key = (period, key[2], key[3])
+                reserve_sum[published_key] += price * seconds
+                bounds = prices.reserve_intervals.get(key, (price, price))
+                reserve_lower_sum[published_key] += bounds[0] * seconds
+                reserve_upper_sum[published_key] += bounds[1] * seconds
+                if key in prices.reserve_intervals:
+                    reserve_interval_keys.add(published_key)
         for period, actual in published.total_seconds.items():
             error = abs(actual - seconds_sum[period])
             errors.append(error)
@@ -137,12 +146,22 @@ class IndependentPublicationValidator:
             for key in energy_interval_keys
             if seconds_sum[key[0]] > 0.0
         }
+        expected_reserve_intervals = {
+            key: (
+                round(reserve_lower_sum[key] / seconds_sum[key[0]], decimals),
+                round(reserve_upper_sum[key] / seconds_sum[key[0]], decimals),
+            )
+            for key in reserve_interval_keys
+            if seconds_sum[key[0]] > 0.0
+        }
         if set(expected_energy) != set(published.energy):
             failures.append("published energy identity set mismatch")
         if set(expected_reserve) != set(published.reserve):
             failures.append("published reserve identity set mismatch")
         if set(expected_energy_intervals) != set(published.energy_intervals):
             failures.append("published energy interval identity set mismatch")
+        if set(expected_reserve_intervals) != set(published.reserve_intervals):
+            failures.append("published reserve interval identity set mismatch")
         for key in set(expected_energy) & set(published.energy):
             error = abs(expected_energy[key] - published.energy[key])
             errors.append(error)
@@ -163,6 +182,18 @@ class IndependentPublicationValidator:
                 errors.append(error)
                 if error > tolerance:
                     failures.append(f"published energy interval mismatch: {key}")
+        for key in set(expected_reserve_intervals) & set(
+            published.reserve_intervals
+        ):
+            for actual_bound, expected_bound in zip(
+                published.reserve_intervals[key],
+                expected_reserve_intervals[key],
+                strict=True,
+            ):
+                error = abs(actual_bound - expected_bound)
+                errors.append(error)
+                if error > tolerance:
+                    failures.append(f"published reserve interval mismatch: {key}")
         if any(not math.isfinite(value) for value in errors):
             failures.append("non-finite validation residual")
         return PublicationValidation(

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from itertools import pairwise
 from types import MappingProxyType
@@ -37,7 +37,7 @@ from pyspd.hvdc.components import (
     HVDCSecurityComponent,
     HVDCTransmissionComponent,
 )
-from pyspd.hvdc.data import HVDC_FORMULATION_ID, HvdcCase
+from pyspd.hvdc.data import HVDC_FORMULATION_ID, HvdcCase, SosRepresentation
 from pyspd.network.components import NetworkDomainsComponent
 from pyspd.network.formulation import NetworkPrices, NetworkPricingEngine
 from pyspd.preprocess import PreprocessingSettings, Vspd506Preprocessor
@@ -60,7 +60,9 @@ _SUPPORTED = frozenset({HVDC_FORMULATION_ID})
 # inactive only when its magnitude is at or below 1e-7.  A wider threshold can
 # erase a legitimate adjacent member and over-constrain the fixed RMIP.
 _SOS_STATE_CANONICALIZATION_TOLERANCE = 1e-7
-_SCIP_PRIMAL_FEASIBILITY_TOLERANCE = 1e-6
+_SCIP_STRICT_PRIMAL_FEASIBILITY_TOLERANCE = 1e-7
+_SCIP_STABLE_PRIMAL_FEASIBILITY_TOLERANCE = 1e-6
+_FIXED_RMIP_OBJECTIVE_TOLERANCE = 1e-6
 
 
 class HvdcPreprocessor(PreprocessorStep):
@@ -124,6 +126,21 @@ class PricingCanonicalizationAudit:
         object.__setattr__(
             self, "accepted_targets", MappingProxyType(dict(self.accepted_targets))
         )
+
+
+@dataclass(frozen=True, slots=True)
+class SosSupportPolishingAudit:
+    """Fail-closed evidence for objective-improving native SOS support repair."""
+
+    policy: str
+    attempted: bool
+    accepted: bool
+    reason: str
+    baseline_objective: float
+    discovery_objective: float
+    polished_objective: float
+    objective_improvement: float
+    inactive_member_count: int
 
 
 type WarmStartKey = tuple[str, tuple[str, ...]]
@@ -203,6 +220,7 @@ class HvdcSolveOutcome:
     next_warm_start: WarmStartSnapshot
     warm_start: WarmStartAudit
     solver_profile: str
+    sos_support_polishing: SosSupportPolishingAudit | None = None
     pricing_canonicalization: PricingCanonicalizationAudit | None = None
 
     def __post_init__(self) -> None:
@@ -212,6 +230,184 @@ class HvdcSolveOutcome:
         object.__setattr__(
             self, "fixed_sos_members", MappingProxyType(dict(self.fixed_sos_members))
         )
+
+
+class SosSupportPolisher:
+    """Compare native SOS2 support with an explicit interval-binary support.
+
+    Native SCIP SOS2 solves can terminate with a numerically acceptable but
+    economically inferior adjacent support.  A second SCIP solve fixes every
+    ordinary discrete decision and lets only the explicit SOS2 interval
+    binaries choose an alternative support.  That support is independently
+    fixed and repriced.  It replaces the native support only when the final
+    RMIP objective is strictly better; ties retain the qualified native path.
+    """
+
+    policy = "objective-improving-adjacent-sos-support-v1"
+
+    def __init__(
+        self,
+        *,
+        support_tolerance: float = _SOS_STATE_CANONICALIZATION_TOLERANCE,
+        minimum_objective_improvement: float = 1e-8,
+    ) -> None:
+        if support_tolerance < 0.0 or minimum_objective_improvement < 0.0:
+            raise ValueError("SOS support-polishing tolerances cannot be negative")
+        self.support_tolerance = float(support_tolerance)
+        self.minimum_objective_improvement = float(minimum_objective_improvement)
+
+    def polish(
+        self,
+        primary: BuiltModel,
+        formulation: Formulation,
+        fixed_discrete: Mapping[str, float],
+        baseline_model: BuiltModel,
+        baseline_result: SolveResult,
+        baseline_snapshot: SolutionSnapshot,
+        solve_mip: Callable[[BuiltModel], MipSolveResult],
+        solve_pricing: Callable[[BuiltModel], SolveResult],
+    ) -> tuple[
+        BuiltModel,
+        SolveResult,
+        SolutionSnapshot,
+        SosSupportPolishingAudit,
+    ]:
+        case = primary.case_data
+        if not isinstance(case, HvdcCase) or case.hvdc is None:
+            raise TypeError("SOS support polishing requires an HVDC case")
+        portable_case = replace(
+            case,
+            hvdc=replace(
+                case.hvdc,
+                sos_representation=SosRepresentation.PORTABLE,
+            ),
+        )
+        discovery = ModelAssembler().assemble(formulation, portable_case)
+        _fix_existing_discrete(discovery.model, fixed_discrete)
+        try:
+            solve_mip(discovery)
+        except SolverExecutionError:
+            return self._rejected(
+                baseline_model,
+                baseline_result,
+                baseline_snapshot,
+                baseline_snapshot.objective,
+                0.0,
+                0,
+                "support-oracle-solve-failed",
+            )
+        candidate_fixed = _discrete_values(discovery.model)
+        candidate_support = _solvefinal_sos_member_values(discovery)
+        inactive_count = sum(value == 0.0 for value in candidate_support.values())
+        if not self._support_is_adjacent(discovery):
+            return self._rejected(
+                baseline_model,
+                baseline_result,
+                baseline_snapshot,
+                baseline_snapshot.objective,
+                0.0,
+                inactive_count,
+                "non-adjacent-portable-support",
+            )
+
+        candidate = ModelAssembler().assemble(formulation, portable_case)
+        _fix_and_relax_discrete(candidate.model, candidate_fixed)
+        _fix_continuous_state(candidate.model, candidate_support)
+        _deactivate_sos(candidate.model)
+        _assert_continuous_pricing_model(candidate.model)
+        candidate_result = solve_pricing(candidate)
+        candidate_snapshot = _snapshot(candidate)
+        objective = next(
+            candidate.model.component_data_objects(pyo.Objective, active=True)
+        )
+        improvement = self._objective_improvement(
+            objective.sense,
+            baseline_snapshot.objective,
+            candidate_snapshot.objective,
+        )
+        if improvement <= self.minimum_objective_improvement:
+            return self._rejected(
+                baseline_model,
+                baseline_result,
+                baseline_snapshot,
+                candidate_snapshot.objective,
+                improvement,
+                inactive_count,
+                "no-material-objective-improvement",
+            )
+        audit = SosSupportPolishingAudit(
+            self.policy,
+            True,
+            True,
+            "objective-improving-adjacent-support",
+            baseline_snapshot.objective,
+            candidate_snapshot.objective,
+            candidate_snapshot.objective,
+            improvement,
+            inactive_count,
+        )
+        return candidate, candidate_result, candidate_snapshot, audit
+
+    def _rejected(
+        self,
+        baseline_model: BuiltModel,
+        baseline_result: SolveResult,
+        baseline_snapshot: SolutionSnapshot,
+        discovery_objective: float,
+        improvement: float,
+        inactive_count: int,
+        reason: str,
+    ) -> tuple[
+        BuiltModel,
+        SolveResult,
+        SolutionSnapshot,
+        SosSupportPolishingAudit,
+    ]:
+        audit = SosSupportPolishingAudit(
+            self.policy,
+            True,
+            False,
+            reason,
+            baseline_snapshot.objective,
+            discovery_objective,
+            baseline_snapshot.objective,
+            max(0.0, improvement),
+            inactive_count,
+        )
+        return baseline_model, baseline_result, baseline_snapshot, audit
+
+    def _support_is_adjacent(self, built: BuiltModel) -> bool:
+        for artifact_name in (
+            "hvdc_lambda",
+            "lambda_hvdc_energy",
+            "lambda_hvdc_reserve",
+        ):
+            if artifact_name not in built.artifacts.values:
+                continue
+            component = built.artifacts[artifact_name]
+            grouped: dict[tuple[str, ...], list[int]] = {}
+            breakpoints: dict[tuple[str, ...], list[str]] = {}
+            for raw_key in component:
+                key = tuple(str(token) for token in raw_key)
+                group = key[:-1]
+                breakpoints.setdefault(group, []).append(key[-1])
+            for group, labels in breakpoints.items():
+                grouped[group] = [
+                    position
+                    for position, label in enumerate(labels)
+                    if _value(component[*group, label]) > self.support_tolerance
+                ]
+            if any(
+                len(active) > 2
+                or (len(active) == 2 and active[1] - active[0] != 1)
+                for active in grouped.values()
+            ):
+                return False
+        return True
+
+    @staticmethod
+    def _objective_improvement(sense: Any, baseline: float, candidate: float) -> float:
+        return candidate - baseline if sense is pyo.maximize else baseline - candidate
 
 
 class HvdcSolvePolicy(SolvePolicy):
@@ -284,6 +480,7 @@ class HvdcSolvePolicy(SolvePolicy):
         fixed = _discrete_values(primary.model)
         fixed_sos_members = _solvefinal_sos_member_values(primary)
         _set_continuous_state(primary.model, fixed_sos_members)
+        primary_snapshot = _snapshot(primary)
         pricing = ModelAssembler().assemble(self._formulation(), primary.case_data)
         pricing_warm_count = 0
         if self.warm_start_pricing and self.pricing_backend is None:
@@ -295,6 +492,44 @@ class HvdcSolvePolicy(SolvePolicy):
         _deactivate_sos(pricing.model)
         _assert_continuous_pricing_model(pricing.model)
         pricing_result = self._solve_pricing(pricing, warm_start=pricing_warm_count > 0)
+        pricing_snapshot = _snapshot(pricing)
+        support_audit: SosSupportPolishingAudit | None = None
+        primary_options = final_solve.options
+        used_stable_scip_fallback = (
+            float(primary_options.get("numerics/feastol", 0.0))
+            > _SCIP_STRICT_PRIMAL_FEASIBILITY_TOLERANCE
+        )
+        native_sos = case.hvdc.sos_representation is SosRepresentation.NATIVE
+        if self._support_polishing_required(
+            native_sos=native_sos,
+            used_stable_scip_fallback=used_stable_scip_fallback,
+            primary_objective=primary_snapshot.objective,
+            pricing_objective=pricing_snapshot.objective,
+        ):
+            pricing, pricing_result, pricing_snapshot, support_audit = (
+                SosSupportPolisher().polish(
+                    primary,
+                    self._formulation(),
+                    fixed,
+                    pricing,
+                    pricing_result,
+                    pricing_snapshot,
+                    self._solve_support_mip,
+                    self._solve_pricing,
+                )
+            )
+        elif native_sos:
+            support_audit = SosSupportPolishingAudit(
+                SosSupportPolisher.policy,
+                False,
+                False,
+                "strict-native-scip-support",
+                pricing_snapshot.objective,
+                pricing_snapshot.objective,
+                pricing_snapshot.objective,
+                0.0,
+                sum(value == 0.0 for value in fixed_sos_members.values()),
+            )
         next_warm_start = (
             WarmStartSnapshot.capture(primary.model, discrete_only=True)
             if self.warm_start_primary
@@ -309,8 +544,8 @@ class HvdcSolvePolicy(SolvePolicy):
             issues,
             fixed,
             fixed_sos_members,
-            _snapshot(primary),
-            _snapshot(pricing),
+            primary_snapshot,
+            pricing_snapshot,
             next_warm_start,
             WarmStartAudit(
                 self.warm_start_primary or self.warm_start_pricing,
@@ -319,6 +554,21 @@ class HvdcSolvePolicy(SolvePolicy):
                 pricing_warm_count,
             ),
             self.solver_profile,
+            support_audit,
+        )
+
+    @staticmethod
+    def _support_polishing_required(
+        *,
+        native_sos: bool,
+        used_stable_scip_fallback: bool,
+        primary_objective: float,
+        pricing_objective: float,
+    ) -> bool:
+        return native_sos and (
+            used_stable_scip_fallback
+            or abs(primary_objective - pricing_objective)
+            > _FIXED_RMIP_OBJECTIVE_TOLERANCE
         )
 
     @property
@@ -352,6 +602,26 @@ class HvdcSolvePolicy(SolvePolicy):
             raise TypeError("primary backend must implement solve_mip")
         return solve_mip(built.model, warm_start_discrete=warm_start)
 
+    @staticmethod
+    def _solve_support_mip(built: BuiltModel) -> MipSolveResult:
+        """Select only explicit SOS intervals under a tighter numeric contract."""
+
+        return NativeScipBackend().solve_mip(
+            built.model,
+            SolverConfiguration(
+                {
+                    "time_limit_seconds": 300.0,
+                    "relative_gap": 0.0,
+                    "threads": 1,
+                    "numerics/feastol": 1e-9,
+                    "limits/absgap": 0.0,
+                    "lp/initalgorithm": "d",
+                    "lp/resolvealgorithm": "d",
+                    "misc/usesymmetry": 0,
+                }
+            ),
+        )
+
     def _solve_pricing(
         self,
         built: BuiltModel,
@@ -382,15 +652,21 @@ class HvdcSolvePolicy(SolvePolicy):
         *,
         warm_start: bool = False,
     ) -> MipSolveResult:
+        case = built.case_data
+        native_sos = (
+            isinstance(case, HvdcCase)
+            and case.hvdc is not None
+            and case.hvdc.sos_representation is SosRepresentation.NATIVE
+        )
         options: dict[str, int | float | str] = {
             "time_limit_seconds": 300.0,
             "relative_gap": 0.0,
             "threads": 1,
-            # The complete historical prefix establishes 1e-6 as the stable
-            # qualified SCIP setting. Tighter settings can make SoPlex reject
-            # otherwise valid full-size vSPD cases; the fixed-HiGHS objective
-            # is retained separately for parity.
-            "numerics/feastol": _SCIP_PRIMAL_FEASIBILITY_TOLERANCE,
+            "numerics/feastol": (
+                _SCIP_STRICT_PRIMAL_FEASIBILITY_TOLERANCE
+                if native_sos
+                else _SCIP_STABLE_PRIMAL_FEASIBILITY_TOLERANCE
+            ),
             "lp/initalgorithm": "d",
             "lp/resolvealgorithm": "d",
             # Legacy daily inputs contain large inactive-period symmetries.
@@ -407,14 +683,38 @@ class HvdcSolvePolicy(SolvePolicy):
         except SolverExecutionError as error:
             if "LP solver" not in str(error):
                 raise
-            # Some legacy matrices make SoPlex fail after SCIP presolve even
-            # though the original matrix solves to optimality. Retry the same
-            # model without presolve; no formulation data or tolerances change.
-            return NativeScipBackend().solve_mip(
-                built.model,
-                SolverConfiguration(options | {"presolving/maxrounds": 0}),
-                warm_start_discrete=warm_start,
+            # Some legacy matrices make SoPlex reject the strict tolerance.
+            # Retain the historically stable setting as an explicit fallback;
+            # its SOS support is then independently challenged by the support
+            # polisher before prices are accepted.
+            stable = (
+                options
+                if not native_sos
+                else options
+                | {
+                    "numerics/feastol": _SCIP_STABLE_PRIMAL_FEASIBILITY_TOLERANCE
+                }
             )
+            if not native_sos:
+                return NativeScipBackend().solve_mip(
+                    built.model,
+                    SolverConfiguration(stable | {"presolving/maxrounds": 0}),
+                    warm_start_discrete=warm_start,
+                )
+            try:
+                return NativeScipBackend().solve_mip(
+                    built.model,
+                    SolverConfiguration(stable),
+                    warm_start_discrete=warm_start,
+                )
+            except SolverExecutionError as error:
+                if "LP solver" not in str(error):
+                    raise
+                return NativeScipBackend().solve_mip(
+                    built.model,
+                    SolverConfiguration(stable | {"presolving/maxrounds": 0}),
+                    warm_start_discrete=warm_start,
+                )
 
     @staticmethod
     def _solve_highs(
@@ -666,10 +966,26 @@ def _fix_and_relax_discrete(
             variable.domain = pyo.Reals
 
 
+def _fix_existing_discrete(
+    model: pyo.ConcreteModel, fixed: Mapping[str, float]
+) -> None:
+    """Fix a known discrete subset while retaining new interval binaries."""
+
+    by_name = {
+        variable.name: variable
+        for variable in model.component_data_objects(pyo.Var, active=True)
+    }
+    missing = set(fixed) - set(by_name)
+    if missing:
+        raise ValueError("support-discovery model lacks an ordinary discrete decision")
+    for name, value in fixed.items():
+        by_name[name].fix(value)
+
+
 def _solvefinal_sos_member_values(built: BuiltModel) -> dict[str, float]:
     """Capture members GAMS treats as discrete state during ``solveFinal``."""
 
-    names = ("lambda_hvdc_energy", "lambda_hvdc_reserve")
+    names = ("hvdc_lambda", "lambda_hvdc_energy", "lambda_hvdc_reserve")
     return {
         variable.name: _canonical_sos_value(_value(variable))
         for name in names

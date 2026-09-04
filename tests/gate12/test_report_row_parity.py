@@ -413,6 +413,120 @@ def test_published_energy_interval_certifies_reference_containment() -> None:
     assert excluded.tables[0].above_precision_count == 1
 
 
+def test_published_reserve_interval_certifies_reference_containment() -> None:
+    reference = _json(
+        {
+            "prefix_PublishedReservePrices_TP": {
+                "fields": [
+                    "DateTime",
+                    "TradingPeriod",
+                    "Island",
+                    "vSPDFIRDollarsPerMegawattHour",
+                ],
+                "rows": [
+                    {
+                        "DateTime": "time",
+                        "TradingPeriod": "TP24",
+                        "Island": "SI",
+                        "vSPDFIRDollarsPerMegawattHour": "0.00836",
+                    }
+                ],
+            }
+        }
+    )
+
+    def candidate(interval: str) -> bytes:
+        return _json(
+            {
+                "published_price": {
+                    "field_order": [
+                        "date_time",
+                        "trading_period",
+                        "location",
+                        "product",
+                        "price_nzd_per_mwh",
+                        "price_interval",
+                    ],
+                    "rows": [
+                        {
+                            "date_time": "time",
+                            "trading_period": "TP24",
+                            "location": "SI",
+                            "product": "FIR",
+                            "price_nzd_per_mwh": "0.00755",
+                            "price_interval": interval,
+                        }
+                    ],
+                }
+            }
+        )
+
+    contained = ReportRowParityValidator().compare(
+        case_id="case",
+        reference=reference,
+        candidate=candidate("[0.00755,0.00836]"),
+    )
+    excluded = ReportRowParityValidator().compare(
+        case_id="case",
+        reference=reference,
+        candidate=candidate("[0.00755,0.00800]"),
+    )
+
+    assert contained.passed
+    assert contained.tables[0].certified_difference_count == 1
+    assert not excluded.passed
+    assert excluded.tables[0].above_precision_count == 1
+
+
+def test_case_reserve_interval_certifies_reference_containment() -> None:
+    reference = _json(
+        {
+            "prefix_ReserveResults_TP": {
+                "fields": ["CaseID", "DateTime", "Island", "FIR Price ($/MW)"],
+                "rows": [
+                    {
+                        "CaseID": "case",
+                        "DateTime": "time",
+                        "Island": "SI",
+                        "FIR Price ($/MW)": "0.010",
+                    }
+                ],
+            }
+        }
+    )
+    candidate = _json(
+        {
+            "reserve": {
+                "field_order": [
+                    "case_id",
+                    "date_time",
+                    "island",
+                    "reserve_class",
+                    "price_nzd_per_mwh",
+                    "price_interval",
+                ],
+                "rows": [
+                    {
+                        "case_id": "case",
+                        "date_time": "time",
+                        "island": "SI",
+                        "reserve_class": "FIR",
+                        "price_nzd_per_mwh": "0.00753",
+                        "price_interval": "[0.00753,0.01000]",
+                    }
+                ],
+            }
+        }
+    )
+
+    comparison = ReportRowParityValidator().compare(
+        case_id="case", reference=reference, candidate=candidate
+    )
+
+    assert comparison.passed
+    assert comparison.tables[0].certified_difference_count == 1
+
+
 @pytest.mark.parametrize(
     (
         "reference_table",

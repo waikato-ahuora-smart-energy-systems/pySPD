@@ -146,3 +146,11 @@ This corrects the six-case diagnostic boundary without claiming the older
 full-day stream incorporates later targeted model and interval corrections.
 See
 [`cplex-reference-comparison-20230922-highs-root-boundary-interval-tp24-allocation.json`](cplex-reference-comparison-20230922-highs-root-boundary-interval-tp24-allocation.json).
+
+The subsequent fresh current-code run supersedes that substituted stream for
+execution diagnosis. It completed 274/274 optimal cases with zero retries and
+is recorded in
+[`current-full-day-replay-20230922.md`](current-full-day-replay-20230922.md).
+The former TP4 published cluster is gone. The remaining published differences
+are 167 TP11 energy rows, one TP11 NI SIR row, and the two TP1 historical
+reserve residues.

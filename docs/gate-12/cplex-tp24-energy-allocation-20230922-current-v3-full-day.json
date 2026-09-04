@@ -1,0 +1,36 @@
+{
+  "accepted_identities": [
+    ["211012023092330682", "22-SEP-2023 11:30", "303", "bus-generation"],
+    ["211012023092330682", "22-SEP-2023 11:30", "304", "bus-generation"],
+    ["211012023092330682", "22-SEP-2023 11:30", "305", "bus-generation"],
+    ["211012023092330682", "22-SEP-2023 11:30", "306", "bus-generation"],
+    ["211012023092330682", "22-SEP-2023 11:30", "307", "bus-generation"],
+    ["211012023092330682", "22-SEP-2023 11:30", "TUI1101 PRI0", "GENE", "generation-mw"],
+    ["211012023092330682", "22-SEP-2023 11:30", "TUI1101 TUI0", "GENE", "generation-mw"],
+    ["211012023092330682", "22-SEP-2023 11:30", "TUI_T1.T1", "308", "305", "branch-flow-mw"],
+    ["211012023092330682", "22-SEP-2023 11:30", "TUI_T2.T2", "308", "307", "branch-flow-mw"],
+    ["211012023092330682", "22-SEP-2023 11:30", "TUI_T3.T3", "308", "306", "branch-flow-mw"],
+    ["211012023092330682", "22-SEP-2023 11:30", "TUI_T4.T4", "308", "303", "branch-flow-mw"],
+    ["211012023092330682", "22-SEP-2023 11:30", "TUI_T5.T5", "308", "304", "branch-flow-mw"],
+    ["base", "22-Sep-2023 11:30", "TUI1101 PRI0", "node-generation"],
+    ["base", "22-Sep-2023 11:30", "TUI1101 TUI0", "node-generation"]
+  ],
+  "benchmark_sha256": "fffa613680750798ad004aeb4f80421e1891357c64b05130eb4784d3ee0c2b61",
+  "case_id": "211012023092330682",
+  "date_time": "22-SEP-2023 11:30",
+  "logical_sha256": "3db20b7313ffdccf7b5397b493e6f0695770799b73070dcb472672837625fbb5",
+  "marginal_block_price": "0x1.a423d70a3d70ap+7",
+  "passed": true,
+  "profile": "gams-pyspd-lossless-equal-price-allocation-v1",
+  "records_sha256": "1778095deba472c22514ae751ca850a35b5d4c87b754bf5c53d765665998345b",
+  "reference_sha256": {
+    "2023-09-22_base_node_results.csv": "435592855ccd7c928daef6adb4568b1be456628f5c3611a810459f53915e7918",
+    "2023-09-22_base_offer_results.csv": "cd5ceaaf29ace153c234ffb175c43396838586946afe2f631234be377171c79a",
+    "2023-09-22_base_vSPD_raw_BranchResults_TP.csv": "63f5b3c206ffcce82cdd866aa2f4e9204043248e01f2793106e9940f292cdc93",
+    "2023-09-22_base_vSPD_raw_BusResults_TP.csv": "9d10e7d04e87308087c5d43825db233044ea8edc2f6998d795578d3f73988994"
+  },
+  "schema_version": 1,
+  "scope": "source-proven-lossless-equal-price-allocation-identities",
+  "source_sha256": "70dffe5c416eed90ffb31925d48293fc785a063dcbacb3367fca815587c9e5fc",
+  "transferred_mw": "0x1.be353f7ced917p+1"
+}

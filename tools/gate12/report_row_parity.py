@@ -393,6 +393,7 @@ _PROJECTIONS = (
         "FIR Price ($/MWh)",
         "price_nzd_per_mwh",
         candidate_filter=("reserve_class", "FIR"),
+        candidate_interval="price_interval",
     ),
     _projection(
         "IslandResults_TP",
@@ -403,6 +404,7 @@ _PROJECTIONS = (
         "SIR Price ($/MWh)",
         "price_nzd_per_mwh",
         candidate_filter=("reserve_class", "SIR"),
+        candidate_interval="price_interval",
     ),
     *(
         _projection(
@@ -591,6 +593,7 @@ _PROJECTIONS = (
         "vSPDFIRDollarsPerMegawattHour",
         "price_nzd_per_mwh",
         candidate_filter=("product", "FIR"),
+        candidate_interval="price_interval",
     ),
     _projection(
         "PublishedReservePrices_TP",
@@ -601,6 +604,7 @@ _PROJECTIONS = (
         "vSPDSIRDollarsPerMegawattHour",
         "price_nzd_per_mwh",
         candidate_filter=("product", "SIR"),
+        candidate_interval="price_interval",
     ),
     _projection(
         "ReserveResults_TP",
@@ -611,6 +615,7 @@ _PROJECTIONS = (
         "FIR Price ($/MW)",
         "price_nzd_per_mwh",
         candidate_filter=("reserve_class", "FIR"),
+        candidate_interval="price_interval",
     ),
     _projection(
         "ReserveResults_TP",
@@ -621,6 +626,7 @@ _PROJECTIONS = (
         "SIR Price ($/MW)",
         "price_nzd_per_mwh",
         candidate_filter=("reserve_class", "SIR"),
+        candidate_interval="price_interval",
     ),
     *(
         _projection(

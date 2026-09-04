@@ -40,6 +40,9 @@ def main() -> None:
     energy_upper_numerator: dict[tuple[str, str], float] = defaultdict(float)
     energy_interval_keys: set[tuple[str, str]] = set()
     reserve_numerator: dict[tuple[str, str, str], float] = defaultdict(float)
+    reserve_lower_numerator: dict[tuple[str, str, str], float] = defaultdict(float)
+    reserve_upper_numerator: dict[tuple[str, str, str], float] = defaultdict(float)
+    reserve_interval_keys: set[tuple[str, str, str]] = set()
     total_seconds: dict[str, float] = defaultdict(float)
     date_time: dict[str, str] = {}
     seen: set[str] = set()
@@ -73,6 +76,9 @@ def main() -> None:
                             energy_lower_numerator=energy_lower_numerator,
                             energy_upper_numerator=energy_upper_numerator,
                             energy_interval_keys=energy_interval_keys,
+                            reserve_lower_numerator=reserve_lower_numerator,
+                            reserve_upper_numerator=reserve_upper_numerator,
+                            reserve_interval_keys=reserve_interval_keys,
                         )
                         if reference is not None:
                             reference_line = reference.readline()
@@ -105,6 +111,13 @@ def main() -> None:
                 round(energy_upper_numerator[key] / total_seconds[key[0]], 5),
             )
             for key in energy_interval_keys
+        },
+        reserve_intervals={
+            key: (
+                round(reserve_lower_numerator[key] / total_seconds[key[0]], 5),
+                round(reserve_upper_numerator[key] / total_seconds[key[0]], 5),
+            )
+            for key in reserve_interval_keys
         },
         total_seconds=total_seconds,
         date_time=date_time,
@@ -211,6 +224,9 @@ def _accumulate_published(
     energy_lower_numerator: dict[tuple[str, str], float] | None = None,
     energy_upper_numerator: dict[tuple[str, str], float] | None = None,
     energy_interval_keys: set[tuple[str, str]] | None = None,
+    reserve_lower_numerator: dict[tuple[str, str, str], float] | None = None,
+    reserve_upper_numerator: dict[tuple[str, str, str], float] | None = None,
+    reserve_interval_keys: set[tuple[str, str, str]] | None = None,
 ) -> None:
     period = record["trading_period"]
     seconds = float.fromhex(record["publication_seconds"])
@@ -240,10 +256,21 @@ def _accumulate_published(
         energy_upper_numerator[published_key] += float(bounds[1]) * seconds
         if key[-1] in intervals and energy_interval_keys is not None:
             energy_interval_keys.add(published_key)
+    reserve_intervals = {
+        tuple(key): tuple(float.fromhex(bound) for bound in bounds)
+        for key, bounds in record.get("price_intervals", {}).get("reserve", ())
+    }
     for key, value in record["prices"]["reserve"]:
-        reserve_numerator[(period, key[-2], key[-1])] += (
-            float.fromhex(value) * seconds
-        )
+        published_key = (period, key[-2], key[-1])
+        price = float.fromhex(value)
+        reserve_numerator[published_key] += price * seconds
+        if reserve_lower_numerator is None or reserve_upper_numerator is None:
+            continue
+        bounds = reserve_intervals.get(tuple(key), (price, price))
+        reserve_lower_numerator[published_key] += bounds[0] * seconds
+        reserve_upper_numerator[published_key] += bounds[1] * seconds
+        if tuple(key) in reserve_intervals and reserve_interval_keys is not None:
+            reserve_interval_keys.add(published_key)
 
 
 if __name__ == "__main__":

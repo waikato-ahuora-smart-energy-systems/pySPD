@@ -136,6 +136,7 @@ class MarketPricePostProcessor:
             raw_bus_intervals=raw_intervals,
             repaired_bus_intervals=repaired_intervals,
             node_intervals=node_intervals,
+            reserve_intervals=observation.reserve_price_intervals,
         )
 
     def _disconnected(self, observation: SolveObservation) -> set[Key]:
@@ -282,6 +283,9 @@ class PublishedPriceAccumulator:
         energy_upper_numerator: Mapping[tuple[str, str], float] | None = None,
         energy_interval_keys: frozenset[tuple[str, str]] | None = None,
         reserve_numerator: Mapping[tuple[str, str, str], float] | None = None,
+        reserve_lower_numerator: Mapping[tuple[str, str, str], float] | None = None,
+        reserve_upper_numerator: Mapping[tuple[str, str, str], float] | None = None,
+        reserve_interval_keys: frozenset[tuple[str, str, str]] | None = None,
         total_seconds: Mapping[str, float] | None = None,
         date_time: Mapping[str, str] | None = None,
     ) -> None:
@@ -298,6 +302,15 @@ class PublishedPriceAccumulator:
         self.energy_interval_keys = set(energy_interval_keys or ())
         self.reserve_numerator: dict[tuple[str, str, str], float] = defaultdict(float)
         self.reserve_numerator.update(reserve_numerator or {})
+        self.reserve_lower_numerator: dict[tuple[str, str, str], float] = defaultdict(
+            float
+        )
+        self.reserve_lower_numerator.update(reserve_lower_numerator or {})
+        self.reserve_upper_numerator: dict[tuple[str, str, str], float] = defaultdict(
+            float
+        )
+        self.reserve_upper_numerator.update(reserve_upper_numerator or {})
+        self.reserve_interval_keys = set(reserve_interval_keys or ())
         self.total_seconds: dict[str, float] = defaultdict(float)
         self.total_seconds.update(total_seconds or {})
         self.date_time: dict[str, str] = dict(date_time or {})
@@ -310,17 +323,21 @@ class PublishedPriceAccumulator:
             return
         self.total_seconds[period] += seconds
         for node, price in result.prices.node.items():
-            key = (period, node[2])
-            self.energy_numerator[key] += price * seconds
+            energy_key = (period, node[2])
+            self.energy_numerator[energy_key] += price * seconds
             bounds = result.prices.node_intervals.get(node, (price, price))
-            self.energy_lower_numerator[key] += bounds[0] * seconds
-            self.energy_upper_numerator[key] += bounds[1] * seconds
+            self.energy_lower_numerator[energy_key] += bounds[0] * seconds
+            self.energy_upper_numerator[energy_key] += bounds[1] * seconds
             if node in result.prices.node_intervals:
-                self.energy_interval_keys.add(key)
+                self.energy_interval_keys.add(energy_key)
         for reserve_key, price in result.prices.reserve.items():
-            self.reserve_numerator[
-                (period, reserve_key[2], reserve_key[3])
-            ] += price * seconds
+            published_key = (period, reserve_key[2], reserve_key[3])
+            self.reserve_numerator[published_key] += price * seconds
+            bounds = result.prices.reserve_intervals.get(reserve_key, (price, price))
+            self.reserve_lower_numerator[published_key] += bounds[0] * seconds
+            self.reserve_upper_numerator[published_key] += bounds[1] * seconds
+            if reserve_key in result.prices.reserve_intervals:
+                self.reserve_interval_keys.add(published_key)
 
     def finish(self, *, decimals: int) -> PublishedPrices:
         energy = {
@@ -347,12 +364,27 @@ class PublishedPriceAccumulator:
             for key in self.energy_interval_keys
             if self.total_seconds[key[0]] > 0.0
         }
+        reserve_intervals = {
+            key: (
+                round(
+                    self.reserve_lower_numerator[key] / self.total_seconds[key[0]],
+                    decimals,
+                ),
+                round(
+                    self.reserve_upper_numerator[key] / self.total_seconds[key[0]],
+                    decimals,
+                ),
+            )
+            for key in self.reserve_interval_keys
+            if self.total_seconds[key[0]] > 0.0
+        }
         return PublishedPrices(
             energy=energy,
             reserve=reserve,
             total_seconds=self.total_seconds,
             date_time=self.date_time,
             energy_intervals=energy_intervals,
+            reserve_intervals=reserve_intervals,
         )
 
 

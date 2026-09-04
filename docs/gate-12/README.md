@@ -33,11 +33,20 @@ The certificate is also bound to the complete 274-case stream; it certifies
 exactly fourteen additional rows without masking any of the broader known
 full-day differences.
 
+A fresh uninterrupted replay under the current code is documented in the
+[`2023-09-22 current full-day replay`](current-full-day-replay-20230922.md).
+All 274 SCIP/HiGHS solves are optimal with zero retries. TP4 and TP11 are
+resolved: no published-energy row remains above Authority precision, and the
+only unresolved publications are the two documented TP1 reserve residues.
+
 The cross-corpus treatment of basis-dependent passive zero-flow prices is in
 the [`ten-day CPLEX zero-flow analysis`](cplex-zero-flow-analysis-ten-days.md).
 The distinct 2023-09-22 TP4 reserve-loss breakpoint diagnosis and bounded
 primal canonicalization are in the
 [`TP4 reserve-kink certificate`](cplex-tp4-reserve-kink-20230922.md).
+The subsequent TP11 native-SOS support defect is resolved by the `1e-7`
+strict-first SCIP contract and guarded support fallback documented in the
+[`TP11 native-support certificate`](cplex-tp11-native-support-20230922.md).
 The 2023-11-24 ARG1101 diagnosis proves a second basis-dependent boundary:
 fresh CPLEX reproduces HiGHS on the same fixed LP, while only CPLEX's
 MIP-to-fixed-LP continuation reproduces the archived marginal. See the
@@ -853,3 +862,50 @@ check rejects any material record that remains unresolved.
 
 The authoritative work and pass criteria are in
 [`Stage 12 — End-to-end parity validation`](../pyomo-vspd-stage-gate-plan.md#stage-12--end-to-end-parity-validation).
+
+## Consecutive-day CPLEX confidence run
+
+The three copied consecutive dates 2023-09-23 through 2023-09-25 are bound by
+the corresponding `cplex-reference-paths-YYYYMMDD-certified.json` streams and
+`cplex-reference-comparison-YYYYMMDD-certified.json` comparisons in this
+directory. Across 821 cases, every primary and fixed-RMIP solve is optimal and
+every accepted fixed-RMIP solution passes independent validation. Published
+energy, published reserve, and case reserve-price rows have zero unresolved
+differences on all three dates.
+
+| Date | Cases | Maximum validation residual | Certified published energy | Certified published reserve | Certified case reserve |
+|---|---:|---:|---:|---:|---:|
+| 2023-09-23 | 275 | `4.73e-7` | 622 | 3 | 3 |
+| 2023-09-24 | 254 | `1.19e-7` | 323 | 7 | 7 |
+| 2023-09-25 | 292 | `1.21e-5` | 310 | 1 | 0 |
+
+The middle date is New Zealand's 2023 spring daylight-saving transition.
+CPLEX and the GDX-derived PySPD axis both move from TP4 at 01:30 directly to
+TP5 at 03:00, contain 46 trading periods, and contain no 02:xx local timestamp.
+The neighbouring dates contain 48 periods. Every period on all three dates
+still accumulates exactly 1,800 publication seconds because those weights are
+read from `i_priceCaseFilesPublishedSecs`; they are not inferred by subtracting
+naive local timestamps. The apparent one-hour wall-clock shift is therefore
+expected DST behaviour rather than result misalignment.
+
+The new-day defects and generic corrections are:
+
+- round-power RZ boundary canonicalization for the TP13 continuous state;
+- susceptance-weighted parallel-circuit loss intervals for TP6; and
+- independently solved one-sided and solver-tolerance-equivalent reserve-price
+  intervals for TP23, TP24, TP44, and TP45; and
+- analytical adjacent-slope intervals when a radial AC branch is exactly on a
+  piecewise-loss breakpoint, observed at KIN on 2023-09-23 and 2023-09-25.
+
+SCIP remains responsible for discrete and SOS state. Continuous feasibility,
+reported quantities, and prices are validated on the accepted fixed-HiGHS
+RMIP; the primary-to-RMIP objective consistency check is relative to objective
+scale so harmless SCIP continuous residue cannot invalidate a better refined
+RMIP solution.
+
+Raw solver-basis and allocation differences remain visible in the comparison,
+including zero-flow node duals and economically equivalent generation/reserve
+allocations. They are outside the accepted market-result evidence boundary and
+are not claimed as exact scalar identity. Under that boundary, 2023-09-23,
+2023-09-24, and 2023-09-25 are three consecutive clean market-result days, so
+the confidence-run stopping criterion is met.

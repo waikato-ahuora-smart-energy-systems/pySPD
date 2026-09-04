@@ -27,6 +27,8 @@ replaces; accepted history is not rewritten.
 | [ADR-0020](0020-binding-market-node-dual-allocation.md) | Certify aggregate-preserving dual allocation across one binding market-node limit family | Accepted for the SCIP/HiGHS Gate 12 report profile |
 | [ADR-0021](0021-bounded-scip-sos-support-residue.md) | Bound structural native-SOS residue at twice the qualified SCIP feasibility tolerance | Accepted for the SCIP/HiGHS Gate 12 profile |
 | [ADR-0022](0022-portable-transition-and-nonbinding-report-equivalence.md) | Bound numeric transition residue, non-binding constraint activity, and risk-price dual equivalence | Accepted for the SCIP/HiGHS Gate 12 profile |
+| [ADR-0023](0023-strict-native-sos-support-with-guarded-fallback.md) | Select native SOS support at `1e-7` with a guarded fallback | Accepted for the SCIP/HiGHS Gate 12 profile |
+| [ADR-0024](0024-validated-price-intervals-at-solver-kinks.md) | Validate source and solver-tolerance price intervals at zero-flow and reserve kinks | Accepted for the SCIP/HiGHS Gate 12 profile |
 
 ## Status values
 

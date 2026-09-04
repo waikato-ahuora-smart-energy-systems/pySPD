@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "profile": "pyspd-cplex-consecutive-clean-streak-v1",
+  "source": "User-supplied CPLEX vSPD archive",
+  "selection": {
+    "rule": "Three consecutive v5.0.6 days immediately after the fully diagnosed 2023-09-22 day.",
+    "stopping_rule": "Stop only after all three days have zero unresolved CPLEX differences."
+  },
+  "days": [
+    {
+      "date": "2023-09-23",
+      "input": "2023/20230923/input/Pricing_20230923.gdx",
+      "input_bytes": 38239421,
+      "input_sha256": "cbf34c38532cf2e3909524d4078b4cf59f04769fc50347597e7022989c0989bf",
+      "result_file_count": 13,
+      "result_bytes": 72268154,
+      "result_tree_sha256": "4b670a3f0147c7b2d593ccd16dc9c318a930e18a0e724a6f6061133b67129670",
+      "summary_rows": 275
+    },
+    {
+      "date": "2023-09-24",
+      "input": "2023/20230924/input/Pricing_20230924.gdx",
+      "input_bytes": 35295640,
+      "input_sha256": "b39a8c948186ddc333ce1f81062b18f725858aac66fb35c19d4bf9f156395570",
+      "result_file_count": 13,
+      "result_bytes": 66302242,
+      "result_tree_sha256": "0eb6d0ad1b956ad4c836748afe8b86041c509b25fc2a8cd70b7e93df0229dac3",
+      "summary_rows": 254
+    },
+    {
+      "date": "2023-09-25",
+      "input": "2023/20230925/input/Pricing_20230925.gdx",
+      "input_bytes": 40607637,
+      "input_sha256": "6eafea73950a695b288a97bad83ed997a9664190cd785e636e76143c5fa07590",
+      "result_file_count": 13,
+      "result_bytes": 76506460,
+      "result_tree_sha256": "a226157bb5c3f52be525adbd45c99813e1c350bbc72ddb9f6d6f5bf4ba88c113",
+      "summary_rows": 292
+    }
+  ]
+}
