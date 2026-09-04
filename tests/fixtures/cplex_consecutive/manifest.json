@@ -46,6 +46,16 @@
       "result_bytes": 77295491,
       "result_tree_sha256": "df9c0fca7e33321aeedd938fa962e2e68a723f6cc9f65b3a9f7a4925d8fcfcff",
       "summary_rows": 295
+    },
+    {
+      "date": "2023-09-27",
+      "input": "2023/20230927/input/Pricing_20230927.gdx",
+      "input_bytes": 36676034,
+      "input_sha256": "c854ea9ee6e078586fcf8bff9a3bc1fdd3cd3641da326a0c921f6aa7fb97a54f",
+      "result_file_count": 13,
+      "result_bytes": 69746508,
+      "result_tree_sha256": "e6c86beea87c539caab00c4f99569a030b349450344487b9718c7034752f73a9",
+      "summary_rows": 263
     }
   ]
 }

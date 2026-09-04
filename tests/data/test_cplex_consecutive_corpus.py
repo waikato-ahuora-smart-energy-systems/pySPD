@@ -35,6 +35,7 @@ def test_consecutive_cplex_corpus_is_complete_successful_and_hash_bound() -> Non
         "2023-09-24",
         "2023-09-25",
         "2023-09-26",
+        "2023-09-27",
     ]
     for day in manifest["days"]:
         input_path = CORPUS / day["input"]
