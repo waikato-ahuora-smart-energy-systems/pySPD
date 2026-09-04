@@ -3,8 +3,8 @@
   "profile": "pyspd-cplex-consecutive-clean-streak-v1",
   "source": "User-supplied CPLEX vSPD archive",
   "selection": {
-    "rule": "Three consecutive v5.0.6 days immediately after the fully diagnosed 2023-09-22 day.",
-    "stopping_rule": "Stop only after all three days have zero unresolved CPLEX differences."
+    "rule": "Consecutive v5.0.6 days immediately after the fully diagnosed 2023-09-22 day.",
+    "stopping_rule": "The original three-day confidence threshold was met through 2023-09-25; later consecutive days extend the evidence."
   },
   "days": [
     {
@@ -36,6 +36,16 @@
       "result_bytes": 76506460,
       "result_tree_sha256": "a226157bb5c3f52be525adbd45c99813e1c350bbc72ddb9f6d6f5bf4ba88c113",
       "summary_rows": 292
+    },
+    {
+      "date": "2023-09-26",
+      "input": "2023/20230926/input/Pricing_20230926.gdx",
+      "input_bytes": 41045905,
+      "input_sha256": "aaf99ffd0550c74bbf84e301bb7a6dfa19da92684d385cc284e94e4de2b9be80",
+      "result_file_count": 13,
+      "result_bytes": 77295491,
+      "result_tree_sha256": "df9c0fca7e33321aeedd938fa962e2e68a723f6cc9f65b3a9f7a4925d8fcfcff",
+      "summary_rows": 295
     }
   ]
 }

@@ -1,9 +1,10 @@
 # Consecutive CPLEX clean-streak corpus
 
-This immutable corpus contains three consecutive vSPD v5.0.6 input days and
+This immutable corpus contains consecutive vSPD v5.0.6 input days and
 their original CPLEX-produced result CSVs from the user-supplied archive. The
-dates are 2023-09-23, 2023-09-24, and 2023-09-25, immediately following the
-fully diagnosed 2023-09-22 day.
+sequence starts on 2023-09-23, immediately after the fully diagnosed
+2023-09-22 day. The original three-day confidence threshold was met through
+2023-09-25; later dates extend the evidence rather than alter that threshold.
 
 The corpus is separate from `cplex_reference`, whose ten dates were selected
 by a reproducible random ranking. `manifest.json` binds every input and result

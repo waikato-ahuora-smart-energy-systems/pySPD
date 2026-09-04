@@ -48,6 +48,13 @@ def _load(path: Path) -> dict:
             "f05672e032abecc2b07b169853e8930e6d44d5220b59eaa8d1def433cc91ae2b",
             (310, 1, 0),
         ),
+        (
+            "20230926",
+            295,
+            2.4e-11,
+            "90c9cbf039bf685260690e495594ba1e1cc0c77d0164a6018a5af1df103cb2ad",
+            (83, 0, 0),
+        ),
     ),
 )
 def test_consecutive_day_market_result_boundary_is_clean_and_hash_bound(
@@ -57,9 +64,12 @@ def test_consecutive_day_market_result_boundary_is_clean_and_hash_bound(
     records_sha256: str,
     certified_counts: tuple[int, int, int],
 ) -> None:
-    benchmark_path = _EVIDENCE / f"cplex-reference-paths-{date}-certified.json"
+    evidence_variant = "full-day" if date == "20230926" else "certified"
+    benchmark_path = (
+        _EVIDENCE / f"cplex-reference-paths-{date}-{evidence_variant}.json"
+    )
     comparison_path = (
-        _EVIDENCE / f"cplex-reference-comparison-{date}-certified.json"
+        _EVIDENCE / f"cplex-reference-comparison-{date}-{evidence_variant}.json"
     )
     benchmark = _load(benchmark_path)
     run = benchmark["runs"][0]
@@ -95,13 +105,21 @@ def test_consecutive_day_market_result_boundary_is_clean_and_hash_bound(
 
 @pytest.mark.parametrize(
     ("date", "expected_periods"),
-    (("20230923", 48), ("20230924", 46), ("20230925", 48)),
+    (
+        ("20230923", 48),
+        ("20230924", 46),
+        ("20230925", 48),
+        ("20230926", 48),
+    ),
 )
 def test_cplex_and_pyspd_share_the_dst_aware_trading_period_axis(
     date: str,
     expected_periods: int,
 ) -> None:
-    benchmark_path = _EVIDENCE / f"cplex-reference-paths-{date}-certified.json"
+    evidence_variant = "full-day" if date == "20230926" else "certified"
+    benchmark_path = (
+        _EVIDENCE / f"cplex-reference-paths-{date}-{evidence_variant}.json"
+    )
     benchmark = _load(benchmark_path)
     run = benchmark["runs"][0]
     records_path = _ROOT / run["records_path"]

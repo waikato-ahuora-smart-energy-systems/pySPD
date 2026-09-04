@@ -865,19 +865,21 @@ The authoritative work and pass criteria are in
 
 ## Consecutive-day CPLEX confidence run
 
-The three copied consecutive dates 2023-09-23 through 2023-09-25 are bound by
-the corresponding `cplex-reference-paths-YYYYMMDD-certified.json` streams and
-`cplex-reference-comparison-YYYYMMDD-certified.json` comparisons in this
-directory. Across 821 cases, every primary and fixed-RMIP solve is optimal and
-every accepted fixed-RMIP solution passes independent validation. Published
-energy, published reserve, and case reserve-price rows have zero unresolved
-differences on all three dates.
+The four copied consecutive dates 2023-09-23 through 2023-09-26 are bound by
+the corresponding `cplex-reference-paths-YYYYMMDD-certified.json` streams,
+except that the unchanged 2023-09-26 first-pass evidence retains its
+`full-day` suffix, and their paired `cplex-reference-comparison` artifacts in
+this directory. Across 1,116 cases, every primary and fixed-RMIP solve is
+optimal and every accepted fixed-RMIP solution passes independent validation.
+Published energy, published reserve, and case reserve-price rows have zero
+unresolved differences on all four dates.
 
 | Date | Cases | Maximum validation residual | Certified published energy | Certified published reserve | Certified case reserve |
 |---|---:|---:|---:|---:|---:|
 | 2023-09-23 | 275 | `4.73e-7` | 622 | 3 | 3 |
 | 2023-09-24 | 254 | `1.19e-7` | 323 | 7 | 7 |
 | 2023-09-25 | 292 | `1.21e-5` | 310 | 1 | 0 |
+| 2023-09-26 | 295 | `2.32e-11` | 83 | 0 | 0 |
 
 The middle date is New Zealand's 2023 spring daylight-saving transition.
 CPLEX and the GDX-derived PySPD axis both move from TP4 at 01:30 directly to
@@ -887,6 +889,8 @@ still accumulates exactly 1,800 publication seconds because those weights are
 read from `i_priceCaseFilesPublishedSecs`; they are not inferred by subtracting
 naive local timestamps. The apparent one-hour wall-clock shift is therefore
 expected DST behaviour rather than result misalignment.
+The following ordinary 48-period date, 2023-09-26, independently confirms
+that the post-transition axis continues without an offset.
 
 The new-day defects and generic corrections are:
 
@@ -906,6 +910,7 @@ RMIP solution.
 Raw solver-basis and allocation differences remain visible in the comparison,
 including zero-flow node duals and economically equivalent generation/reserve
 allocations. They are outside the accepted market-result evidence boundary and
-are not claimed as exact scalar identity. Under that boundary, 2023-09-23,
-2023-09-24, and 2023-09-25 are three consecutive clean market-result days, so
-the confidence-run stopping criterion is met.
+are not claimed as exact scalar identity. Under that boundary, 2023-09-23
+through 2023-09-26 are four consecutive clean market-result days. The
+confidence-run stopping criterion remains met with one additional
+out-of-sample day.
