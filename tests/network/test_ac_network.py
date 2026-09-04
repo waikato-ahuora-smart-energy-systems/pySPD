@@ -207,6 +207,70 @@ def test_zero_flow_cplex_subgradient_propagates_through_transformer_tree() -> No
     )
 
 
+def test_zero_flow_subgradient_propagates_through_lossless_mesh() -> None:
+    case = make_three_bus_case()
+    assert case.network is not None
+    period = ("C1", "T1")
+    boundary = (*period, "L1")
+    transformer = (*period, "L2")
+    parallel = (*period, "L3")
+    branches = case.network.branches | {parallel}
+    loss_segments = case.network.valid_ac_loss_segments | {
+        (*parallel, "ls1", direction)
+        for direction in ("forward", "backward")
+    }
+    factors = {
+        (*boundary, "ls1", direction): 0.001
+        for direction in ("forward", "backward")
+    } | {
+        (*branch, "ls1", direction): 0.0
+        for branch in (transformer, parallel)
+        for direction in ("forward", "backward")
+    }
+    network = replace(
+        case.network,
+        branches=branches,
+        ac_branches=branches,
+        branch_from_bus=case.network.branch_from_bus | {(*parallel, "B2")},
+        branch_to_bus=case.network.branch_to_bus | {(*parallel, "B3")},
+        branch_bus_connect=case.network.branch_bus_connect
+        | {(*parallel, "B2"), (*parallel, "B3")},
+        valid_ac_loss_segments=loss_segments,
+        node_load={
+            (*period, "N1"): 50.0,
+            (*period, "N2"): 0.0,
+            (*period, "N3"): 0.0,
+        },
+        branch_capacity=case.network.branch_capacity
+        | {
+            (*parallel, direction): 100.0
+            for direction in ("forward", "backward")
+        },
+        branch_susceptance=case.network.branch_susceptance | {parallel: 100.0},
+        branch_fixed_loss=case.network.branch_fixed_loss | {parallel: 0.0},
+        ac_loss_segment_mw=case.network.ac_loss_segment_mw
+        | {
+            (*parallel, "ls1", direction): 100.0
+            for direction in ("forward", "backward")
+        },
+        ac_loss_segment_factor=factors,
+    )
+
+    built, prices, _report = solve(replace(case, network=network))
+
+    for branch in (boundary, transformer, parallel):
+        assert pyo.value(built.artifacts["branch_flow"][branch]) == pytest.approx(
+            0.0, abs=1e-9
+        )
+    expected = (10.0 * 0.999, 10.0 / 0.999)
+    for bus in ("B2", "B3"):
+        assert prices.bus[(*period, bus)] == pytest.approx(expected[0])
+        assert prices.bus_price_intervals[(*period, bus)] == pytest.approx(expected)
+    for node in ("N2", "N3"):
+        assert prices.node[(*period, node)] == pytest.approx(expected[0])
+        assert prices.node_price_intervals[(*period, node)] == pytest.approx(expected)
+
+
 def test_zero_flow_export_subgradient_propagates_through_lossy_tree() -> None:
     case = make_three_bus_case()
     assert case.network is not None

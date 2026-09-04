@@ -865,14 +865,14 @@ The authoritative work and pass criteria are in
 
 ## Consecutive-day CPLEX confidence run
 
-The four copied consecutive dates 2023-09-23 through 2023-09-26 are bound by
+The five copied consecutive dates 2023-09-23 through 2023-09-27 are bound by
 the corresponding `cplex-reference-paths-YYYYMMDD-certified.json` streams,
 except that the unchanged 2023-09-26 first-pass evidence retains its
 `full-day` suffix, and their paired `cplex-reference-comparison` artifacts in
-this directory. Across 1,116 cases, every primary and fixed-RMIP solve is
+this directory. Across 1,379 cases, every primary and fixed-RMIP solve is
 optimal and every accepted fixed-RMIP solution passes independent validation.
 Published energy, published reserve, and case reserve-price rows have zero
-unresolved differences on all four dates.
+unresolved differences on all five dates.
 
 | Date | Cases | Maximum validation residual | Certified published energy | Certified published reserve | Certified case reserve |
 |---|---:|---:|---:|---:|---:|
@@ -880,6 +880,7 @@ unresolved differences on all four dates.
 | 2023-09-24 | 254 | `1.19e-7` | 323 | 7 | 7 |
 | 2023-09-25 | 292 | `1.21e-5` | 310 | 1 | 0 |
 | 2023-09-26 | 295 | `2.32e-11` | 83 | 0 | 0 |
+| 2023-09-27 | 263 | `1.78e-8` | 112 | 0 | 0 |
 
 The middle date is New Zealand's 2023 spring daylight-saving transition.
 CPLEX and the GDX-derived PySPD axis both move from TP4 at 01:30 directly to
@@ -899,7 +900,12 @@ The new-day defects and generic corrections are:
 - independently solved one-sided and solver-tolerance-equivalent reserve-price
   intervals for TP23, TP24, TP44, and TP45; and
 - analytical adjacent-slope intervals when a radial AC branch is exactly on a
-  piecewise-loss breakpoint, observed at KIN on 2023-09-23 and 2023-09-25.
+  piecewise-loss breakpoint, observed at KIN on 2023-09-23 and 2023-09-25; and
+- analytical zero-flow intervals propagated through an anchored lossless mesh,
+  observed at TWC on 2023-09-27. The three TWC buses are joined by lossless
+  parallel transformers and connect to the live grid through one lossy branch.
+  Nonzero-flow TWC cases match CPLEX directly; zero-flow cases expose the two
+  valid import/export derivatives and retain the governed export endpoint.
 
 SCIP remains responsible for discrete and SOS state. Continuous feasibility,
 reported quantities, and prices are validated on the accepted fixed-HiGHS
@@ -911,6 +917,6 @@ Raw solver-basis and allocation differences remain visible in the comparison,
 including zero-flow node duals and economically equivalent generation/reserve
 allocations. They are outside the accepted market-result evidence boundary and
 are not claimed as exact scalar identity. Under that boundary, 2023-09-23
-through 2023-09-26 are four consecutive clean market-result days. The
-confidence-run stopping criterion remains met with one additional
-out-of-sample day.
+through 2023-09-27 are five consecutive clean market-result days. The
+confidence-run stopping criterion remains met with two additional
+out-of-sample days.

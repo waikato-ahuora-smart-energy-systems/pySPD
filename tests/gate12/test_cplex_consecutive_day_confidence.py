@@ -55,6 +55,13 @@ def _load(path: Path) -> dict:
             "90c9cbf039bf685260690e495594ba1e1cc0c77d0164a6018a5af1df103cb2ad",
             (83, 0, 0),
         ),
+        (
+            "20230927",
+            263,
+            1.8e-8,
+            "ab21f4072cc4d92c945302ee510fac46e97e31a73e01c1a56c239b566fc7f474",
+            (112, 0, 0),
+        ),
     ),
 )
 def test_consecutive_day_market_result_boundary_is_clean_and_hash_bound(
@@ -110,6 +117,7 @@ def test_consecutive_day_market_result_boundary_is_clean_and_hash_bound(
         ("20230924", 46),
         ("20230925", 48),
         ("20230926", 48),
+        ("20230927", 48),
     ),
 )
 def test_cplex_and_pyspd_share_the_dst_aware_trading_period_axis(

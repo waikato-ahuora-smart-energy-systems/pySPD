@@ -303,11 +303,13 @@ class NetworkPricingEngine(PricingEngine):
         Historical vSPD/CPLEX result sets select the export-side endpoint for
         WPT1101.  Normalize to that endpoint and propagate it through any
         zero-loss transformer leaves. Positive-loss boundaries anchor the
-        recursion.  A passive tree whose multiple live boundaries meet at one
-        root retains a solver dual already inside the intersection of the
-        boundary intervals. An outlying basis dual is projected to the nearest
-        analytic endpoint so the scalar and its certificate remain consistent.
-        Unanchored zero-loss cycles retain their solver duals.
+        recursion. A lossless mesh behind one live boundary is equivalent to a
+        contracted passive bus and receives the same interval. A passive tree
+        whose multiple live boundaries meet at one root retains a solver dual
+        already inside the intersection of the boundary intervals. An outlying
+        basis dual is projected to the nearest analytic endpoint so the scalar
+        and its certificate remain consistent. Unanchored or lossy cycles
+        retain their solver duals.
         """
 
         network = case.network
@@ -548,7 +550,13 @@ class NetworkPricingEngine(PricingEngine):
                                     select(child, branch, bus)
                                     root_queue.append(child)
                 continue
-            if len(boundary) != 1 or len(internal) != len(component) - 1:
+            is_tree = len(internal) == len(component) - 1
+            is_lossless_mesh = len(internal) >= len(component) and all(
+                abs(first_factor(branch, direction)) <= tolerance
+                for branch in internal
+                for direction in ("forward", "backward")
+            )
+            if len(boundary) != 1 or not (is_tree or is_lossless_mesh):
                 continue
             root, root_branch, root_parent = next(iter(boundary))
             queue = [(root, root_branch, root_parent)]
@@ -559,7 +567,7 @@ class NetworkPricingEngine(PricingEngine):
                     continue
                 visited.add(bus)
                 select(bus, branch, parent)
-                for child_branch in incident[bus]:
+                for child_branch in sorted(incident[bus]):
                     left, right = endpoints[child_branch]
                     child = right if left == bus else left
                     if child in component and child not in visited:
