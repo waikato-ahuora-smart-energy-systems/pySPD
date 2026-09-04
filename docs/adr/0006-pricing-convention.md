@@ -70,6 +70,16 @@ field. All differentiable prices remain direct fixed-RMIP marginals and omit
 interval metadata. This rule does not change dispatch, the fixed-RMIP
 objective, or prices away from the loss kink.
 
+For a reserve-loss convex combination, historical CPLEX may retain an exact
+segment breakpoint while the portable fixed RMIP moves an economically
+immaterial distance onto the adjacent segment. The reserve pricing policy may
+select that breakpoint only when one convex weight is at least `0.999`, the
+candidate is re-solved as a continuous LP, and the objective loss is no more
+than `0.001 NZD`. The original optimum, candidate target, candidate objective,
+loss, and acceptance budget are retained in a typed audit. A rejected
+candidate restores the original primal and dual state without another solve.
+This is a bounded primal canonicalization and is not an analytic dual interval.
+
 ## Consequences
 
 - MIP pricing implementation waits until Gate 1 evidence exists.
@@ -85,6 +95,9 @@ objective, or prices away from the loss kink.
   output-parity difference.
 - Reports expose `price_interval` on affected bus, node, and published-energy
   rows; scalar-only rows contain an empty CSV value.
+- Reserve-loss breakpoint canonicalization is solver-independent, explicitly
+  budgeted, and validated against the CPLEX corpus; it cannot silently relax
+  feasibility or accept a larger objective loss.
 - Stage 7 repeats the complete pricing audit after NMIR/reserve binaries arrive.
 
 ## Rejected alternatives

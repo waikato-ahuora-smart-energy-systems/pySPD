@@ -87,6 +87,44 @@ class SolutionSnapshot:
     def __post_init__(self) -> None:
         object.__setattr__(self, "variables", MappingProxyType(dict(self.variables)))
 
+    @classmethod
+    def capture(cls, built: BuiltModel) -> SolutionSnapshot:
+        objective = next(
+            built.model.component_data_objects(pyo.Objective, active=True)
+        )
+        return cls(
+            built.formulation.formulation_id,
+            float(pyo.value(objective)),
+            {
+                variable.name: _value(variable)
+                for variable in built.model.component_data_objects(
+                    pyo.Var, active=True
+                )
+            },
+            built.structural_signature,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class PricingCanonicalizationAudit:
+    """Auditable secondary pricing solve within a declared objective budget."""
+
+    policy: str
+    candidate_targets: Mapping[str, float]
+    accepted_targets: Mapping[str, float]
+    baseline_objective: float
+    canonical_objective: float
+    objective_loss: float
+    allowed_objective_loss: float
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self, "candidate_targets", MappingProxyType(dict(self.candidate_targets))
+        )
+        object.__setattr__(
+            self, "accepted_targets", MappingProxyType(dict(self.accepted_targets))
+        )
+
 
 type WarmStartKey = tuple[str, tuple[str, ...]]
 
@@ -165,6 +203,7 @@ class HvdcSolveOutcome:
     next_warm_start: WarmStartSnapshot
     warm_start: WarmStartAudit
     solver_profile: str
+    pricing_canonicalization: PricingCanonicalizationAudit | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -704,16 +743,7 @@ def _assert_continuous_pricing_model(model: pyo.ConcreteModel) -> None:
 
 
 def _snapshot(built: BuiltModel) -> SolutionSnapshot:
-    objective = next(built.model.component_data_objects(pyo.Objective, active=True))
-    return SolutionSnapshot(
-        built.formulation.formulation_id,
-        float(pyo.value(objective)),
-        {
-            variable.name: _value(variable)
-            for variable in built.model.component_data_objects(pyo.Var, active=True)
-        },
-        built.structural_signature,
-    )
+    return SolutionSnapshot.capture(built)
 
 
 def _component_values(component: Any) -> dict[Key, float]:

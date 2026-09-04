@@ -7,6 +7,7 @@ from pyspd.reserve.data import (
     ReserveDataError,
 )
 from pyspd.reserve.formulation import (
+    ReserveKinkCanonicalizer,
     ReservePreprocessor,
     ReservePrices,
     ReservePricingEngine,
@@ -29,6 +30,7 @@ __all__ = [
     "ReserveCase",
     "ReserveData",
     "ReserveDataError",
+    "ReserveKinkCanonicalizer",
     "ReservePreprocessor",
     "ReservePriceCheck",
     "ReservePrices",

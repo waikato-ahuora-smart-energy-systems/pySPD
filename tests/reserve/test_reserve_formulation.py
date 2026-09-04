@@ -17,6 +17,7 @@ from pyspd.orchestration import (
 )
 from pyspd.reserve import (
     IndependentReserveValidator,
+    ReserveKinkCanonicalizer,
     ReservePricingEngine,
     ReserveResultSchema,
     ReserveSolvePolicy,
@@ -197,6 +198,23 @@ def test_nmir_uses_portable_adjacent_interval_mip_not_native_sos() -> None:
     assert len(built.artifacts["lambda_hvdc_energy_interval"]) == 12
     assert len(built.artifacts["lambda_hvdc_reserve_interval"]) == 96
     assert not tuple(built.model.component_data_objects(pyo.SOSConstraint, active=True))
+    assert len(built.artifacts["hvdc_reserve_sent"]) == 8
+    assert len(built.artifacts["hvdc_reserve_loss"]) == 8
+
+
+def test_reserve_kink_canonicalization_configuration_fails_closed() -> None:
+    with pytest.raises(ValueError, match="dominant_weight"):
+        ReserveKinkCanonicalizer(minimum_dominant_weight=0.5)
+    with pytest.raises(ValueError, match="cannot be negative"):
+        ReserveKinkCanonicalizer(objective_loss_budget=-1.0)
+
+
+def test_reserve_kink_objective_loss_respects_objective_sense() -> None:
+    loss = ReserveKinkCanonicalizer._objective_loss
+
+    assert loss(pyo.maximize, 10.0, 9.999) == pytest.approx(0.001)
+    assert loss(pyo.minimize, 10.0, 10.001) == pytest.approx(0.001)
+    assert loss(pyo.maximize, 10.0, 10.001) == 0.0
 
 
 def test_exact_reserve_share_perturbation_coefficients() -> None:

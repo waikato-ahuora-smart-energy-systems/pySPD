@@ -122,12 +122,28 @@ class IndependentReserveValidator:
         self._shortfall_residuals(artifacts, residuals)
         self._risk_residuals(case, artifacts, residuals)
         self._sharing_residuals(case, artifacts, residuals, tolerance)
+        self._canonicalization_residuals(outcome, residuals)
         self._objective_residuals(case, artifacts, residuals)
         passed = all(
             math.isfinite(value) and value <= tolerance
             for value in residuals.values()
         )
         return ReserveValidationReport(residuals, tolerance, passed)
+
+    @staticmethod
+    def _canonicalization_residuals(
+        outcome: HvdcSolveOutcome,
+        residuals: dict[str, float],
+    ) -> None:
+        audit = outcome.pricing_canonicalization
+        if audit is None:
+            return
+        reserve_sent = outcome.pricing_model.artifacts["hvdc_reserve_sent"]
+        for name, target in audit.accepted_targets.items():
+            key = tuple(name.split("|"))
+            residuals[f"pricing_canonicalization_target:{key}"] = abs(
+                _value(reserve_sent[key]) - target
+            )
 
     @staticmethod
     def _shortfall_residuals(

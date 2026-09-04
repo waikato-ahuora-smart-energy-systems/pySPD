@@ -122,8 +122,28 @@ class IndependentHvdcValidator:
                     )
                     - 1.0,
                 )
+        canonicalization = outcome.pricing_canonicalization
+        pricing_objective = outcome.pricing_snapshot.objective
+        if canonicalization is not None and canonicalization.accepted_targets:
+            pricing_objective = canonicalization.baseline_objective
+            observed_loss = abs(
+                canonicalization.baseline_objective
+                - canonicalization.canonical_objective
+            )
+            residuals["pricing_canonicalization_objective"] = abs(
+                observed_loss - canonicalization.objective_loss
+            )
+            residuals["pricing_canonicalization_budget"] = max(
+                0.0,
+                canonicalization.objective_loss
+                - canonicalization.allowed_objective_loss,
+            )
+            residuals["pricing_canonicalization_snapshot"] = abs(
+                canonicalization.canonical_objective
+                - outcome.pricing_snapshot.objective
+            )
         residuals["pricing_objective_fixed_discrete"] = abs(
-            outcome.primary_snapshot.objective - outcome.pricing_snapshot.objective
+            outcome.primary_snapshot.objective - pricing_objective
         )
         passed = all(
             math.isfinite(value) and value <= tolerance

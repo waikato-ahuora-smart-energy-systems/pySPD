@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "profile": "cplex-gold-reserve-loss-breakpoint-certificate-v1",
+  "trading_date": "20230922",
+  "case_id": "211012023091330496",
+  "date_time": "22-SEP-2023 01:30",
+  "trading_period": "TP4",
+  "policy": {
+    "name": "dominant-reserve-loss-breakpoint-v1",
+    "minimum_dominant_weight": 0.999,
+    "objective_loss_budget_nzd": 0.001,
+    "target": "SI/FIR/backward post-contingent HVDC flow",
+    "target_mw": 0.0
+  },
+  "diagnosis": {
+    "dominant_breakpoint_weight": 0.9998547596,
+    "ordinary_post_contingent_flow_mw": -0.031161101356701693,
+    "ordinary_pricing_objective_nzd": 555972.9979575574,
+    "canonical_pricing_objective_nzd": 555972.9972455984,
+    "objective_loss_nzd": 0.0007119590882211924,
+    "accepted": true
+  },
+  "comparison": {
+    "ordinary_si_fir_price_nzd_per_mwh": 0.07144039261639178,
+    "canonical_si_fir_price_nzd_per_mwh": 0.1,
+    "cplex_si_fir_price_nzd_per_mwh": 0.1,
+    "ordinary_si_reference_price_nzd_per_mwh": 83.75184848,
+    "canonical_si_reference_price_nzd_per_mwh": 83.77469616883619,
+    "cplex_si_reference_price_nzd_per_mwh": 83.7747,
+    "canonical_system_cost_nzd": 11826.673999385524,
+    "cplex_system_cost_nzd": 11826.674,
+    "ordinary_published_si_fir_price_nzd_per_mwh": 0.07144,
+    "canonical_published_si_fir_price_nzd_per_mwh": 0.07585,
+    "cplex_published_si_fir_price_nzd_per_mwh": 0.07585,
+    "tp4_unresolved_published_energy": 0,
+    "tp4_unresolved_published_reserve": 0,
+    "tp4_unresolved_island": 0,
+    "tp4_unresolved_summary": 0
+  },
+  "source": {
+    "input_sha256": "70dffe5c416eed90ffb31925d48293fc785a063dcbacb3367fca815587c9e5fc",
+    "vspd_v5_0_2_commit": "3360a91ebd48f2e3cbb52a5e6766d893011054be",
+    "vspd_v5_0_6_commit": "21b1cf33f5607399331dcb1c03270348def5ccc8",
+    "historical_cplex_options_sha256": "0c2fe2c491945c6a970701bdcbf0024c1fac2f90fa3141646ce9f246a40d0aff"
+  },
+  "evidence": {
+    "benchmark_sha256": "b84cd4314f6c7b503cb53c7073cdc12e597199eb46833d525f07483c06aee00e",
+    "records_sha256": "c84a7840491aabb3990a71639e1483ad1e224d14aa5ee90cad67b9299959aae7",
+    "comparison_file_sha256": "535a2c82e1df19a3732cbf0d3fd7cce9e21af8f4eee4666ca220ca7e8873c53c",
+    "comparison_logical_sha256": "7e1ea2bd67d9b98bf4f13e5acad8c6f7225260a48c06e9529313c8d53b531a9b",
+    "prefix_case_count": 25,
+    "prefix_all_solves_optimal": true
+  },
+  "logical_sha256": "c5dfd68e91249e15af72c067b7d3317d1aa90b2db008a970688db22d88c650ce"
+}

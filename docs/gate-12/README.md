@@ -21,6 +21,9 @@ Four additional SCIP→HiGHS full-day runs are documented in the
 [`expanded CPLEX analysis`](cplex-reference-expanded-four-days.md).
 The cross-corpus treatment of basis-dependent passive zero-flow prices is in
 the [`ten-day CPLEX zero-flow analysis`](cplex-zero-flow-analysis-ten-days.md).
+The distinct 2023-09-22 TP4 reserve-loss breakpoint diagnosis and bounded
+primal canonicalization are in the
+[`TP4 reserve-kink certificate`](cplex-tp4-reserve-kink-20230922.md).
 The 2023-11-24 ARG1101 diagnosis proves a second basis-dependent boundary:
 fresh CPLEX reproduces HiGHS on the same fixed LP, while only CPLEX's
 MIP-to-fixed-LP continuation reproduces the archived marginal. See the

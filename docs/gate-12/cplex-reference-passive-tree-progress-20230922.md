@@ -119,11 +119,12 @@ and
 
 ## Next execution
 
-Diagnose the remaining coupled price cluster: TP1's two SI reserve
-publications, and TP4's 167 energy and one SI FIR publication. Unlike the
-zero-flow energy certificates, the TP4 difference also changes reserve
-sharing and summary cost and must not be classified as a node-only dual
-interval. TP24's two TUI offers also require a narrow source-backed
+TP4's coupled reserve-sharing and node-price cluster is now resolved by the
+bounded reserve-loss breakpoint canonicalization documented in
+[`cplex-tp4-reserve-kink-20230922.md`](cplex-tp4-reserve-kink-20230922.md).
+The 25-case prefix has zero unresolved TP4 differences in published energy,
+published reserve, island, and summary results. Continue with TP1's two SI
+reserve publications. TP24's two TUI offers also require a narrow source-backed
 alternate-energy-allocation certificate: their total generation and marginal
 block cost agree, but CPLEX and SCIP split 4.7 MW of identical-price
 second-block energy differently. All certifications must preserve the raw
