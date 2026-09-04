@@ -19,6 +19,7 @@ from pyspd.data.legacy import (
     LegacyV3InputAdapter,
 )
 from pyspd.orchestration import (
+    DailyCaseDataIndex,
     DailyCasePreparer,
     DailyCaseRunner,
     DailyCaseSelector,
@@ -229,9 +230,13 @@ class PyspdApplication:
         selected = selector.select(symbols, case_ids=configuration.case_ids)
         if start_ordinal > len(selected):
             raise ConfigurationError("start_ordinal exceeds selected case count")
-        for specification in selected[start_ordinal:]:
-            case_data = selector.case_data(
-                symbols, specification, formulation_id=source_profile
+        scheduled = selected[start_ordinal:]
+        case_data_index = DailyCaseDataIndex(
+            symbols, case_ids=tuple(item.case_id for item in scheduled)
+        )
+        for specification in scheduled:
+            case_data = case_data_index.case_data(
+                specification, formulation_id=source_profile
             )
             case_data, audit = OverrideApplier().apply(case_data, ())
             yield DailyCasePreparer().prepare(

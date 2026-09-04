@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "profile": "pyspd-solve-performance-investigation-v1",
+  "source": {
+    "name": "Pricing_20230927.gdx",
+    "sha256": "c854ea9ee6e078586fcf8bff9a3bc1fdd3cd3641da326a0c921f6aa7fb97a54f",
+    "environment": "Darwin-arm64",
+    "solver_profile": "scip-mip-fixed-highs-rmip",
+    "versions": {
+      "pyomo": "6.10.1",
+      "pyscipopt": "5.7.1",
+      "highspy": "1.15.1"
+    }
+  },
+  "case_data_index": {
+    "case_count": 24,
+    "case_scoped_source_record_count": 3527523,
+    "extracted_record_count": 357798,
+    "repetitions": 3,
+    "scan_median_seconds": 1.464605415938422,
+    "index_median_seconds": 0.108338333084248,
+    "speedup_factor": 13.518810694636489,
+    "elapsed_reduction_percent": 92.60289959976475,
+    "exact_case_data_match": true,
+    "execution_sha256": "c2350c572b288368c59286cde955b6b8437bc89ac099a681038819f5ac9b70c9",
+    "logical_sha256": "0a29d70fc38c28187ea9a32e900b2a88d9e96d37b524395223cd8d8f449f44a7"
+  },
+  "baseline_phase_profile": {
+    "case_count": 8,
+    "end_to_end_seconds": 134.01902466686442,
+    "preparation_seconds": 14.110004832968116,
+    "model_assembly_seconds": 19.17250783299096,
+    "scip_seconds": 47.34452883398626,
+    "highs_seconds": 32.64114979095757,
+    "executor_unattributed_seconds": 20.6033574170433,
+    "daily_runner_overhead_seconds": 0.1474759589182213,
+    "peak_resident_bytes": 4174626816,
+    "all_solves_optimal": true,
+    "independent_validation_passed": true,
+    "maximum_validation_residual": 2.5825391502602448e-11,
+    "execution_sha256": "c2350c572b288368c59286cde955b6b8437bc89ac099a681038819f5ac9b70c9",
+    "logical_sha256": "505ada3cd6a2d778ecf54791b0a0e3cd493e548afa68ec1fb72458698a653a3a"
+  },
+  "period_initialization": {
+    "case_count": 12,
+    "repetitions": 2,
+    "cold_median_seconds": 193.343384228996,
+    "scip_warm_median_seconds": 193.72092339600204,
+    "elapsed_reduction_percent": -0.19526872797409858,
+    "successor_discrete_values_seeded": 12,
+    "compared_value_count": 46464,
+    "exact_result_sha256_match": true,
+    "published_output_exact_match": true,
+    "all_solves_optimal": true,
+    "decision": "retain-opt-in-diagnostic-only",
+    "execution_sha256": "c2350c572b288368c59286cde955b6b8437bc89ac099a681038819f5ac9b70c9",
+    "logical_sha256": "4ae7ff15fe32cc807a7b5229b0c7ecb4d42cab03b17ed18fc51ad79300e85ea6"
+  },
+  "parallel_processing": {
+    "case_count": 12,
+    "serial": {
+      "wall_seconds": 223.48271745897364,
+      "solve_seconds": 184.5907087069936,
+      "records_sha256": "b70315b35ff694fb04c42b4797da397a4f51582d3dad243faeca6e54c70df26b",
+      "logical_sha256": "139b8f38f430b88a1f39cfef584bb73d6bbc2351dd9ac46e5a7249e123f3d968"
+    },
+    "two_workers": {
+      "wall_seconds": 122.87477895896882,
+      "summed_solve_seconds": 177.55420224869158,
+      "speedup_factor": 1.81878,
+      "elapsed_reduction_percent": 45.0182,
+      "records_sha256": "f0cbdc29a82b33e76047030dd900af9379fa1ad1a648cf9d39cba796ad92b892",
+      "logical_sha256": "7d82a0d46859607b94fd32693d5e1b90352c61a451636d71790b09b71342e3c1"
+    },
+    "three_workers": {
+      "wall_seconds": 88.59536679193843,
+      "summed_solve_seconds": 183.7391166681191,
+      "speedup_factor": 2.52251,
+      "elapsed_reduction_percent": 60.3569,
+      "records_sha256": "c2221e203f7ea8c49b5b3fc3dc8fae2b0f565dee4f455572b7743cda60c662c3",
+      "logical_sha256": "ad2079fb2d25020c5406eabe7dedb91b657644e7051a982da03f3af6b0dd9a61"
+    },
+    "parity": {
+      "compared_value_count": 46464,
+      "fixed_discrete_match": true,
+      "identity_match": true,
+      "maximum_physics_error": 0.0,
+      "maximum_market_price_error": 0.0,
+      "maximum_raw_bus_price_error": 0.0,
+      "strict_raw_parity_passed": true,
+      "market_result_parity_passed": true
+    }
+  },
+  "pricing_model_clone": {
+    "case_count": 12,
+    "baseline_wall_seconds": 223.48271745897364,
+    "candidate_wall_seconds": 211.24142700002994,
+    "wall_elapsed_reduction_percent": 5.47751,
+    "baseline_solve_seconds": 184.5907087069936,
+    "candidate_solve_seconds": 171.15882808319293,
+    "solve_elapsed_reduction_percent": 7.27657,
+    "isolated_rebuild_median_seconds": 1.0957390420371667,
+    "isolated_clone_median_seconds": 0.475541332969442,
+    "isolated_clone_reduction_percent": 56.60085889744978,
+    "compared_value_count": 46464,
+    "fixed_discrete_match": true,
+    "maximum_physics_error": 0.0,
+    "maximum_market_price_error": 0.0,
+    "maximum_raw_bus_price_error": 0.0,
+    "strict_raw_parity_passed": true,
+    "market_result_parity_passed": true,
+    "candidate_records_sha256": "4d6f8094ecbd0df09d4310852efea42ddf135fb71922001ec3205da64d6d306d",
+    "comparison_logical_sha256": "70c2135989649762045f6ebf13476c07558899fe0e906e5004ed8be58b82208d",
+    "candidate_execution_sha256": "f0ab3197e6d46cdf3ea735d99534a1791e7038bddeffcdf11fd3c4c850786e24"
+  },
+  "combined_clone_three_workers": {
+    "wall_seconds": 93.50806079199538,
+    "summed_solve_seconds": 183.01421029295307,
+    "speedup_vs_clone_serial": 2.25907,
+    "elapsed_reduction_percent_vs_clone_serial": 55.734,
+    "strict_raw_parity_passed": true,
+    "market_result_parity_passed": true,
+    "records_sha256": "9039ffcc12790a6f1205d3c1bfd03e6d5e49ff816ed9ef396a5a41541dff4113",
+    "logical_sha256": "b67c2916e3f3bfe1252135501330cec407a73e858ab80545b98b377f20b7a50a"
+  },
+  "persistent_solver_probe": {
+    "highs_factory_sample_count": 100,
+    "highs_factory_median_seconds": 0.00003841641591861844,
+    "highs_factory_total_seconds": 0.004136964911594987,
+    "decision": "factory-caching-has-no-material-value"
+  },
+  "decisions": {
+    "enable_case_data_index": true,
+    "enable_pricing_model_clone": true,
+    "enable_scip_period_warm_start": false,
+    "enable_highs_primal_warm_start": false,
+    "recommended_parallel_workers": 3,
+    "solver_threads_per_worker": 1,
+    "retain_solver_profile": "scip-mip-fixed-highs-rmip"
+  }
+}

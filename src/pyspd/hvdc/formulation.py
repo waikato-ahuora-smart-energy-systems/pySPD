@@ -481,7 +481,10 @@ class HvdcSolvePolicy(SolvePolicy):
         fixed_sos_members = _solvefinal_sos_member_values(primary)
         _set_continuous_state(primary.model, fixed_sos_members)
         primary_snapshot = _snapshot(primary)
-        pricing = ModelAssembler().assemble(self._formulation(), primary.case_data)
+        # The fixed RMIP has the same algebra and artifact graph as the solved
+        # primary model. Clone that exact instance instead of rebuilding every
+        # component, then apply the governed solveFinal fix/relax overlay.
+        pricing = ModelAssembler().clone(primary)
         pricing_warm_count = 0
         if self.warm_start_pricing and self.pricing_backend is None:
             pricing_warm_count = WarmStartSnapshot.capture(primary.model).apply(

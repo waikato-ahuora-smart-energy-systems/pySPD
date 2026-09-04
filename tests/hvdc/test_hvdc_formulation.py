@@ -435,6 +435,26 @@ def test_explicit_portable_sos_mip_uses_scip_and_immutable_pricing_snapshot() ->
     assert audit.primary_state_sha256 != audit.pricing_state_sha256
 
 
+def test_pricing_model_clones_the_solved_primary_model(monkeypatch) -> None:
+    cloned_from = []
+    clone = ModelAssembler.clone
+
+    def capture(assembler, built_model):
+        cloned_from.append(built_model)
+        return clone(assembler, built_model)
+
+    monkeypatch.setattr(ModelAssembler, "clone", capture)
+    original = build(make_hvdc_case(enforce=True))
+
+    outcome = HvdcSolvePolicy().solve(original)
+
+    assert cloned_from == [outcome.primary_model]
+    assert outcome.pricing_model.model is not outcome.primary_model.model
+    assert outcome.pricing_model.artifacts["generation"] is not (
+        outcome.primary_model.artifacts["generation"]
+    )
+
+
 def test_exact_breakpoint_alternative_interval_optimum_is_safely_fixed() -> None:
     _built, outcome, _prices = solve(make_hvdc_case(load=48.0, enforce=True))
     interval_fixings = {

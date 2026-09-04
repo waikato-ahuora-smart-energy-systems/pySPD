@@ -12,6 +12,7 @@ from types import MappingProxyType
 from typing import Any, ClassVar
 
 import pyomo.environ as pyo
+from pyomo.core.base.component import Component
 
 
 class AssemblyError(ValueError):
@@ -226,6 +227,45 @@ class ModelAssembler:
             build_order=build_order,
             structural_signature=structural_signature,
         )
+
+    def clone(self, built_model: BuiltModel) -> BuiltModel:
+        """Clone a built model and remap every owned Pyomo artifact.
+
+        Immutable source-data artifacts remain shared. Pyomo components,
+        including components nested in tuples, must resolve by their fully
+        qualified name on the cloned model or the operation fails closed.
+        """
+
+        model = built_model.model.clone()
+        artifacts = ModelArtifacts()
+        for name, value in built_model.artifacts.values.items():
+            artifacts.register(
+                built_model.artifacts.owners[name],
+                name,
+                self._clone_artifact(value, model),
+            )
+        artifacts.seal()
+        return BuiltModel(
+            model=model,
+            artifacts=artifacts,
+            formulation=built_model.formulation,
+            case_data=built_model.case_data,
+            build_order=built_model.build_order,
+            structural_signature=built_model.structural_signature,
+        )
+
+    @classmethod
+    def _clone_artifact(cls, value: Any, model: pyo.ConcreteModel) -> Any:
+        if isinstance(value, Component):
+            cloned = model.find_component(value.name)
+            if cloned is None:
+                raise AssemblyError(
+                    f"cloned model is missing artifact component {value.name!r}"
+                )
+            return cloned
+        if isinstance(value, tuple):
+            return tuple(cls._clone_artifact(item, model) for item in value)
+        return value
 
     @staticmethod
     def _validate_versions(formulation: Formulation) -> None:

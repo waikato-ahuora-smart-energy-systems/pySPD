@@ -14,7 +14,11 @@ from pyspd.orchestration.pricing import (
     PublishedPriceAggregator,
 )
 from pyspd.orchestration.runner import DailyCaseExecution, DailyCaseRunner, DailyRunner
-from pyspd.orchestration.selection import DailyCasePreparer, DailyCaseSelector
+from pyspd.orchestration.selection import (
+    DailyCaseDataIndex,
+    DailyCasePreparer,
+    DailyCaseSelector,
+)
 from pyspd.orchestration.solver import (
     CaseExecutor,
     ReserveCaseExecutor,
@@ -50,6 +54,7 @@ __all__ = [
     "CaseRunResult",
     "CaseRunStatus",
     "DailyCase",
+    "DailyCaseDataIndex",
     "DailyCaseExecution",
     "DailyCasePreparer",
     "DailyCaseRunner",

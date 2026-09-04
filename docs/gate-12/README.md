@@ -920,3 +920,13 @@ are not claimed as exact scalar identity. Under that boundary, 2023-09-23
 through 2023-09-27 are five consecutive clean market-result days. The
 confidence-run stopping criterion remains met with two additional
 out-of-sample days.
+
+## Solve-performance investigation
+
+The [2023-09-27 performance investigation](solve-performance-investigation-20230927.md)
+profiles the complete SCIP→fixed-HiGHS workflow, validates two- and three-worker
+case sharding against a serial record stream, repeats the predecessor-period
+SCIP initialization trial, and measures model construction and persistent-
+backend opportunities. It enables indexed case extraction and cloned pricing-
+model construction. The controlled three-worker runs reduce wall time by
+55.7–60.4% with strict result parity; SCIP/HiGHS warm starts remain disabled.

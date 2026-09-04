@@ -48,6 +48,22 @@ class BalanceComponent(ModelComponent):
         return {"balance": context.model.balance.equation}
 
 
+class CloneArtifactsComponent(ModelComponent):
+    name = "clone-artifacts"
+    provides = frozenset({"variable", "component_tuple", "metadata"})
+    supported_formulations = frozenset({FORMULATION})
+
+    def build(self, context: BuildContext) -> Mapping[str, Any]:
+        context.model.cloneable = pyo.Block(concrete=True)
+        context.model.cloneable.value = pyo.Var(initialize=3.0)
+        variable = context.model.cloneable.value
+        return {
+            "variable": variable,
+            "component_tuple": (variable,),
+            "metadata": context.case_data,
+        }
+
+
 class Policy(SolvePolicy):
     supported_formulations = frozenset({FORMULATION})
 
@@ -107,6 +123,29 @@ def test_assembly_is_dependency_ordered_and_deterministic() -> None:
     assert first.artifacts.owners == {"nodes": "domain", "balance": "balance"}
     with pytest.raises(AssemblyError, match="sealed"):
         first.artifacts.register("late", "late_artifact", object())
+
+
+def test_built_model_clone_remaps_components_and_preserves_metadata() -> None:
+    metadata = object()
+    assembler = ModelAssembler()
+    original = assembler.assemble(formulation(CloneArtifactsComponent), metadata)
+
+    cloned = assembler.clone(original)
+
+    assert cloned.model is not original.model
+    assert cloned.case_data is original.case_data
+    assert cloned.formulation is original.formulation
+    assert cloned.build_order == original.build_order
+    assert cloned.structural_signature == original.structural_signature
+    assert cloned.artifacts.owners == original.artifacts.owners
+    assert cloned.artifacts["metadata"] is metadata
+    assert cloned.artifacts["variable"] is not original.artifacts["variable"]
+    assert cloned.artifacts["variable"].parent_block().model() is cloned.model
+    assert cloned.artifacts["component_tuple"] == (cloned.artifacts["variable"],)
+
+    cloned.artifacts["variable"].set_value(9.0)
+    assert pyo.value(original.artifacts["variable"]) == 3.0
+    assert pyo.value(cloned.artifacts["variable"]) == 9.0
 
 
 def test_missing_cycles_and_duplicate_ownership_fail_before_build() -> None:

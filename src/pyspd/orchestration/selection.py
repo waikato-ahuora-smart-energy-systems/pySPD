@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from types import MappingProxyType
 
 from pyspd.contracts import CaseData, CaseIdentifier
-from pyspd.data.raw import RawSymbol, RawSymbols
+from pyspd.data.raw import RawRecord, RawSymbol, RawSymbols
 from pyspd.preprocess import PreprocessingSettings, Vspd506Preprocessor
 from pyspd.preprocess.input import CaseInput, nonzero
 from pyspd.reserve import ReserveCase
@@ -25,6 +26,124 @@ _STUDY_MODES = {
     131: ScheduleType.PRSS,
     111: ScheduleType.SPD,
 }
+
+type _RecordRange = tuple[int, int]
+
+
+class DailyCaseDataIndex:
+    """Index case-scoped GDX records once for repeated period extraction.
+
+    GDX symbols are ordered by their declared domains, but an input adapter is
+    allowed to present the same case in more than one record run.  Retaining
+    ranges rather than assuming one contiguous block preserves source order
+    while avoiding a full-record scan for every trading period.
+    """
+
+    def __init__(
+        self,
+        symbols: RawSymbols,
+        *,
+        case_ids: tuple[str, ...] = (),
+    ) -> None:
+        self._symbols = symbols
+        self._case_ids = frozenset(case_ids) if case_ids else None
+        ranges_by_symbol: dict[
+            str, MappingProxyType[str, tuple[_RecordRange, ...]]
+        ] = {}
+        for symbol in symbols.symbols:
+            if not _is_case_scoped(symbol):
+                continue
+            ranges: dict[str, list[_RecordRange]] = {}
+            active_case: str | None = None
+            active_start = 0
+            for position, record in enumerate(symbol.records):
+                case_id = record.keys[0]
+                if active_case is None:
+                    active_case = case_id
+                    active_start = position
+                elif case_id != active_case:
+                    self._retain_range(
+                        ranges, active_case, active_start, position
+                    )
+                    active_case = case_id
+                    active_start = position
+            if active_case is not None:
+                self._retain_range(
+                    ranges, active_case, active_start, len(symbol.records)
+                )
+            ranges_by_symbol[symbol.name] = MappingProxyType(
+                {case_id: tuple(items) for case_id, items in ranges.items()}
+            )
+        self._ranges_by_symbol = MappingProxyType(ranges_by_symbol)
+
+    def case_data(
+        self,
+        selected: DailyCase,
+        *,
+        formulation_id: str = _BASE_FORMULATION,
+    ) -> CaseData:
+        """Return the exact isolated source view for one indexed case."""
+
+        if selected.source_sha256 != self._symbols.source_sha256:
+            raise OrchestrationError("selected case belongs to a different source")
+        if self._case_ids is not None and selected.case_id not in self._case_ids:
+            raise OrchestrationError(
+                f"case {selected.case_id!r} is not present in case-data index"
+            )
+        case_symbols = tuple(
+            RawSymbol(
+                symbol.name,
+                symbol.symbol_type,
+                symbol.dimension,
+                symbol.domains,
+                symbol.description,
+                symbol.uel_orders,
+                self._case_records(symbol, selected.case_id),
+            )
+            for symbol in self._symbols.symbols
+        )
+        return CaseData(
+            formulation_id,
+            CaseIdentifier(
+                selected.case_id, selected.date_time, selected.trading_period
+            ),
+            RawSymbols(
+                self._symbols.source_name,
+                self._symbols.source_sha256,
+                case_symbols,
+            ),
+        )
+
+    def _retain_range(
+        self,
+        ranges: dict[str, list[_RecordRange]],
+        case_id: str,
+        start: int,
+        stop: int,
+    ) -> None:
+        if self._case_ids is None or case_id in self._case_ids:
+            ranges.setdefault(case_id, []).append((start, stop))
+
+    def _case_records(
+        self, symbol: RawSymbol, case_id: str
+    ) -> tuple[RawRecord, ...]:
+        if not _is_case_scoped(symbol):
+            return symbol.records
+        ranges = self._ranges_by_symbol[symbol.name].get(case_id, ())
+        if not ranges:
+            return ()
+        if len(ranges) == 1:
+            start, stop = ranges[0]
+            return symbol.records[start:stop]
+        return tuple(
+            symbol.records[position]
+            for start, stop in ranges
+            for position in range(start, stop)
+        )
+
+
+def _is_case_scoped(symbol: RawSymbol) -> bool:
+    return bool(symbol.domains and symbol.domains[0] in {"ca", "caseID"})
 
 
 class DailyCaseSelector:
@@ -106,33 +225,9 @@ class DailyCaseSelector:
         *,
         formulation_id: str = _BASE_FORMULATION,
     ) -> CaseData:
-        if selected.source_sha256 != symbols.source_sha256:
-            raise OrchestrationError("selected case belongs to a different source")
-        case_symbols: list[RawSymbol] = []
-        for symbol in symbols.symbols:
-            records = symbol.records
-            if symbol.domains and symbol.domains[0] in {"ca", "caseID"}:
-                records = tuple(
-                    record for record in records if record.keys[0] == selected.case_id
-                )
-            case_symbols.append(
-                RawSymbol(
-                    symbol.name,
-                    symbol.symbol_type,
-                    symbol.dimension,
-                    symbol.domains,
-                    symbol.description,
-                    symbol.uel_orders,
-                    records,
-                )
-            )
-        return CaseData(
-            formulation_id,
-            CaseIdentifier(
-                selected.case_id, selected.date_time, selected.trading_period
-            ),
-            RawSymbols(symbols.source_name, symbols.source_sha256, tuple(case_symbols)),
-        )
+        return DailyCaseDataIndex(
+            symbols, case_ids=(selected.case_id,)
+        ).case_data(selected, formulation_id=formulation_id)
 
 
 class DailyCasePreparer:

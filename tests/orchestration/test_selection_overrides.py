@@ -7,6 +7,7 @@ import pytest
 from pyspd.contracts import CaseData
 from pyspd.data import RawRecord, RawSymbol, RawSymbols, ScalarValue, SymbolType
 from pyspd.orchestration import (
+    DailyCaseDataIndex,
     DailyCasePreparer,
     DailyCaseSelector,
     OverrideApplier,
@@ -161,6 +162,57 @@ def test_case_selector_isolates_every_case_scoped_symbol() -> None:
         if symbol.domains and symbol.domains[0] == "ca"
         for record in symbol.records
     )
+
+
+def test_case_data_index_matches_scan_with_noncontiguous_case_records() -> None:
+    case = _with_publication(make_case())
+    source = case.symbols["i_dateTimeParameter"]
+    interleaved = RawSymbol(
+        source.name,
+        source.symbol_type,
+        source.dimension,
+        source.domains,
+        source.description,
+        source.uel_orders,
+        (
+            RawRecord(
+                ("C2", "D2", "studyMode"),
+                {"value": ScalarValue.finite(101.0)},
+            ),
+            *source.records,
+            RawRecord(
+                ("C2", "D2", "maxSolveLoop"),
+                {"value": ScalarValue.finite(5.0)},
+            ),
+        ),
+    )
+    symbols = RawSymbols(
+        case.symbols.source_name,
+        case.symbols.source_sha256,
+        tuple(
+            interleaved if symbol.name == source.name else symbol
+            for symbol in case.symbols.symbols
+        ),
+    )
+    selector = DailyCaseSelector()
+    selected = selector.select(symbols)[0]
+
+    indexed = DailyCaseDataIndex(symbols, case_ids=(selected.case_id,)).case_data(
+        selected
+    )
+    scanned = selector.case_data(symbols, selected)
+
+    assert indexed == scanned
+    assert indexed.symbols["i_dateTimeParameter"].records == source.records
+
+
+def test_case_data_index_rejects_case_outside_its_declared_scope() -> None:
+    case = _with_publication(make_case())
+    selected = DailyCaseSelector().select(case.symbols)[0]
+    index = DailyCaseDataIndex(case.symbols, case_ids=("C2",))
+
+    with pytest.raises(OrchestrationError, match="not present in case-data index"):
+        index.case_data(selected)
 
 
 def test_daily_preparer_keeps_source_demand_for_rtd_daily_mode() -> None:

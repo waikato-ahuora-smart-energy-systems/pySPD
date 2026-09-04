@@ -240,9 +240,9 @@ def _accumulate_published(
         if (raw := row.get("price_interval", ""))
     }
     for key, value in record["prices"]["node"]:
-        published_key = (period, key[-1])
+        energy_key = (period, key[-1])
         price = float.fromhex(value)
-        energy_numerator[published_key] += price * seconds
+        energy_numerator[energy_key] += price * seconds
         if energy_lower_numerator is None or energy_upper_numerator is None:
             continue
         bounds = intervals.get(key[-1], (price, price))
@@ -252,25 +252,25 @@ def _accumulate_published(
             or float(bounds[0]) > float(bounds[1])
         ):
             raise ValueError(f"invalid node price interval for {key[-1]}")
-        energy_lower_numerator[published_key] += float(bounds[0]) * seconds
-        energy_upper_numerator[published_key] += float(bounds[1]) * seconds
+        energy_lower_numerator[energy_key] += float(bounds[0]) * seconds
+        energy_upper_numerator[energy_key] += float(bounds[1]) * seconds
         if key[-1] in intervals and energy_interval_keys is not None:
-            energy_interval_keys.add(published_key)
+            energy_interval_keys.add(energy_key)
     reserve_intervals = {
         tuple(key): tuple(float.fromhex(bound) for bound in bounds)
         for key, bounds in record.get("price_intervals", {}).get("reserve", ())
     }
     for key, value in record["prices"]["reserve"]:
-        published_key = (period, key[-2], key[-1])
+        reserve_key = (period, key[-2], key[-1])
         price = float.fromhex(value)
-        reserve_numerator[published_key] += price * seconds
+        reserve_numerator[reserve_key] += price * seconds
         if reserve_lower_numerator is None or reserve_upper_numerator is None:
             continue
         bounds = reserve_intervals.get(tuple(key), (price, price))
-        reserve_lower_numerator[published_key] += bounds[0] * seconds
-        reserve_upper_numerator[published_key] += bounds[1] * seconds
+        reserve_lower_numerator[reserve_key] += bounds[0] * seconds
+        reserve_upper_numerator[reserve_key] += bounds[1] * seconds
         if tuple(key) in reserve_intervals and reserve_interval_keys is not None:
-            reserve_interval_keys.add(published_key)
+            reserve_interval_keys.add(reserve_key)
 
 
 if __name__ == "__main__":
