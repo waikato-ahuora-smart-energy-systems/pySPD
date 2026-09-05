@@ -20,6 +20,7 @@ conventions have been validated.
 
 - [Install and run a first case](getting-started.md).
 - [Choose a case-study pattern](case-studies/index.md).
+- [Review potential case studies to build](case-studies/potential-builds.md).
 - [Understand the generated reports](user-guide/results.md).
 - [Interpret comparisons with GAMS or CPLEX](validation/interpreting-parity.md).
 - [Extend the class-based formulation](developer-guide/extending.md).

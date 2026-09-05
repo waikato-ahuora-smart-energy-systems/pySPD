@@ -53,6 +53,7 @@ nav:
       - Reserve and scarcity: case-studies/reserve-and-scarcity.md
       - Solver and batch comparisons: case-studies/solver-and-batch.md
       - Historical and versioned studies: case-studies/historical-and-versioned.md
+      - Potential case studies to build: case-studies/potential-builds.md
   - Validation:
       - Validation workflow: validation/index.md
       - Interpreting parity: validation/interpreting-parity.md
