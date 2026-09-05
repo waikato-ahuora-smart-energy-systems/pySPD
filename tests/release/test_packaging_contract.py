@@ -22,4 +22,4 @@ def test_ci_matches_linux_execution_deferral() -> None:
     assert "pip install" not in workflow
     assert 'branches: ["main"]' in workflow
     assert "cancel-in-progress: true" in workflow
-    assert "timeout-minutes: 20" in workflow
+    assert "timeout-minutes: 30" in workflow
