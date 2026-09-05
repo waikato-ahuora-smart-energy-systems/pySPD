@@ -1,0 +1,2 @@
+Command: uv run pytest tests/studies/test_stress_atlas.py tests/multiperiod/test_battery.py -q
+Result: 13 passed in 0.52s; exit 0

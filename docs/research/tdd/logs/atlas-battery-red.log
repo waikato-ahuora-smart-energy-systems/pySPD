@@ -1,0 +1,8 @@
+Command: uv run pytest tests/studies/test_stress_atlas.py tests/multiperiod/test_battery.py -q
+Result: 2 failed in 0.10s; exit 1
+
+FAILED tests/studies/test_stress_atlas.py::test_stress_event_atlas_contract_exists
+AssertionError: REQ-STUDY-ATLAS: deterministic, hash-bound stress-event atlas behavior is absent
+
+FAILED tests/multiperiod/test_battery.py::test_multiperiod_battery_contract_exists
+AssertionError: REQ-MULTIPERIOD-BATTERY: class-based time-coupled battery formulation is absent

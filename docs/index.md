@@ -36,8 +36,10 @@ conventions have been validated.
 | Default solver path | SCIP MIP → HiGHS fixed RMIP |
 | Independent alternative pricing path | SCIP MIP → CLP fixed RMIP |
 | Parallel independent cases | `worker_count` or `--workers` |
+| Historical stress-event atlas | 21 hash-verified CPLEX-backed days |
+| Multi-period battery storage | Separate analytic research profile |
 | Audited raw-input overrides | Python API; not yet part of the stable CLI schema |
-| Inter-period storage/unit commitment | Not implemented |
+| Inter-period unit commitment | Not implemented |
 | Exact CPLEX basis reproduction | Not generally guaranteed |
 
 !!! warning "Validation boundary"

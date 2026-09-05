@@ -1,0 +1,514 @@
+{
+  "events": [
+    {
+      "categories": [
+        "violation"
+      ],
+      "date": "2019-02-18",
+      "input_path": "pyspd-cplex-reference-day-corpus-v2:2019/20190218/input/FP_20190218_F.gdx",
+      "input_schema": "vspd-v3-final-pricing",
+      "input_sha256": "c45fd64b27c947e74ac05229f56843408ab68e89181fba905c2eebf433450ae0",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8931296296296296,
+        "maximum_energy_price": 363.895,
+        "maximum_reserve_price": 38.824,
+        "maximum_violation_mw": 0.5,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 48,
+        "total_system_cost": 2529703.67887,
+        "total_violation_cost": 850000.0
+      },
+      "result_tree_sha256": "9864a8b584ea456b50e62610ee9720a43e9aa140a984954e463c36a1d12da403",
+      "selection_reason": "retained by the pyspd-cplex-reference-day-corpus-v2 selection rule",
+      "source_profile": "pyspd-cplex-reference-day-corpus-v2"
+    },
+    {
+      "categories": [
+        "dst-long-day"
+      ],
+      "date": "2019-04-07",
+      "input_path": "pyspd-odd-day-reference-corpus-v2:2019/20190407/input/FP_20190407_F.gdx",
+      "input_schema": "vspd-v3-final-pricing",
+      "input_sha256": "032b05d343affcbdebc6ccad193b7ee05ba4879de885595ebe7170f6d9ee7d10",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8368421052631579,
+        "maximum_energy_price": 222.906,
+        "maximum_reserve_price": 24.99,
+        "maximum_violation_mw": 0.0,
+        "minimum_energy_price": 0.0,
+        "period_count": 50,
+        "summary_case_count": 50,
+        "total_system_cost": 1666343.59951,
+        "total_violation_cost": 0.0
+      },
+      "result_tree_sha256": "b0f62cbf1db95642b143e473a08e4d3f4be08d4eaad3a6587cd4b0ac1323cacb",
+      "selection_reason": "NZ daylight-saving fall-back day with 50 trading periods.",
+      "source_profile": "pyspd-odd-day-reference-corpus-v2"
+    },
+    {
+      "categories": [],
+      "date": "2019-05-16",
+      "input_path": "pyspd-cplex-reference-day-corpus-v2:2019/20190516/input/FP_20190516_F.gdx",
+      "input_schema": "vspd-v3-final-pricing",
+      "input_sha256": "44636b4f211af080bf03185c714c41ffddd96c6012da0904e440703c595aee17",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8106832699619771,
+        "maximum_energy_price": 150.436,
+        "maximum_reserve_price": 3.0,
+        "maximum_violation_mw": 0.0,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 48,
+        "total_system_cost": 1256401.49151,
+        "total_violation_cost": 0.0
+      },
+      "result_tree_sha256": "fe9e557347562cf66de771dca3f571119604b0b55564b80295b39142491f26a3",
+      "selection_reason": "retained by the pyspd-cplex-reference-day-corpus-v2 selection rule",
+      "source_profile": "pyspd-cplex-reference-day-corpus-v2"
+    },
+    {
+      "categories": [],
+      "date": "2019-06-05",
+      "input_path": "pyspd-cplex-reference-day-corpus-v2:2019/20190605/input/FP_20190605_F.gdx",
+      "input_schema": "vspd-v3-final-pricing",
+      "input_sha256": "aa5f0df2f02b217df5e5c423b5afa0ca0603f68ec6bcd8915c521f192066e96e",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8475738056680162,
+        "maximum_energy_price": 512.496,
+        "maximum_reserve_price": 183.06,
+        "maximum_violation_mw": 0.0,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 48,
+        "total_system_cost": 1801798.93831,
+        "total_violation_cost": 0.0
+      },
+      "result_tree_sha256": "80dbab5951785c6e00e9bd4de387e9572b271c7ac5fde800e47fe41e84be5deb",
+      "selection_reason": "retained by the pyspd-cplex-reference-day-corpus-v2 selection rule",
+      "source_profile": "pyspd-cplex-reference-day-corpus-v2"
+    },
+    {
+      "categories": [],
+      "date": "2019-06-06",
+      "input_path": "pyspd-cplex-reference-day-corpus-v2:2019/20190606/input/FP_20190606_F.gdx",
+      "input_schema": "vspd-v3-final-pricing",
+      "input_sha256": "385d33e1e041a998802acd3228907f8367fa714274fea8701156efa265b8e8dc",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8231697165991904,
+        "maximum_energy_price": 197.689,
+        "maximum_reserve_price": 28.33,
+        "maximum_violation_mw": 0.0,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 48,
+        "total_system_cost": 1509031.7862500001,
+        "total_violation_cost": 0.0
+      },
+      "result_tree_sha256": "2fa7c343dd94ae95bb039f9d2888f8ebd07d807aec0b1e0aa746946ba743c42b",
+      "selection_reason": "retained by the pyspd-cplex-reference-day-corpus-v2 selection rule",
+      "source_profile": "pyspd-cplex-reference-day-corpus-v2"
+    },
+    {
+      "categories": [
+        "high-energy-price",
+        "high-reserve-price"
+      ],
+      "date": "2019-06-19",
+      "input_path": "pyspd-odd-day-reference-corpus-v2:2019/20190619/input/FP_20190619_F.gdx",
+      "input_schema": "vspd-v3-final-pricing",
+      "input_sha256": "aef96e63c46f9272b06c1d7b9e2c0384cce67a8ebd601a354d3744877b36f733",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8307017543859649,
+        "maximum_energy_price": 1024.226,
+        "maximum_reserve_price": 313.859,
+        "maximum_violation_mw": 0.0,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 48,
+        "total_system_cost": 3410214.85777,
+        "total_violation_cost": 0.0
+      },
+      "result_tree_sha256": "e7a1dc985e8b79be85c624b89e628d46a883199c95dea998fd3daa0cd5323d24",
+      "selection_reason": "Highest remaining zero-violation archived system cost: NZD 202,569.77482, with node prices to NZD 1,024.226/MWh and reserve prices to NZD 313.859/MW.",
+      "source_profile": "pyspd-odd-day-reference-corpus-v2"
+    },
+    {
+      "categories": [],
+      "date": "2019-06-22",
+      "input_path": "pyspd-cplex-reference-day-corpus-v2:2019/20190622/input/FP_20190622_F.gdx",
+      "input_schema": "vspd-v3-final-pricing",
+      "input_sha256": "62cb85144a54ef87b48bac34281030a918fab174e2ccad06f341bf0b4b65b448",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8403508771929824,
+        "maximum_energy_price": 176.373,
+        "maximum_reserve_price": 8.48,
+        "maximum_violation_mw": 0.0,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 48,
+        "total_system_cost": 1466816.05199,
+        "total_violation_cost": 0.0
+      },
+      "result_tree_sha256": "946e0606a55eae0d7a72e9fda52e9a050ab9c7d2851ab40c3f5c0540cda44c65",
+      "selection_reason": "retained by the pyspd-cplex-reference-day-corpus-v2 selection rule",
+      "source_profile": "pyspd-cplex-reference-day-corpus-v2"
+    },
+    {
+      "categories": [
+        "dst-short-day"
+      ],
+      "date": "2019-09-29",
+      "input_path": "pyspd-odd-day-reference-corpus-v2:2019/20190929/input/FP_20190929_F.gdx",
+      "input_schema": "vspd-v3-final-pricing",
+      "input_sha256": "aac25fad67df0a9377f011c442d1a5deb25ea70992693d70b98b7ca96f0d2c30",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8219298245614035,
+        "maximum_energy_price": 138.376,
+        "maximum_reserve_price": 15.06,
+        "maximum_violation_mw": 0.0,
+        "minimum_energy_price": 0.0,
+        "period_count": 46,
+        "summary_case_count": 46,
+        "total_system_cost": 913213.51005,
+        "total_violation_cost": 0.0
+      },
+      "result_tree_sha256": "93cc0fb640d34569e1a3eae140c463b2d00a6ffc930ec059aa7038c3e757cf1a",
+      "selection_reason": "NZ daylight-saving spring-forward day with 46 trading periods.",
+      "source_profile": "pyspd-odd-day-reference-corpus-v2"
+    },
+    {
+      "categories": [
+        "violation"
+      ],
+      "date": "2019-10-16",
+      "input_path": "pyspd-odd-day-reference-corpus-v2:2019/20191016/input/FP_20191016_F.gdx",
+      "input_schema": "vspd-v3-final-pricing",
+      "input_sha256": "060fb58cddb25ad9fa83ee7081c159abcd11e25fc74254ccf8ab6af7e82da7ab",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8423401894682939,
+        "maximum_energy_price": 288.504,
+        "maximum_reserve_price": 33.245,
+        "maximum_violation_mw": 1.4,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 48,
+        "total_system_cost": 1946638.4562,
+        "total_violation_cost": 4165000.0
+      },
+      "result_tree_sha256": "7dd35de091b769e005618127fe5082b74d69972257646bf131bc05b16762e5f0",
+      "selection_reason": "Largest remaining archived daily violation cost: NZD 4.165 million across seven periods.",
+      "source_profile": "pyspd-odd-day-reference-corpus-v2"
+    },
+    {
+      "categories": [
+        "violation"
+      ],
+      "date": "2019-10-21",
+      "input_path": "pyspd-odd-day-reference-corpus-v2:2019/20191021/input/FP_20191021_F.gdx",
+      "input_schema": "vspd-v3-final-pricing",
+      "input_sha256": "6f3bfa4013bea7691db164bc5092e0be576b4946ecf458a87b5bb2b7b31e5e7e",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8149122807017545,
+        "maximum_energy_price": 156.866,
+        "maximum_reserve_price": 6.75,
+        "maximum_violation_mw": 11.8,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 48,
+        "total_system_cost": 952319.41231,
+        "total_violation_cost": 10710000.0
+      },
+      "result_tree_sha256": "2cc385aa732370075f3a0e4087454d0a3001442a842e7bbbffd0a9bf05503440",
+      "selection_reason": "Largest 2019 archived CPLEX violation event found during selection: 11.8 MW and NZD 10.03 million violation cost.",
+      "source_profile": "pyspd-odd-day-reference-corpus-v2"
+    },
+    {
+      "categories": [
+        "violation"
+      ],
+      "date": "2019-11-26",
+      "input_path": "pyspd-odd-day-reference-corpus-v2:2019/20191126/input/FP_20191126_F.gdx",
+      "input_schema": "vspd-v3-final-pricing",
+      "input_sha256": "e1ce3219b3bb902416b0165c5906efe3650c7c7597ef2d57f7b7f80331f108ae",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8699848767903212,
+        "maximum_energy_price": 194.926,
+        "maximum_reserve_price": 6.75,
+        "maximum_violation_mw": 3.12,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 48,
+        "total_system_cost": 1261919.34049,
+        "total_violation_cost": 2652000.0
+      },
+      "result_tree_sha256": "9ca67b429f75db40c3241728b73cee157b0b754fa49e01621fb68fe5a7316f50",
+      "selection_reason": "Largest remaining archived single-period violation: 3.12 MW and NZD 2.652 million.",
+      "source_profile": "pyspd-odd-day-reference-corpus-v2"
+    },
+    {
+      "categories": [
+        "violation"
+      ],
+      "date": "2023-01-26",
+      "input_path": "pyspd-cplex-reference-day-corpus-v2:2023/20230126/input/Pricing_20230126.gdx",
+      "input_schema": "vspd-v5.0.6",
+      "input_sha256": "60dcb983824af32f35e127c910e9dfeb1a1f5f2f54b11e9fff018a25a2fa82bc",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.9194951494420456,
+        "maximum_energy_price": 377.83844285714287,
+        "maximum_reserve_price": 70.0,
+        "maximum_violation_mw": 2.305,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 294,
+        "total_system_cost": 23089354.29279,
+        "total_violation_cost": 10505478.57009
+      },
+      "result_tree_sha256": "7ff0591d871f6fdc57b877d406911be9d7aab2eca08e89991fdd30e1201bf43a",
+      "selection_reason": "retained by the pyspd-cplex-reference-day-corpus-v2 selection rule",
+      "source_profile": "pyspd-cplex-reference-day-corpus-v2"
+    },
+    {
+      "categories": [
+        "violation"
+      ],
+      "date": "2023-02-14",
+      "input_path": "pyspd-cplex-reference-day-corpus-v2:2023/20230214/input/Pricing_20230214.gdx",
+      "input_schema": "vspd-v5.0.6",
+      "input_sha256": "9a4443cc8a811d958ca4e6f2aeee5ad87eca2723ddd56a391b3f6ca8f215baeb",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8213805865530196,
+        "maximum_energy_price": 289.7860285714286,
+        "maximum_reserve_price": 102.63,
+        "maximum_violation_mw": 14.33665,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 321,
+        "total_system_cost": 1910864.02554,
+        "total_violation_cost": 11651383.56132
+      },
+      "result_tree_sha256": "e76563461b7b42022f49dbc3fb845411d9144a2017f1f09aa003572bddbc6745",
+      "selection_reason": "retained by the pyspd-cplex-reference-day-corpus-v2 selection rule",
+      "source_profile": "pyspd-cplex-reference-day-corpus-v2"
+    },
+    {
+      "categories": [
+        "high-reserve-price",
+        "violation"
+      ],
+      "date": "2023-08-02",
+      "input_path": "pyspd-cplex-reference-day-corpus-v2:2023/20230802/input/Pricing_20230802.gdx",
+      "input_schema": "vspd-v5.0.6",
+      "input_sha256": "99a6dc5dd9d69dd49c497fe140ac4bfb26fe5ed2b79ab4f1b225363e7af62d08",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.9322378418058359,
+        "maximum_energy_price": 942.7943833333334,
+        "maximum_reserve_price": 1360.001,
+        "maximum_violation_mw": 4.097,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 305,
+        "total_system_cost": 19914000.93253,
+        "total_violation_cost": 12368403.62308
+      },
+      "result_tree_sha256": "a7baf613d0213dda568fab15d9bcf17ab69fcfeadaa07dc8688a2f6b2f9f4ef8",
+      "selection_reason": "retained by the pyspd-cplex-reference-day-corpus-v2 selection rule",
+      "source_profile": "pyspd-cplex-reference-day-corpus-v2"
+    },
+    {
+      "categories": [
+        "violation"
+      ],
+      "date": "2023-09-22",
+      "input_path": "pyspd-cplex-reference-day-corpus-v2:2023/20230922/input/Pricing_20230922.gdx",
+      "input_schema": "vspd-v5.0.6",
+      "input_sha256": "70dffe5c416eed90ffb31925d48293fc785a063dcbacb3367fca815587c9e5fc",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8413793103448275,
+        "maximum_energy_price": 163.88334999999998,
+        "maximum_reserve_price": 4.5,
+        "maximum_violation_mw": 0.0,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 274,
+        "total_system_cost": 5049110.14393,
+        "total_violation_cost": 52.51674
+      },
+      "result_tree_sha256": "6672c7761d44c614e4856c021a91c213e199c57e6109eaa4e7425ce57da4c190",
+      "selection_reason": "retained by the pyspd-cplex-reference-day-corpus-v2 selection rule",
+      "source_profile": "pyspd-cplex-reference-day-corpus-v2"
+    },
+    {
+      "categories": [
+        "violation"
+      ],
+      "date": "2023-09-23",
+      "input_path": "pyspd-cplex-consecutive-clean-streak-v1:2023/20230923/input/Pricing_20230923.gdx",
+      "input_schema": "vspd-v5.0.6",
+      "input_sha256": "cbf34c38532cf2e3909524d4078b4cf59f04769fc50347597e7022989c0989bf",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8413793103448275,
+        "maximum_energy_price": 143.25892857142858,
+        "maximum_reserve_price": 4.5,
+        "maximum_violation_mw": 0.20315,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 275,
+        "total_system_cost": 3593424.44367,
+        "total_violation_cost": 61.99816
+      },
+      "result_tree_sha256": "4b670a3f0147c7b2d593ccd16dc9c318a930e18a0e724a6f6061133b67129670",
+      "selection_reason": "retained by the pyspd-cplex-consecutive-clean-streak-v1 selection rule",
+      "source_profile": "pyspd-cplex-consecutive-clean-streak-v1"
+    },
+    {
+      "categories": [
+        "dst-short-day",
+        "violation"
+      ],
+      "date": "2023-09-24",
+      "input_path": "pyspd-cplex-consecutive-clean-streak-v1:2023/20230924/input/Pricing_20230924.gdx",
+      "input_schema": "vspd-v5.0.6",
+      "input_sha256": "b39a8c948186ddc333ce1f81062b18f725858aac66fb35c19d4bf9f156395570",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8413793103448275,
+        "maximum_energy_price": 24.706566666666664,
+        "maximum_reserve_price": 0.532,
+        "maximum_violation_mw": 0.0,
+        "minimum_energy_price": 0.0,
+        "period_count": 46,
+        "summary_case_count": 254,
+        "total_system_cost": 545963.46621,
+        "total_violation_cost": 54.26972
+      },
+      "result_tree_sha256": "0eb6d0ad1b956ad4c836748afe8b86041c509b25fc2a8cd70b7e93df0229dac3",
+      "selection_reason": "retained by the pyspd-cplex-consecutive-clean-streak-v1 selection rule",
+      "source_profile": "pyspd-cplex-consecutive-clean-streak-v1"
+    },
+    {
+      "categories": [
+        "violation"
+      ],
+      "date": "2023-09-25",
+      "input_path": "pyspd-cplex-consecutive-clean-streak-v1:2023/20230925/input/Pricing_20230925.gdx",
+      "input_schema": "vspd-v5.0.6",
+      "input_sha256": "6eafea73950a695b288a97bad83ed997a9664190cd785e636e76143c5fa07590",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8448275862068966,
+        "maximum_energy_price": 148.77248333333333,
+        "maximum_reserve_price": 12.192,
+        "maximum_violation_mw": 4.19333,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 292,
+        "total_system_cost": 3168342.21469,
+        "total_violation_cost": 34432972.55061
+      },
+      "result_tree_sha256": "a226157bb5c3f52be525adbd45c99813e1c350bbc72ddb9f6d6f5bf4ba88c113",
+      "selection_reason": "retained by the pyspd-cplex-consecutive-clean-streak-v1 selection rule",
+      "source_profile": "pyspd-cplex-consecutive-clean-streak-v1"
+    },
+    {
+      "categories": [
+        "violation"
+      ],
+      "date": "2023-09-26",
+      "input_path": "pyspd-cplex-consecutive-clean-streak-v1:2023/20230926/input/Pricing_20230926.gdx",
+      "input_schema": "vspd-v5.0.6",
+      "input_sha256": "aaf99ffd0550c74bbf84e301bb7a6dfa19da92684d385cc284e94e4de2b9be80",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8448275862068966,
+        "maximum_energy_price": 147.86477142857143,
+        "maximum_reserve_price": 102.956,
+        "maximum_violation_mw": 4.14,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 295,
+        "total_system_cost": 2619569.01941,
+        "total_violation_cost": 8301149.74887
+      },
+      "result_tree_sha256": "df9c0fca7e33321aeedd938fa962e2e68a723f6cc9f65b3a9f7a4925d8fcfcff",
+      "selection_reason": "retained by the pyspd-cplex-consecutive-clean-streak-v1 selection rule",
+      "source_profile": "pyspd-cplex-consecutive-clean-streak-v1"
+    },
+    {
+      "categories": [
+        "violation"
+      ],
+      "date": "2023-09-27",
+      "input_path": "pyspd-cplex-consecutive-clean-streak-v1:2023/20230927/input/Pricing_20230927.gdx",
+      "input_schema": "vspd-v5.0.6",
+      "input_sha256": "c854ea9ee6e078586fcf8bff9a3bc1fdd3cd3641da326a0c921f6aa7fb97a54f",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.8448275862068966,
+        "maximum_energy_price": 200.45973333333333,
+        "maximum_reserve_price": 43.291,
+        "maximum_violation_mw": 2.44,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 263,
+        "total_system_cost": 11968764.76367,
+        "total_violation_cost": 2074047.50793
+      },
+      "result_tree_sha256": "e6c86beea87c539caab00c4f99569a030b349450344487b9718c7034752f73a9",
+      "selection_reason": "retained by the pyspd-cplex-consecutive-clean-streak-v1 selection rule",
+      "source_profile": "pyspd-cplex-consecutive-clean-streak-v1"
+    },
+    {
+      "categories": [
+        "violation"
+      ],
+      "date": "2023-11-24",
+      "input_path": "pyspd-cplex-reference-day-corpus-v2:2023/20231124/input/Pricing_20231124.gdx",
+      "input_schema": "vspd-v5.0.6",
+      "input_sha256": "90578d17d7f3cb2d3b1844afbd4ac7cc68e4b1422aa2ddd35046d67ff3949424",
+      "metrics": {
+        "all_solves_successful": true,
+        "maximum_branch_utilization": 0.9355940740740741,
+        "maximum_energy_price": 377.47921428571425,
+        "maximum_reserve_price": 4.5,
+        "maximum_violation_mw": 0.30362,
+        "minimum_energy_price": 0.0,
+        "period_count": 48,
+        "summary_case_count": 297,
+        "total_system_cost": 11085243.3879,
+        "total_violation_cost": 50.66957
+      },
+      "result_tree_sha256": "e205d5b3b75eb2dd00a4117a7f916d29e67f6e0d4d9a88263d3cad83d487fa0c",
+      "selection_reason": "retained by the pyspd-cplex-reference-day-corpus-v2 selection rule",
+      "source_profile": "pyspd-cplex-reference-day-corpus-v2"
+    }
+  ],
+  "logical_sha256": "756dd640b31bfc57e94044d32e94ca798028f46d6bd9220b2dafbef5b9eed74a",
+  "preregistration_sha256": "46cb808721d8422957473f9a795cf05bcdddccac9f3034fc20d802bfe5383550",
+  "schema_version": 1,
+  "source_tree_sha256": "0dc94af6beff17d2fa8cc21c9dfcc606b41a94271f13812cc7d70495ffc48577",
+  "thresholds": {
+    "high_energy_price": 1000.0,
+    "high_reserve_price": 300.0,
+    "negative_energy_price": 0.0,
+    "network_utilization": 0.98,
+    "violation_mw": 1e-06
+  }
+}

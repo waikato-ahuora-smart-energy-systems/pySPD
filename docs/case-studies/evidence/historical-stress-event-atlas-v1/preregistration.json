@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "study_id": "pyspd-historical-stress-event-atlas-v1",
+  "status": "preregistered-before-classification",
+  "purpose": "Screen the complete retained CPLEX-backed day corpus for reproducible stress signals without selecting dates after observing atlas metrics.",
+  "population_rule": "Include every unique day with an input SHA-256 and result-tree SHA-256 in the three named retained manifests. Classify rather than exclude a non-successful CPLEX summary. Exclude result-free 2022 input-only days because the atlas is an output-screening study.",
+  "source_manifests": [
+    "tests/fixtures/cplex_reference/manifest.json",
+    "tests/fixtures/cplex_consecutive/manifest.json",
+    "tests/fixtures/odd_day_reference/manifest.json"
+  ],
+  "thresholds": {
+    "high_energy_price": 1000.0,
+    "negative_energy_price": 0.0,
+    "high_reserve_price": 300.0,
+    "network_utilization": 0.98,
+    "violation_mw": 1e-06
+  },
+  "declared_categories": {
+    "dst-short-day": "46 distinct trading periods",
+    "dst-long-day": "50 distinct trading periods",
+    "high-energy-price": "maximum CPLEX node price is at least the registered high-energy threshold",
+    "negative-energy-price": "minimum CPLEX node price is below the registered negative-energy threshold",
+    "high-reserve-price": "maximum CPLEX FIR or SIR price is at least the registered reserve threshold",
+    "network-stress": "maximum absolute branch flow/capacity is at least the registered utilization threshold",
+    "violation": "maximum reported violation MW exceeds the threshold or total reported violation cost is positive",
+    "solve-failure": "at least one CPLEX summary row does not report solve status 1"
+  },
+  "causal_boundary": "Categories are screening signals only. Asset outages, scarcity causes, and causal market effects require a separate input-based diagnosis and a baseline/counterfactual replay.",
+  "output_directory": "docs/case-studies/evidence/historical-stress-event-atlas-v1"
+}

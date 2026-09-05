@@ -34,6 +34,8 @@ replaces; accepted history is not rewritten.
 | [ADR-0027](0027-ordinal-parallel-period-identity.md) | Use ordinal and full period identity for parallel execution | Accepted for Gate 12 parallel evidence |
 | [ADR-0028](0028-repaired-bus-rounding-boundary.md) | Admit micro-scale solver noise at repaired-bus rounding boundaries | Accepted for the SCIP/HiGHS Gate 12 report profile |
 | [ADR-0029](0029-production-process-parallel-application.md) | Execute independent trading periods through bounded worker processes | Accepted for the SCIP/HiGHS application profile |
+| [ADR-0030](0030-hash-bound-stress-event-atlas.md) | Build stress-event atlases from preregistered, hash-bound corpora | Accepted by explicit project direction |
+| [ADR-0031](0031-separate-multiperiod-battery-profile.md) | Introduce storage as a separate multi-period research profile | Accepted by explicit project direction |
 
 ## Status values
 

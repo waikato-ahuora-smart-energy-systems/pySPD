@@ -11,6 +11,9 @@ parity, full-day qualification, and CPLEX validation are reserved for Gate 12.
 Stage 13 is a planned, separately named research profile to reproduce the
 residential-PV counterfactual study in O'Leary, Atkins, and Severinsen (2026)
 after its full methods and source data have been acquired and hash-bound.
+Research extensions now also include a hash-bound 21-day historical
+stress-event atlas and the separate `pyspd-multiperiod-battery-v1` analytic
+battery profile; neither changes the vSPD compatibility formulation.
 
 ## Set up with uv
 

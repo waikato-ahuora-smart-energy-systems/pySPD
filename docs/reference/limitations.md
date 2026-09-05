@@ -24,8 +24,10 @@ date on or after its effective date and does not accept legacy v3 input.
 
 The production model solves pricing cases independently except for explicit
 daily orchestration state such as fallback generation starts and publication.
-It does not implement multi-period unit commitment, storage state of charge,
-hydro energy budgets, intertemporal demand response, or stochastic coupling.
+The separate `pyspd-multiperiod-battery-v1` analytic research profile now
+implements storage state of charge, but it is not integrated with historical
+GDX, the network, reserve, or the production CLI. Unit commitment, hydro energy
+budgets, intertemporal demand response, and stochastic coupling remain absent.
 
 ## Scenario CLI
 

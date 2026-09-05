@@ -12,9 +12,9 @@ rule creates a new formulation that needs its own validation evidence.
 | Candidate study | Research question | Build class | Main extension | Suggested first evidence |
 |---|---|---|---|---|
 | Residential PV replication | How does distributed PV adoption affect dispatch, prices, hydro generation, and emissions? | Planned research profile | Audited nodal PV-demand overlay and paper metrics | Reproduce the paper's baseline date and one adoption case |
-| Generator or circuit outage replay | Which assets drive cost, congestion, reserve, and price separation during stressed periods? | Can start now | Scenario catalogue and event metrics | One historical event with a no-change control |
+| Generator or circuit outage replay | Which assets drive cost, congestion, reserve, and price separation during stressed periods? | Atlas built; causal replays next | Input diagnosis and counterfactual event metrics | One historical event with a no-change control |
 | Demand and offer elasticity | How do dispatch and prices respond to load, offer-price, or capacity changes? | Can start now | Experiment runner and sweep summaries | A small preregistered sweep around one qualified day |
-| Battery energy storage | What are the energy, reserve, congestion, and price effects of storage? | New formulation | State of charge, charging, efficiency, terminal state, reserve coupling | Two-period analytic case, then a 48-period historical day |
+| Battery energy storage | What are the energy, reserve, congestion, and price effects of storage? | Analytic research profile built | Network/reserve integration and historical battery data | Two-period analytic case passed; next a 48-period historical day |
 | Flexible demand and EV charging | What is the value of shifting demand across trading periods? | New formulation | Inter-period energy/service constraints and consumer objective | Small load-shifting unit test, then a daily fleet case |
 | Hydro energy budget | How does limited water alter dispatch, prices, and thermal displacement? | New formulation | Inter-period energy budget or reservoir balance | Two-period water-value case, then a dry-day study |
 | Thermal unit commitment | What changes when start-up, minimum-run, and minimum-down decisions are represented? | New formulation | Commitment state, start-up cost, minimum up/down time | Three-period analytic case and matched MIP benchmark |
@@ -48,8 +48,9 @@ The deliverable should contain:
   and
 - parity checks for the unchanged baseline before interpreting the scenario.
 
-This is a strong first portfolio build because it exercises the qualified
-single-period formulation without inventing inter-period physics.
+The first [historical stress-event atlas](historical-stress-event-atlas.md) now
+provides a hash-bound 21-day screening population. Its next step is a causal
+baseline/counterfactual replay for the 2019-10-21 violation event.
 
 ### Demand, offer, and network sensitivity library
 
@@ -88,11 +89,11 @@ versioned multi-period foundation with:
 - a pricing policy that states how discrete decisions are fixed before the
   RMIP and how intertemporal duals are interpreted.
 
-Battery storage is the best first inter-period build. A minimal storage model
-has an intuitive conservation equation and can be validated against a small
-analytic example before adding reserve participation or degradation. Hydro and
-unit commitment should follow only after the common time-coupling architecture
-has demonstrated clean-build parity and order independence.
+The [minimal battery profile](battery-storage.md) is now the first inter-period
+build. Its analytic conservation, dispatch, cost, dual, and structural tests
+pass. Historical network and reserve integration remain future gates. Hydro
+and unit commitment should follow only after that foundation demonstrates
+clean-build parity and order independence on full-day inputs.
 
 ## Uncertainty and investment builds
 
@@ -135,14 +136,14 @@ Every new case study should use the following sequence.
 
 ## Choosing what to build next
 
-A practical order is:
+A practical order from the current implementation boundary is:
 
-1. historical stress-event and sensitivity studies using existing overrides;
-2. Stage 13 residential-PV replication once its source gate passes;
-3. the common multi-period foundation and a minimal battery study;
-4. hydro-budget and flexible-demand components;
-5. unit commitment; and
-6. stochastic or endogenous investment formulations.
+1. diagnose and replay the atlas's 2019-10-21 violation event;
+2. integrate the analytic battery profile with a 48-period network case;
+3. start Stage 13 residential-PV replication once its source gate passes;
+4. add hydro-budget and flexible-demand components;
+5. add unit commitment; and
+6. consider stochastic or endogenous investment formulations.
 
 This order produces useful research outputs early while increasing model
 complexity only after each underlying validation layer has been exercised.
