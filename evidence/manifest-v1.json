@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "artifacts": [
+    {
+      "artifact_id": "cplex-consecutive-v1",
+      "version": "1",
+      "url": "https://github.com/waikato-ahuora-smart-energy-systems/pySPD/releases/download/evidence-v1/pyspd-cplex-consecutive-v1.tar.gz",
+      "sha256": "8f1cf4677f2d389085b45fbf140e43e0c7a02e619a0cc9f8e862f6cb16090f9e",
+      "size_bytes": 83460987,
+      "description": "Five consecutive CPLEX reference days with GDX inputs",
+      "file_count": 72,
+      "uncompressed_size_bytes": 553987006
+    },
+    {
+      "artifact_id": "cplex-reference-v1",
+      "version": "1",
+      "url": "https://github.com/waikato-ahuora-smart-energy-systems/pySPD/releases/download/evidence-v1/pyspd-cplex-reference-v1.tar.gz",
+      "sha256": "79636217eb48a7a10675dab0f33f831a8f10abdb33f0105187969ec365455108",
+      "size_bytes": 105759111,
+      "description": "Ten-day random CPLEX reference corpus with GDX inputs",
+      "file_count": 147,
+      "uncompressed_size_bytes": 680936555
+    },
+    {
+      "artifact_id": "gate12-solver-paths-v1",
+      "version": "1",
+      "url": "https://github.com/waikato-ahuora-smart-energy-systems/pySPD/releases/download/evidence-v1/pyspd-gate12-solver-paths-v1.tar.gz",
+      "sha256": "05e7b921acb93c8475e6d71916945ea7db9ccb8a7c50dc4a924340cba45d771c",
+      "size_bytes": 9508890,
+      "description": "Detailed Gate 12 SCIP-to-fixed-RMIP solver-path observations",
+      "file_count": 94,
+      "uncompressed_size_bytes": 293542780
+    },
+    {
+      "artifact_id": "odd-day-reference-v1",
+      "version": "1",
+      "url": "https://github.com/waikato-ahuora-smart-energy-systems/pySPD/releases/download/evidence-v1/pyspd-odd-day-reference-v1.tar.gz",
+      "sha256": "ece75ef7015af0793cc6fcc5afa56700bb5e726d413a2067e93bf68700bf5889",
+      "size_bytes": 69833131,
+      "description": "Twelve odd-day inputs and six retained 2019 CPLEX result trees",
+      "file_count": 99,
+      "uncompressed_size_bytes": 381554475
+    }
+  ],
+  "logical_sha256": "e26a46494837dc1636df1570205b3ef985be3588edce8992df7f07a2768f5e6b"
+}

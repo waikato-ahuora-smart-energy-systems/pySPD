@@ -7,11 +7,16 @@ from pathlib import Path
 
 import pytest
 
+from tests.evidence_support import require_external_evidence
+
 _EVIDENCE = Path(__file__).parents[2] / "docs/gate-12"
 
 
 def _load(name: str) -> dict:
-    return json.loads((_EVIDENCE / name).read_text(encoding="utf-8"))
+    path = _EVIDENCE / name
+    if name.startswith("cplex-reference-paths-"):
+        require_external_evidence(path, "gate12-solver-paths-v1")
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def test_tp29_published_energy_and_summary_match_cplex_precision() -> None:

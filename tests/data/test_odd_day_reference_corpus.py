@@ -5,6 +5,8 @@ import hashlib
 import json
 from pathlib import Path
 
+import pytest
+
 CORPUS = Path(__file__).parents[1] / "fixtures" / "odd_day_reference"
 
 
@@ -27,6 +29,8 @@ def _result_tree_sha256(path: Path) -> str:
 
 
 def test_odd_day_reference_corpus_is_complete_and_hash_bound() -> None:
+    if not (CORPUS / "2019").is_dir():
+        pytest.skip("odd-day-reference-v1 external evidence is not installed")
     manifest = json.loads((CORPUS / "manifest.json").read_text(encoding="utf-8"))
 
     assert manifest["profile"] == "pyspd-odd-day-reference-corpus-v2"
@@ -50,6 +54,8 @@ def test_odd_day_reference_corpus_is_complete_and_hash_bound() -> None:
 
 
 def test_odd_2019_cplex_summary_rows_report_success() -> None:
+    if not (CORPUS / "2019").is_dir():
+        pytest.skip("odd-day-reference-v1 external evidence is not installed")
     manifest = json.loads((CORPUS / "manifest.json").read_text(encoding="utf-8"))
 
     for day in manifest["days"]:

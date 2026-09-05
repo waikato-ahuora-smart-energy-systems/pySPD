@@ -10,6 +10,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.evidence_support import require_external_evidence
+
 _ROOT = Path(__file__).parents[2]
 _EVIDENCE = _ROOT / "docs/gate-12"
 
@@ -75,6 +77,7 @@ def test_consecutive_day_market_result_boundary_is_clean_and_hash_bound(
     benchmark_path = (
         _EVIDENCE / f"cplex-reference-paths-{date}-{evidence_variant}.json"
     )
+    require_external_evidence(benchmark_path, "gate12-solver-paths-v1")
     comparison_path = (
         _EVIDENCE / f"cplex-reference-comparison-{date}-{evidence_variant}.json"
     )
@@ -128,6 +131,7 @@ def test_cplex_and_pyspd_share_the_dst_aware_trading_period_axis(
     benchmark_path = (
         _EVIDENCE / f"cplex-reference-paths-{date}-{evidence_variant}.json"
     )
+    require_external_evidence(benchmark_path, "gate12-solver-paths-v1")
     benchmark = _load(benchmark_path)
     run = benchmark["runs"][0]
     records_path = _ROOT / run["records_path"]

@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.evidence_support import require_external_evidence
+
 _ROOT = Path(__file__).parents[2]
 _MANIFEST = (
     _ROOT
@@ -24,6 +26,8 @@ def _sha256(path: Path) -> str:
 
 
 def test_tp11_native_support_prefix_is_hash_bound_and_validated() -> None:
+    require_external_evidence(_MANIFEST, "gate12-solver-paths-v1")
+    require_external_evidence(_INPUT, "cplex-reference-v1")
     manifest = json.loads(_MANIFEST.read_text(encoding="utf-8"))
     logical_sha256 = manifest.pop("logical_sha256")
 
@@ -44,6 +48,7 @@ def test_tp11_native_support_prefix_is_hash_bound_and_validated() -> None:
 
 
 def test_tp11_prefix_publishes_cplex_ni_sir_price() -> None:
+    require_external_evidence(_MANIFEST, "gate12-solver-paths-v1")
     run = json.loads(_MANIFEST.read_text(encoding="utf-8"))["runs"][0]
     rows = [
         row

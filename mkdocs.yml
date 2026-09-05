@@ -58,6 +58,7 @@ nav:
       - Potential case studies to build: case-studies/potential-builds.md
   - Validation:
       - Validation workflow: validation/index.md
+      - External evidence: validation/external-evidence.md
       - Interpreting parity: validation/interpreting-parity.md
   - Developer guide:
       - Architecture: developer-guide/architecture.md

@@ -23,6 +23,19 @@ uv run pyspd formulations --json
 uv run pytest -q
 ```
 
+Large historical GDX inputs, CPLEX result trees, and detailed solver-path
+records are stored as hash-bound release assets rather than Git blobs. List or
+restore them with:
+
+```shell
+uv run pyspd evidence list
+uv run pyspd evidence fetch cplex-reference-v1 --destination .
+```
+
+Add `--github-auth` when the repository requires authentication. Ordinary tests
+do not download external evidence; source-backed oracle tests skip explicitly
+until their declared archive has been restored.
+
 Run a case from a hash-bound JSON configuration:
 
 ```shell

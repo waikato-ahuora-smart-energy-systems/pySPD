@@ -161,7 +161,7 @@ as the solve criterion and retains this residual as a diagnostic.
 
 Evidence:
 
-- [`cplex-reference-paths-20190622.json`](cplex-reference-paths-20190622.json)
+- [`cplex-reference-paths-20190622.json`](../validation/external-evidence.md)
 - [`cplex-reference-comparison-20190622.json`](cplex-reference-comparison-20190622.json)
 
 ### 2023-08-02 — 305 cases across 48 trading periods
@@ -240,8 +240,8 @@ flat faces and must not be described as row-exact parity.
 
 Evidence:
 
-- [`cplex-reference-paths-20230802-highs.json`](cplex-reference-paths-20230802-highs.json)
-- [`cplex-reference-paths-20230802-clp.json`](cplex-reference-paths-20230802-clp.json)
+- [`cplex-reference-paths-20230802-highs.json`](../validation/external-evidence.md)
+- [`cplex-reference-paths-20230802-clp.json`](../validation/external-evidence.md)
 - [`cplex-reference-comparison-20230802-highs.json`](cplex-reference-comparison-20230802-highs.json)
 - [`cplex-reference-comparison-20230802-clp.json`](cplex-reference-comparison-20230802-clp.json)
 

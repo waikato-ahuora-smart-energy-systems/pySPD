@@ -41,8 +41,8 @@ prices.
 ## Evidence
 
 - Final prefix manifest:
-  [`cplex-reference-paths-20230922-tp11-native-1e7.json`](cplex-reference-paths-20230922-tp11-native-1e7.json)
+  [`cplex-reference-paths-20230922-tp11-native-1e7.json`](../validation/external-evidence.md)
 - Independent support proof:
-  [`cplex-reference-paths-20230922-tp11-support-polish.json`](cplex-reference-paths-20230922-tp11-support-polish.json)
+  [`cplex-reference-paths-20230922-tp11-support-polish.json`](../validation/external-evidence.md)
 - Decision record:
   [`ADR-0023`](../adr/0023-strict-native-sos-support-with-guarded-fallback.md)

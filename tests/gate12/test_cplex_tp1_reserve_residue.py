@@ -6,6 +6,8 @@ import hashlib
 import json
 from pathlib import Path
 
+from tests.evidence_support import require_external_evidence
+
 _ROOT = Path(__file__).parents[2]
 _EVIDENCE = _ROOT / "docs/gate-12/cplex-tp1-reserve-residue-20230922.json"
 _INPUT = (
@@ -20,6 +22,7 @@ def _sha256(path: Path) -> str:
 
 
 def test_tp1_reserve_residue_is_hash_bound_and_fails_closed() -> None:
+    require_external_evidence(_INPUT, "cplex-reference-v1")
     evidence = json.loads(_EVIDENCE.read_text(encoding="utf-8"))
     logical_sha256 = evidence.pop("logical_sha256")
 

@@ -23,6 +23,8 @@ SOURCE_SHA256 = "62cb85144a54ef87b48bac34281030a918fab174e2ccad06f341bf0b4b65b44
 
 @pytest.mark.oracle
 def test_legacy_v3_fixture_normalizes_and_prepares_48_cases(tmp_path: Path) -> None:
+    if not FIXTURE.is_file():
+        pytest.skip("cplex-reference-v1 external evidence is not installed")
     system_text = os.environ.get("GAMS_SYSTEM_DIRECTORY")
     if not system_text:
         pytest.skip("GAMS_SYSTEM_DIRECTORY is required")
@@ -51,6 +53,8 @@ def test_legacy_v3_fixture_normalizes_and_prepares_48_cases(tmp_path: Path) -> N
 
 @pytest.mark.oracle
 def test_legacy_v3_adapter_retains_price_responsive_potential_output() -> None:
+    if not ODD_DAY_FIXTURE.is_file():
+        pytest.skip("odd-day-reference-v1 external evidence is not installed")
     system_text = os.environ.get("GAMS_SYSTEM_DIRECTORY")
     if not system_text:
         pytest.skip("GAMS_SYSTEM_DIRECTORY is required")

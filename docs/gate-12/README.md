@@ -61,7 +61,7 @@ The corrected 297-case 2023-11-24 evidence also reproduces TP16 ABY0111
 exactly at 158.78761 NZD/MWh after restoring vSPD's daily transfer guard,
 persistent disconnected-bus state, and unresolved-dead-node bus-report rule.
 Its complete-day evidence is bound by
-[`cplex-reference-paths-20231124-highs-corrected.json`](cplex-reference-paths-20231124-highs-corrected.json)
+[`cplex-reference-paths-20231124-highs-corrected.json`](../validation/external-evidence.md)
 and
 [`cplex-reference-comparison-20231124-highs-corrected.json`](cplex-reference-comparison-20231124-highs-corrected.json).
 For 2023-09-22, the passive-tree replay now covers all 274 cases across all 48

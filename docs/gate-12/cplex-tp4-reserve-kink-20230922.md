@@ -53,7 +53,7 @@ the accepted target, objective accounting, and budget.
 - Machine-readable decision:
   [`cplex-tp4-reserve-kink-20230922.json`](cplex-tp4-reserve-kink-20230922.json)
 - Prefix benchmark:
-  [`cplex-reference-paths-20230922-tp4-reserve-kink.json`](cplex-reference-paths-20230922-tp4-reserve-kink.json)
+  [`cplex-reference-paths-20230922-tp4-reserve-kink.json`](../validation/external-evidence.md)
 - Mapped CPLEX comparison:
   [`cplex-reference-comparison-20230922-tp4-reserve-kink.json`](cplex-reference-comparison-20230922-tp4-reserve-kink.json)
 - Executable regression:

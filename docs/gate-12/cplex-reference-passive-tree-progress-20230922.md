@@ -71,7 +71,7 @@ to require ordinary scalar parity.
 
 The cumulative partial-rerun stream remains complete at 274 cases by retaining
 the earlier records for periods not yet replayed. It is bound by
-[`cplex-reference-paths-20230922-highs-passive-tree-partial.json`](cplex-reference-paths-20230922-highs-passive-tree-partial.json)
+[`cplex-reference-paths-20230922-highs-passive-tree-partial.json`](../validation/external-evidence.md)
 and compared in
 [`cplex-reference-comparison-20230922-highs-passive-tree-partial.json`](cplex-reference-comparison-20230922-highs-passive-tree-partial.json).
 
@@ -84,11 +84,11 @@ unresolved: CPLEX's 112.04301 NZD/MWh lies inside the weighted analytic
 interval [111.86839, 113.03644] NZD/MWh.
 
 TP12's six-case rerun is bound by
-[`cplex-reference-paths-20230922-tp12-transit-interval.json`](cplex-reference-paths-20230922-tp12-transit-interval.json)
+[`cplex-reference-paths-20230922-tp12-transit-interval.json`](../validation/external-evidence.md)
 and
 [`cplex-reference-comparison-20230922-tp12-transit-interval.json`](cplex-reference-comparison-20230922-tp12-transit-interval.json).
 TP1's seven-case rerun is bound by
-[`cplex-reference-paths-20230922-tp1-root-boundary-interval.json`](cplex-reference-paths-20230922-tp1-root-boundary-interval.json)
+[`cplex-reference-paths-20230922-tp1-root-boundary-interval.json`](../validation/external-evidence.md)
 and
 [`cplex-reference-comparison-20230922-tp1-root-boundary-interval.json`](cplex-reference-comparison-20230922-tp1-root-boundary-interval.json).
 The two remaining TP1 reserve publications have now been isolated as a
@@ -99,7 +99,7 @@ pair. See
 [`cplex-tp1-reserve-residue-20230922.md`](cplex-tp1-reserve-residue-20230922.md).
 
 The updated complete stream is bound by
-[`cplex-reference-paths-20230922-highs-root-boundary-interval.json`](cplex-reference-paths-20230922-highs-root-boundary-interval.json)
+[`cplex-reference-paths-20230922-highs-root-boundary-interval.json`](../validation/external-evidence.md)
 and
 [`cplex-reference-comparison-20230922-highs-root-boundary-interval.json`](cplex-reference-comparison-20230922-highs-root-boundary-interval.json).
 It substitutes only those thirteen freshly solved TP1 and TP12 records into
@@ -107,20 +107,20 @@ the prior complete 274-case stream and inherits the other 261 solves and the
 recorded timing.
 
 The six-case result and its cumulative substitution are bound by
-[`cplex-reference-paths-20230922-tp21-passive-tree-six-cases.json`](cplex-reference-paths-20230922-tp21-passive-tree-six-cases.json),
+[`cplex-reference-paths-20230922-tp21-passive-tree-six-cases.json`](../validation/external-evidence.md),
 [`cplex-reference-comparison-20230922-tp21-passive-tree-six-cases.json`](cplex-reference-comparison-20230922-tp21-passive-tree-six-cases.json),
-[`cplex-reference-paths-20230922-highs-passive-tree-tp21.json`](cplex-reference-paths-20230922-highs-passive-tree-tp21.json),
+[`cplex-reference-paths-20230922-highs-passive-tree-tp21.json`](../validation/external-evidence.md),
 and
 [`cplex-reference-comparison-20230922-highs-passive-tree-tp21.json`](cplex-reference-comparison-20230922-highs-passive-tree-tp21.json).
 
 The four-period priority batch and its cumulative substitution are bound by
 the TP13, TP24, TP26, and TP30 `paths`/`comparison` pairs and by
-[`cplex-reference-paths-20230922-highs-passive-tree-priority.json`](cplex-reference-paths-20230922-highs-passive-tree-priority.json)
+[`cplex-reference-paths-20230922-highs-passive-tree-priority.json`](../validation/external-evidence.md)
 and
 [`cplex-reference-comparison-20230922-highs-passive-tree-priority.json`](cplex-reference-comparison-20230922-highs-passive-tree-priority.json).
 
 The authoritative full-day replay is bound by
-[`cplex-reference-paths-20230922-highs-passive-tree-complete.json`](cplex-reference-paths-20230922-highs-passive-tree-complete.json)
+[`cplex-reference-paths-20230922-highs-passive-tree-complete.json`](../validation/external-evidence.md)
 and
 [`cplex-reference-comparison-20230922-highs-passive-tree-complete.json`](cplex-reference-comparison-20230922-highs-passive-tree-complete.json).
 

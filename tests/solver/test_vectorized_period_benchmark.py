@@ -137,6 +137,8 @@ def test_real_vectorized_matrix_has_no_physical_cross_period_rows() -> None:
     source = (
         root / "tests/fixtures/cplex_reference/2023/20230922/input/Pricing_20230922.gdx"
     )
+    if not source.is_file():
+        pytest.skip("cplex-reference-v1 external evidence is not installed")
     system = root / ".venv/lib/python3.13/site-packages/gamspy_base"
     configuration = ApplicationConfiguration(
         formulation_id=RESERVE_FORMULATION_ID,

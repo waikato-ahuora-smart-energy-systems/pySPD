@@ -61,7 +61,9 @@ uv run mkdocs build --strict
 
 Oracle-marked tests require external GAMS/source prerequisites and may be
 skipped in an ordinary development environment. A skip is not passing oracle
-evidence.
+evidence. The large historical corpus is restored through the
+[external-evidence workflow](external-evidence.md), with every archive checked
+against the tracked SHA-256 manifest before extraction.
 
 ## Evidence pack for a new case study
 

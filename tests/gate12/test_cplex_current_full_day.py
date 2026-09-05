@@ -6,6 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 
+from tests.evidence_support import require_external_evidence
 from tools.gate12.energy_allocation import EnergyAllocationCertificateStore
 
 _ROOT = Path(__file__).parents[2]
@@ -22,6 +23,7 @@ _CERTIFICATE = (
 
 
 def _load(path: Path) -> dict:
+    require_external_evidence(path, "gate12-solver-paths-v1")
     return json.loads(path.read_text(encoding="utf-8"))
 
 

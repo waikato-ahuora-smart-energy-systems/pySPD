@@ -5,6 +5,8 @@ import hashlib
 import json
 from pathlib import Path
 
+import pytest
+
 CORPUS = Path(__file__).parents[1] / "fixtures" / "cplex_consecutive"
 
 
@@ -27,6 +29,8 @@ def _result_tree_sha256(path: Path) -> str:
 
 
 def test_consecutive_cplex_corpus_is_complete_successful_and_hash_bound() -> None:
+    if not (CORPUS / "2023").is_dir():
+        pytest.skip("cplex-consecutive-v1 external evidence is not installed")
     manifest = json.loads((CORPUS / "manifest.json").read_text(encoding="utf-8"))
 
     assert manifest["profile"] == "pyspd-cplex-consecutive-clean-streak-v1"

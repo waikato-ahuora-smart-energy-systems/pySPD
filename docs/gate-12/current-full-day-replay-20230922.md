@@ -50,7 +50,7 @@ independent-validator pass.
 
 Evidence:
 
-- [`cplex-reference-paths-20230922-current-v3-full-day.json`](cplex-reference-paths-20230922-current-v3-full-day.json)
+- [`cplex-reference-paths-20230922-current-v3-full-day.json`](../validation/external-evidence.md)
 - [`cplex-reference-comparison-20230922-current-v3-full-day.json`](cplex-reference-comparison-20230922-current-v3-full-day.json)
 - [`cplex-reference-comparison-20230922-current-v3-full-day-tp24-certified.json`](cplex-reference-comparison-20230922-current-v3-full-day-tp24-certified.json)
 - [`cplex-tp24-energy-allocation-20230922-current-v3-full-day.json`](cplex-tp24-energy-allocation-20230922-current-v3-full-day.json)

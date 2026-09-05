@@ -12,6 +12,7 @@ import pytest
 
 from pyspd.application import ApplicationConfiguration, PyspdApplication
 from pyspd.reserve import RESERVE_FORMULATION_ID
+from tests.evidence_support import require_external_evidence
 from tools.compare_cplex_reference import (
     _case_candidate,
     _case_reference,
@@ -72,6 +73,9 @@ def _record() -> dict[str, object]:
 
 
 def test_tp24_certificate_is_bound_and_resolves_only_the_case_rows() -> None:
+    require_external_evidence(_INPUT, "cplex-reference-v1")
+    require_external_evidence(_BENCHMARK, "gate12-solver-paths-v1")
+    require_external_evidence(_RECORDS, "gate12-solver-paths-v1")
     certificate = EnergyAllocationCertificateStore().load(_CERTIFICATE)
     benchmark = json.loads(_BENCHMARK.read_text(encoding="utf-8"))
     record = _record()
@@ -127,6 +131,9 @@ def test_tp24_certificate_fails_closed_when_tampered(tmp_path: Path) -> None:
 
 
 def test_tp24_full_day_certificate_and_comparison_are_bound() -> None:
+    require_external_evidence(_INPUT, "cplex-reference-v1")
+    require_external_evidence(_FULL_BENCHMARK, "gate12-solver-paths-v1")
+    require_external_evidence(_FULL_RECORDS, "gate12-solver-paths-v1")
     sample = EnergyAllocationCertificateStore().load(_CERTIFICATE)
     certificate = EnergyAllocationCertificateStore().load(_FULL_CERTIFICATE)
     benchmark = json.loads(_FULL_BENCHMARK.read_text(encoding="utf-8"))
@@ -162,6 +169,8 @@ def test_tp24_full_day_certificate_and_comparison_are_bound() -> None:
 def test_tp24_certificate_matches_source_blocks_and_lossless_star(
     tmp_path: Path,
 ) -> None:
+    require_external_evidence(_INPUT, "cplex-reference-v1")
+    require_external_evidence(_RECORDS, "gate12-solver-paths-v1")
     certificate = EnergyAllocationCertificateStore().load(_CERTIFICATE)
     configuration = ApplicationConfiguration(
         formulation_id=RESERVE_FORMULATION_ID,
