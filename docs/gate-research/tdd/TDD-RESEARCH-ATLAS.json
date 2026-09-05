@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-RESEARCH-ATLAS",
+  "requirement_ids": [
+    "REQ-STUDY-ATLAS"
+  ],
+  "production_paths": [
+    "src/pyspd/studies/__init__.py",
+    "src/pyspd/studies/stress_atlas.py",
+    "tools/build_stress_event_atlas.py"
+  ],
+  "parent_commit": "704afe41839d204e4322a907291f155278c7d2c0",
+  "implementation_commit": "7b1ff530c80328e0b1418dd3d08f27e7caa72724",
+  "test_patch_sha256": "6222caf2f034ce6b493c68c527d4b3343fb74f8601a330db21a03f5f0b77d50d",
+  "test_files": [
+    {
+      "path": "tests/studies/test_stress_atlas.py",
+      "sha256": "6a667c6f13a7c3c342b0e85a483d86fbec85e2b9758cf8288da1fc06ac39eee1"
+    }
+  ],
+  "command": "uv run pytest tests/studies/test_stress_atlas.py tests/multiperiod/test_battery.py -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "791b510480f05b5bd91a089e6b6c8380b34eb567d9dd04c2bfd6d5fcf16dd6ba",
+  "red": {
+    "timestamp": "2026-09-06T05:27:00+12:00",
+    "exit_code": 1,
+    "output_sha256": "0af194498be04f8ea8ef1c6be3a306e204d050f38ba76f2c8c5afdd8f9b44d33",
+    "duration_seconds": 0.16,
+    "expected_failure_fingerprint": "REQ-STUDY-ATLAS: deterministic, hash-bound stress-event atlas behavior is absent",
+    "log_uri": "docs/research/tdd/logs/atlas-battery-red.log"
+  },
+  "green": {
+    "timestamp": "2026-09-06T05:44:00+12:00",
+    "exit_code": 0,
+    "output_sha256": "ccdfb8d6cead4d5c2a306530bb9976906a3c9590a399f2db75ea725e65da2d9e",
+    "duration_seconds": 0.64,
+    "log_uri": "docs/research/tdd/logs/atlas-battery-green.log"
+  },
+  "author": {
+    "name": "Codex",
+    "role": "implementation agent"
+  },
+  "reviewer": {
+    "name": "Codex",
+    "role": "project-directed machine-evidence validator"
+  },
+  "exception": null
+}

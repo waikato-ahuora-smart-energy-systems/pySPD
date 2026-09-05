@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "captured_date": "2026-09-06",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "python": "3.13.14",
+  "package_manager": "uv",
+  "uv": "0.11.29",
+  "uv_lock_sha256": "cc8553b5159a323585f30394f2605318caf6444119033087bd126e6a79bed39a",
+  "packages": {
+    "highspy": "1.15.1",
+    "pyarrow": "22.0.0",
+    "pyomo": "6.10.1",
+    "pytest": "9.1.1"
+  },
+  "qualification_profile": "Research-only stress atlas and continuous multi-period battery analytic profile on macOS arm64",
+  "commands": [
+    "uv run pytest tests/studies/test_stress_atlas.py tests/multiperiod/test_battery.py -q",
+    "uv run pytest tests/studies tests/multiperiod -q",
+    "uv run pytest -q",
+    "uv run ruff check .",
+    "uv run mypy src tools",
+    "uv run mkdocs build --strict",
+    "uv build"
+  ]
+}

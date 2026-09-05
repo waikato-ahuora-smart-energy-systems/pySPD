@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-RESEARCH-BATTERY",
+  "requirement_ids": [
+    "REQ-MULTIPERIOD-BATTERY"
+  ],
+  "production_paths": [
+    "src/pyspd/multiperiod/__init__.py",
+    "src/pyspd/multiperiod/components.py",
+    "src/pyspd/multiperiod/data.py",
+    "src/pyspd/multiperiod/formulation.py"
+  ],
+  "parent_commit": "704afe41839d204e4322a907291f155278c7d2c0",
+  "implementation_commit": "7b1ff530c80328e0b1418dd3d08f27e7caa72724",
+  "test_patch_sha256": "0aa5ac8015ac28a7c636c581ee1dc31db9ad341c7a50c3378f368c5609918b2f",
+  "test_files": [
+    {
+      "path": "tests/multiperiod/test_battery.py",
+      "sha256": "90a660db0859a67e1f9338a972e6fcbe4c7216b85afc99d3a107f6fde170eaac"
+    }
+  ],
+  "command": "uv run pytest tests/studies/test_stress_atlas.py tests/multiperiod/test_battery.py -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "791b510480f05b5bd91a089e6b6c8380b34eb567d9dd04c2bfd6d5fcf16dd6ba",
+  "red": {
+    "timestamp": "2026-09-06T05:27:00+12:00",
+    "exit_code": 1,
+    "output_sha256": "0af194498be04f8ea8ef1c6be3a306e204d050f38ba76f2c8c5afdd8f9b44d33",
+    "duration_seconds": 0.16,
+    "expected_failure_fingerprint": "REQ-MULTIPERIOD-BATTERY: class-based time-coupled battery formulation is absent",
+    "log_uri": "docs/research/tdd/logs/atlas-battery-red.log"
+  },
+  "green": {
+    "timestamp": "2026-09-06T05:44:00+12:00",
+    "exit_code": 0,
+    "output_sha256": "ccdfb8d6cead4d5c2a306530bb9976906a3c9590a399f2db75ea725e65da2d9e",
+    "duration_seconds": 0.64,
+    "log_uri": "docs/research/tdd/logs/atlas-battery-green.log"
+  },
+  "author": {
+    "name": "Codex",
+    "role": "implementation agent"
+  },
+  "reviewer": {
+    "name": "Codex",
+    "role": "project-directed machine-evidence validator"
+  },
+  "exception": null
+}
