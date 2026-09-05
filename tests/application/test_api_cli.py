@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from types import SimpleNamespace
 
 import pytest
 
@@ -13,7 +14,7 @@ from pyspd.application import (
     ConfigurationError,
     PyspdApplication,
 )
-from pyspd.cli import main
+from pyspd.cli import main, parser
 from pyspd.data import LEGACY_V3_INPUT_SCHEMA, V5_INPUT_SCHEMA
 from pyspd.orchestration import ReserveCaseExecutor
 from pyspd.solver import CbcBackend, ClpBackend
@@ -36,6 +37,7 @@ def test_application_configuration_is_strict_and_hash_bound(tmp_path) -> None:
     assert config.input_path == source.resolve()
     assert config.solver_profile == PORTABLE_SOLVER_PROFILE
     assert config.input_schema == V5_INPUT_SCHEMA
+    assert config.worker_count == 1
 
     selected = ApplicationConfiguration(
         formulation_id=FORMULATION,
@@ -47,6 +49,17 @@ def test_application_configuration_is_strict_and_hash_bound(tmp_path) -> None:
     )
     assert selected.case_ids == ("CASE-2", "CASE-1")
     assert selected.logical_sha256 != config.logical_sha256
+
+    parallel = ApplicationConfiguration(
+        formulation_id=FORMULATION,
+        input_path=source,
+        output_directory=tmp_path / "parallel-output",
+        source_sha256="0dd67251795fcbceeac3c5728b868d16f2ecffce6e710acc84fc9bff043cfaf8",
+        gams_system_directory=tmp_path,
+        worker_count=10,
+    )
+    assert parallel.worker_count == 10
+    assert parallel.logical_sha256 != config.logical_sha256
 
     try:
         ApplicationConfiguration(
@@ -82,6 +95,26 @@ def test_application_configuration_rejects_ambiguous_case_selection(tmp_path) ->
             assert "case_ids" in str(error)
         else:  # pragma: no cover - assertion guard
             raise AssertionError("ambiguous case selection was accepted")
+
+
+@pytest.mark.parametrize("worker_count", [0, -1, True])
+def test_application_configuration_rejects_invalid_worker_count(
+    tmp_path, worker_count: int
+) -> None:
+    source = tmp_path / "case.gdx"
+    source.write_bytes(b"synthetic-gdx-placeholder")
+
+    with pytest.raises(ConfigurationError, match="worker_count"):
+        ApplicationConfiguration(
+            formulation_id=FORMULATION,
+            input_path=source,
+            output_directory=tmp_path / "output",
+            source_sha256=(
+                "0dd67251795fcbceeac3c5728b868d16f2ecffce6e710acc84fc9bff043cfaf8"
+            ),
+            gams_system_directory=tmp_path,
+            worker_count=worker_count,
+        )
 
 
 def test_application_rejects_nonpositive_preparation_bound(tmp_path) -> None:
@@ -224,3 +257,54 @@ def test_cli_formulations_is_stable_json(capsys) -> None:
     assert main(["formulations", "--json"]) == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload == {"formulations": sorted((FORMULATION, SPD16_FORMULATION_ID))}
+
+
+def test_cli_run_accepts_explicit_positive_worker_override() -> None:
+    arguments = parser().parse_args(
+        ["run", "--config", "configuration.json", "--workers", "10"]
+    )
+
+    assert arguments.workers == 10
+
+
+@pytest.mark.parametrize("workers", ["0", "-1"])
+def test_cli_run_rejects_nonpositive_worker_override(workers: str) -> None:
+    with pytest.raises(SystemExit):
+        parser().parse_args(
+            ["run", "--config", "configuration.json", "--workers", workers]
+        )
+
+
+def test_cli_worker_override_is_hash_bound_before_application_dispatch(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    source = tmp_path / "case.gdx"
+    source.write_bytes(b"synthetic-gdx-placeholder")
+    configuration = ApplicationConfiguration(
+        formulation_id=FORMULATION,
+        input_path=source,
+        output_directory=tmp_path / "output",
+        source_sha256="0dd67251795fcbceeac3c5728b868d16f2ecffce6e710acc84fc9bff043cfaf8",
+        gams_system_directory=tmp_path,
+    )
+    dispatched = []
+    monkeypatch.setattr(
+        ApplicationConfiguration,
+        "from_json",
+        classmethod(lambda _cls, _path: configuration),
+    )
+
+    def run(_application, selected):
+        dispatched.append(selected)
+        return SimpleNamespace(
+            output_directory=selected.output_directory,
+            report_manifest=SimpleNamespace(logical_sha256="1" * 64),
+            result=SimpleNamespace(state=SimpleNamespace(value="complete")),
+        )
+
+    monkeypatch.setattr(PyspdApplication, "run", run)
+
+    assert main(["run", "--config", "unused.json", "--workers", "10"]) == 0
+    assert dispatched[0].worker_count == 10
+    assert dispatched[0].logical_sha256 != configuration.logical_sha256
+    assert json.loads(capsys.readouterr().out)["state"] == "complete"

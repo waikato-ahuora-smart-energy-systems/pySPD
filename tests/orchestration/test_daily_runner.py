@@ -172,6 +172,30 @@ def test_prior_accepted_generation_initializes_zero_start_next_case() -> None:
     assert executor.calls[1].generation_start["G1"] == 42.0
 
 
+def test_repeated_case_label_is_preserved_by_full_period_identity() -> None:
+    first = make_prepared(make_daily_case("RECURRING", ordinal=0))
+    second = make_prepared(
+        make_daily_case("RECURRING", "01-JAN-2024 00:05", "TP2", ordinal=1)
+    )
+    executor = SequenceExecutor(
+        [make_observation(first.specification), make_observation(second.specification)]
+    )
+
+    result = DailyRunner(executor).run(configuration(), (first, second))
+
+    assert [case.specification.trading_period for case in result.cases] == ["TP1", "TP2"]
+
+
+def test_exact_duplicate_period_identity_fails_closed() -> None:
+    first = make_prepared(make_daily_case("DUPLICATE", ordinal=0))
+    duplicate = make_prepared(make_daily_case("DUPLICATE", ordinal=1))
+
+    with pytest.raises(OrchestrationError, match="duplicate selected case"):
+        DailyRunner(SequenceExecutor([make_observation()])).run(
+            configuration(), (first, duplicate)
+        )
+
+
 def test_interrupted_run_resumes_exact_prefix_and_rejects_environment_mix() -> None:
     first = make_prepared(make_daily_case())
     second = make_prepared(make_daily_case("C2", "01-JAN-2024 00:05", ordinal=1))

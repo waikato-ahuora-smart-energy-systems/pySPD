@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from collections.abc import Sequence
+from dataclasses import replace
 from pathlib import Path
 
 from pyspd.application import (
@@ -14,6 +15,13 @@ from pyspd.application import (
 )
 
 
+def _positive_integer(value: str) -> int:
+    parsed = int(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError("must be a positive integer")
+    return parsed
+
+
 def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser(prog="pyspd")
     commands = root.add_subparsers(dest="command", required=True)
@@ -21,6 +29,11 @@ def parser() -> argparse.ArgumentParser:
     formulations.add_argument("--json", action="store_true", dest="as_json")
     run = commands.add_parser("run")
     run.add_argument("--config", required=True, type=Path)
+    run.add_argument(
+        "--workers",
+        type=_positive_integer,
+        help="override the configured number of independent case workers",
+    )
     return root
 
 
@@ -36,6 +49,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
     try:
         configuration = ApplicationConfiguration.from_json(arguments.config)
+        if arguments.workers is not None:
+            configuration = replace(configuration, worker_count=arguments.workers)
         run = application.run(configuration)
     except (ConfigurationError, OSError, ValueError) as error:
         print(f"pyspd: {error}")

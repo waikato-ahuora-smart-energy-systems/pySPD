@@ -24,7 +24,7 @@ next MIP case after six successful cases.
 - CBC: PuLP-bundled CBC 2.10.3, 2019 x86_64 binary executed on Apple Silicon
 - Validation tolerance: `1e-4`
 - Benchmark implementation:
-  [`tools/benchmark_solver_paths.py`](../../tools/benchmark_solver_paths.py)
+  [`tools/benchmark_solver_paths.py`](https://github.com/waikato-ahuora-smart-energy-systems/pySPD/blob/main/tools/benchmark_solver_paths.py)
 
 The ranked time is measured around the class-based case executor and includes
 both the primary MIP and fixed-RMIP solve. GDX loading, model preparation,

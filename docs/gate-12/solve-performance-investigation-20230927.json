@@ -236,6 +236,17 @@
     },
     "decision": "use-ten-workers-for-full-day-throughput-when-memory-permits"
   },
+  "production_application_integration": {
+    "evidence": "parallel-application-integration-20190218.json",
+    "two_case_serial_seconds": 56.27,
+    "two_case_parallel_seconds": 36.87,
+    "two_worker_reduction_percent": 34.47751910431846,
+    "report_row_count": 70470,
+    "maximum_report_difference": 5e-14,
+    "full_day_boundary_case_count": 322,
+    "full_day_boundary_planning_seconds": 12.411003875080496,
+    "generation_start_classification_seconds": 0.07272395910695195
+  },
   "persistent_solver_probe": {
     "highs_factory_sample_count": 100,
     "highs_factory_median_seconds": 0.00003841641591861844,
@@ -245,6 +256,8 @@
   "decisions": {
     "enable_case_data_index": true,
     "enable_pricing_model_clone": true,
+    "enable_parallel_application_run": true,
+    "enable_minimal_generation_start_planner": true,
     "enable_scip_period_warm_start": false,
     "enable_highs_primal_warm_start": false,
     "recommended_parallel_workers_for_small_workloads": 3,

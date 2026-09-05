@@ -54,7 +54,9 @@ class ReserveDomainsComponent(ModelComponent):
         block.Island = pyo.Set(dimen=3, ordered=True, initialize=sorted(data.islands))
         block.ReserveClass = pyo.Set(ordered=True, initialize=RESERVE_CLASSES)
         block.ReserveType = pyo.Set(ordered=True, initialize=RESERVE_TYPES)
-        block.RiskClass = pyo.Set(ordered=True, initialize=data.risk_classes)
+        block.RiskClass = pyo.Set(
+            ordered=True, initialize=sorted(data.risk_classes)
+        )
         block.Direction = pyo.Set(ordered=True, initialize=DIRECTIONS)
         block.Zone = pyo.Set(ordered=True, initialize=ZONES)
         block.Block = pyo.Set(ordered=True, initialize=BLOCKS)
@@ -246,11 +248,11 @@ class ReserveOfferComponent(ModelComponent):
             ),
         )
         block.EnergyAndReserveMaximum = pyo.Constraint(
-            [
+            sorted(
                 (offer, reserve_class)
                 for offer in case.offers
                 for reserve_class in RESERVE_CLASSES
-            ],
+            ),
             rule=lambda _b, ca, dt, offer, reserve_class: (
                 generation[ca, dt, offer]
                 + data.reserve_maximum_factor.get((ca, dt, offer, reserve_class), 0.0)
@@ -297,7 +299,9 @@ class ReserveScarcityComponent(ModelComponent):
             (*island, reserve_class, risk, tranche)
             for island in domains.Island
             for reserve_class in RESERVE_CLASSES
-            for risk in data.hvdc_risks | data.manual_risks | data.hvdc_secondary_risks
+            for risk in sorted(
+                data.hvdc_risks | data.manual_risks | data.hvdc_secondary_risks
+            )
             for tranche in BLOCKS
             if (*island, reserve_class, risk) in domains.Shortfall
             or data.reserve_scarcity_price.get((*island, reserve_class, tranche), 0.0)
@@ -317,11 +321,11 @@ class ReserveScarcityComponent(ModelComponent):
             domains.ShortfallUnit, domain=pyo.NonNegativeReals
         )
         block.ReserveShortfallUnitBlock = pyo.Var(
-            [
+            sorted(
                 (*generator, reserve_class, risk, tranche)
                 for generator in data.risk_generators
                 for reserve_class in RESERVE_CLASSES
-                for risk in data.generator_risks | data.hvdc_secondary_risks
+                for risk in sorted(data.generator_risks | data.hvdc_secondary_risks)
                 for tranche in BLOCKS
                 if (*generator, reserve_class, risk) in domains.ShortfallUnit
                 or data.reserve_scarcity_price.get(
@@ -329,7 +333,7 @@ class ReserveScarcityComponent(ModelComponent):
                     0.0,
                 )
                 != 0.0
-            ],
+            ),
             domain=pyo.NonNegativeReals,
             bounds=lambda _b, ca, dt, island, offer, reserve_class, risk, tranche: (
                 0.0,
@@ -343,19 +347,19 @@ class ReserveScarcityComponent(ModelComponent):
         )
         group_names = sorted({key[3] for key in data.island_risk_group})
         block.ReserveShortfallGroupBlock = pyo.Var(
-            [
+            sorted(
                 (*island, group, reserve_class, risk, tranche)
                 for island in domains.Island
                 for group in group_names
                 for reserve_class in RESERVE_CLASSES
-                for risk in data.group_risks
+                for risk in sorted(data.group_risks)
                 for tranche in BLOCKS
                 if (*island, group, reserve_class, risk) in domains.ShortfallGroup
                 or data.reserve_scarcity_price.get(
                     (*island, reserve_class, tranche), 0.0
                 )
                 != 0.0
-            ],
+            ),
             domain=pyo.NonNegativeReals,
             bounds=lambda _b, ca, dt, island, group, reserve_class, risk, tranche: (
                 0.0,
@@ -451,7 +455,7 @@ class ReserveRiskComponent(ModelComponent):
         block.IslandRisk = pyo.Var(domains.IslandRisk, domain=pyo.Reals)
         block.GeneratorIslandRisk = pyo.Var(domains.GeneratorRisk, domain=pyo.Reals)
         block.GroupIslandRisk = pyo.Var(domains.RiskGroup, domain=pyo.Reals)
-        secondary_generator_domain = [
+        secondary_generator_domain = sorted(
             (*generator, reserve_class, risk)
             for generator in data.risk_generators
             for reserve_class in RESERVE_CLASSES
@@ -459,14 +463,14 @@ class ReserveRiskComponent(ModelComponent):
             if data.hvdc_secondary_enabled.get(
                 (generator[0], generator[1], generator[2], risk), 0.0
             )
-        ]
-        secondary_manual_domain = [
+        )
+        secondary_manual_domain = sorted(
             (*island, reserve_class, risk)
             for island in domains.Island
             for reserve_class in RESERVE_CLASSES
             for risk in data.hvdc_secondary_risks
             if data.hvdc_secondary_enabled.get((*island, risk), 0.0)
-        ]
+        )
         block.HVDCGeneratorIslandRisk = pyo.Var(
             secondary_generator_domain, domain=pyo.Reals
         )
@@ -798,7 +802,7 @@ class ReserveSharingComponent(ModelComponent):
         effective_domain = [
             (*key, risk)
             for key in island_reserve_class
-            for risk in data.shareable_risks
+            for risk in sorted(data.shareable_risks)
         ]
         block.SharedNFR = pyo.Var(
             domains.Island,
@@ -894,7 +898,7 @@ class ReserveSharingComponent(ModelComponent):
                     for bp in ENERGY_BREAKPOINTS
                 )
             )
-        for period in case.periods:
+        for period in sorted(case.periods):
             block.Constraints.add(
                 sum(
                     block.HVDCSending[island]
@@ -959,7 +963,7 @@ class ReserveSharingComponent(ModelComponent):
                     )
                     <= data.big_m * (1.0 - block.InZone[*key, "NR"])
                 )
-            for risk in data.shareable_risks:
+            for risk in sorted(data.shareable_risks):
                 effective_key = (*key, risk)
                 block.Constraints.add(
                     block.ReserveShareEffective[effective_key]

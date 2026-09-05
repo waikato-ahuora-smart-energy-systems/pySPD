@@ -965,3 +965,34 @@ compared primal values and the objective. Despite that correctness result, the
 combined solve was 35.8–84.5% slower in order-controlled trials and its
 physical algebra remained almost exactly additive. Dynamic independent-case
 execution therefore remains the qualified performance architecture.
+
+## Production multiprocessing application
+
+ADR-0029 promotes the bounded dynamic process coordinator into the ordinary
+`pyspd run` application. Worker count defaults to one and may be selected in
+configuration or with `--workers`; it is included in configuration provenance.
+The parent classifies generation-start independence directly from the GDX and
+workers cache their own immutable source/index view. Live Pyomo/solver objects
+never cross the process boundary: workers render complete reports first and
+return an explicit portable result surface for canonical parent aggregation.
+
+The two-period 2019-02-18 application trial reduced wall time from 56.27 to
+36.87 seconds with two workers. All 70,470 report identities and their order
+matched, published prices were byte-identical, and the largest numeric report
+difference was `5e-14`. Canonical sorting of reserve domains removed the
+process-hash-dependent constraint numbering exposed by the initial red trial.
+The 322-case 2022-11-01 source now requires 12.41 seconds for parent planning,
+down from the prior 126–130 second full-preparation pass. Evidence is retained
+in [the production parallel integration record](parallel-application-integration-20190218.json).
+The complete 48-period day then passed the actual `--workers 10` CLI path in
+399.66 seconds. Its manifest round trip verifies 12 tables, 1,654,840 rows,
+48 unique complete period identities, and 25,536 published-price rows.
+
+A diagnostic comparison with the supplied CPLEX aggregate prices does not form
+part of the multiprocessing qualification. The largest published-energy
+difference, TP29 `WPT1101`, is certified because CPLEX's `201.581` lies inside
+PySPD's reported `[199.92455, 201.58105]` analytical interval. Two reserve
+prices remain outside Authority display precision and without an analytical
+interval; the largest is TP11 SI FIR (`0.500` versus `0.00005`). An isolated
+serial TP11 solve reproduces the parallel value and objective, proving that it
+is a pre-existing CPLEX-parity item rather than a process-execution regression.

@@ -74,4 +74,4 @@ replacement completed all 322 cases.
 The machine-readable record is
 [`odd-day-second-six-validation.json`](odd-day-second-six-validation.json).
 The 12-day corpus is hash-bound by
-[`tests/fixtures/odd_day_reference/manifest.json`](../../tests/fixtures/odd_day_reference/manifest.json).
+[`tests/fixtures/odd_day_reference/manifest.json`](https://github.com/waikato-ahuora-smart-energy-systems/pySPD/blob/main/tests/fixtures/odd_day_reference/manifest.json).

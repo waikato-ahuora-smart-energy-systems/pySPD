@@ -229,20 +229,28 @@ object cache.
 
 ## Remaining opportunities
 
+The first two former priorities are now complete. ADR-0029 integrates bounded
+dynamic processes into `pyspd run`, and replaces the complete-day preparation
+pass with direct generation-start classification. On 2022-11-01 the new parent
+planning path took 12.41 seconds for 322 cases, including only 0.073 seconds for
+boundary classification, rather than the prior 126–130 seconds. A real
+two-period report run was 34.48% faster with two workers and retained all
+70,470 identities in canonical order.
+
+A complete 48-period 2019-02-18 production run through `pyspd run --workers
+10` finished in 399.66 seconds. Its manifest round trip verifies 1,654,840
+rows. The constraint table alone contains 1,504,321 rows and occupies about
+208 MiB, confirming report-surface selection and extraction as the next
+performance target.
+
 The next performance work, in priority order, is:
 
-1. integrate the retained coordinator with the stable `pyspd run` report-writing
-   entry point; the governed benchmark driver is parallel, while the standard
-   application entry point remains serial;
-2. replace the conservative full-case boundary preparation pass with an
-   independently tested minimal generation-start inventory; this would remove
-   about 130 seconds of serial planning from a complete day;
-3. profile and index the result/report builders—one diagnostic case spent about
+1. profile and index the result/report builders—one diagnostic case spent about
    1.95 seconds constructing reports, including 1.08 seconds in model-row
    extraction;
-4. investigate within-case reuse for reserve price-sensitivity LPs, retaining
+2. investigate within-case reuse for reserve price-sensitivity LPs, retaining
    every analytical interval and CPLEX parity test; and
-5. consider a parameterized model template/persistent matrix only after a
+3. consider a parameterized model template/persistent matrix only after a
    corpus-wide structural-signature study proves which periods are safely
    reusable.
 
@@ -269,6 +277,6 @@ identification.
 
 Final verification on the implemented source is:
 
-- `uv run pytest -q`: 624 passed, 1 skipped;
+- `uv run pytest -q`: 648 passed, 3 skipped;
 - `uv run ruff check .`: passed; and
-- `uv run mypy src tools`: passed across 143 source files.
+- `uv run mypy src tools`: passed across 145 source files.

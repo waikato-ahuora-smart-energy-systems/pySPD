@@ -45,7 +45,7 @@ requirement.
 | [Gate checklist](gate-checklist.md) | Gate 1 criterion status | Complete |
 | [Closure decision](closure-decision.md) | Formal blocker audit and Stage 2 authorization boundary | Pass recorded |
 | [`tools.oracle`](../../tools/oracle/) | Class-based staged runner, fail-closed overlay, parsers, comparator, and CLI | Implemented and tested |
-| [Objective fixture](../../tests/fixtures/oracle/vspd-v5.0.6-rtd-202502261155-dps-objectives.json) | Committed CPLEX objective values and provenance | Active smoke baseline |
+| [Objective fixture](https://github.com/waikato-ahuora-smart-energy-systems/pySPD/blob/main/tests/fixtures/oracle/vspd-v5.0.6-rtd-202502261155-dps-objectives.json) | Committed CPLEX objective values and provenance | Active smoke baseline |
 | Canonical GDX/matrix evidence | Deterministic symbol, UEL, matrix, solution, and dictionary manifests | Passed for all ten frozen runs |
 | Independent price validation | Marginals and raw transfer graph mapped independently of vSPD node-price parameters | Passed for 20,344 corpus prices, including 38 transfers |
 

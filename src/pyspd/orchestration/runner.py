@@ -274,14 +274,19 @@ class DailyRunner:
     def _validate_inputs(
         configuration: DailyRunConfiguration, cases: tuple[PreparedCase, ...]
     ) -> None:
-        identities: set[str] = set()
+        identities: set[tuple[str, str, str]] = set()
         for ordinal, prepared in enumerate(cases):
             selected = prepared.specification
             if selected.ordinal != ordinal:
                 raise OrchestrationError("prepared cases are not in canonical order")
-            if selected.case_id in identities:
+            identity = (
+                selected.case_id,
+                selected.date_time,
+                selected.trading_period,
+            )
+            if identity in identities:
                 raise OrchestrationError("duplicate selected case")
-            identities.add(selected.case_id)
+            identities.add(identity)
             if selected.source_sha256 != configuration.source_sha256:
                 raise OrchestrationError("case source does not match run configuration")
 

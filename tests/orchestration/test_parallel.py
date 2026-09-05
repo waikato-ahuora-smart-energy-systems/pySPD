@@ -5,15 +5,19 @@ from dataclasses import dataclass
 
 import pytest
 
+from pyspd.data import RawRecord, RawSymbol, RawSymbols, ScalarValue, SymbolType
 from pyspd.orchestration import (
     CaseBoundary,
     CaseShard,
     CaseShardPlan,
     ContiguousCaseShardPlanner,
     DynamicCaseJobPlanner,
+    GenerationStartBoundaryClassifier,
     ParallelExecutionError,
     ProcessShardCoordinator,
+    ScheduleType,
 )
+from tests.orchestration.conftest import make_daily_case
 
 
 def _boundaries(
@@ -27,6 +31,86 @@ def _boundaries(
         )
         for ordinal in range(count)
     )
+
+
+def _parameter_symbol(
+    name: str,
+    domains: tuple[str, ...],
+    records: tuple[tuple[tuple[str, ...], float], ...],
+) -> RawSymbol:
+    return RawSymbol(
+        name,
+        SymbolType.PARAMETER,
+        len(domains),
+        domains,
+        name,
+        tuple(() for _ in domains),
+        tuple(
+            RawRecord(keys, {"value": ScalarValue.finite(value)})
+            for keys, value in records
+        ),
+    )
+
+
+def test_generation_start_classifier_matches_daily_mode_offer_rules() -> None:
+    cases = (
+        make_daily_case("RTD-NONZERO", "01-JAN-2024 00:00", ordinal=0),
+        make_daily_case("RTD-ZERO", "01-JAN-2024 00:05", ordinal=1),
+        make_daily_case(
+            "PRSS-SOLVED", "01-JAN-2024 00:10", ordinal=2,
+            schedule_type=ScheduleType.PRSS,
+        ),
+        make_daily_case(
+            "PRSS-ZERO", "01-JAN-2024 00:15", ordinal=3,
+            schedule_type=ScheduleType.PRSS,
+        ),
+    )
+    run_mode = _parameter_symbol(
+        "i_runMode",
+        ("ca", "runParameter"),
+        tuple(
+            ((case.case_id, "studyMode"), float(case.study_mode)) for case in cases
+        ),
+    )
+    offer_records: list[tuple[tuple[str, ...], float]] = []
+    inputs = {
+        "RTD-NONZERO": (12.0, 0.0),
+        "RTD-ZERO": (0.0, 15.0),
+        "PRSS-SOLVED": (0.0, 18.0),
+        "PRSS-ZERO": (5.0, 0.0),
+    }
+    for case in cases:
+        initial, solved = inputs[case.case_id]
+        offer_records.extend(
+            (
+                ((case.case_id, case.date_time, "O1", "initialMW"), initial),
+                ((case.case_id, case.date_time, "O1", "solvedInitialMW"), solved),
+            )
+        )
+    offers = _parameter_symbol(
+        "i_dateTimeOfferParameter",
+        ("ca", "dt", "o", "offerParameter"),
+        tuple(offer_records),
+    )
+    primary_secondary = RawSymbol(
+        "i_dateTimePrimarySecondaryOffer",
+        SymbolType.SET,
+        4,
+        ("ca", "dt", "o", "o1"),
+        "primary secondary",
+        ((), (), (), ()),
+        (),
+    )
+    symbols = RawSymbols("synthetic.gdx", "0" * 64, (run_mode, offers, primary_secondary))
+
+    boundaries = GenerationStartBoundaryClassifier().classify(symbols, cases)
+
+    assert [boundary.predecessor_independent for boundary in boundaries] == [
+        True,
+        False,
+        True,
+        False,
+    ]
 
 
 def test_contiguous_planner_balances_and_preserves_canonical_order() -> None:

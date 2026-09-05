@@ -66,7 +66,7 @@ The complete machine-readable record, including source, benchmark, record, and
 comparison hashes, is
 [`odd-day-six-day-validation.json`](odd-day-six-day-validation.json). The
 immutable inputs and CPLEX results are governed by
-[`tests/fixtures/odd_day_reference/manifest-v1.json`](../../tests/fixtures/odd_day_reference/manifest-v1.json).
+[`tests/fixtures/odd_day_reference/manifest-v1.json`](https://github.com/waikato-ahuora-smart-energy-systems/pySPD/blob/main/tests/fixtures/odd_day_reference/manifest-v1.json).
 
 ## Corrections found by the corpus
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import multiprocessing
+from collections import defaultdict
 from collections.abc import Callable, Sequence
 from concurrent.futures import (
     FIRST_COMPLETED,
@@ -14,7 +15,9 @@ from concurrent.futures import (
 from dataclasses import dataclass
 from typing import Protocol, TypeVar
 
-from .types import OrchestrationError, PreparedCase
+from pyspd.data.raw import RawSymbol, RawSymbols
+
+from .types import DailyCase, OrchestrationError, PreparedCase
 
 T = TypeVar("T")
 
@@ -44,6 +47,95 @@ class CaseBoundary:
             ordinal=prepared.specification.ordinal,
             predecessor_independent=any(prepared.generation_start.values()),
         )
+
+
+class GenerationStartBoundaryClassifier:
+    """Classify period independence from the minimal source offer inventory."""
+
+    def classify(
+        self,
+        symbols: RawSymbols,
+        cases: Sequence[DailyCase],
+    ) -> tuple[CaseBoundary, ...]:
+        try:
+            offer_parameter = _numeric(symbols["i_dateTimeOfferParameter"])
+        except KeyError as error:
+            raise ParallelExecutionError(
+                "generation-start inventory is missing i_dateTimeOfferParameter"
+            ) from error
+        initial = _component(offer_parameter, "initialMW")
+        solved_initial = _component(offer_parameter, "solvedInitialMW")
+        try:
+            primary_secondary = tuple(
+                record.keys
+                for record in symbols["i_dateTimePrimarySecondaryOffer"].records
+            )
+        except KeyError:
+            primary_secondary = ()
+        offer_identities = frozenset(key[:3] for key in offer_parameter)
+        offers_by_period: dict[tuple[str, str], list[tuple[str, str, str]]] = (
+            defaultdict(list)
+        )
+        for raw_identity in offer_identities:
+            case_id, date_time, offer = raw_identity
+            identity = (case_id, date_time, offer)
+            offers_by_period[(case_id, date_time)].append(identity)
+        all_initial_zero: dict[tuple[str, str], bool] = {}
+        for (case_id, _date_time, offer), value in initial.items():
+            key = (case_id, offer)
+            all_initial_zero[key] = all_initial_zero.get(key, True) and value == 0.0
+        secondaries_by_primary: dict[tuple[str, str, str], list[str]] = defaultdict(
+            list
+        )
+        for case_id, date_time, primary, secondary in primary_secondary:
+            secondaries_by_primary[(case_id, date_time, primary)].append(secondary)
+
+        boundaries: list[CaseBoundary] = []
+        for case in cases:
+            period = (case.case_id, case.date_time)
+            is_rtd = case.study_mode in {101, 201}
+            use_initial = is_rtd or case.study_mode == 111
+            nonzero_start = False
+            for identity in offers_by_period[period]:
+                offer = identity[2]
+                value = (
+                    initial.get(identity, 0.0)
+                    if use_initial
+                    else solved_initial.get(identity, 0.0)
+                )
+                if not is_rtd and all_initial_zero.get((case.case_id, offer), False):
+                    value = solved_initial.get(identity, 0.0)
+                value += sum(
+                    initial.get((case.case_id, case.date_time, secondary), 0.0)
+                    for secondary in secondaries_by_primary[identity]
+                )
+                if value != 0.0:
+                    nonzero_start = True
+                    break
+            boundaries.append(
+                CaseBoundary(case.case_id, case.ordinal, nonzero_start)
+            )
+        return tuple(boundaries)
+
+
+def _numeric(symbol: RawSymbol) -> dict[tuple[str, ...], float]:
+    return {
+        record.keys: float(value.number)
+        for record in symbol.records
+        if (value := record.values.get("value")) is not None
+        and value.number is not None
+    }
+
+
+def _component(
+    values: dict[tuple[str, ...], float], component: str
+) -> dict[tuple[str, ...], float]:
+    wanted = component.casefold()
+    return {
+        key[:-1]: value
+        for key, value in values.items()
+        if key[-1].casefold() == wanted
+    }
 
 
 @dataclass(frozen=True, slots=True)

@@ -1,0 +1,71 @@
+site_name: PySPD
+site_description: Validated, class-based Pyomo implementation of New Zealand vSPD
+repo_url: https://github.com/waikato-ahuora-smart-energy-systems/pySPD
+edit_uri: ""
+docs_dir: docs
+site_dir: site
+theme:
+  name: material
+  features:
+    - navigation.indexes
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - content.tabs.link
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: cyan
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: cyan
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - User guide:
+      - Inputs and GDX: user-guide/inputs-and-gdx.md
+      - Configuration: user-guide/configuration.md
+      - Running PySPD: user-guide/running.md
+      - Audited scenario API: user-guide/audited-scenarios.md
+      - Results and prices: user-guide/results.md
+  - Case studies:
+      - Choosing a study: case-studies/index.md
+      - Baseline and subsets: case-studies/baseline-and-subsets.md
+      - Demand and offers: case-studies/demand-and-offers.md
+      - Generation and transmission outages: case-studies/outages-and-constraints.md
+      - Reserve and scarcity: case-studies/reserve-and-scarcity.md
+      - Solver and batch comparisons: case-studies/solver-and-batch.md
+      - Historical and versioned studies: case-studies/historical-and-versioned.md
+  - Validation:
+      - Validation workflow: validation/index.md
+      - Interpreting parity: validation/interpreting-parity.md
+  - Developer guide:
+      - Architecture: developer-guide/architecture.md
+      - Extending PySPD: developer-guide/extending.md
+      - Testing and evidence: developer-guide/testing-and-evidence.md
+  - Reference:
+      - Configuration fields: reference/configuration.md
+      - Report tables: reference/reports.md
+      - Current limitations: reference/limitations.md
+      - Troubleshooting: troubleshooting.md
+      - ADR index: adr/README.md
+      - Stage and gate plan: pyomo-vspd-stage-gate-plan.md
+      - Gate 12 status: gate-12/README.md
+      - Stage 13 research profile: gate-13/README.md

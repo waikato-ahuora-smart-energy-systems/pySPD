@@ -33,7 +33,7 @@ dominates on every output surface.
 The repository-local corpus is in
 [`tests/fixtures/cplex_reference`](../../tests/fixtures/cplex_reference). Its
 selection algorithm, byte counts and SHA-256 hashes are bound by
-[`manifest.json`](../../tests/fixtures/cplex_reference/manifest.json) and
+[`manifest.json`](https://github.com/waikato-ahuora-smart-energy-systems/pySPD/blob/main/tests/fixtures/cplex_reference/manifest.json) and
 verified by `tests/data/test_cplex_reference_corpus.py`.
 
 | Year | Selected dates | Execution date | Schema |

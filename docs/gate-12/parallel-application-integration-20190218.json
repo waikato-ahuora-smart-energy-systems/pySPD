@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "evidence_id": "G12-PARALLEL-APPLICATION-20190218",
+  "recorded_at": "2026-09-05",
+  "source": {
+    "path": "tests/fixtures/cplex_reference/2019/20190218/input/FP_20190218_F.gdx",
+    "sha256": "c45fd64b27c947e74ac05229f56843408ab68e89181fba905c2eebf433450ae0",
+    "input_schema": "vspd-v3-final-pricing"
+  },
+  "implementation_parent_commit": "6f87f9c0c50e211562cceb7e548c881cb8a7db59",
+  "solver_profile": "scip-mip-fixed-highs-rmip",
+  "cases": ["V318FEB2019TP1", "V318FEB2019TP2"],
+  "serial": {
+    "workers": 1,
+    "wall_seconds": 56.27,
+    "manifest_logical_sha256": "02bc0b63d0e1a4ace86e8eacf8ff98cb00ffad5edece77f7fe86f4cfc4e6d509",
+    "configuration_sha256": "2fb221a31d66b57f74194ebc57b5ac03c644383c27f46d7f08a3bb9c27698f58"
+  },
+  "parallel": {
+    "workers": 2,
+    "scheduling": "dynamic-next-idle-worker",
+    "cases_per_job": 1,
+    "wall_seconds": 36.87,
+    "manifest_logical_sha256": "9b144aa7feba4b14c027038c687dd318d104d1b8d36de01f188964722aed69ec",
+    "configuration_sha256": "e618f37910259543c687b251ad0e580811ac235724d8937fde27613bfe4da9f7"
+  },
+  "performance": {
+    "wall_seconds_saved": 19.4,
+    "wall_time_reduction_percent": 34.47751910431846,
+    "speedup": 1.5261730404122593
+  },
+  "report_parity": {
+    "table_count": 12,
+    "row_count": 70470,
+    "identity_sets_match": true,
+    "identity_order_matches": true,
+    "published_price_bytes_match": true,
+    "numeric_difference_count": 8,
+    "maximum_absolute_difference": 5e-14,
+    "maximum_difference_table": "island",
+    "non_numeric_difference_count": 0,
+    "passed_at_tolerance": 1e-12
+  },
+  "full_day_boundary_benchmark": {
+    "source": "tests/fixtures/odd_day_reference/2022/20221101/input/Pricing_20221101.gdx",
+    "source_sha256": "da239092c446d39a55c300c421018744d0fc05606b0f4141a837519ee108c175",
+    "selected_case_count": 322,
+    "predecessor_independent_count": 322,
+    "source_load_validation_and_index_seconds": 12.338279915973544,
+    "generation_start_classification_seconds": 0.07272395910695195,
+    "total_planning_seconds": 12.411003875080496,
+    "replaced_full_preparation_seconds_range": [126.3101405419875, 129.70226883306168]
+  },
+  "full_day_production_run": {
+    "cli_worker_override": 10,
+    "case_count": 48,
+    "all_cases_complete": true,
+    "wall_seconds": 399.66,
+    "table_count": 12,
+    "report_row_count": 1654840,
+    "published_price_row_count": 25536,
+    "output_bytes_approximate": 234881024,
+    "constraint_report_bytes_approximate": 218103808,
+    "configuration_sha256": "9ffd206b6b465421b8f54cf99a55092a9364e74dca84d2e11799f70cff65d7b5",
+    "manifest_logical_sha256": "b910d31ce5b39a76301457d98505e9ac345103169641d16452817070a7f56b37",
+    "manifest_round_trip_valid": true
+  },
+  "cplex_published_price_diagnostic": {
+    "purpose": "diagnostic-only; serial-to-parallel parity qualifies this application change",
+    "authority_display_tolerance": 0.0005,
+    "energy": {
+      "compared_row_count": 25344,
+      "above_display_tolerance_count": 522,
+      "analytic_interval_certified_count": 44,
+      "uncontained_count": 478,
+      "maximum_absolute_difference_nzd_per_mwh": 1.65645,
+      "maximum_identity": ["TP29", "WPT1101"],
+      "cplex_value_nzd_per_mwh": 201.581,
+      "pyspd_value_nzd_per_mwh": 199.92455,
+      "pyspd_analytic_interval_nzd_per_mwh": [199.92455, 201.58105],
+      "maximum_is_interval_certified": true
+    },
+    "reserve": {
+      "compared_row_count": 192,
+      "above_display_tolerance_count": 2,
+      "analytic_interval_certified_count": 0,
+      "maximum_absolute_difference_nzd_per_mwh": 0.49995,
+      "maximum_identity": ["TP11", "SI", "FIR"],
+      "cplex_value_nzd_per_mwh": 0.5,
+      "pyspd_value_nzd_per_mwh": 0.00005
+    },
+    "tp11_isolated_serial_reproduction": {
+      "reproduced_parallel_value": true,
+      "scip_primary_objective_nzd": -468642.39620477613,
+      "highs_pricing_objective_nzd": -468642.39620477776,
+      "disposition": "pre-existing CPLEX parity item; not a multiprocessing regression"
+    }
+  },
+  "decision": "qualified-production-application-path"
+}

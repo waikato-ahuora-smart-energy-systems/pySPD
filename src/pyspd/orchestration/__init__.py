@@ -14,6 +14,7 @@ from pyspd.orchestration.parallel import (
     CaseShardPlan,
     ContiguousCaseShardPlanner,
     DynamicCaseJobPlanner,
+    GenerationStartBoundaryClassifier,
     ParallelExecutionError,
     ProcessShardCoordinator,
 )
@@ -78,6 +79,7 @@ __all__ = [
     "DailyRunState",
     "DailyRunner",
     "DynamicCaseJobPlanner",
+    "GenerationStartBoundaryClassifier",
     "IndependentPublicationValidator",
     "MarketPricePostProcessor",
     "OrchestrationError",
