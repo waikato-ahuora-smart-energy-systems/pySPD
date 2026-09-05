@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0.0",
+  "evidence_id": "TDD-RESEARCH-EVIDENCE",
+  "requirement_ids": [
+    "REQ-EVIDENCE-EXTERNALIZATION"
+  ],
+  "production_paths": [
+    "src/pyspd/cli.py",
+    "src/pyspd/evidence.py",
+    "tools/build_evidence_archives.py",
+    "tools/publish_evidence_release.py"
+  ],
+  "parent_commit": "0a3c6cc6a71bc55fce35db56cd5e8cd580619cae",
+  "implementation_commit": "e2bb53dd1c32450577a8b1cf521e87493c413743",
+  "test_patch_sha256": "fb85c11bf07a5732623a8401ba3ea956f90e643b1f1e617da33ad776d1cc9bdb",
+  "test_files": [
+    {
+      "path": "tests/application/test_evidence_cli.py",
+      "sha256": "0b124ccde0fa9ad487a0ced7a16ab0c1c6ad69039f563d501038065576aaf929"
+    },
+    {
+      "path": "tests/evidence/test_archive_plan.py",
+      "sha256": "026880d1b84e9e559dd05d577a33ab07284a08886412944a4371d9b3c844289d"
+    },
+    {
+      "path": "tests/evidence/test_artifacts.py",
+      "sha256": "f863d791aa6195e89c6877669b238ddbed5ac6add8b4c34f789404472845c447"
+    }
+  ],
+  "command": "uv run pytest tests/evidence/test_artifacts.py tests/evidence/test_archive_plan.py tests/application/test_evidence_cli.py -q",
+  "package_manager": "uv",
+  "environment_manifest_sha256": "791b510480f05b5bd91a089e6b6c8380b34eb567d9dd04c2bfd6d5fcf16dd6ba",
+  "red": {
+    "timestamp": "2026-09-06T06:38:22+12:00",
+    "exit_code": 2,
+    "output_sha256": "e16ecf3799daf093bc44832b017247d1e8a3b4acc3796fc07ac373c388ca336c",
+    "duration_seconds": 0.18,
+    "expected_failure_fingerprint": "REQ-EVIDENCE-EXTERNALIZATION: hash-verified external evidence acquisition behavior is absent",
+    "log_uri": "docs/research/tdd/logs/evidence-externalization-red.log"
+  },
+  "green": {
+    "timestamp": "2026-09-06T07:05:00+12:00",
+    "exit_code": 0,
+    "output_sha256": "cc2f6847c00de7e2ba7689e14a1c7052811ebb453e3f2726bbccc20df7396ba7",
+    "duration_seconds": 0.99,
+    "log_uri": "docs/research/tdd/logs/evidence-externalization-green.log"
+  },
+  "author": {
+    "name": "Codex",
+    "role": "implementation agent"
+  },
+  "reviewer": {
+    "name": "Codex",
+    "role": "project-directed machine-evidence validator"
+  },
+  "exception": null
+}

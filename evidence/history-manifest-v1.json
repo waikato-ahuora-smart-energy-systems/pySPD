@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "artifact": {
+    "name": "pyspd-pre-slim-history-v1.bundle",
+    "url": "https://github.com/waikato-ahuora-smart-energy-systems/pySPD/releases/download/evidence-v1/pyspd-pre-slim-history-v1.bundle",
+    "sha256": "a96098c0d5977a27e8afc9a0cd150ff8fcf009702d33f972dffe7865dd144c93",
+    "size_bytes": 206393897
+  },
+  "pre_rewrite_head": "a413d2cf0326acf7da2727498578e461dcc4834b",
+  "rewritten_equivalent": "e2bb53dd1c32450577a8b1cf521e87493c413743",
+  "unchanged_history_anchor": "6271a763a8b3e3ba65e1d353d63bc6b42a1c9b7a",
+  "verification": {
+    "complete_history": true,
+    "remote_download_sha256_verified": true,
+    "verified_date": "2026-09-06"
+  }
+}

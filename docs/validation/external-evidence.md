@@ -77,6 +77,22 @@ Release v1 was independently downloaded through the authenticated API,
 SHA-256 verified, restored into a clean temporary destination, and compared
 byte-for-byte with all 412 source files. No mismatches were found.
 
-The current release assets preserve the evidence content. A later Git-history
-rewrite requires a separate recovery bundle and commit-provenance migration;
-it must not be inferred from the externalization step alone.
+## History recovery
+
+The release also preserves the complete repository immediately before the
+large-object history cleanup as `pyspd-pre-slim-history-v1.bundle`. The tracked
+[`history-manifest-v1.json`](https://github.com/waikato-ahuora-smart-energy-systems/pySPD/blob/main/evidence/history-manifest-v1.json)
+binds it to SHA-256, size, original head, and rewritten equivalent. The bundle
+was downloaded back through the authenticated API and passed both SHA-256 and
+`git bundle verify` checks before any history was rewritten.
+
+Clone the historical repository into a separate directory when old commit IDs
+or the original in-Git evidence layout are required:
+
+```shell
+git clone pyspd-pre-slim-history-v1.bundle pyspd-pre-slim-history
+```
+
+The history rewrite removes only the four externalized corpus trees and the
+detailed Gate 12 solver-path JSON files. Compact manifests, certificates,
+documentation, production code, and tests remain in the ordinary repository.

@@ -9,8 +9,8 @@
     "src/pyspd/studies/stress_atlas.py",
     "tools/build_stress_event_atlas.py"
   ],
-  "parent_commit": "704afe41839d204e4322a907291f155278c7d2c0",
-  "implementation_commit": "7b1ff530c80328e0b1418dd3d08f27e7caa72724",
+  "parent_commit": "c88b7b0b4bbea35e771fbcb5534dca95edbd1b29",
+  "implementation_commit": "b24bced5270edc5c7cd459778e52a9ce89dcdaa4",
   "test_patch_sha256": "6222caf2f034ce6b493c68c527d4b3343fb74f8601a330db21a03f5f0b77d50d",
   "test_files": [
     {

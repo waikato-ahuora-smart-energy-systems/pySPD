@@ -36,3 +36,12 @@ ordinary suite without the external corpus.
 The release assets are supporting evidence, not package runtime dependencies.
 Their original source and result-tree hashes remain in the restored corpus
 manifests.
+
+The same release also contains the complete pre-cleanup Git history as
+`pyspd-pre-slim-history-v1.bundle`. Its hash, byte count, original head, and
+rewritten equivalent are recorded in `history-manifest-v1.json`. Restore that
+history into an isolated clone with:
+
+```shell
+git clone pyspd-pre-slim-history-v1.bundle pyspd-pre-slim-history
+```

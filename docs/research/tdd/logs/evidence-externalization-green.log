@@ -1,0 +1,2 @@
+Command: uv run pytest tests/evidence/test_artifacts.py tests/evidence/test_archive_plan.py tests/application/test_evidence_cli.py -q
+Result: 8 passed in 0.99s; exit 0
