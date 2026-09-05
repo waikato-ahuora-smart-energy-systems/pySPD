@@ -201,12 +201,18 @@ class PyspdApplication:
         configuration: ApplicationConfiguration,
         *,
         start_ordinal: int = 0,
+        maximum_cases: int | None = None,
     ) -> Iterator[PreparedCase]:
         """Prepare selected cases lazily from a validated immutable GDX source."""
 
         self.validate_formulation(configuration.formulation_id)
         if isinstance(start_ordinal, bool) or start_ordinal < 0:
             raise ConfigurationError("start_ordinal must be a non-negative integer")
+        if (
+            maximum_cases is not None
+            and (isinstance(maximum_cases, bool) or maximum_cases <= 0)
+        ):
+            raise ConfigurationError("maximum_cases must be a positive integer")
         symbols = GdxAdapter.read(
             configuration.input_path,
             system_directory=configuration.gams_system_directory,
@@ -230,7 +236,10 @@ class PyspdApplication:
         selected = selector.select(symbols, case_ids=configuration.case_ids)
         if start_ordinal > len(selected):
             raise ConfigurationError("start_ordinal exceeds selected case count")
-        scheduled = selected[start_ordinal:]
+        stop_ordinal = (
+            None if maximum_cases is None else start_ordinal + maximum_cases
+        )
+        scheduled = selected[start_ordinal:stop_ordinal]
         case_data_index = DailyCaseDataIndex(
             symbols, case_ids=tuple(item.case_id for item in scheduled)
         )

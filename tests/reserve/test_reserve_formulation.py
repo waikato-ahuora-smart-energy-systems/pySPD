@@ -171,6 +171,32 @@ def test_risk_group_ignores_mapping_to_offer_outside_active_domain() -> None:
     assert len(built.artifacts["group_island_risk"]) == 2
 
 
+def test_market_reserve_constraint_ignores_factor_for_inactive_offer() -> None:
+    case = make_reserve_case()
+    assert case.network is not None
+    assert case.reserve is not None
+    constraint = ("C1", "T1", "MC1")
+    network = replace(
+        case.network,
+        market_node_constraints=frozenset({constraint}),
+        market_node_constraint_sense={constraint: 1.0},
+        market_node_constraint_limit={constraint: 0.0},
+    )
+    reserve = replace(
+        case.reserve,
+        market_reserve_offer_factor={
+            ("C1", "T1", "MC1", "INACTIVE", "FIR", "PLRO"): 1.0
+        },
+    )
+
+    built = ModelAssembler().assemble(
+        reserve_formulation(), replace(case, network=network, reserve=reserve)
+    )
+
+    assert len(built.model.NetworkSecurity.MNodeSecurityConstraintLE) == 0
+    assert len(built.model.NetworkSecurity.MNodeSecurityConstraintGE) == 1
+
+
 @pytest.mark.parametrize("risk_class", RISK_CLASSES)
 def test_every_risk_class_has_binding_and_nonbinding_cover_cases(
     risk_class: str,
@@ -252,6 +278,41 @@ def test_round_power_zone_boundary_is_a_bounded_canonicalization_candidate() -> 
     assert canonicalizer._round_power_targets(built) == {}
 
 
+def test_zero_price_reserve_surplus_is_a_canonicalization_candidate() -> None:
+    built = build()
+    reserve = built.artifacts["reserve"]
+    island_reserve = built.artifacts["island_reserve"]
+    definitions = built.artifacts["island_reserve_definition"]
+    key = next(iter(island_reserve))
+    for variable in reserve.values():
+        variable.set_value(0.0)
+    for name in (
+        "generator_island_risk",
+        "group_island_risk",
+        "island_risk",
+        "reserve_share_effective",
+        "hvdc_generator_island_risk",
+        "hvdc_manual_island_risk",
+    ):
+        for variable in built.artifacts[name].values():
+            variable.set_value(0.0)
+    island_reserve[key].set_value(11.0)
+    matching = [
+        variable
+        for reserve_key, variable in reserve.items()
+        if reserve_key[:2] == key[:2] and reserve_key[3] == key[3]
+    ]
+    assert matching
+    matching[0].set_value(11.0)
+    built.model.dual[definitions[key]] = 0.0
+
+    canonicalizer = ReserveKinkCanonicalizer()
+
+    assert canonicalizer._zero_price_surplus_targets(built) == {key: 0.0}
+    built.model.dual[definitions[key]] = 1.0
+    assert canonicalizer._zero_price_surplus_targets(built) == {}
+
+
 def test_exact_reserve_share_perturbation_coefficients() -> None:
     built = build()
     definition = built.artifacts["sharing_constraints"]
@@ -277,7 +338,7 @@ def test_exact_reserve_share_perturbation_coefficients() -> None:
     assert abs(coefficients["ReserveShareEffectiveECE"]) == pytest.approx(3e-5)
 
 
-def test_net_benefit_excludes_the_vspd_commented_scarcity_constant() -> None:
+def test_net_benefit_includes_the_vspd_active_scarcity_constant() -> None:
     """The model objective must match vSPD's active ObjectiveFunction algebra."""
 
     base = make_reserve_case()
@@ -297,6 +358,10 @@ def test_net_benefit_excludes_the_vspd_commented_scarcity_constant() -> None:
         - built.artifacts["system_penalty"]
         - built.artifacts["scarcity_cost"]
         - sum(share_penalty[key] for key in case.periods)
+        + sum(
+            case.scarcity_limit[key] * case.scarcity_price[key]
+            for key in case.scarcity_blocks
+        )
     )
     actual_repn = generate_standard_repn(
         built.artifacts["net_benefit"], compute_values=True

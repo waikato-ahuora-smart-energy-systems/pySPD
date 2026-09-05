@@ -31,6 +31,8 @@ _OFFER_COMPONENT = {
     "i_ReserveGenerationMaximum": "resrvGenMax",
     "i_WindOffer": "isIG",
     "i_FKBandMW": "FKbandMW",
+    "i_IsPriceResponse": "isPriceResponse",
+    "i_PotentialMW": "potentialMW",
 }
 _RHS_COMPONENT = {
     "i_ConstraintLimit": "cnstrLimit",

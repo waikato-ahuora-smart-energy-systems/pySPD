@@ -442,11 +442,6 @@ class V5SummaryReportProjector:
                 )
         if any(component is None for component in period_components.values()):
             raise ReportError("period economics handles are unavailable")
-        scarcity_constant = sum(
-            float(case.scarcity_limit[key]) * float(case.scarcity_price[key])
-            for key in case.scarcity_blocks
-            if tuple(key)[:2] == period
-        )
         values = {
             name: _component_sum(artifacts[component], period)
             for name, component in self._VIOLATION_COMPONENTS
@@ -468,7 +463,7 @@ class V5SummaryReportProjector:
             - _component_value(period_components["system_cost_nzd"], period)
             - _component_value(period_components["violation_cost_nzd"], period)
             if legacy_spd
-            else accepted.objective + scarcity_constant
+            else accepted.objective
         )
         return {
             **base,

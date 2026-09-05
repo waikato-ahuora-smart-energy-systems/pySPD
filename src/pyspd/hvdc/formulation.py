@@ -62,6 +62,7 @@ _SUPPORTED = frozenset({HVDC_FORMULATION_ID})
 _SOS_STATE_CANONICALIZATION_TOLERANCE = 1e-7
 _SCIP_STRICT_PRIMAL_FEASIBILITY_TOLERANCE = 1e-7
 _SCIP_STABLE_PRIMAL_FEASIBILITY_TOLERANCE = 1e-6
+_SCIP_MIP_TIME_LIMIT_SECONDS = 300.0
 _FIXED_RMIP_OBJECTIVE_TOLERANCE = 1e-6
 
 
@@ -607,23 +608,29 @@ class HvdcSolvePolicy(SolvePolicy):
 
     @staticmethod
     def _solve_support_mip(built: BuiltModel) -> MipSolveResult:
-        """Select only explicit SOS intervals under a tighter numeric contract."""
+        """Select explicit SOS intervals, relaxing only after LP failure."""
 
-        return NativeScipBackend().solve_mip(
-            built.model,
-            SolverConfiguration(
-                {
-                    "time_limit_seconds": 300.0,
-                    "relative_gap": 0.0,
-                    "threads": 1,
-                    "numerics/feastol": 1e-9,
-                    "limits/absgap": 0.0,
-                    "lp/initalgorithm": "d",
-                    "lp/resolvealgorithm": "d",
-                    "misc/usesymmetry": 0,
-                }
-            ),
-        )
+        options: dict[str, int | float | str] = {
+            "time_limit_seconds": _SCIP_MIP_TIME_LIMIT_SECONDS,
+            "relative_gap": 0.0,
+            "threads": 1,
+            "limits/absgap": 0.0,
+            "lp/initalgorithm": "d",
+            "lp/resolvealgorithm": "d",
+            "misc/usesymmetry": 0,
+        }
+        for index, tolerance in enumerate((1e-9, 1e-7, 1e-6)):
+            try:
+                return NativeScipBackend().solve_mip(
+                    built.model,
+                    SolverConfiguration(
+                        options | {"numerics/feastol": tolerance}
+                    ),
+                )
+            except SolverExecutionError as error:
+                if "LP solver" not in str(error) or index == 2:
+                    raise
+        raise AssertionError("support solve retry sequence did not terminate")
 
     def _solve_pricing(
         self,
@@ -662,7 +669,7 @@ class HvdcSolvePolicy(SolvePolicy):
             and case.hvdc.sos_representation is SosRepresentation.NATIVE
         )
         options: dict[str, int | float | str] = {
-            "time_limit_seconds": 300.0,
+            "time_limit_seconds": _SCIP_MIP_TIME_LIMIT_SECONDS,
             "relative_gap": 0.0,
             "threads": 1,
             "numerics/feastol": (

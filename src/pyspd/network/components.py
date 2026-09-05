@@ -72,9 +72,7 @@ class NetworkBuildIndex:
                 received_key = (*branch[:2], received_bus)
                 sending[sent_key].append((branch, direction))
                 receiving[received_key].append((branch, direction))
-                incident[sent_key].append(
-                    (branch, direction, sent_key == received_key)
-                )
+                incident[sent_key].append((branch, direction, sent_key == received_key))
                 if received_key != sent_key:
                     incident[received_key].append((branch, direction, True))
 
@@ -94,7 +92,14 @@ class NetworkBuildIndex:
         fixed: dict[Key, list[Key]] = defaultdict(list)
         for branch in sorted(data.branches):
             for bus_key in sorted(data.buses):
-                if (*branch, bus_key[2]) in data.branch_bus_connect:
+                if (
+                    branch[:2] == bus_key[:2]
+                    and (
+                        *branch,
+                        bus_key[2],
+                    )
+                    in data.branch_bus_connect
+                ):
                     fixed[bus_key].append(branch)
         grouped_segments: dict[DirectedBranch, list[Key]] = defaultdict(list)
         for key in loss_segments:
@@ -132,15 +137,11 @@ class NetworkDomainsComponent(ModelComponent):
         block = pyo.Block(concrete=True)
         context.model.add_component("NetworkDomains", block)
         block.Bus = pyo.Set(dimen=3, ordered=True, initialize=sorted(data.buses))
-        block.Branch = pyo.Set(
-            dimen=3, ordered=True, initialize=sorted(data.branches)
-        )
+        block.Branch = pyo.Set(dimen=3, ordered=True, initialize=sorted(data.branches))
         block.ACBranch = pyo.Set(
             dimen=3, ordered=True, initialize=sorted(data.ac_branches)
         )
-        block.Direction = pyo.Set(
-            ordered=True, initialize=("forward", "backward")
-        )
+        block.Direction = pyo.Set(ordered=True, initialize=("forward", "backward"))
         block.DirectedACBranch = pyo.Set(
             dimen=4,
             ordered=True,
@@ -235,15 +236,9 @@ class ACNetworkComponent(ModelComponent):
         block.ACBranchLossesBlockDirected = pyo.Var(
             network.ACLossSegment, domain=pyo.NonNegativeReals
         )
-        block.DeficitBusGeneration = pyo.Var(
-            network.Bus, domain=pyo.NonNegativeReals
-        )
-        block.SurplusBusGeneration = pyo.Var(
-            network.Bus, domain=pyo.NonNegativeReals
-        )
-        block.SurplusBranchFlow = pyo.Var(
-            network.Branch, domain=pyo.NonNegativeReals
-        )
+        block.DeficitBusGeneration = pyo.Var(network.Bus, domain=pyo.NonNegativeReals)
+        block.SurplusBusGeneration = pyo.Var(network.Bus, domain=pyo.NonNegativeReals)
+        block.SurplusBranchFlow = pyo.Var(network.Branch, domain=pyo.NonNegativeReals)
         build_index = NetworkBuildIndex.build(data, network.ACLossSegment)
 
         def flow_balance(_b: pyo.Block, ca: str, dt: str, bus: str) -> Any:
@@ -271,8 +266,7 @@ class ACNetworkComponent(ModelComponent):
                 return pyo.Constraint.Skip
             key = (ca, dt, branch)
             return (
-                _b.ACBranchFlowDirected[*key, direction]
-                - _b.SurplusBranchFlow[key]
+                _b.ACBranchFlowDirected[*key, direction] - _b.SurplusBranchFlow[key]
                 <= data.branch_capacity[*key, direction]
             )
 
@@ -300,9 +294,7 @@ class ACNetworkComponent(ModelComponent):
             network.ACLossSegment,
             rule=lambda _b, ca, dt, branch, segment, direction: (
                 _b.ACBranchFlowBlockDirected[ca, dt, branch, segment, direction]
-                <= data.ac_loss_segment_mw[
-                    ca, dt, branch, segment, direction
-                ]
+                <= data.ac_loss_segment_mw[ca, dt, branch, segment, direction]
             ),
         )
         block.ACDirectedBranchFlowDefinition = pyo.Constraint(
@@ -320,15 +312,9 @@ class ACNetworkComponent(ModelComponent):
         block.ACBranchLossCalculation = pyo.Constraint(
             network.ACLossSegment,
             rule=lambda _b, ca, dt, branch, segment, direction: (
-                _b.ACBranchLossesBlockDirected[
-                    ca, dt, branch, segment, direction
-                ]
-                == _b.ACBranchFlowBlockDirected[
-                    ca, dt, branch, segment, direction
-                ]
-                * data.ac_loss_segment_factor[
-                    ca, dt, branch, segment, direction
-                ]
+                _b.ACBranchLossesBlockDirected[ca, dt, branch, segment, direction]
+                == _b.ACBranchFlowBlockDirected[ca, dt, branch, segment, direction]
+                * data.ac_loss_segment_factor[ca, dt, branch, segment, direction]
             ),
         )
         block.ACDirectedBranchLossDefinition = pyo.Constraint(
@@ -385,8 +371,7 @@ class ACNetworkComponent(ModelComponent):
                 for offer, node in build_index.offers.get(bus_key, ())
             )
             demand_bid = sum(
-                data.node_bus_allocation.get((ca, dt, node, bus), 0.0)
-                * purchase[bid]
+                data.node_bus_allocation.get((ca, dt, node, bus), 0.0) * purchase[bid]
                 for bid, node in build_index.bids.get(bus_key, ())
             )
             load = sum(
@@ -479,9 +464,7 @@ class NetworkSecurityComponent(ModelComponent):
         def branch_expression(key: tuple[str, str, str]) -> Any:
             ca, dt, constraint = key
             return sum(
-                data.branch_constraint_factor.get(
-                    (ca, dt, constraint, branch), 0.0
-                )
+                data.branch_constraint_factor.get((ca, dt, constraint, branch), 0.0)
                 * flow[ca, dt, branch]
                 for b_ca, b_dt, branch in data.ac_branches
                 if (b_ca, b_dt) == (ca, dt)
@@ -529,9 +512,7 @@ class NetworkSecurityComponent(ModelComponent):
                 for o_ca, o_dt, offer in data.positive_offers
                 if (o_ca, o_dt) == (ca, dt)
             ) + sum(
-                data.market_node_energy_bid_factor.get(
-                    (ca, dt, constraint, bid), 0.0
-                )
+                data.market_node_energy_bid_factor.get((ca, dt, constraint, bid), 0.0)
                 * purchase[ca, dt, bid]
                 for b_ca, b_dt, bid in _case(context).bids
                 if (b_ca, b_dt) == (ca, dt)
@@ -660,20 +641,24 @@ class NetworkEconomicsComponent(ModelComponent):
         block.TotalPenaltyCost = pyo.Var(domain=pyo.NonNegativeReals)
         block.SystemCostDefinition = pyo.Constraint(
             domains.Period,
-            rule=lambda _b, ca, dt: _b.SystemCostByPeriod[ca, dt]
-            == sum(
-                generation_block[key] * case.offer_price[key]
-                for key in domains.OfferBlock
-                if key[:2] == (ca, dt)
+            rule=lambda _b, ca, dt: (
+                _b.SystemCostByPeriod[ca, dt]
+                == sum(
+                    generation_block[key] * case.offer_price[key]
+                    for key in domains.OfferBlock
+                    if key[:2] == (ca, dt)
+                )
             ),
         )
         block.SystemBenefitDefinition = pyo.Constraint(
             domains.Period,
-            rule=lambda _b, ca, dt: _b.SystemBenefitByPeriod[ca, dt]
-            == sum(
-                purchase_block[key] * case.bid_price[key]
-                for key in domains.BidBlock
-                if key[:2] == (ca, dt)
+            rule=lambda _b, ca, dt: (
+                _b.SystemBenefitByPeriod[ca, dt]
+                == sum(
+                    purchase_block[key] * case.bid_price[key]
+                    for key in domains.BidBlock
+                    if key[:2] == (ca, dt)
+                )
             ),
         )
 
@@ -717,20 +702,20 @@ class NetworkEconomicsComponent(ModelComponent):
                 )
             )
 
-        block.SystemPenaltyDefinition = pyo.Constraint(
-            domains.Period, rule=penalty
-        )
+        block.SystemPenaltyDefinition = pyo.Constraint(domains.Period, rule=penalty)
         block.TotalViolationCostDefinition = pyo.Constraint(
             expr=block.TotalPenaltyCost
             == sum(block.SystemPenaltyByPeriod[key] for key in domains.Period)
         )
         block.TotalScarcityCostDefinition = pyo.Constraint(
             domains.Period,
-            rule=lambda _b, ca, dt: _b.ScarcityCostByPeriod[ca, dt]
-            == sum(
-                scarcity_block[key] * case.scarcity_price[key]
-                for key in domains.ScarcityBlock
-                if key[:2] == (ca, dt)
+            rule=lambda _b, ca, dt: (
+                _b.ScarcityCostByPeriod[ca, dt]
+                == sum(
+                    scarcity_block[key] * case.scarcity_price[key]
+                    for key in domains.ScarcityBlock
+                    if key[:2] == (ca, dt)
+                )
             ),
         )
         block.SystemCost = pyo.Expression(

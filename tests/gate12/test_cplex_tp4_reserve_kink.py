@@ -112,7 +112,7 @@ def test_tp4_reserve_breakpoint_reproduces_cplex_prices_and_quantities(
     audit = outcome.pricing_canonicalization
 
     assert audit is not None
-    assert audit.policy == "reserve-and-round-power-boundary-v2"
+    assert audit.policy == "reserve-boundary-and-zero-price-surplus-v3"
     assert audit.accepted_targets == {
         f"{_CASE_ID}|{_DATETIME}|SI|FIR|backward": pytest.approx(0.0)
     }

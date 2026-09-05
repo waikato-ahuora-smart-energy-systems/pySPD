@@ -25,12 +25,12 @@ from tools.gate12.zero_flow_price_convention import (
     ZeroFlowPriceConventionResult,
 )
 
-REPORT_ROW_PARITY_PROFILE = "authority-pyspd-mapped-report-row-parity-v7"
+REPORT_ROW_PARITY_PROFILE = "authority-pyspd-mapped-report-row-parity-v8"
 REPORT_ROW_BUS_CERTIFIED_PROFILE = (
-    "authority-pyspd-mapped-report-row-parity-bus-certified-v7"
+    "authority-pyspd-mapped-report-row-parity-bus-certified-v8"
 )
 REPORT_ROW_ZERO_FLOW_CERTIFIED_PROFILE = (
-    "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v7"
+    "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v8"
 )
 _LEGACY_REPORT_ROW_PROFILES = frozenset(
     {
@@ -46,6 +46,9 @@ _LEGACY_REPORT_ROW_PROFILES = frozenset(
         "authority-pyspd-mapped-report-row-parity-v6",
         "authority-pyspd-mapped-report-row-parity-bus-certified-v6",
         "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v6",
+        "authority-pyspd-mapped-report-row-parity-v7",
+        "authority-pyspd-mapped-report-row-parity-bus-certified-v7",
+        "authority-pyspd-mapped-report-row-parity-zero-flow-certified-v7",
     }
 )
 _MAX_EXAMPLES = 20
@@ -53,6 +56,8 @@ _PORTABLE_PRICE_TOLERANCE = Decimal("0.001")
 _PORTABLE_PUBLISHED_PRICE_TOLERANCE = Decimal("0.0001")
 _PORTABLE_RISK_PRICE_TOLERANCE = Decimal("0.0001")
 _PORTABLE_MONEY_TOLERANCE = Decimal("0.01")
+_BINARY_FLOAT_RENDERING_SLACK = Decimal("0.000000000001")
+_SOLVER_ROUNDING_BOUNDARY_SLACK = Decimal("0.000001")
 _RAW_PRICE_OBSERVABLES = frozenset(
     {
         "branch-from-price",
@@ -971,8 +976,8 @@ class ReportRowParityValidator:
                         format(tolerance, "f"),
                     )
                 compared += 1
-                if absolute_error <= tolerance:
-                    if absolute_error > half_unit:
+                if absolute_error <= tolerance + _BINARY_FLOAT_RENDERING_SLACK:
+                    if absolute_error > half_unit + _BINARY_FLOAT_RENDERING_SLACK:
                         certified += 1
                     continue
                 if allocation_equivalent:
@@ -1053,6 +1058,8 @@ class ReportRowParityValidator:
             return max(display_half_unit, _PORTABLE_RISK_PRICE_TOLERANCE)
         if observable == "branch-rentals":
             return max(display_half_unit, _PORTABLE_MONEY_TOLERANCE)
+        if observable == "repaired-bus-price":
+            return display_half_unit + _SOLVER_ROUNDING_BOUNDARY_SLACK
         return display_half_unit
 
     @staticmethod

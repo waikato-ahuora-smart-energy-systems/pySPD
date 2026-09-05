@@ -69,6 +69,8 @@ from pyspd.solver import (
 type Key = tuple[str, ...]
 type CanonicalTarget = tuple[str, Key]
 
+_RESERVE_TOTAL_TARGET = "reserve_total"
+
 _SUPPORTED = frozenset({RESERVE_FORMULATION_ID})
 
 
@@ -109,7 +111,7 @@ class ReserveSolvePolicy(HvdcSolvePolicy):
 
 
 class ReserveKinkCanonicalizer:
-    """Select an adjacent reserve or round-power boundary when immaterial.
+    """Select deterministic reserve boundaries when economically immaterial.
 
     Historical CPLEX can terminate on the exact endpoint of a reserve-loss
     segment while a tighter fixed-RMIP solve moves a very small distance onto
@@ -118,9 +120,14 @@ class ReserveKinkCanonicalizer:
     no material economic effect.  Candidates are tightly bounded in weight or
     MW distance and are kept only when the secondary solve loses no more than
     the applicable explicit objective budget.
+
+    Zero-priced offered reserve can also be left above the binding island
+    reserve quantity because the excess has no objective coefficient.  Such a
+    surplus is removed by equating total offered reserve to island reserve and
+    accepting the re-solve only within its stricter objective budget.
     """
 
-    policy = "reserve-and-round-power-boundary-v2"
+    policy = "reserve-boundary-and-zero-price-surplus-v3"
 
     def __init__(
         self,
@@ -129,6 +136,9 @@ class ReserveKinkCanonicalizer:
         objective_loss_budget: float = 1e-3,
         maximum_round_power_distance_mw: float = 1.0,
         round_power_objective_loss_budget: float = 1e-2,
+        surplus_objective_loss_budget: float = 1e-7,
+        surplus_tolerance_mw: float = 1e-6,
+        zero_price_tolerance: float = 1e-9,
         equality_tolerance: float = 1e-9,
     ) -> None:
         if not 0.5 < minimum_dominant_weight < 1.0:
@@ -137,6 +147,9 @@ class ReserveKinkCanonicalizer:
             objective_loss_budget < 0.0
             or maximum_round_power_distance_mw < 0.0
             or round_power_objective_loss_budget < 0.0
+            or surplus_objective_loss_budget < 0.0
+            or surplus_tolerance_mw < 0.0
+            or zero_price_tolerance < 0.0
             or equality_tolerance < 0.0
         ):
             raise ValueError("canonicalization tolerances cannot be negative")
@@ -148,6 +161,9 @@ class ReserveKinkCanonicalizer:
         self.round_power_objective_loss_budget = float(
             round_power_objective_loss_budget
         )
+        self.surplus_objective_loss_budget = float(surplus_objective_loss_budget)
+        self.surplus_tolerance_mw = float(surplus_tolerance_mw)
+        self.zero_price_tolerance = float(zero_price_tolerance)
         self.equality_tolerance = float(equality_tolerance)
 
     def canonicalize(
@@ -184,7 +200,11 @@ class ReserveKinkCanonicalizer:
         overlay = pyo.ConstraintList()
         model.add_component(overlay_name, overlay)
         for (artifact_name, key), target in candidates.items():
-            overlay.add(built.artifacts[artifact_name][key] == target)
+            if artifact_name == _RESERVE_TOTAL_TARGET:
+                overlay.add(built.artifacts["island_reserve"][key] == target)
+                overlay.add(self._reserve_total_expression(built, key) == 0.0)
+            else:
+                overlay.add(built.artifacts[artifact_name][key] == target)
         model.dual.clear()
         try:
             candidate_result = solve(built)
@@ -238,7 +258,100 @@ class ReserveKinkCanonicalizer:
             for key, target in self._reserve_loss_targets(built).items()
         }
         candidates.update(self._round_power_targets(built))
+        candidates.update(
+            {
+                (_RESERVE_TOTAL_TARGET, key): target
+                for key, target in self._zero_price_surplus_targets(built).items()
+            }
+        )
         return candidates
+
+    def _zero_price_surplus_targets(self, built: BuiltModel) -> dict[Key, float]:
+        case = built.case_data
+        if not isinstance(case, ReserveCase) or case.reserve is None:
+            raise TypeError("reserve surplus canonicalization requires ReserveCase")
+        island_reserve = built.artifacts["island_reserve"]
+        definitions = built.artifacts["island_reserve_definition"]
+        targets: dict[Key, float] = {}
+        for key in island_reserve:
+            constraint = definitions[key]
+            price = built.model.dual.get(constraint, float("nan"))
+            if not math.isfinite(float(price)) or abs(float(price)) > self.zero_price_tolerance:
+                continue
+            level = float(pyo.value(island_reserve[key]))
+            required = self._published_reserve_requirement(built, tuple(key))
+            total = level + float(
+                pyo.value(self._reserve_total_expression(built, key))
+            )
+            if max(level, total) - required > self.surplus_tolerance_mw:
+                targets[tuple(key)] = required
+        return targets
+
+    @staticmethod
+    def _published_reserve_requirement(built: BuiltModel, key: Key) -> float:
+        """Recompute the requirement used by the governed reserve reports."""
+
+        case = built.case_data
+        if not isinstance(case, ReserveCase) or case.reserve is None:
+            raise TypeError("reserve surplus canonicalization requires ReserveCase")
+        ca, dt, island, reserve_class = key
+        prefix = (ca, dt, island)
+        effective = built.artifacts["reserve_share_effective"]
+        candidates = [0.0]
+        for name in ("generator_island_risk", "group_island_risk"):
+            for risk_key, risk in built.artifacts[name].items():
+                if risk_key[:3] != prefix or risk_key[-2] != reserve_class:
+                    continue
+                effective_key = (*prefix, reserve_class, risk_key[-1])
+                candidates.append(
+                    float(pyo.value(risk))
+                    + (
+                        float(pyo.value(effective[effective_key]))
+                        if effective_key in effective
+                        else 0.0
+                    )
+                )
+        for risk_key, risk in built.artifacts["island_risk"].items():
+            if risk_key[:4] != key:
+                continue
+            if risk_key[4] in case.reserve.manual_risks:
+                candidates.append(
+                    float(pyo.value(risk))
+                    + (
+                        float(pyo.value(effective[risk_key]))
+                        if risk_key in effective
+                        else 0.0
+                    )
+                )
+            elif risk_key[4] in case.reserve.hvdc_risks:
+                candidates.append(float(pyo.value(risk)))
+        for name in ("hvdc_generator_island_risk", "hvdc_manual_island_risk"):
+            for risk_key, risk in built.artifacts[name].items():
+                if risk_key[:3] == prefix and risk_key[-2] == reserve_class:
+                    candidates.append(float(pyo.value(risk)))
+        return max(candidates)
+
+    @staticmethod
+    def _reserve_total_expression(built: BuiltModel, key: Key) -> Any:
+        case = built.case_data
+        if not isinstance(case, ReserveCase) or case.reserve is None:
+            raise TypeError("reserve surplus canonicalization requires ReserveCase")
+        ca, dt, island, reserve_class = key
+        offer_island = {
+            (o_ca, o_dt, offer): o_island
+            for o_ca, o_dt, offer, o_island in case.reserve.offer_island
+        }
+        reserve = built.artifacts["reserve"]
+        return (
+            sum(
+                variable
+                for reserve_key, variable in reserve.items()
+                if reserve_key[:2] == (ca, dt)
+                and reserve_key[3] == reserve_class
+                and offer_island.get(reserve_key[:3]) == island
+            )
+            - built.artifacts["island_reserve"][key]
+        )
 
     def _reserve_loss_targets(self, built: BuiltModel) -> dict[Key, float]:
         case = built.case_data
@@ -303,12 +416,15 @@ class ReserveKinkCanonicalizer:
     def _allowed_objective_loss(
         self, candidates: Mapping[CanonicalTarget, float]
     ) -> float:
+        budgets = [
+            self.surplus_objective_loss_budget
+            if artifact_name == _RESERVE_TOTAL_TARGET
+            else self.objective_loss_budget
+            for artifact_name, _key in candidates
+        ]
         if any(artifact_name == "hvdc_sent" for artifact_name, _key in candidates):
-            return max(
-                self.objective_loss_budget,
-                self.round_power_objective_loss_budget,
-            )
-        return self.objective_loss_budget
+            budgets.append(self.round_power_objective_loss_budget)
+        return max(budgets, default=self.objective_loss_budget)
 
     @staticmethod
     def _objective_loss(sense: Any, baseline: float, candidate: float) -> float:

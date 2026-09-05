@@ -74,17 +74,14 @@ class IndependentReserveValidator:
         deficit_ce = artifacts["reserve_deficit_ce"]
         deficit_ece = artifacts["reserve_deficit_ece"]
         residuals = dict(
-            IndependentHvdcValidator()
-            .validate(outcome, tolerance=tolerance)
-            .residuals
+            IndependentHvdcValidator().validate(outcome, tolerance=tolerance).residuals
         )
 
         for key in reserve:
             residuals[f"reserve_offer:{key}"] = abs(
                 _value(reserve[key])
                 - sum(
-                    _value(reserve_block[*key[:3], block, *key[3:]])
-                    for block in BLOCKS
+                    _value(reserve_block[*key[:3], block, *key[3:]]) for block in BLOCKS
                 )
             )
         for offer in case.offers:
@@ -103,7 +100,11 @@ class IndependentReserveValidator:
             for reserve_class in RESERVE_CLASSES:
                 key = (*island, reserve_class)
                 available = sum(
-                    _value(reserve[island[0], island[1], offer, reserve_class, reserve_type])
+                    _value(
+                        reserve[
+                            island[0], island[1], offer, reserve_class, reserve_type
+                        ]
+                    )
                     for ca, dt, offer, offer_island in data.offer_island
                     if (ca, dt, offer_island) == island
                     for reserve_type in RESERVE_TYPES
@@ -128,8 +129,7 @@ class IndependentReserveValidator:
         self._canonicalization_residuals(outcome, residuals)
         self._objective_residuals(case, artifacts, residuals)
         passed = all(
-            math.isfinite(value) and value <= tolerance
-            for value in residuals.values()
+            math.isfinite(value) and value <= tolerance for value in residuals.values()
         )
         return ReserveValidationReport(residuals, tolerance, passed)
 
@@ -166,12 +166,35 @@ class IndependentReserveValidator:
             if parts[0] == "hvdc_sent":
                 artifact_name = parts[0]
                 key = parts[1:]
+                observed = _value(outcome.pricing_model.artifacts[artifact_name][key])
+            elif parts[0] == "reserve_total":
+                key = parts[1:]
+                case = outcome.pricing_model.case_data
+                if not isinstance(case, ReserveCase) or case.reserve is None:
+                    raise TypeError("reserve canonicalization requires ReserveCase")
+                ca, dt, island, reserve_class = key
+                offer_island = {
+                    (o_ca, o_dt, offer): o_island
+                    for o_ca, o_dt, offer, o_island in case.reserve.offer_island
+                }
+                reserve = outcome.pricing_model.artifacts["reserve"]
+                total = sum(
+                    _value(variable)
+                    for reserve_key, variable in reserve.items()
+                    if reserve_key[:2] == (ca, dt)
+                    and reserve_key[3] == reserve_class
+                    and offer_island.get(reserve_key[:3]) == island
+                )
+                level = _value(outcome.pricing_model.artifacts["island_reserve"][key])
+                residuals[f"pricing_canonicalization_target:{key}"] = max(
+                    abs(level - target), abs(total - level)
+                )
+                continue
             else:
                 artifact_name = "hvdc_reserve_sent"
                 key = parts
-            residuals[f"pricing_canonicalization_target:{key}"] = abs(
-                _value(outcome.pricing_model.artifacts[artifact_name][key]) - target
-            )
+                observed = _value(outcome.pricing_model.artifacts[artifact_name][key])
+            residuals[f"pricing_canonicalization_target:{key}"] = abs(observed - target)
 
     @staticmethod
     def _shortfall_residuals(
@@ -221,13 +244,15 @@ class IndependentReserveValidator:
                 -_value(hvdc_flow[link])
                 for link in case.hvdc.links
                 for *prefix, bus in case.hvdc.sending_bus
-                if tuple(prefix) == link
+                if link[:2] == (ca, dt)
+                and tuple(prefix) == link
                 and (ca, dt, bus, island_name) in case.network.bus_island
             ) + sum(
                 _value(hvdc_flow[link]) - _value(hvdc_loss[link])
                 for link in case.hvdc.links
                 for *prefix, bus in case.hvdc.receiving_bus
-                if tuple(prefix) == link
+                if link[:2] == (ca, dt)
+                and tuple(prefix) == link
                 and (ca, dt, bus, island_name) in case.network.bus_island
             )
             residuals[f"hvdc_received:{island}"] = abs(
@@ -244,43 +269,41 @@ class IndependentReserveValidator:
                             if risk_class in CE_RISKS
                             else 0.0
                         )
-                        + data.modulation_risk_class.get(
-                            (ca, dt, risk_class), 0.0
-                        )
+                        + data.modulation_risk_class.get((ca, dt, risk_class), 0.0)
                     ) - _optional_value(shortfall, key)
-                    residuals[f"hvdc_risk:{key}"] = abs(
-                        _value(risk[key]) - expected
-                    )
+                    residuals[f"hvdc_risk:{key}"] = abs(_value(risk[key]) - expected)
                 for risk_class in MANUAL_RISKS:
                     key = (*island, reserve_class, risk_class)
-                    expected = data.risk_adjustment_factor.get(key, 0.0) * (
-                        data.risk_minimum.get(key, 0.0)
-                        - data.free_reserve.get(key, 0.0)
-                    ) - _value(effective[key]) - _optional_value(shortfall, key)
-                    residuals[f"manual_risk:{key}"] = abs(
-                        _value(risk[key]) - expected
+                    expected = (
+                        data.risk_adjustment_factor.get(key, 0.0)
+                        * (
+                            data.risk_minimum.get(key, 0.0)
+                            - data.free_reserve.get(key, 0.0)
+                        )
+                        - _value(effective[key])
+                        - _optional_value(shortfall, key)
                     )
+                    residuals[f"manual_risk:{key}"] = abs(_value(risk[key]) - expected)
         for key in gen_risk:
             ca, dt, island, offer, reserve_class, risk_class = key
             total = _risk_offer_total(
                 case, artifacts, ca, dt, offer, reserve_class, risk_class
             )
-            expected = data.risk_adjustment_factor.get(
-                (ca, dt, island, reserve_class, risk_class), 0.0
-            ) * (
-                total
-                - data.secondary_risk_offer.get(
-                    (ca, dt, offer, risk_class), 0.0
-                )
-                - data.free_reserve.get(
+            expected = (
+                data.risk_adjustment_factor.get(
                     (ca, dt, island, reserve_class, risk_class), 0.0
                 )
-            ) - _value(
-                effective[ca, dt, island, reserve_class, risk_class]
-            ) - _optional_value(shortfall_unit, key)
-            residuals[f"generator_risk:{key}"] = abs(
-                _value(gen_risk[key]) - expected
+                * (
+                    total
+                    - data.secondary_risk_offer.get((ca, dt, offer, risk_class), 0.0)
+                    - data.free_reserve.get(
+                        (ca, dt, island, reserve_class, risk_class), 0.0
+                    )
+                )
+                - _value(effective[ca, dt, island, reserve_class, risk_class])
+                - _optional_value(shortfall_unit, key)
             )
+            residuals[f"generator_risk:{key}"] = abs(_value(gen_risk[key]) - expected)
             residuals[f"generator_risk_envelope:{key}"] = max(
                 0.0, _value(gen_risk[key]) - _value(risk[key[:3] + key[4:]])
             )
@@ -289,8 +312,7 @@ class IndependentReserveValidator:
             offers = [
                 offer
                 for r_ca, r_dt, r_group, offer, r_risk in data.risk_group_offer
-                if (r_ca, r_dt, r_group, r_risk)
-                == (ca, dt, group, risk_class)
+                if (r_ca, r_dt, r_group, r_risk) == (ca, dt, group, risk_class)
             ]
             gross = (
                 sum(
@@ -302,43 +324,36 @@ class IndependentReserveValidator:
                         branch,
                         f_risk,
                     ), factor in data.directional_risk_factor.items()
-                    if (f_ca, f_dt, f_group, f_risk)
-                    == (ca, dt, group, risk_class)
+                    if (f_ca, f_dt, f_group, f_risk) == (ca, dt, group, risk_class)
                 )
                 + sum(
                     _value(reserve[ca, dt, offer, reserve_class, reserve_type])
                     for offer in offers
                     for reserve_type in RESERVE_TYPES
                 )
-                if (ca, dt, island, group, risk_class)
-                in data.island_link_risk_group
+                if (ca, dt, island, group, risk_class) in data.island_link_risk_group
                 else sum(
                     _value(generation[ca, dt, offer])
                     + data.fk_band.get((ca, dt, offer), 0.0)
                     + sum(
-                        _value(
-                            reserve[
-                                ca, dt, offer, reserve_class, reserve_type
-                            ]
-                        )
+                        _value(reserve[ca, dt, offer, reserve_class, reserve_type])
                         for reserve_type in RESERVE_TYPES
                     )
                     for offer in offers
                 )
             )
             envelope = (ca, dt, island, reserve_class, risk_class)
-            expected = data.risk_adjustment_factor.get(envelope, 0.0) * (
-                gross
-                - data.secondary_risk_group.get(
-                    (ca, dt, group, risk_class), 0.0
+            expected = (
+                data.risk_adjustment_factor.get(envelope, 0.0)
+                * (
+                    gross
+                    - data.secondary_risk_group.get((ca, dt, group, risk_class), 0.0)
+                    - data.free_reserve.get(envelope, 0.0)
                 )
-                - data.free_reserve.get(envelope, 0.0)
-            ) - _value(effective[envelope]) - _optional_value(
-                shortfall_group, key
+                - _value(effective[envelope])
+                - _optional_value(shortfall_group, key)
             )
-            residuals[f"group_risk:{key}"] = abs(
-                _value(group_risk[key]) - expected
-            )
+            residuals[f"group_risk:{key}"] = abs(_value(group_risk[key]) - expected)
             residuals[f"group_risk_envelope:{key}"] = max(
                 0.0, _value(group_risk[key]) - _value(risk[envelope])
             )
@@ -362,8 +377,10 @@ class IndependentReserveValidator:
             )
             expected = data.risk_adjustment_factor.get(envelope, 0.0) * gross
             expected -= _optional_value(shortfall_unit, key)
-            expected -= data.big_m * _value(send_zero[ca, dt, island]) * max(
-                0, len(data.islands) - 1
+            expected -= (
+                data.big_m
+                * _value(send_zero[ca, dt, island])
+                * max(0, len(data.islands) - 1)
             )
             residuals[f"hvdc_secondary_generator_risk:{key}"] = abs(
                 _value(hvdc_gen_risk[key]) - expected
@@ -380,8 +397,10 @@ class IndependentReserveValidator:
                 - data.hvdc_secondary_subtractor.get((ca, dt, island), 0.0)
                 + data.modulation_risk_class.get((ca, dt, risk_class), 0.0)
             ) - _optional_value(shortfall, key)
-            expected -= data.big_m * _value(send_zero[ca, dt, island]) * max(
-                0, len(data.islands) - 1
+            expected -= (
+                data.big_m
+                * _value(send_zero[ca, dt, island])
+                * max(0, len(data.islands) - 1)
             )
             residuals[f"hvdc_secondary_manual_risk:{key}"] = abs(
                 _value(hvdc_manual_risk[key]) - expected
@@ -595,7 +614,9 @@ def validate_reserve_price_finite_difference(
 
 
 def _adjacency(active: list[int]) -> float:
-    return 0.0 if len(active) < 2 or all(b - a <= 1 for a, b in pairwise(active)) else 1.0
+    return (
+        0.0 if len(active) < 2 or all(b - a <= 1 for a, b in pairwise(active)) else 1.0
+    )
 
 
 def _risk_offer_total(
@@ -621,9 +642,7 @@ def _risk_offer_total(
         + sum(
             _value(generation[ca, dt, secondary])
             + sum(
-                _value(
-                    reserve[ca, dt, secondary, reserve_class, reserve_type]
-                )
+                _value(reserve[ca, dt, secondary, reserve_class, reserve_type])
                 for reserve_type in RESERVE_TYPES
             )
             for p_ca, p_dt, primary, secondary in data.primary_secondary_offer

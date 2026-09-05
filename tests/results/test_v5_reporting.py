@@ -330,7 +330,9 @@ def test_v5_renderer_projects_complete_authority_risk_and_summary_rows() -> None
     observation = replace(
         make_observation(),
         reserve_prices={(*period, island, reserve_class): 0.0085},
-        objective=-19.5,
+        # vSPD's active ObjectiveFunction includes the 100 MW * 10 NZD/MWh
+        # energy-scarcity constant in the solved objective.
+        objective=980.5,
         solve_payload=SimpleNamespace(pricing_model=pricing),
     )
 

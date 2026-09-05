@@ -80,6 +80,33 @@
       "records_sha256": "c2221e203f7ea8c49b5b3fc3dc8fae2b0f565dee4f455572b7743cda60c662c3",
       "logical_sha256": "ad2079fb2d25020c5406eabe7dedb91b657644e7051a982da03f3af6b0dd9a61"
     },
+    "ten_workers": {
+      "wall_seconds": 94.0,
+      "maximum_shard_wall_seconds": 93.32451929198578,
+      "summed_solve_seconds": 287.77823374967556,
+      "speedup_factor": 2.3774757176486556,
+      "elapsed_reduction_percent": 57.93858197681158,
+      "elapsed_change_percent_vs_three_worker_repeat": 0.5260928350325988,
+      "summed_solve_increase_percent_vs_three_worker_repeat": 57.24365517247292,
+      "shard_case_counts": [2, 2, 1, 1, 1, 1, 1, 1, 1, 1],
+      "all_solves_optimal": true,
+      "independent_validation_passed": true,
+      "maximum_validation_residual": 2.5826598889007084e-11,
+      "records_sha256": "d89a1d2136ceb8bcfbf09be0e8ea4ddb68a2524f25cc1b5f96f2116d2f710c2d",
+      "parity": {
+        "compared_value_count": 46464,
+        "fixed_discrete_match": true,
+        "identity_match": true,
+        "maximum_physics_error": 0.0,
+        "maximum_pricing_objective_error": 0.0,
+        "maximum_primary_objective_error": 4.889443516731262e-09,
+        "maximum_market_price_error": 0.0,
+        "maximum_raw_bus_price_error": 0.0,
+        "strict_raw_parity_passed": true,
+        "market_result_parity_passed": true
+      },
+      "decision": "valid-but-not-recommended-for-12-case-workload"
+    },
     "parity": {
       "compared_value_count": 46464,
       "fixed_discrete_match": true,
@@ -123,6 +150,92 @@
     "records_sha256": "9039ffcc12790a6f1205d3c1bfd03e6d5e49ff816ed9ef396a5a41541dff4113",
     "logical_sha256": "b67c2916e3f3bfe1252135501330cec407a73e858ab80545b98b377f20b7a50a"
   },
+  "multiprocessing_infrastructure": {
+    "profile": "pyspd-process-job-coordinator-v2",
+    "planners": [
+      "ContiguousCaseShardPlanner",
+      "DynamicCaseJobPlanner"
+    ],
+    "coordinator": "ProcessShardCoordinator",
+    "process_start_method": "spawn",
+    "dynamic_idle_worker_assignment": true,
+    "bounded_in_flight_job_count": true,
+    "deterministic_merge_order": true,
+    "predecessor_boundary_validation": true,
+    "bounded_worker_case_index": true,
+    "worker_failure_identification": true,
+    "overwrite_protection": true,
+    "process_smoke_test": {
+      "worker_count": 2,
+      "case_count": 3,
+      "all_solves_optimal": true,
+      "independent_validation_passed": true,
+      "execution_seconds": 47.760723749990575,
+      "total_wall_seconds": 59.57828637491912,
+      "records_sha256": "9567832aebf5fa8f14947768e76fcbd3469b6d8db0032560e6da83c44bdc64cb"
+    }
+  },
+  "full_day_parallel_processing": {
+    "case_count": 263,
+    "three_workers": {
+      "preparation_seconds": 126.3101405419875,
+      "execution_seconds": 1431.1843388749985,
+      "merge_seconds": 3.356935749994591,
+      "total_wall_seconds": 1561.4503610419342,
+      "minimum_shard_wall_seconds": 1328.48731258302,
+      "maximum_shard_wall_seconds": 1429.6983639170649,
+      "summed_solve_seconds": 3451.3918073342647,
+      "all_solves_optimal": true,
+      "independent_validation_passed": true,
+      "maximum_validation_residual": 1.2002487892459612e-10,
+      "records_sha256": "9e2ac446c9759b6c7d8124b224f0122539da4b650fb570df0e6ef588f8c5104f"
+    },
+    "ten_workers": {
+      "preparation_seconds": 129.70226883306168,
+      "execution_seconds": 601.7750880839303,
+      "merge_seconds": 3.3840289170620963,
+      "total_wall_seconds": 735.4704866660759,
+      "minimum_shard_wall_seconds": 513.536220042035,
+      "maximum_shard_wall_seconds": 600.1224419999635,
+      "summed_solve_seconds": 4184.93049237004,
+      "all_solves_optimal": true,
+      "independent_validation_passed": true,
+      "maximum_validation_residual": 1.2002487892459612e-10,
+      "records_sha256": "7f14fdde4926a90df87ead8bfd83c537758dee66e627136ae2f8b29d6997a523"
+    },
+    "performance_comparison": {
+      "execution_speedup_factor": 2.3782711634539937,
+      "execution_elapsed_reduction_percent": 57.95265000195826,
+      "end_to_end_speedup_factor": 2.1230632491047547,
+      "end_to_end_elapsed_reduction_percent": 52.898247359249595,
+      "summed_solve_increase_percent": 21.253416765868003,
+      "three_worker_cases_per_minute": 11.025833340521375,
+      "ten_worker_cases_per_minute": 26.222421486811605
+    },
+    "three_vs_ten_result_comparison": {
+      "compared_value_count": 1013096,
+      "identity_match": true,
+      "solve_count_match": true,
+      "maximum_physics_error": 3.410605131648481e-12,
+      "maximum_primary_objective_error": 1.49488914757967e-05,
+      "maximum_pricing_objective_error": 4.656612873077393e-10,
+      "fixed_discrete_match": false,
+      "fixed_discrete_difference_case_count": 1,
+      "fixed_discrete_difference_count": 2,
+      "fixed_discrete_difference_case": "261302023091200863",
+      "maximum_raw_price_error": 0.0628690920594579,
+      "raw_price_difference_case_count": 1,
+      "raw_price_difference_case": "261012023091940036",
+      "published_price_row_count": 25584,
+      "published_price_difference_count": 3,
+      "maximum_published_price_error": 0.03104999999999336,
+      "published_price_interval": [149.90607, 149.93712],
+      "all_published_price_differences_within_analytic_interval": true,
+      "strict_raw_parity_passed": false,
+      "interval_aware_market_result_accepted": true
+    },
+    "decision": "use-ten-workers-for-full-day-throughput-when-memory-permits"
+  },
   "persistent_solver_probe": {
     "highs_factory_sample_count": 100,
     "highs_factory_median_seconds": 0.00003841641591861844,
@@ -134,7 +247,8 @@
     "enable_pricing_model_clone": true,
     "enable_scip_period_warm_start": false,
     "enable_highs_primal_warm_start": false,
-    "recommended_parallel_workers": 3,
+    "recommended_parallel_workers_for_small_workloads": 3,
+    "recommended_parallel_workers_for_full_days": 10,
     "solver_threads_per_worker": 1,
     "retain_solver_profile": "scip-mip-fixed-highs-rmip"
   }

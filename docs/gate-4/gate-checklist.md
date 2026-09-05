@@ -3,6 +3,7 @@
 | Gate criterion | Evidence | Decision |
 |---|---|---|
 | Canonical core matrix matches the approved Gate 1 Stage 4 projection | [Matrix parity](oracle-matrix-parity.json): identical logical/structural SHA-256; 882 rows, 11,632 columns, 12,892 nonzeros; all nine discrepancy counters zero | Pass |
+| Continuous and discrete demand plus the affine objective constant have direct GAMS evidence | [Demand/objective parity](oracle-demand-objective-parity.json): two `DemBidDefintion` rows, one active `DemBidDiscrete` row, five columns and six nonzeros have identical hashes; objective-constant error `4.47e-8 NZD` | Pass |
 | Objective components match independently | Independent generation cost, bid benefit, balance/ramp/movement penalty, scarcity cost, system penalty, and net-benefit recomputation; maximum governed error within `1e-7` NZD | Pass |
 | Analytic dispatch, objective, slack, and price cases match hand results | Merit order, negative price, zero price, elastic demand, signed demand, capacity, scarcity, ramp-up/down, conflicting cap, and infeasible-with-slack tests | Pass |
 | Balance and ramp residuals meet thresholds | Independent evaluator plus representative full RTD evidence; maximum residual below `5e-13` MW against `1e-7` MW | Pass |
@@ -19,6 +20,7 @@
 ```text
 uv run pytest tests/core_energy -q
 uv run python -m tools.gate4.oracle_matrix ...
+uv run python -m tools.gate4.demand_objective_oracle ...
 uv run python -m tools.gate4.qualification ...
 uv run python -m tools.gate3.oracle_parity ...
 uv run python -m tools.probity_audit

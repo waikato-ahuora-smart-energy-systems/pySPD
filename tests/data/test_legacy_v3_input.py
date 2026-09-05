@@ -14,6 +14,10 @@ FIXTURE = (
     Path(__file__).parents[1]
     / "fixtures/cplex_reference/2019/20190622/input/FP_20190622_F.gdx"
 )
+ODD_DAY_FIXTURE = (
+    Path(__file__).parents[1]
+    / "fixtures/odd_day_reference/2019/20190929/input/FP_20190929_F.gdx"
+)
 SOURCE_SHA256 = "62cb85144a54ef87b48bac34281030a918fab174e2ccad06f341bf0b4b65b448"
 
 
@@ -43,3 +47,28 @@ def test_legacy_v3_fixture_normalizes_and_prepares_48_cases(tmp_path: Path) -> N
     assert prepared[0].specification.schedule_type.value == "SPD"
     assert prepared[0].specification.study_mode == 111
     assert prepared[-1].specification.date_time == "22-JUN-2019 23:30"
+
+
+@pytest.mark.oracle
+def test_legacy_v3_adapter_retains_price_responsive_potential_output() -> None:
+    system_text = os.environ.get("GAMS_SYSTEM_DIRECTORY")
+    if not system_text:
+        pytest.skip("GAMS_SYSTEM_DIRECTORY is required")
+
+    source = GdxAdapter.read(ODD_DAY_FIXTURE, system_directory=Path(system_text))
+    normalized = LegacyV3InputAdapter().normalize(source)
+    records = normalized["i_dateTimeOfferParameter"].records
+    responsive = tuple(
+        record for record in records if record.keys[-1] == "isPriceResponse"
+    )
+    potential = tuple(record for record in records if record.keys[-1] == "potentialMW")
+
+    assert len(responsive) == 506
+    assert len(potential) == 3666
+    assert potential[0].keys == (
+        "V329SEP2019TP1",
+        "29-SEP-2019 00:00",
+        "ARA2201 ARA0",
+        "potentialMW",
+    )
+    assert potential[0].values["value"].number == 9999.0

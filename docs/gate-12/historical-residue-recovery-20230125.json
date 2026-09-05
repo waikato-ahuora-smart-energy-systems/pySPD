@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "classification": "qualifying-subthreshold-residue-guard-shard-checkpoint",
+  "trading_date": "20230125",
+  "reference_commit": "3360a91ebd48f2e3cbb52a5e6766d893011054be",
+  "source_sha256": "27c99805ec587fa1b474968daf8735a40814de06a3cbef0b505b739eacf34def",
+  "execution_scope": "shard",
+  "execution_profile": "historical-v5.0.2-dailymode0-scip-solvelink5-first-loop-rtd-only-canonical-order-material-transfer",
+  "patch_profile": "historical-v5.0.2-dailymode0-scip-first-loop-material-transfer-subthreshold-residue-threshold1e-6",
+  "patch_logical_sha256": "ee09dc8ca3203d6793f54c42394d7a9e2da356008a3992931e9e04c9ddeade21",
+  "patch_metadata_file_sha256": "4593333d66124ccf96a5472a46c925fb96b903d6dffd236c64d146cc261e97dd",
+  "patch_file_sha256": {
+    "vSPDperiod.gms": "89dc70d3b794e27aac1d96680c4bbd26eb418f169e8bba6494077f3412bb7db4",
+    "vSPDsettings.inc": "fcf4b90c1ba75abe6dbf7c7327da9ef491bc8b05f5ee7880dd28d695791198e2",
+    "vSPDsolve.gms": "b1240e3be117d6407a73987ea3c396605a95b83e374dd391c062bf0d72a13dc6"
+  },
+  "selected_case_count": 276,
+  "solved_case_count": 276,
+  "all_solves_optimal": true,
+  "checkpoint_logical_sha256": "a22853d9f93db2ec1c5f63613f7b9dba61c62787edefb5f53a29d8f29cd3e357",
+  "checkpoint_file_sha256": "039f95bcb3f8fd8d0f4d4df42a6d034060ce12f81399335d2d70d4c5f35ed828",
+  "population_summary_file_sha256": "0c6320de9a6028a54cd51df7ce1520ef3e000ec3178a2745e788f2ac745cc881",
+  "artifact_sha256": {
+    "evidence": "7d973764d8f34d277c435c7ced8c40b3ab3f5aafe41d768ced4f3a0cd1acbb9a",
+    "listing": "62bbc9d758a90c6134bf6580bb74d7cf0219932894553daecabe7ad8d247ebc5",
+    "progress": "3a5db63b34f65f12c9ab46e2c42b2639ad2126f92710f604a40de3e932b38bfa"
+  },
+  "affected_identity_count": 6,
+  "identities": [
+    ["241012023011800838", "25-JAN-2023 07:00", "WAI0501", "EDG1102", 0.616471819491],
+    ["241012023011805841", "25-JAN-2023 07:05", "WAI0501", "EDG1102", 0.611157982167],
+    ["241012023011810842", "25-JAN-2023 07:10", "WAI0501", "EDG1102", 0.61095204786],
+    ["241012023011815843", "25-JAN-2023 07:15", "WAI0501", "EDG1102", 0.101926694478],
+    ["251012023010510095", "25-JAN-2023 18:10", "WAI0501", "EDG1102", 0.703810773526],
+    ["251012023010515098", "25-JAN-2023 18:15", "WAI0501", "EDG1102", 0.704112421443]
+  ],
+  "identity_fields": ["case_id", "date_time", "node", "target_node", "energy_shortfall_mw"],
+  "solver_options_changed": false,
+  "shard_complete": true,
+  "population_passed": false
+}

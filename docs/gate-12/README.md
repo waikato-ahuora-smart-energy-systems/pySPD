@@ -19,6 +19,12 @@ Both tested pathways are complete and optimal, but neither establishes exact
 CPLEX parity; SCIP→HiGHS remains the overall-fidelity default.
 Four additional SCIP→HiGHS full-day runs are documented in the
 [`expanded CPLEX analysis`](cplex-reference-expanded-four-days.md).
+Twelve purposefully unusual 2019/2022 dates are captured in the first and
+[`second odd-day dynamic validation records`](odd-day-second-six-validation.md).
+Their 2,103 cases all solved optimally and passed independent validation under
+ten-worker dynamic scheduling; all 4,337,142 mapped values on the six
+CPLEX-backed 2019 days pass the governed comparator. The first record is
+[`odd-day-six-day-validation.md`](odd-day-six-day-validation.md).
 The two remaining 2023-09-22 TP1 SI reserve publications are retained as a
 fail-closed historical residue after same-matrix CPLEX, native `solvefinal`,
 reserve-zone, two-sided derivative, algorithm, and daily-mode diagnostics. See
@@ -241,6 +247,19 @@ native-SOS qualification profile cannot currently be exported through that
 backend. These are held as explicit Gate 12 debt rather than being inferred
 away from the objective match.
 
+The exact v16 input cannot currently be reconstructed from the public archive.
+The 2026-09-05 recovery check downloaded the Authority's
+[`Pricing_20260703.gdx`](https://emidatasets.blob.core.windows.net/publicdata/Datasets/Wholesale/DispatchAndPricing/GDX/2026/Pricing_20260703.gdx)
+(SHA-256 `8e22f556c8f78941e7c9298ef73132a34691efd466d5ef57b1f5ca675747dd1c`)
+and confirmed that case `31012026070255374` is absent. The corresponding
+[public RTD case-file directory](https://www.emi.ea.govt.nz/Wholesale/Datasets/DispatchAndPricing/CaseFiles/RTD/2026/20260703)
+jumps from `MSS_31012026070250373_0X.ZIP` to
+`MSS_31012026070300375_0X.ZIP`; the governed `...0255374` schedule is not
+published there either. A new common-optimal-face or per-node price
+certificate therefore requires the original input with recorded SHA-256
+`bb4ca6367e8115b9b6d7f20d2050489ac2bd3206a1c6a39fb67deae18cb802cb`.
+Substituting either adjacent public case is prohibited.
+
 The v5 affected-population evidence is likewise incomplete. Gate 12 has now
 replayed the first-loop RTD load equations against every hash-bound input and
 identified 434 diagnostic candidates, seven more than the Gate 8 screen. The
@@ -358,6 +377,13 @@ The 2023-01-18 shard passed 277/277 exact optimal cases and emitted four
 material `CLH0111 -> CLH0661` identities from 16:10 through 16:25. Its logical
 checkpoint hash is `a5cab808d5864b50fa4250ec71c1b9a6f2b115a1781d550e2172d4b892b9174c`;
 see [`historical-residue-recovery-20230118.json`](historical-residue-recovery-20230118.json).
+
+The next inventory date, 2023-01-25, passed 276/276 exact optimal cases under
+the same unchanged residue-guard profile. It emitted six material
+`WAI0501 -> EDG1102` identities: four from 07:00 through 07:15 and two from
+18:10 through 18:15. Its logical checkpoint hash is
+`a22853d9f93db2ec1c5f63613f7b9dba61c62787edefb5f53a29d8f29cd3e357`;
+see [`historical-residue-recovery-20230125.json`](historical-residue-recovery-20230125.json).
 
 `HistoricalPopulationRunner` verifies every Gate 1 source size and SHA-256,
 reads the GDX run-mode surface, selects exactly RTD modes 101 and 201, and
@@ -714,10 +740,11 @@ components. Probity tests cover both paths. The replacement replay proves zero
 missing branch identities. Dead-node bus reporting now also follows pinned
 vSPD by transferring the dead node's price through its allocation factor; this
 removed all eight false zero-price differences without rewriting old bundles.
-`SystemOFV` is intentionally unsupported: pinned vSPD adds
-its scarcity-limit-by-price constant to the summary value even though that
-constant is omitted from the solved objective, and the current PySPD summary
-has no equivalent derived field.
+`SystemOFV` is now derived from the accepted fixed-RMIP objective. Both pinned
+vSPD and the full Pyomo reserve objective include the active
+scarcity-limit-by-price constant; the dedicated Gate 4 Convert certificate
+retains and compares that constant even though Convert removes its generated
+objective row from the ordinary sparse-matrix projection.
 
 The expanded `authority-pyspd-mapped-report-row-parity-v2` projector also
 reconstructs branch and market-node constraint RHS/sense from Pyomo lower and
@@ -930,3 +957,11 @@ SCIP initialization trial, and measures model construction and persistent-
 backend opportunities. It enables indexed case extraction and cloned pricing-
 model construction. The controlled three-worker runs reduce wall time by
 55.7–60.4% with strict result parity; SCIP/HiGHS warm starts remain disabled.
+
+The [multi-period vectorisation investigation](vectorized-two-period-investigation-20230922.md)
+also assembles and solves TP1 and TP2 in one model. It exposed and fixed 16
+cross-period HVDC indexing defects, then achieved parity across all 5,610
+compared primal values and the objective. Despite that correctness result, the
+combined solve was 35.8–84.5% slower in order-controlled trials and its
+physical algebra remained almost exactly additive. Dynamic independent-case
+execution therefore remains the qualified performance architecture.

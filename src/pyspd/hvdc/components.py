@@ -58,9 +58,7 @@ class HVDCDomainsComponent(ModelComponent):
         data = _hvdc(context)
         block = pyo.Block(concrete=True)
         context.model.add_component("HVDCDomains", block)
-        block.HVDCLink = pyo.Set(
-            dimen=3, ordered=True, initialize=sorted(data.links)
-        )
+        block.HVDCLink = pyo.Set(dimen=3, ordered=True, initialize=sorted(data.links))
         block.Breakpoint = pyo.Set(
             dimen=4, ordered=True, initialize=sorted(data.breakpoints)
         )
@@ -72,12 +70,9 @@ class HVDCDomainsComponent(ModelComponent):
                 if key[:3] == link
             )
             intervals.extend(
-                (*link, left[3])
-                for (_order, left), _right in pairwise(ordered)
+                (*link, left[3]) for (_order, left), _right in pairwise(ordered)
             )
-        block.SOSInterval = pyo.Set(
-            dimen=4, ordered=True, initialize=sorted(intervals)
-        )
+        block.SOSInterval = pyo.Set(dimen=4, ordered=True, initialize=sorted(intervals))
         block.FlowDirection = pyo.Set(
             dimen=3,
             ordered=True,
@@ -121,9 +116,7 @@ class HVDCTransmissionComponent(ModelComponent):
         block = pyo.Block(concrete=True)
         context.model.add_component("HVDCTransmission", block)
         block.HVDCLinkFlow = pyo.Var(domains.HVDCLink, domain=pyo.NonNegativeReals)
-        block.HVDCLinkLosses = pyo.Var(
-            domains.HVDCLink, domain=pyo.NonNegativeReals
-        )
+        block.HVDCLinkLosses = pyo.Var(domains.HVDCLink, domain=pyo.NonNegativeReals)
         block.Lambda = pyo.Var(
             domains.Breakpoint, domain=pyo.NonNegativeReals, bounds=(0.0, 1.0)
         )
@@ -197,8 +190,7 @@ class HVDCTransmissionComponent(ModelComponent):
                     block.Lambda[points[0]] <= block.SOSIntervalBinary[intervals[0]]
                 )
                 block.SOSAdjacency.add(
-                    block.Lambda[points[-1]]
-                    <= block.SOSIntervalBinary[intervals[-1]]
+                    block.Lambda[points[-1]] <= block.SOSIntervalBinary[intervals[-1]]
                 )
                 for index, point in enumerate(points[1:-1], start=1):
                     block.SOSAdjacency.add(
@@ -207,6 +199,7 @@ class HVDCTransmissionComponent(ModelComponent):
                         + block.SOSIntervalBinary[intervals[index]]
                     )
         if data.enforce_sos2 and data.sos_representation is SosRepresentation.NATIVE:
+
             def native_sos_rule(_b: pyo.Block, ca: str, dt: str, link: str) -> Any:
                 points = [
                     key
@@ -273,9 +266,7 @@ class HVDCTransmissionComponent(ModelComponent):
 class DiscreteDemandComponent(ModelComponent):
     name = "discrete_demand"
     supported_formulations = _SUPPORTED
-    requires = frozenset(
-        {"core_data", "hvdc_data", "hvdc_domains", "purchase_block"}
-    )
+    requires = frozenset({"core_data", "hvdc_data", "hvdc_domains", "purchase_block"})
     provides = frozenset({"purchase_block_binary", "discrete_bid_definition"})
 
     def build(self, context: BuildContext) -> Mapping[str, Any]:
@@ -284,9 +275,7 @@ class DiscreteDemandComponent(ModelComponent):
         purchase_block = context.artifacts["purchase_block"]
         block = pyo.Block(concrete=True)
         context.model.add_component("DiscreteDemand", block)
-        block.PurchaseBlockBinary = pyo.Var(
-            domains.DiscreteBidBlock, domain=pyo.Binary
-        )
+        block.PurchaseBlockBinary = pyo.Var(domains.DiscreteBidBlock, domain=pyo.Binary)
         block.DemBidDiscrete = pyo.Constraint(
             domains.DiscreteBidBlock,
             rule=lambda _b, ca, dt, bid, tranche: (
@@ -326,6 +315,8 @@ class HVDCACNetworkComponent(ACNetworkComponent):
         sent_links: dict[Key, list[Key]] = {}
         for link in sorted(hvdc_data.links):
             for bus_key in sorted(network_data.buses):
+                if link[:2] != bus_key[:2]:
+                    continue
                 if (*link, bus_key[2]) in hvdc_data.receiving_bus:
                     received_links.setdefault(bus_key, []).append(link)
                 if (*link, bus_key[2]) in hvdc_data.sending_bus:
@@ -367,9 +358,7 @@ class HVDCACNetworkComponent(ACNetworkComponent):
                 hvdc_flow[link] - hvdc_loss[link]
                 for link in received_links.get(bus_key, ())
             )
-            sent_hvdc = sum(
-                hvdc_flow[link] for link in sent_links.get(bus_key, ())
-            )
+            sent_hvdc = sum(hvdc_flow[link] for link in sent_links.get(bus_key, ()))
             scarcity_supply = sum(
                 network_data.node_bus_allocation.get((ca, dt, node, bus), 0.0)
                 * scarcity[ca, dt, node]
@@ -394,9 +383,7 @@ class HVDCACNetworkComponent(ACNetworkComponent):
 class HVDCSecurityComponent(NetworkSecurityComponent):
     name = "network_security"
     supported_formulations = _SUPPORTED
-    requires = NetworkSecurityComponent.requires | frozenset(
-        {"hvdc_data", "hvdc_flow"}
-    )
+    requires = NetworkSecurityComponent.requires | frozenset({"hvdc_data", "hvdc_flow"})
 
     def build(self, context: BuildContext) -> Mapping[str, Any]:
         artifacts = dict(super().build(context))
@@ -416,16 +403,12 @@ class HVDCSecurityComponent(NetworkSecurityComponent):
         def expression(key: Key) -> Any:
             ca, dt, constraint = key
             return sum(
-                data.branch_constraint_factor.get(
-                    (ca, dt, constraint, branch), 0.0
-                )
+                data.branch_constraint_factor.get((ca, dt, constraint, branch), 0.0)
                 * ac_flow[ca, dt, branch]
                 for b_ca, b_dt, branch in data.ac_branches
                 if (b_ca, b_dt) == (ca, dt)
             ) + sum(
-                data.branch_constraint_factor.get(
-                    (ca, dt, constraint, link), 0.0
-                )
+                data.branch_constraint_factor.get((ca, dt, constraint, link), 0.0)
                 * hvdc_flow[ca, dt, link]
                 for h_ca, h_dt, link in hvdc_data.links
                 if (h_ca, h_dt) == (ca, dt)

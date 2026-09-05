@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from types import SimpleNamespace
 
 import pyomo.environ as pyo
 import pytest
 
 from pyspd.architecture import ModelAssembler
+from pyspd.hvdc import formulation as hvdc_formulation_module
 from pyspd.hvdc.data import SosRepresentation
 from pyspd.orchestration import DailyCase, PreparedCase, ScheduleType
 from pyspd.orchestration.solver import _updated_case
 from pyspd.reserve import ReserveSolvePolicy, reserve_formulation
+from pyspd.solver import SolverExecutionError
 from tests.reserve.conftest import make_reserve_case
 
 
@@ -104,3 +107,34 @@ def test_native_pricing_records_objective_guarded_sos_support_polishing() -> Non
     assert audit.discovery_objective >= audit.baseline_objective - 1e-8
     assert audit.polished_objective >= audit.baseline_objective - 1e-8
     assert audit.objective_improvement >= -1e-8
+
+
+def test_support_oracle_retries_lp_failure_at_native_support_tolerance(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    configurations = []
+    accepted = object()
+
+    class StubScipBackend:
+        def solve_mip(self, model, configuration, *, warm_start_discrete=False):
+            configurations.append(configuration)
+            if len(configurations) == 1:
+                raise SolverExecutionError("synthetic LP solver failure")
+            return accepted
+
+    monkeypatch.setattr(
+        hvdc_formulation_module, "NativeScipBackend", StubScipBackend
+    )
+
+    result = ReserveSolvePolicy._solve_support_mip(
+        SimpleNamespace(model=object())  # type: ignore[arg-type]
+    )
+
+    assert result is accepted
+    assert [item.options["numerics/feastol"] for item in configurations] == [
+        1e-9,
+        1e-7,
+    ]
+    assert {item.options["time_limit_seconds"] for item in configurations} == {
+        300.0
+    }

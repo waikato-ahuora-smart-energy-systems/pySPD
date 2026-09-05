@@ -24,6 +24,14 @@ SHA-256. All missing/extra/mismatch counters are zero for row bounds, column
 bounds, integrality, objective terms, and coefficients. See the
 [matrix evidence](oracle-matrix-parity.json).
 
+An additional real-data microcase marks one active 2023 demand bid as discrete
+and proves `DemBidDefintion`, the economically active `DemBidDiscrete` row,
+`PURCHASE`, `PURCHASEBLOCK`, and `PURCHASEBLOCKBINARY` by identical canonical
+matrix hashes. It also recovers the affine constant removed by GAMS Convert's
+generated objective row and compares it with the Pyomo objective within
+`1e-7 NZD`. See the
+[demand and objective certificate](oracle-demand-objective-parity.json).
+
 The representative RTD core solve reports optimal through HiGHS. Independent
 recalculation gives a maximum primal residual below `5e-13` MW, no bound or
 objective-component breach at the governed tolerances, and dual prices within

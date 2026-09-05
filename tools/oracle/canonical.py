@@ -342,6 +342,17 @@ class LinearMatrixEvidence:
 
 
 @dataclass(frozen=True)
+class ObjectiveDefinitionEvidence:
+    """Objective sense and affine constant retained from a Convert matrix."""
+
+    sense: str
+    constant: float
+    objective_row: str
+    objective_column: str
+    objective_jacobian: float
+
+
+@dataclass(frozen=True)
 class SemanticNameDictionary:
     """Stable equation/variable names recovered from a Convert DictMap GDX."""
 
@@ -829,6 +840,58 @@ class ConvertMatrixReader:
             if str(record.i) != objective_row and str(record.j) != objective_column
         )
         return LinearMatrixEvidence.build(rows, columns, entries, sense)
+
+    def read_objective_definition(self, path: Path) -> ObjectiveDefinitionEvidence:
+        """Recover the affine objective constant Convert omits from its matrix.
+
+        Convert represents an objective expression with a generated equality
+        ``a*z + c'x = rhs`` and then removes that row and the objective variable
+        from the exported constraint matrix.  The modeled objective is therefore
+        ``z = rhs/a - c'x/a``; ``rhs/a`` is the otherwise-lost constant.
+        """
+
+        try:
+            import gams.transfer as gt  # type: ignore[import-untyped]
+        except ImportError as error:
+            raise RuntimeError(
+                "GDX matrix reading requires the uv oracle dependency group"
+            ) from error
+        container = gt.Container(
+            system_directory=(
+                str(self.system_directory)
+                if self.system_directory is not None
+                else None
+            )
+        )
+        container.read(str(path))
+        names = set(container.listSymbols())
+        missing = sorted(self._required - names)
+        if missing:
+            raise ValueError(f"Convert GDX is missing symbols: {missing}")
+        objective_row = str(container["iobj"].records.iloc[0]["i"])
+        objective_column = str(container["jobj"].records.iloc[0]["j"])
+        objective_jacobian = float(container["objjacval"].records.iloc[0]["value"])
+        if objective_jacobian == 0.0:
+            raise ValueError("Convert objective Jacobian is zero")
+        marker = float(container["objcoef"].records.iloc[0]["value"])
+        if marker not in {-1.0, 1.0}:
+            raise ValueError(f"unsupported Convert objective marker: {marker}")
+        sense = "maximize" if marker == -1.0 else "minimize"
+        rows = container["e"].records
+        selected = rows[rows["i"].astype(str) == objective_row]
+        if len(selected) != 1:
+            raise ValueError("Convert objective row is not unique")
+        lower = float(selected.iloc[0]["lower"])
+        upper = float(selected.iloc[0]["upper"])
+        if not math.isclose(lower, upper, rel_tol=0.0, abs_tol=1e-12):
+            raise ValueError("Convert objective row is not an equality")
+        return ObjectiveDefinitionEvidence(
+            sense=sense,
+            constant=lower / objective_jacobian,
+            objective_row=objective_row,
+            objective_column=objective_column,
+            objective_jacobian=objective_jacobian,
+        )
 
     @staticmethod
     def _discrete_types(container: Any) -> dict[str, str]:

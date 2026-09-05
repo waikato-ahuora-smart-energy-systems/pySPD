@@ -234,7 +234,9 @@ def _run_profile(
     try:
         with records_path.open("w", encoding="utf-8") as records:
             for prepared in app.iter_prepared_cases(
-                configuration, start_ordinal=args.start_ordinal
+                configuration,
+                start_ordinal=args.start_ordinal,
+                maximum_cases=args.maximum_cases,
             ):
                 if (
                     args.maximum_cases is not None

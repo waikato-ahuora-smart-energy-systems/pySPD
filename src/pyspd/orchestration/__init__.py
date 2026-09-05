@@ -8,6 +8,15 @@ from pyspd.orchestration.overrides import (
     OverrideInstruction,
     OverrideScope,
 )
+from pyspd.orchestration.parallel import (
+    CaseBoundary,
+    CaseShard,
+    CaseShardPlan,
+    ContiguousCaseShardPlanner,
+    DynamicCaseJobPlanner,
+    ParallelExecutionError,
+    ProcessShardCoordinator,
+)
 from pyspd.orchestration.pricing import (
     MarketPricePostProcessor,
     PublishedPriceAccumulator,
@@ -50,9 +59,13 @@ from pyspd.orchestration.validation import (
 )
 
 __all__ = [
+    "CaseBoundary",
     "CaseExecutor",
     "CaseRunResult",
     "CaseRunStatus",
+    "CaseShard",
+    "CaseShardPlan",
+    "ContiguousCaseShardPlanner",
     "DailyCase",
     "DailyCaseDataIndex",
     "DailyCaseExecution",
@@ -64,6 +77,7 @@ __all__ = [
     "DailyRunResult",
     "DailyRunState",
     "DailyRunner",
+    "DynamicCaseJobPlanner",
     "IndependentPublicationValidator",
     "MarketPricePostProcessor",
     "OrchestrationError",
@@ -73,8 +87,10 @@ __all__ = [
     "OverrideFamily",
     "OverrideInstruction",
     "OverrideScope",
+    "ParallelExecutionError",
     "PreparedCase",
     "PriceTrace",
+    "ProcessShardCoordinator",
     "PublicationValidation",
     "PublishedPriceAccumulator",
     "PublishedPriceAggregator",

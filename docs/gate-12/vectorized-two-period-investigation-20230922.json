@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "classification": "qualified-investigation-not-production-execution-profile",
+  "source": {
+    "path": "tests/fixtures/cplex_reference/2023/20230922/input/Pricing_20230922.gdx",
+    "sha256": "70dffe5c416eed90ffb31925d48293fc785a063dcbacb3367fca815587c9e5fc"
+  },
+  "selection": {
+    "policy": "first-case-from-each-distinct-trading-period",
+    "case_ids": ["211302023091130458", "211012023091230480"],
+    "trading_periods": ["TP1", "TP2"]
+  },
+  "solver_path": "SCIP MIP -> fixed HiGHS RMIP",
+  "solver_versions": {
+    "scip": "5.7.1",
+    "highs": "1.15.1"
+  },
+  "model_size": {
+    "separate_variables": 114520,
+    "vectorized_variables": 114519,
+    "separate_constraints": 64762,
+    "vectorized_constraints": 64761,
+    "explanation": "One aggregate objective and total-penalty variable/row replace two scalar copies; all physical blocks otherwise scale linearly."
+  },
+  "pre_fix_diagnosis": {
+    "unintended_cross_period_constraint_count": 16,
+    "intentional_cross_period_constraint_count": 1,
+    "unintended_families": {
+      "ACNetwork.ACNodeNetInjectionDefinition2": 8,
+      "ReserveRisk.Constraints": 4,
+      "ReserveSharing.Constraints": 4
+    },
+    "cause": "HVDC links were matched to an island or bus by terminal bus name without also matching the case/date-time prefix.",
+    "objective_absolute_difference_nzd": 2506.8040701150894,
+    "above_tolerance_variable_count": 1496,
+    "compared_variable_count": 5610,
+    "maximum_variable_absolute_difference": 119.75374813493829,
+    "raw_benchmark_sha256": "44936c836006a10bc21132b23a96101790fa7fbbedc7a917466ab86e38483816"
+  },
+  "post_fix_parity": {
+    "passed": true,
+    "tolerance": 1e-6,
+    "objective_absolute_difference_nzd": 1.1920928955078125e-7,
+    "above_tolerance_variable_count": 0,
+    "compared_variable_count": 5610,
+    "maximum_variable_absolute_difference": 1.5760548421894782e-10,
+    "surface_maximum_absolute_differences": {
+      "directed_branch_flow": 1.5760548421894782e-10,
+      "generation": 9.663381206337363e-13,
+      "island_reserve": 0.0,
+      "purchase": 0.0,
+      "reserve": 0.0
+    },
+    "remaining_cross_period_constraints": [
+      "Economics.TotalViolationCostDefinition"
+    ]
+  },
+  "timing_trials": [
+    {
+      "execution_order": "vectorized-first",
+      "separate_wall_seconds": 20.65600495808758,
+      "vectorized_wall_seconds": 28.056737250182778,
+      "vectorized_percent_slower": 35.828478484158886,
+      "raw_benchmark_sha256": "412f098b8bde895da57293f84f6b0363e0c6abbd278786e816fed374b752f6d7"
+    },
+    {
+      "execution_order": "separate-first",
+      "separate_wall_seconds": 20.314084167126566,
+      "vectorized_wall_seconds": 37.48511954094283,
+      "vectorized_percent_slower": 84.52773569582544,
+      "raw_benchmark_sha256": "6284ff02931912d3e757b1a6b595aa8fa2ea5bdaaf76aaafe428c5fbfdd4f8ca"
+    }
+  ],
+  "aggregate_timing": {
+    "separate_mean_wall_seconds": 20.485044562607072,
+    "vectorized_mean_wall_seconds": 32.770928395562805,
+    "vectorized_mean_percent_slower": 59.97489434502916,
+    "separate_over_vectorized_speedup": 0.6250980843551797
+  },
+  "linear_full_scale_estimates": {
+    "48_period_representatives": {
+      "variables": 2748433,
+      "constraints": 1554241
+    },
+    "274_case_day": {
+      "variables": 15688967,
+      "constraints": 8872121
+    },
+    "qualification": "Algebraic count estimate only; no full-scale vectorized solve was attempted."
+  },
+  "decision": {
+    "production_profile_changed": false,
+    "retain_dynamic_independent_case_execution": true,
+    "reason": "The two-period combined solve is correct after index repair but materially slower, scales almost exactly linearly in algebra size, cannot dynamically schedule independent cases, and cannot represent period-local shortfall re-solve counts without changing orchestration semantics.",
+    "reconsider_when": "Inter-period constraints such as storage state of charge make periods mathematically coupled, or a solver-native block/batch API can avoid constructing one monolithic Pyomo model."
+  }
+}

@@ -3,11 +3,12 @@
 ## Decision
 
 Use independent case processes as the primary acceleration mechanism, with one
-SCIP thread and one HiGHS thread per worker. Three workers are the measured
-default for this Darwin arm64 host when at least 13 GB is available to the
-workers. Keep period-to-period SCIP initialization and HiGHS primal warm starts
-disabled. Enable the indexed case-data extractor and clone the solved primary
-Pyomo model when constructing the fixed-discrete pricing RMIP.
+SCIP thread and one HiGHS thread per worker. Use ten workers for complete-day
+throughput on this Darwin arm64 host when memory capacity permits; retain three
+workers as the lower-memory setting and for small workloads. Keep
+period-to-period SCIP initialization and HiGHS primal warm starts disabled.
+Enable the indexed case-data extractor and clone the solved primary Pyomo model
+when constructing the fixed-discrete pricing RMIP.
 
 The qualified solver path remains SCIP MIP → fix all discrete/SOS state →
 HiGHS RMIP. The earlier full-day CLP experiment was 7.60% faster than HiGHS but
@@ -24,6 +25,12 @@ The controlled trials use the first 12 ordered cases from hash-pinned
 generation start, so the six-case and four-case shard boundaries do not invoke
 the daily predecessor-generation fallback. Parallel output is merged in source
 order and compared with the serial JSONL record stream.
+
+The later infrastructure trial uses all 263 ordered cases from the same source.
+Every case has an explicit generation start, so all 3-worker and 10-worker
+boundaries are independently valid. Its raw comparison remains strict and its
+market acceptance additionally applies the established analytical-price-
+interval rule.
 
 Every accepted timing requires:
 
@@ -86,6 +93,27 @@ for a second assembly, a 56.60% reduction. On the full 12-case governed path,
 solve time fell 7.28% (184.591 to 171.159 seconds) and wall time fell 5.48%
 (223.483 to 211.241 seconds). All 46,464 compared values passed strict parity.
 
+### Multiprocessing infrastructure
+
+`ContiguousCaseShardPlanner`, `DynamicCaseJobPlanner`, and
+`ProcessShardCoordinator` now provide the retained class-based execution path.
+The static planner creates deterministic balanced half-open ranges. The dynamic
+planner creates small canonical jobs and the coordinator keeps at most one job
+per worker in flight, assigning the next job whenever a worker becomes idle.
+Both planners cap excess workers at the job count and fail closed when an
+internal job would start at a case that needs predecessor-generation fallback.
+The coordinator uses the portable `spawn` process context, returns artifacts in
+source order even when jobs finish out of order, cancels pending work after a
+failure, and identifies the exact failed job and first case.
+
+`tools/run_parallel_solver_path.py` applies that infrastructure to the governed
+solver benchmark. It refuses to overwrite an existing evidence target, runs
+each shard in an isolated solver process, bounds each worker's case-data index
+to its declared range, retains a per-shard log and benchmark, merges all JSONL
+records in canonical order, and records preparation, execution, merge, and
+total timing separately. A real two-worker, three-case process smoke test
+completed optimally and independently validated before the full-day trials.
+
 ## Parallel processing
 
 The serial and parallel trials used identical case groups and one thread inside
@@ -96,12 +124,59 @@ each solver.
 | 1 | 223.483 s | 1.00× | — | optimal, validated |
 | 2 | 122.875 s | 1.82× | 45.02% | strict parity |
 | 3 | 88.595 s | 2.52× | 60.36% | strict parity |
+| 10 | 94.000 s | 2.38× | 57.94% | strict parity |
 
 A repeat after pricing-model cloning took 93.508 seconds, or 55.73% less than
 the cloned serial path. The repeat was slower than the first three-worker run
 because the middle shard's solver time increased; the results therefore
 support a measured three-worker reduction range of 55.7–60.4%, not an additive
 parallel-plus-clone claim.
+
+A subsequent ten-worker trial split the same 12 cases into two two-case shards
+and eight one-case shards. It completed in 94 seconds overall (93.325 seconds
+for the slowest shard), with every solve optimal and independently validated.
+All 46,464 values retained strict parity; the maximum primary-objective
+difference was `4.89e-9 NZD`, while physics, pricing objectives, raw prices,
+market prices, and fixed-discrete state matched exactly. Ten workers were 0.53%
+slower than the 93.508-second three-worker repeat and 6.10% slower than the
+best three-worker run. Their summed solver time rose from 183.014 to 287.778
+seconds, a 57.24% increase, demonstrating CPU and memory-bandwidth contention
+rather than useful additional scaling. Ten workers are therefore valid but not
+recommended on this host.
+
+That small-workload conclusion does not generalize to a complete day. A
+subsequent matched 263-case run through the retained coordinator produced:
+
+| Workers | Preparation | Worker execution | Merge | End to end | Cases/min during execution |
+|---:|---:|---:|---:|---:|---:|
+| 3 | 126.310 s | 1,431.184 s | 3.357 s | 1,561.450 s | 11.03 |
+| 10 | 129.702 s | 601.775 s | 3.384 s | 735.470 s | 26.22 |
+
+For the full day, ten workers were 2.378× faster during worker execution and
+2.123× faster end to end: reductions of 57.95% and 52.90%, respectively.
+Summed solver time increased from 3,451.392 to 4,184.930 seconds (21.25%), so
+the additional processes still incur contention, but the shorter shards more
+than compensate at this workload size. The ten-worker slowest shard took
+600.122 seconds and the fastest 513.536 seconds; the three-worker range was
+1,328.487–1,429.698 seconds.
+
+Both runs completed all 263 cases optimally and passed independent validation.
+The ten-worker result was compared with the three-worker result across
+1,013,096 internal values. Physics matched to `3.41e-12`, the maximum primary
+objective difference was `1.49e-5 NZD`, and the maximum pricing-objective
+difference was `4.66e-10 NZD`. One degenerate reserve-sharing choice selected
+the opposite pair of zone binaries in case `261302023091200863` without
+changing physics or prices.
+
+Raw strict parity also identifies case `261012023091940036`: its three affected
+node prices selected opposite endpoints of the same independently calculated
+interval. At the published TP18 boundary, only 3 of 25,584 price rows differ,
+by `0.03105 NZD/MWh`; both values are the endpoints of the identical
+`[149.90607, 149.93712]` interval. Under the established Gate 12 rule that any
+value inside the analytical interval is accepted, complete-day market results
+therefore pass the interval-aware evidence boundary. The raw strict comparator
+correctly remains false because it intentionally requires identical binary
+choices and scalar dual endpoints.
 
 The already retained full-day evidence is consistent with this result:
 
@@ -122,13 +197,14 @@ Parallel execution has two hard safety constraints:
    validated predecessor checkpoint.
 2. A single eight-case process peaked at 4.175 GB. Three workers therefore need
    roughly 12.5 GB for worker peaks, plus operating-system and merge headroom.
-   More workers are not recommended without measuring memory and contention on
-   the target host.
+   Ten workers completed successfully on this host, but their aggregate peak
+   memory was not instrumented; deployment must retain explicit memory
+   headroom and fall back to a smaller worker count where necessary.
 
-Contiguous shards preserve source order and minimize orchestration risk, but
-support-polishing cases can make them imbalanced. A future scheduler may use
-smaller independent chunks only after checking every chunk boundary against
-the predecessor-state rule.
+Dynamic small-job scheduling now addresses solve-time imbalance while retaining
+the generation-start, memory, source-order, and fail-closed contracts. Job size
+remains configurable because one-case jobs improve balancing while multi-case
+jobs amortize repeated GDX preparation.
 
 ## Initialization and persistence
 
@@ -155,15 +231,18 @@ object cache.
 
 The next performance work, in priority order, is:
 
-1. add a production-grade process coordinator that performs the generation-
-   start boundary check, launches memory-bounded contiguous shards, and merges
-   reports deterministically;
-2. profile and index the result/report builders—one diagnostic case spent about
+1. integrate the retained coordinator with the stable `pyspd run` report-writing
+   entry point; the governed benchmark driver is parallel, while the standard
+   application entry point remains serial;
+2. replace the conservative full-case boundary preparation pass with an
+   independently tested minimal generation-start inventory; this would remove
+   about 130 seconds of serial planning from a complete day;
+3. profile and index the result/report builders—one diagnostic case spent about
    1.95 seconds constructing reports, including 1.08 seconds in model-row
    extraction;
-3. investigate within-case reuse for reserve price-sensitivity LPs, retaining
+4. investigate within-case reuse for reserve price-sensitivity LPs, retaining
    every analytical interval and CPLEX parity test; and
-4. consider a parameterized model template/persistent matrix only after a
+5. consider a parameterized model template/persistent matrix only after a
    corpus-wide structural-signature study proves which periods are safely
    reusable.
 
@@ -182,8 +261,14 @@ red observations. The green tests cover noncontiguous source records, declared
 index scope, cloned component and tuple-artifact ownership, primary/clone state
 independence, and use of the clone specifically for the pricing model.
 
+The multiprocessing additions were developed from observed red tests for the
+missing API and nonpositive preparation bound. The tests cover balanced and
+capped plans, canonical inventory checks, predecessor-dependent rejection,
+bounded in-flight dynamic assignment, ordered collection, and failed-job
+identification.
+
 Final verification on the implemented source is:
 
-- `uv run pytest -q`: 602 passed, 2 skipped;
+- `uv run pytest -q`: 624 passed, 1 skipped;
 - `uv run ruff check .`: passed; and
-- `uv run mypy src tools`: passed across 141 source files.
+- `uv run mypy src tools`: passed across 143 source files.

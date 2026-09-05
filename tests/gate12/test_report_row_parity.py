@@ -127,6 +127,106 @@ def test_node_row_above_half_display_unit_fails() -> None:
     assert result.tables[0].above_precision_count == 1
 
 
+def test_binary_float_rendering_at_half_display_unit_passes() -> None:
+    reference = _json(
+        {
+            "prefix_NodeResults_TP": {
+                "fields": ["CaseID", "DateTime", "Node", "Generation (MW)"],
+                "rows": [
+                    {
+                        "CaseID": "case",
+                        "DateTime": "time",
+                        "Node": "NODE",
+                        "Generation (MW)": "98.09758",
+                    }
+                ],
+            }
+        }
+    )
+    candidate = _json(
+        {
+            "node": {
+                "field_order": [
+                    "case_id",
+                    "date_time",
+                    "node",
+                    "generation_mw",
+                ],
+                "fields": [],
+                "rows": [
+                    {
+                        "case_id": "case",
+                        "date_time": "time",
+                        "node": "NODE",
+                        "generation_mw": "98.097574999999964",
+                    }
+                ],
+            }
+        }
+    )
+
+    result = ReportRowParityValidator().compare(
+        case_id="case", reference=reference, candidate=candidate
+    )
+
+    assert result.passed
+    assert result.tables[0].above_precision_count == 0
+    assert result.tables[0].certified_difference_count == 0
+
+
+def test_repaired_bus_price_accepts_only_micro_slack_at_rounding_boundary() -> None:
+    reference = _json(
+        {
+            "prefix_BusResults_TP": {
+                "fields": ["CaseID", "DateTime", "Bus", "Price ($/MWh)"],
+                "rows": [
+                    {
+                        "CaseID": "case",
+                        "DateTime": "time",
+                        "Bus": "673",
+                        "Price ($/MWh)": "68.547",
+                    }
+                ],
+            }
+        }
+    )
+
+    def candidate(value: str) -> bytes:
+        return _json(
+            {
+                "bus": {
+                    "field_order": [
+                        "case_id",
+                        "date_time",
+                        "bus",
+                        "repaired_price_nzd_per_mwh",
+                    ],
+                    "fields": [],
+                    "rows": [
+                        {
+                            "case_id": "case",
+                            "date_time": "time",
+                            "bus": "673",
+                            "repaired_price_nzd_per_mwh": value,
+                        }
+                    ],
+                }
+            }
+        )
+
+    within = ReportRowParityValidator().compare(
+        case_id="case", reference=reference, candidate=candidate("68.5475004426")
+    )
+    outside = ReportRowParityValidator().compare(
+        case_id="case", reference=reference, candidate=candidate("68.547502")
+    )
+
+    assert within.passed
+    assert within.tables[0].certified_difference_count == 1
+    assert not outside.passed
+    assert outside.tables[0].above_precision_count == 1
+
+
 def test_branch_endpoint_price_uses_governed_portable_price_tolerance() -> None:
     reference = _json(
         {

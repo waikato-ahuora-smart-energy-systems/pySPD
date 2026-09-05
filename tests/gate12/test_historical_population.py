@@ -140,7 +140,9 @@ def test_residue_guard_checkpoint_is_exact_hash_bound_and_nonpopulation() -> Non
         "241012022112030932",
         "241012022112035936",
     }
-    assert all(abs(item["energy_shortfall_mw"]) > 1e-6 for item in evidence["identities"])
+    assert all(
+        abs(item["energy_shortfall_mw"]) > 1e-6 for item in evidence["identities"]
+    )
     assert evidence["guard_contract"]["solver_options_changed"] is False
     assert evidence["shard_complete"] is True
     assert evidence["population_passed"] is False
@@ -205,6 +207,30 @@ def test_third_residue_guard_checkpoint_is_complete_and_exact() -> None:
     assert evidence["all_solves_optimal"] is True
     assert evidence["affected_identity_count"] == len(evidence["identities"]) == 8
     assert len({row[0] for row in evidence["identities"]}) == 8
+    assert all(abs(row[4]) > 1e-6 for row in evidence["identities"])
+    assert evidence["solver_options_changed"] is False
+    assert evidence["shard_complete"] is True
+    assert evidence["population_passed"] is False
+
+
+def test_20230125_residue_guard_checkpoint_preserves_six_material_transfers() -> None:
+    root = Path(__file__).resolve().parents[2]
+    evidence = json.loads(
+        (root / "docs/gate-12/historical-residue-recovery-20230125.json").read_text()
+    )
+
+    assert evidence["selected_case_count"] == evidence["solved_case_count"] == 276
+    assert evidence["all_solves_optimal"] is True
+    assert evidence["affected_identity_count"] == len(evidence["identities"]) == 6
+    assert {row[0] for row in evidence["identities"]} == {
+        "241012023011800838",
+        "241012023011805841",
+        "241012023011810842",
+        "241012023011815843",
+        "251012023010510095",
+        "251012023010515098",
+    }
+    assert all(row[2:4] == ["WAI0501", "EDG1102"] for row in evidence["identities"])
     assert all(abs(row[4]) > 1e-6 for row in evidence["identities"])
     assert evidence["solver_options_changed"] is False
     assert evidence["shard_complete"] is True
@@ -345,16 +371,14 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
     assert targeted_solve.count("vSPD_NMIR.Optfile = 1 ;") == 2
     assert targeted_solve.count("vSPD_BranchFlowMIP.Optfile = 1 ;") == 1
     assert (targeted_programs / "scip.opt").read_text() == (
-        "emphasis: numerics\n"
-        "numerics/feastol = 1e-10\n"
+        "emphasis: numerics\nnumerics/feastol = 1e-10\n"
     )
     assert "scip.opt" in targeted.file_sha256
 
     tighter = HistoricalTargetedScipPatcher(target, "1e-12").apply(tighter_programs)
     assert tighter.profile.endswith(f"target-{target}-feastol1e-12")
     assert (tighter_programs / "scip.opt").read_text() == (
-        "emphasis: numerics\n"
-        "numerics/feastol = 1e-12\n"
+        "emphasis: numerics\nnumerics/feastol = 1e-12\n"
     )
     assert tighter.logical_sha256 != targeted.logical_sha256
 
@@ -372,20 +396,13 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
         f"material-only-{target}_{material_case}-threshold1e-6"
         "-residue-only-threshold1e-6"
     )
-    assert (
-        f"if(sameas(ca,'{target}') or sameas(ca,'{material_case}'),"
-        in guarded_solve
-    )
+    assert f"if(sameas(ca,'{target}') or sameas(ca,'{material_case}')," in guarded_solve
     assert (guarded_programs / "scip.opt").read_text() == (
-        "numerics/feastol = 1e-10\n"
-        "numerics/checkfeastolfac = 1e-4\n"
+        "numerics/feastol = 1e-10\nnumerics/checkfeastolfac = 1e-4\n"
     )
+    assert "$ (abs(EnergyShortfallMW(t,n)) <= 0.000001) = 0;" in guarded_solve
     assert (
-        "$ (abs(EnergyShortfallMW(t,n)) <= 0.000001) = 0;" in guarded_solve
-    )
-    assert (
-        "$ (smax[n1, abs(EnergyShortfallMW(t,n1))] <= 0.000001) = 0;"
-        in guarded_solve
+        "$ (smax[n1, abs(EnergyShortfallMW(t,n1))] <= 0.000001) = 0;" in guarded_solve
     )
     assert guarded.logical_sha256 not in {
         targeted.logical_sha256,
@@ -410,9 +427,7 @@ def test_historical_source_patcher_is_exact_and_fail_closed(tmp_path) -> None:
         HistoricalTargetedScipPatcher(target, "1e-18")
 
     with pytest.raises(EvidenceContractError, match="material-only.*numeric"):
-        HistoricalTargetedScipPatcher(
-            target, material_only_case_ids=("bad-case",)
-        )
+        HistoricalTargetedScipPatcher(target, material_only_case_ids=("bad-case",))
 
     with pytest.raises(EvidenceContractError, match="must be unique"):
         HistoricalTargetedScipPatcher(

@@ -29,6 +29,10 @@ replaces; accepted history is not rewritten.
 | [ADR-0022](0022-portable-transition-and-nonbinding-report-equivalence.md) | Bound numeric transition residue, non-binding constraint activity, and risk-price dual equivalence | Accepted for the SCIP/HiGHS Gate 12 profile |
 | [ADR-0023](0023-strict-native-sos-support-with-guarded-fallback.md) | Select native SOS support at `1e-7` with a guarded fallback | Accepted for the SCIP/HiGHS Gate 12 profile |
 | [ADR-0024](0024-validated-price-intervals-at-solver-kinks.md) | Validate source and solver-tolerance price intervals at zero-flow and reserve kinks | Accepted for the SCIP/HiGHS Gate 12 profile |
+| [ADR-0025](0025-stable-explicit-sos-support-oracle.md) | Retry only numerical LP failures in the explicit SOS support oracle | Accepted for the SCIP/HiGHS Gate 12 profile |
+| [ADR-0026](0026-zero-price-reserve-canonicalization.md) | Canonicalize zero-price reserve surplus within an objective guard | Accepted for the SCIP/HiGHS Gate 12 profile |
+| [ADR-0027](0027-ordinal-parallel-period-identity.md) | Use ordinal and full period identity for parallel execution | Accepted for Gate 12 parallel evidence |
+| [ADR-0028](0028-repaired-bus-rounding-boundary.md) | Admit micro-scale solver noise at repaired-bus rounding boundaries | Accepted for the SCIP/HiGHS Gate 12 report profile |
 
 ## Status values
 

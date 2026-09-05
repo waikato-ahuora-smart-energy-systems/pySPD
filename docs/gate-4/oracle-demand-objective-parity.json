@@ -1,0 +1,78 @@
+{
+  "case": {
+    "case_id": "211012023092220661",
+    "date_time": "22-SEP-2023 10:20",
+    "trading_period": "TP21"
+  },
+  "coverage": {
+    "DemBidDefintion": {
+      "gams_rows": 2,
+      "python_rows": 2
+    },
+    "DemBidDiscrete": {
+      "gams_rows": 1,
+      "python_rows": 1
+    }
+  },
+  "differences": {
+    "coefficient_mismatches": 0,
+    "column_mismatches": 0,
+    "extra_columns": 0,
+    "extra_nonzeros": 0,
+    "extra_rows": 0,
+    "missing_columns": 0,
+    "missing_nonzeros": 0,
+    "missing_rows": 0,
+    "row_bound_mismatches": 0
+  },
+  "gams": {
+    "column_count": 5,
+    "logical_sha256": "12e9a76ddbb273e1ea0cb70e5c133814031cb36bb973a8bdfe67a531a32413b7",
+    "nonzero_count": 6,
+    "row_count": 3,
+    "sense": "maximize",
+    "structural_sha256": "f44984490ff6ad79e52966e73b704bc4fac874d7876cea37fcb74d761a80b187"
+  },
+  "objective_constant": {
+    "difference_nzd": 4.470348358154297e-08,
+    "gams_nzd": 95549918.99999996,
+    "gams_objective_column": "x1",
+    "gams_objective_jacobian": 1.0,
+    "gams_objective_row": "e1",
+    "passed": true,
+    "python_nzd": 95549919.0
+  },
+  "passed": true,
+  "precision_rule": {
+    "matrix_absolute_tolerance": 1e-09,
+    "objective_constant_absolute_tolerance_nzd": 1e-07
+  },
+  "profile": "vspd-v5.0.6-demand-objective-oracle",
+  "projection": {
+    "gams_zero_mw_discrete_rows_excluded": 19,
+    "reason": "GAMS expands a discrete bid across all global block labels; rows with zero bid MW only restate an already fixed zero PURCHASEBLOCK and leave an economically inert binary."
+  },
+  "python": {
+    "column_count": 5,
+    "logical_sha256": "12e9a76ddbb273e1ea0cb70e5c133814031cb36bb973a8bdfe67a531a32413b7",
+    "nonzero_count": 6,
+    "row_count": 3,
+    "sense": "maximize",
+    "structural_sha256": "f44984490ff6ad79e52966e73b704bc4fac874d7876cea37fcb74d761a80b187"
+  },
+  "schema_version": 1,
+  "sources": {
+    "dictionary_gdx": {
+      "name": "pyspd_solve_1_dict.gdx",
+      "sha256": "36bd2f65661383e8c3e2b6d5214705c4614b121aa4120b4ad7af741ad4a98dc3"
+    },
+    "input_gdx": {
+      "name": "pyspd-demand-oracle-input.gdx",
+      "sha256": "c1f1217fb0d286b16a02a85ed1ad9f6c528d85480b7890ca16c42bcfada39fdd"
+    },
+    "matrix_gdx": {
+      "name": "pyspd_solve_1_matrix.gdx",
+      "sha256": "6b864fdcf257ba40e88adaa166eb0939b9f718091d9e20503ae1a1946c42b2c1"
+    }
+  }
+}

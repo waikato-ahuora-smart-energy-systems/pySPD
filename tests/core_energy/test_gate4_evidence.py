@@ -30,6 +30,18 @@ def test_gate4_gams_matrix_projection_is_exact() -> None:
     assert python["nonzero_count"] == 12_892
 
 
+def test_gate4_oracle_covers_demand_rows_and_objective_constant() -> None:
+    evidence = _read("oracle-demand-objective-parity.json")
+
+    assert evidence["passed"] is True
+    assert evidence["coverage"] == {
+        "DemBidDefintion": {"gams_rows": 2, "python_rows": 2},
+        "DemBidDiscrete": {"gams_rows": 1, "python_rows": 1},
+    }
+    assert evidence["objective_constant"]["passed"] is True
+    assert evidence["objective_constant"]["difference_nzd"] <= 1e-7
+
+
 def test_gate4_full_case_residual_objective_and_price_evidence_passes() -> None:
     evidence = _read("solve-price-validation.json")
     assert evidence["passed"] is True

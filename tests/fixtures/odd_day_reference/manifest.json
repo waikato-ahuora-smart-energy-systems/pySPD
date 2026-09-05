@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "profile": "pyspd-odd-day-reference-corpus-v2",
+  "selection": {
+    "method": "Two rounds of purposeful edge-case selection, six days per requested year.",
+    "2019": "Two daylight-saving transition days, the largest 2019 archived CPLEX violation event, the largest remaining single-period and daily violation events, and the highest remaining zero-violation system cost.",
+    "2022": "The public consolidated Pricing GDX inventory starts in November 2022. Dates cover the first and largest file at that schema boundary, shortfall-transfer candidates, residual-recovery behavior, and a known original-model numerical-recovery edge.",
+    "source_2019": "User-supplied vSPD final-pricing GDX and CPLEX result archive.",
+    "source_2022": "Electricity Authority public Pricing GDX archive. No archived CPLEX result tables were supplied for 2022."
+  },
+  "days": [
+    {
+      "year": 2019,
+      "date": "2019-04-07",
+      "selection_reason": "NZ daylight-saving fall-back day with 50 trading periods.",
+      "input_schema": "vspd-v3-final-pricing",
+      "input": "2019/20190407/input/FP_20190407_F.gdx",
+      "input_bytes": 5881465,
+      "input_sha256": "032b05d343affcbdebc6ccad193b7ee05ba4879de885595ebe7170f6d9ee7d10",
+      "reference_kind": "archived-cplex-results",
+      "result_file_count": 14,
+      "summary_rows": 50,
+      "result_bytes": 11181237,
+      "result_tree_sha256": "b0f62cbf1db95642b143e473a08e4d3f4be08d4eaad3a6587cd4b0ac1323cacb"
+    },
+    {
+      "year": 2019,
+      "date": "2019-09-29",
+      "selection_reason": "NZ daylight-saving spring-forward day with 46 trading periods.",
+      "input_schema": "vspd-v3-final-pricing",
+      "input": "2019/20190929/input/FP_20190929_F.gdx",
+      "input_bytes": 5454829,
+      "input_sha256": "aac25fad67df0a9377f011c442d1a5deb25ea70992693d70b98b7ca96f0d2c30",
+      "reference_kind": "archived-cplex-results",
+      "result_file_count": 14,
+      "summary_rows": 46,
+      "result_bytes": 10149525,
+      "result_tree_sha256": "93cc0fb640d34569e1a3eae140c463b2d00a6ffc930ec059aa7038c3e757cf1a"
+    },
+    {
+      "year": 2019,
+      "date": "2019-10-21",
+      "selection_reason": "Largest 2019 archived CPLEX violation event found during selection: 11.8 MW and NZD 10.03 million violation cost.",
+      "input_schema": "vspd-v3-final-pricing",
+      "input": "2019/20191021/input/FP_20191021_F.gdx",
+      "input_bytes": 5693482,
+      "input_sha256": "6f3bfa4013bea7691db164bc5092e0be576b4946ecf458a87b5bb2b7b31e5e7e",
+      "reference_kind": "archived-cplex-results",
+      "result_file_count": 14,
+      "summary_rows": 48,
+      "result_bytes": 10628209,
+      "result_tree_sha256": "2cc385aa732370075f3a0e4087454d0a3001442a842e7bbbffd0a9bf05503440"
+    },
+    {
+      "year": 2019,
+      "date": "2019-06-19",
+      "selection_reason": "Highest remaining zero-violation archived system cost: NZD 202,569.77482, with node prices to NZD 1,024.226/MWh and reserve prices to NZD 313.859/MW.",
+      "input_schema": "vspd-v3-final-pricing",
+      "input": "2019/20190619/input/FP_20190619_F.gdx",
+      "input_bytes": 5575956,
+      "input_sha256": "aef96e63c46f9272b06c1d7b9e2c0384cce67a8ebd601a354d3744877b36f733",
+      "reference_kind": "archived-cplex-results",
+      "result_file_count": 14,
+      "summary_rows": 48,
+      "result_bytes": 10661717,
+      "result_tree_sha256": "e7a1dc985e8b79be85c624b89e628d46a883199c95dea998fd3daa0cd5323d24"
+    },
+    {
+      "year": 2019,
+      "date": "2019-10-16",
+      "selection_reason": "Largest remaining archived daily violation cost: NZD 4.165 million across seven periods.",
+      "input_schema": "vspd-v3-final-pricing",
+      "input": "2019/20191016/input/FP_20191016_F.gdx",
+      "input_bytes": 5701381,
+      "input_sha256": "060fb58cddb25ad9fa83ee7081c159abcd11e25fc74254ccf8ab6af7e82da7ab",
+      "reference_kind": "archived-cplex-results",
+      "result_file_count": 14,
+      "summary_rows": 48,
+      "result_bytes": 10695826,
+      "result_tree_sha256": "7dd35de091b769e005618127fe5082b74d69972257646bf131bc05b16762e5f0"
+    },
+    {
+      "year": 2019,
+      "date": "2019-11-26",
+      "selection_reason": "Largest remaining archived single-period violation: 3.12 MW and NZD 2.652 million.",
+      "input_schema": "vspd-v3-final-pricing",
+      "input": "2019/20191126/input/FP_20191126_F.gdx",
+      "input_bytes": 5677125,
+      "input_sha256": "e1ce3219b3bb902416b0165c5906efe3650c7c7597ef2d57f7b7f80331f108ae",
+      "reference_kind": "archived-cplex-results",
+      "result_file_count": 14,
+      "summary_rows": 48,
+      "result_bytes": 10623354,
+      "result_tree_sha256": "9ca67b429f75db40c3241728b73cee157b0b754fa49e01621fb68fe5a7316f50"
+    },
+    {
+      "year": 2022,
+      "date": "2022-11-09",
+      "selection_reason": "Twelve shortfall-transfer affected intervals, the largest 2022 count in the governed inventory.",
+      "input_schema": "vspd-v5.0.6",
+      "input": "2022/20221109/input/Pricing_20221109.gdx",
+      "input_bytes": 40505034,
+      "input_sha256": "60a6dfa4fe9151cad8b545f7a81028b970044d7aa04fc91465878b7607523e04",
+      "reference_kind": "official-input-with-pyspd-optimality-and-independent-validation"
+    },
+    {
+      "year": 2022,
+      "date": "2022-11-16",
+      "selection_reason": "Two governed shortfall-transfer candidates at the TP42 evening edge.",
+      "input_schema": "vspd-v5.0.6",
+      "input": "2022/20221116/input/Pricing_20221116.gdx",
+      "input_bytes": 39577696,
+      "input_sha256": "1e2d55749a0e32939731cab9e2526bb31911f0b1639c5fdfcbd19e142a524463",
+      "reference_kind": "official-input-with-pyspd-optimality-and-independent-validation"
+    },
+    {
+      "year": 2022,
+      "date": "2022-11-01",
+      "selection_reason": "First day of the Authority post-1-Nov consolidated Pricing GDX regime and the largest file in the November-December archive; exercises schema-boundary, scale, and duplicate-label ordinal handling.",
+      "input_schema": "vspd-v5.0.6",
+      "input": "2022/20221101/input/Pricing_20221101.gdx",
+      "input_bytes": 44411730,
+      "input_sha256": "da239092c446d39a55c300c421018744d0fc05606b0f4141a837519ee108c175",
+      "reference_kind": "official-input-with-pyspd-optimality-and-independent-validation"
+    },
+    {
+      "year": 2022,
+      "date": "2022-11-24",
+      "selection_reason": "Known original-model branch-block residual and targeted numerical-recovery edge, with two governed shortfall-transfer candidates at TP47.",
+      "input_schema": "vspd-v5.0.6",
+      "input": "2022/20221124/input/Pricing_20221124.gdx",
+      "input_bytes": 40396075,
+      "input_sha256": "37f5e7a62a58df0b427d5205377f435d8fb16fa1d15a44c6c608d5a84adce7c9",
+      "reference_kind": "official-input-with-pyspd-optimality-and-independent-validation"
+    },
+    {
+      "year": 2022,
+      "date": "2022-11-25",
+      "selection_reason": "Five shortfall-transfer affected intervals and a residual-recovery edge.",
+      "input_schema": "vspd-v5.0.6",
+      "input": "2022/20221125/input/Pricing_20221125.gdx",
+      "input_bytes": 43479821,
+      "input_sha256": "913e0b0d2bebb42625293a75754cd4265c401ea566d49c96db490a042ffe5c47",
+      "reference_kind": "official-input-with-pyspd-optimality-and-independent-validation"
+    },
+    {
+      "year": 2022,
+      "date": "2022-12-04",
+      "selection_reason": "Known residual-recovery edge in the governed Gate 12 inventory.",
+      "input_schema": "vspd-v5.0.6",
+      "input": "2022/20221204/input/Pricing_20221204.gdx",
+      "input_bytes": 42416863,
+      "input_sha256": "848a80308a6c5e55bafb7b2a46882d3a1381d856e7c8b56f0a3bcb8239e80e3e",
+      "reference_kind": "official-input-with-pyspd-optimality-and-independent-validation"
+    }
+  ]
+}

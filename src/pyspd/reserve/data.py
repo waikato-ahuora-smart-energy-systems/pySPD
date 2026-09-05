@@ -430,7 +430,9 @@ def _hvdc_maximum(
             link
             for link in data.links
             for *prefix, bus in data.sending_bus
-            if tuple(prefix) == link and (*island[:2], bus, island[2]) in bus_island
+            if link[:2] == island[:2]
+            and tuple(prefix) == link
+            and (*island[:2], bus, island[2]) in bus_island
         }
         monopoles: list[float] = []
         for link in sending:
@@ -485,7 +487,9 @@ def _nmir_breakpoints(
             link
             for link in data.links
             for *prefix, bus in data.sending_bus
-            if tuple(prefix) == link and (*island[:2], bus, island[2]) in bus_island
+            if link[:2] == island[:2]
+            and tuple(prefix) == link
+            and (*island[:2], bus, island[2]) in bus_island
         ]
         capacity = sum(data.capacity[link] for link in sending)
         resistances = [resistance.get(link, 0.0) for link in sending]

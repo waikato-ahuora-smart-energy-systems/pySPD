@@ -45,7 +45,7 @@ def main() -> None:
     reserve_interval_keys: set[tuple[str, str, str]] = set()
     total_seconds: dict[str, float] = defaultdict(float)
     date_time: dict[str, str] = {}
-    seen: set[str] = set()
+    seen: set[tuple[str, str, str]] = set()
     case_count = 0
     reference: TextIO | None = (
         args.reference_records.open(encoding="utf-8")
@@ -62,10 +62,10 @@ def main() -> None:
                 with Path(run["records_path"]).open(encoding="utf-8") as source:
                     for line in source:
                         record = json.loads(line)
-                        case_id = record["case_id"]
-                        if case_id in seen:
-                            raise ValueError(f"duplicate shard case: {case_id}")
-                        seen.add(case_id)
+                        identity = _record_identity(record)
+                        if identity in seen:
+                            raise ValueError(f"duplicate shard case: {identity!r}")
+                        seen.add(identity)
                         target.write(line)
                         _accumulate_published(
                             record,
@@ -212,6 +212,14 @@ def _validate(payloads: list[dict[str, Any]], runs: list[dict[str, Any]]) -> Non
         raise ValueError("shards use different solver profiles")
     if not all(run.get("completed") for run in runs):
         raise ValueError("cannot merge an incomplete shard")
+
+
+def _record_identity(record: dict[str, Any]) -> tuple[str, str, str]:
+    return (
+        str(record["case_id"]),
+        str(record["date_time"]),
+        str(record["trading_period"]),
+    )
 
 
 def _accumulate_published(

@@ -486,14 +486,16 @@ class ReserveRiskComponent(ModelComponent):
                     -hvdc_flow[link]
                     for link in hvdc.links
                     for *prefix, bus in hvdc.sending_bus
-                    if tuple(prefix) == link
+                    if link[:2] == (ca, dt)
+                    and tuple(prefix) == link
                     and (ca, dt, bus, island_name) in network.bus_island
                 )
                 + sum(
                     hvdc_flow[link] - hvdc_loss[link]
                     for link in hvdc.links
                     for *prefix, bus in hvdc.receiving_bus
-                    if tuple(prefix) == link
+                    if link[:2] == (ca, dt)
+                    and tuple(prefix) == link
                     and (ca, dt, bus, island_name) in network.bus_island
                 )
             )
@@ -860,7 +862,8 @@ class ReserveSharingComponent(ModelComponent):
                     hvdc_flow[link]
                     for link in hvdc.links
                     for *prefix, bus in hvdc.sending_bus
-                    if tuple(prefix) == link
+                    if link[:2] == (ca, dt)
+                    and tuple(prefix) == link
                     and (ca, dt, bus, island_name) in network.bus_island
                 )
             )
@@ -1335,6 +1338,14 @@ class ReserveSecurityComponent(HVDCSecurityComponent):
                         reserve_type,
                     ), factor in data.market_reserve_offer_factor.items()
                     if (ca, dt, constraint_name) == tuple(key)
+                    and (
+                        ca,
+                        dt,
+                        offer,
+                        reserve_class,
+                        reserve_type,
+                    )
+                    in reserve
                 )
                 if extra.__class__ is not int:
                     constraint.set_value(
@@ -1450,6 +1461,10 @@ class ReserveEconomicsComponent(HVDCEconomicsComponent):
             - block.SystemPenalty
             - block.ScarcityCost
             - sum(share_penalty[key] for key in case.periods)
+            + sum(
+                case.scarcity_limit[key] * case.scarcity_price[key]
+                for key in case.scarcity_blocks
+            )
         )
         block.Objective = pyo.Objective(expr=block.NetBenefit, sense=pyo.maximize)
         artifacts.update(

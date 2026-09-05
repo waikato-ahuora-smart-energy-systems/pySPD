@@ -4,7 +4,26 @@ from collections import defaultdict
 
 import pytest
 
-from tools.merge_solver_path_shards import _accumulate_published, _validate
+from tools.merge_solver_path_shards import (
+    _accumulate_published,
+    _record_identity,
+    _validate,
+)
+
+
+def test_shard_record_identity_allows_a_case_label_across_distinct_periods() -> None:
+    first = {
+        "case_id": "DUPLICATE",
+        "date_time": "17-NOV-2022 00:00",
+        "trading_period": "TP1",
+    }
+    second = {
+        **first,
+        "date_time": "17-NOV-2022 00:30",
+        "trading_period": "TP2",
+    }
+
+    assert _record_identity(first) != _record_identity(second)
 
 
 def test_shard_publication_accumulator_preserves_authoritative_weights() -> None:
