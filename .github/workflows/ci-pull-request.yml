@@ -3,7 +3,7 @@ name: PR Validation
 on:
   pull_request:
     branches: ["main"]
-    types: [opened, synchronize, reopened, ready_for_review, edited]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read
@@ -17,11 +17,11 @@ env:
   UV_VERSION: "0.11.29"
 
 jobs:
-  quality:
-    name: Python 3.13 / macOS
+  pr-gate:
+    name: pr-gate
     if: ${{ github.event.pull_request.draft == false }}
     runs-on: macos-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Check out repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
@@ -46,3 +46,5 @@ jobs:
         run: uv run --no-sync python -m tools.probity_audit
       - name: Build documentation
         run: uv run --no-sync mkdocs build --strict
+      - name: Check whitespace errors
+        run: git diff --check
