@@ -1,5 +1,5 @@
 [project]
-name = "pyspd"
+name = "pySPD"
 version = "0.1.0"
 description = "Class-based Pyomo implementation of vSPD under staged validation"
 readme = "README.md"

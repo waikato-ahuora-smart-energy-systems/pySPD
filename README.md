@@ -1,8 +1,8 @@
-# PySPD
+# pySPD
 
 **New Zealand electricity dispatch and pricing in Python.**
 
-PySPD is a class-based [Pyomo](https://www.pyomo.org/) implementation of New
+pySPD is a class-based [Pyomo](https://www.pyomo.org/) implementation of New
 Zealand's Scheduling, Pricing, and Dispatch model. Use it to replay vSPD inputs,
 inspect dispatch and prices, and build reproducible market studies with explicit
 input, solver, and report provenance.
@@ -13,7 +13,7 @@ input, solver, and report provenance.
 [Validation status](https://github.com/waikato-ahuora-smart-energy-systems/pySPD/blob/v0.1.0/docs/reference/limitations.md)
 
 > [!IMPORTANT]
-> PySPD is an engineering candidate under staged validation. Retained comparisons
+> pySPD is an engineering candidate under staged validation. Retained comparisons
 > support specific dates, formulations, and report surfaces; complete historical
 > parity is not established. The qualified execution environment is Python 3.13
 > on macOS ARM64.
@@ -45,7 +45,7 @@ Install in a Python 3.13 environment:
 pip install pyspd
 ```
 
-SCIP (`pyscipopt`) and HiGHS (`highspy`) install automatically with PySPD.
+SCIP (`pyscipopt`) and HiGHS (`highspy`) install automatically with pySPD.
 For GDX input support, use `pip install "pyspd[gdx]"` and configure your local
 GAMS runtime. The `clp`, `cbc`, and `probity` extras enable additional APIs and
 solver profiles. See the [installation guide](https://github.com/waikato-ahuora-smart-energy-systems/pySPD/blob/v0.1.0/docs/getting-started.md).
@@ -158,5 +158,5 @@ separately from the user documentation published to Read the Docs.
 
 ## Licence
 
-PySPD is licensed under the [Apache License 2.0](https://github.com/waikato-ahuora-smart-energy-systems/pySPD/blob/v0.1.0/LICENSE). Third-party
+pySPD is licensed under the [Apache License 2.0](https://github.com/waikato-ahuora-smart-energy-systems/pySPD/blob/v0.1.0/LICENSE). Third-party
 dependencies, external input data, and solver runtimes retain their own terms.
