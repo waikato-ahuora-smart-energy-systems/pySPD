@@ -55,7 +55,7 @@ time and memory. Review local paths and external data before sharing results.
 See [inputs and GDX](user-guide/inputs-and-gdx.md) for input requirements and
 [results and prices](user-guide/results.md) for interpreting the report bundle.
 
-## Choose the right model
+## Battery + PV at grid nodes
 
 Notebook 08 extends the whole-grid workflow with a short `SITES` settings block
 for node IDs, PV MW, battery MW, and battery MWh. It checks state of charge, losses,
@@ -70,6 +70,8 @@ schedule is fixed, surplus PV is curtailed at zero net demand, and battery expor
 is rejected. The grid re-optimizes around those effects; the new assets do not bid
 as generators or provide reserves. Use a complete daily input with 46, 48, or 50
 half-hour trading periods.
+
+## Choose the right model
 
 Notebooks 01–04 use energy/network LPs with HiGHS to introduce dispatch and
 price mechanics. Notebook 05 uses the full reserve solve policy. Notebook 06

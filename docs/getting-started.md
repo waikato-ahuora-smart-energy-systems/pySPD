@@ -32,7 +32,7 @@ elsewhere in the manual describe working from a repository checkout.
 ## Installing a candidate wheel
 
 To test a supplied wheel before publication, replace `"pyspd[gdx]"` in the
-installation command above with `"/path/to/pyspd-0.1.1-py3-none-any.whl[gdx]"`.
+installation command above with `"/path/to/pyspd-0.1.2-py3-none-any.whl[gdx]"`.
 
 ## 1. Prepare the environment
 
