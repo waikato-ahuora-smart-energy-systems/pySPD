@@ -1,6 +1,6 @@
 [project]
 name = "pySPD"
-version = "0.1.0"
+version = "0.1.1"
 description = "Class-based Pyomo implementation of vSPD under staged validation"
 readme = "README.md"
 license = "Apache-2.0"
