@@ -5,23 +5,23 @@
 Keep input, cases, formulation and all numerical settings constant. Change only
 the solver profile and output directory.
 
-=== "SCIP → HiGHS"
+### SCIP → HiGHS
 
-    ```json
-    {
-      "solver_profile": "scip-mip-fixed-highs-rmip",
-      "output_directory": "/results/20230927/highs"
-    }
-    ```
+```json
+{
+  "solver_profile": "scip-mip-fixed-highs-rmip",
+  "output_directory": "/results/20230927/highs"
+}
+```
 
-=== "SCIP → CLP"
+### SCIP → CLP
 
-    ```json
-    {
-      "solver_profile": "scip-mip-fixed-clp-rmip",
-      "output_directory": "/results/20230927/clp"
-    }
-    ```
+```json
+{
+  "solver_profile": "scip-mip-fixed-clp-rmip",
+  "output_directory": "/results/20230927/clp"
+}
+```
 
 Install CLP with:
 

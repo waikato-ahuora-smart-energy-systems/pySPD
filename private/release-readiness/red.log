@@ -1,0 +1,80 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_______________ test_report_uses_bundled_lock_outside_a_checkout _______________
+
+tmp_path = PosixPath('/private/var/folders/7t/x58dtxdn5zsb6pgycxnzg84mzbmn1q/T/pytest-of-timothyw/pytest-2021/test_report_uses_bundled_lock_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10a886780>
+
+    def test_report_uses_bundled_lock_outside_a_checkout(tmp_path, monkeypatch) -> None:
+        package = tmp_path / "environment/lib/python3.13/site-packages/pyspd"
+        package.mkdir(parents=True)
+        module_path = package / "application.py"
+        module_path.write_text("")
+        bundled = package / "_build/uv.lock"
+        bundled.parent.mkdir()
+        bundled.write_bytes(b"version = 1\n# wheel build lock\n")
+        monkeypatch.setattr(application, "__file__", str(module_path))
+        monkeypatch.chdir(tmp_path)
+        # An unrelated caller's lock must not be mistaken for this package's lock.
+        (tmp_path / "uv.lock").write_bytes(b"unrelated project")
+        source = tmp_path / "synthetic-input"
+        source.write_bytes(b"fixture")
+        configuration = ApplicationConfiguration(
+            formulation_id="vspd-v5.0.6-reserve",
+            input_path=source,
+            output_directory=tmp_path / "reports",
+            source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+            gams_system_directory=tmp_path,
+        )
+        app = PyspdApplication()
+        daily = app.daily_configuration(configuration)
+        case = replace(make_daily_case(), source_sha256=configuration.source_sha256)
+        result = DailyRunner(SequenceExecutor([make_observation(case)])).run(
+            daily, (make_prepared(case),)
+        )
+>       bundle = app.render_report_bundle(configuration, result)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/Users/timothyw/Github_Local/pySPD/tests/release/test_installed_provenance.py:41: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/Users/timothyw/Github_Local/pySPD/src/pyspd/application.py:715: in render_report_bundle
+    _file_sha256(lock_path),
+    ^^^^^^^^^^^^^^^^^^^^^^^
+/Users/timothyw/Github_Local/pySPD/src/pyspd/application.py:86: in _file_sha256
+    with path.open("rb") as handle:
+         ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/private/var/folders/7t/x58dtxdn5zsb6pgycxnzg84mzbmn1q/T/pytest-of-timothyw/pytest-2021/test_report_uses_bundled_lock_0/environment/lib/python3.13/uv.lock')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/private/var/folders/7t/x58dtxdn5zsb6pgycxnzg84mzbmn1q/T/pytest-of-timothyw/pytest-2021/test_report_uses_bundled_lock_0/environment/lib/python3.13/uv.lock'
+
+/Users/timothyw/.local/share/uv/python/cpython-3.13.14-macos-aarch64-none/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+_________ test_release_dependencies_are_installable_without_uv_groups __________
+
+    def test_release_dependencies_are_installable_without_uv_groups() -> None:
+        import tomllib
+    
+        project = tomllib.loads(
+            (Path(__file__).resolve().parents[2] / "pyproject.toml").read_text()
+        )["project"]
+>       assert any(dep.startswith("highspy") for dep in project["dependencies"])
+E       assert False
+E        +  where False = any(<generator object test_release_dependencies_are_installable_without_uv_groups.<locals>.<genexpr> at 0x10a8b6810>)
+
+tests/release/test_installed_provenance.py:57: AssertionError
+=========================== short test summary info ============================
+FAILED tests/release/test_installed_provenance.py::test_report_uses_bundled_lock_outside_a_checkout
+FAILED tests/release/test_installed_provenance.py::test_release_dependencies_are_installable_without_uv_groups
+2 failed in 0.61s

@@ -111,3 +111,9 @@ utilization uses `abs(flow) / abs(capacity)` and ignores zero-capacity rows.
 Dates absent from the retained corpus were not tested and cannot be called
 non-stress days. Outages and islanding are not inferred from output magnitude;
 they need topology-aware input diagnostics in the causal follow-up.
+
+```{toctree}
+:hidden:
+
+evidence/historical-stress-event-atlas-v1/README
+```

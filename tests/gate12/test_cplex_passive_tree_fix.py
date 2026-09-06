@@ -9,7 +9,7 @@ import pytest
 
 from tests.evidence_support import require_external_evidence
 
-_EVIDENCE = Path(__file__).parents[2] / "docs/gate-12"
+_EVIDENCE = Path(__file__).parents[2] / "private/docs/gate-12"
 
 
 def _load(name: str) -> dict:

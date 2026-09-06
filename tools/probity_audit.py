@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from pyspd.probity import TddEvidenceError, TddEvidenceValidator
+from tools.evidence_paths import repository_evidence_path
 
 
 def _git(root: Path, *arguments: str) -> str:
@@ -91,11 +92,11 @@ def changed_production_paths(
 def audit_repository(root: Path) -> dict[str, Any]:
     root = root.resolve()
     validator = TddEvidenceValidator(
-        root, root / "docs/gate-0/schemas/tdd-evidence.schema.json"
+        root, root / "private/docs/gate-0/schemas/tdd-evidence.schema.json"
     )
 
     grouped: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
-    evidence_paths = sorted(root.glob("docs/gate-*/tdd/TDD-*.json"))
+    evidence_paths = sorted(root.glob("private/docs/gate-*/tdd/TDD-*.json"))
     if not evidence_paths:
         raise TddEvidenceError("no gate TDD evidence records found")
     for path in evidence_paths:
@@ -123,8 +124,16 @@ def audit_repository(root: Path) -> dict[str, Any]:
         ) -> bytes:
             return blobs[relative]
 
+        # Preserve immutable records and hashes; relocate only filesystem lookups.
+        relocated = dict(evidence)
+        for phase in ("red", "green"):
+            relocated[phase] = dict(evidence[phase])
+            relocated[phase]["log_uri"] = str(
+                repository_evidence_path(root, evidence[phase]["log_uri"])
+                .relative_to(root)
+            )
         validator.validate(
-            evidence,
+            relocated,
             changed_production_paths=evidence["production_paths"],
             expected_parent=evidence["parent_commit"],
             expected_implementation=implementation,

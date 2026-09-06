@@ -4,3 +4,6 @@
 # Historical CPLEX authority evidence is hash-bound byte-for-byte. Preserve
 # its source line endings so clean checkouts reproduce the manifest hashes.
 tests/fixtures/cplex_reference/**/results/*.csv -text
+
+# Release logs retain raw tool output and are bound by qualification hashes.
+private/release-readiness/*.log -text -whitespace

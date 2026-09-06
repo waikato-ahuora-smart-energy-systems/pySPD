@@ -72,7 +72,7 @@ def test_parallel_daily_assembler_restores_serial_order_and_event_sequence() -> 
 
 def test_parallel_application_evidence_is_identity_strict_and_materially_faster() -> None:
     evidence = json.loads(
-        Path("docs/gate-12/parallel-application-integration-20190218.json").read_text()
+        Path("private/docs/gate-12/parallel-application-integration-20190218.json").read_text()
     )
 
     assert evidence["decision"] == "qualified-production-application-path"

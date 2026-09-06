@@ -55,10 +55,6 @@ not automatically license every solver invoked by existing `$include`-based
 GAMS source. Record the actual executable, solver, option files, source-tree
 hash, and license boundary for each oracle run.
 
-The repository's Gate 12 tools support canonical surface extraction,
-identity-strict comparisons, report crosswalks, and zero-flow certificates.
-They are evidence tooling rather than the stable end-user CLI.
-
 ## CPLEX archive comparison
 
 Treat the supplied historical CPLEX files as the designated output standard,
@@ -73,10 +69,9 @@ Use the mapped-field comparator, preserve missing/extra identities, and accept a
 price only if it matches display precision or lies in a governed analytical
 interval. Never choose a solver rerun after observing which endpoint matches.
 
-## Research counterfactuals
+## Residential-PV counterfactuals
 
-The residential-PV replication is a planned [Stage 13 research
-profile](../gate-13/README.md). It will reduce node demand using a separately
-validated PV dataset and overlay. Until its full method/data entry gate passes,
-ordinary demand-scaling examples must not be described as reproducing that
-paper.
+Use [audited demand overrides](demand-and-offers.md) to explore changes in net
+node demand. Retain the PV dataset, node mapping, units, and scenario definition
+with the results. Generic demand scaling does not establish replication of a
+published residential-PV study; that requires matching its method and data.

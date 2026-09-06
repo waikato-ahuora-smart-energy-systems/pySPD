@@ -1,63 +1,70 @@
-# PySPD documentation
+# PySPD Guide
 
-PySPD is a class-based Pyomo implementation of New Zealand's Scheduling,
-Pricing, and Dispatch model. It reads vSPD GDX inputs, solves each pricing case
-with an explicitly selected solver profile, reconstructs market prices, and
-writes deterministic CSV reports with a hash-bound manifest.
+PySPD is a Python implementation of New Zealand's Scheduling, Pricing, and
+Dispatch model. It is built for researchers and analysts who need reproducible
+market studies, transparent dispatch and pricing calculations, and comparisons
+with historical vSPD results.
 
-The qualified portable pathway is:
+A run reads a declared GDX input, assembles a class-based Pyomo formulation,
+solves dispatch with SCIP, and calculates fixed-discrete prices with HiGHS.
+It writes twelve CSV tables and a manifest recording the input, configuration,
+solver, and report hashes.
 
-```text
-SCIP MIP → fix discrete and SOS state → HiGHS RMIP → validated prices/reports
+## Start Here
+
+I want to run a case
+: Start with [getting started](getting-started.md), then use
+  [running PySPD](user-guide/running.md) to select cases or run a complete day.
+
+I need to understand the results
+: Read [results and prices](user-guide/results.md) for dispatch, raw and repaired
+  prices, node allocation, publication weighting, and output verification.
+
+I am building a market study
+: Start with [choosing a case study](case-studies/index.md), then use the
+  [audited scenario API](user-guide/audited-scenarios.md) for counterfactual inputs.
+
+I want to compare historical results
+: Use the [validation workflow](validation/index.md) and
+  [interpreting parity](validation/interpreting-parity.md) to compare matching
+  populations, report fields, numerical tolerances, and analytical intervals.
+
+I need a command or field definition
+: Look up the [CLI](reference/cli.md), [configuration fields](reference/configuration.md),
+  [report tables](reference/reports.md), or [glossary](reference/glossary.md).
+
+## What PySPD Covers
+
+- v5-style pricing GDX and legacy v3 final-pricing inputs;
+- energy dispatch, AC/HVDC networks, reserve, and version-specific formulations;
+- SCIP dispatch followed by fixed-discrete HiGHS pricing;
+- independent validation and deterministic report bundles;
+- parallel execution of independent pricing cases;
+- audited demand, offer, reserve, and network counterfactuals through Python; and
+- a separate analytic multi-period battery research profile.
+
+The qualified production environment is macOS ARM64 with Python 3.13. GDX
+access requires a local GAMS runtime. The production formulations are
+`vspd-v5.0.6-reserve` and `spd-v16.0-reserve`; the
+[battery profile](case-studies/battery-storage.md) has a separate Python entry
+point and is not registered in `pyspd run`.
+
+Validation applies to specific inputs and output surfaces. Complete historical
+parity is not established; read [current limitations](reference/limitations.md)
+before extending a comparison claim to another date, platform, or formulation.
+
+PySPD is licensed under the {download}`Apache License 2.0 <../LICENSE>`.
+Third-party dependencies, external input data, and solver runtimes retain
+their own terms.
+
+```{toctree}
+:maxdepth: 2
+:caption: Documentation
+
+getting-started
+user-guide/index
+case-studies/index
+validation/index
+reference/index
+troubleshooting
 ```
-
-PySPD is designed for repeatable model investigation, not as an unqualified
-replacement for every historical vSPD execution. The repository's stage-and-
-gate evidence records exactly which formulations, dates, outputs, and numerical
-conventions have been validated.
-
-## Where to begin
-
-- [Install and run a first case](getting-started.md).
-- [Choose a case-study pattern](case-studies/index.md).
-- [Review potential case studies to build](case-studies/potential-builds.md).
-- [Understand the generated reports](user-guide/results.md).
-- [Interpret comparisons with GAMS or CPLEX](validation/interpreting-parity.md).
-- [Extend the class-based formulation](developer-guide/extending.md).
-
-## Supported execution surface
-
-| Capability | Current status |
-|---|---|
-| vSPD 5.x-style daily GDX input | Supported as `vspd-v5.0.6` |
-| Legacy 2019 final-pricing GDX input | Supported through `vspd-v3-final-pricing` |
-| Reserve co-optimization formulation | `vspd-v5.0.6-reserve` |
-| SPD v16 reserve formulation | `spd-v16.0-reserve`, subject to its compatibility window |
-| Default solver path | SCIP MIP → HiGHS fixed RMIP |
-| Independent alternative pricing path | SCIP MIP → CLP fixed RMIP |
-| Parallel independent cases | `worker_count` or `--workers` |
-| Historical stress-event atlas | 21 hash-verified CPLEX-backed days |
-| Multi-period battery storage | Separate analytic research profile |
-| Audited raw-input overrides | Python API; not yet part of the stable CLI schema |
-| Inter-period unit commitment | Not implemented |
-| Exact CPLEX basis reproduction | Not generally guaranteed |
-
-!!! warning "Validation boundary"
-
-    An optimal solver status establishes optimality for the PySPD algebra. It
-    does not by itself establish exact historical-output parity. Degenerate LP
-    faces can produce different valid dispatch allocations or dual prices.
-    PySPD reports analytical price intervals where they have been independently
-    derived; a reference value inside such an interval is accepted without
-    rewriting either result.
-
-## Reproducibility principles
-
-Every normal run binds the input SHA-256, application configuration, package
-lock, formulation, solver profile, and environment into `manifest.json`.
-Reports use stable identities and deterministic ordering. Multi-process runs
-restore source order before publishing prices and writing reports.
-
-The detailed engineering record remains available in the [stage-and-gate
-plan](pyomo-vspd-stage-gate-plan.md), [ADRs](adr/README.md), and [Gate 12
-evidence](gate-12/README.md).

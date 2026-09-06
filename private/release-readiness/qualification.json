@@ -1,0 +1,89 @@
+{
+  "artifacts": [
+    {
+      "name": "pyspd-0.1.0-py3-none-any.whl",
+      "sha256": "5cdf45f62ec406fcd6966da2f7e22ffbd083f9c4c55df89051f7875827b13da6",
+      "size": 275085
+    },
+    {
+      "name": "pyspd-0.1.0.tar.gz",
+      "sha256": "44de0ae84c44b846aafdb5b333b66ca005e0a44213c6f46bcc014b509046e3c6",
+      "size": 233389
+    }
+  ],
+  "build_lock_sha256": "6f9f7a6c618fecb9a5e09cfe04c0db946d49dd34b4d8e48ab810ece83329b5c2",
+  "core_install": {
+    "build_lock_sha256": "6f9f7a6c618fecb9a5e09cfe04c0db946d49dd34b4d8e48ab810ece83329b5c2",
+    "gdx_roundtrip": false,
+    "installed_distributions": {
+      "PySCIPOpt": "5.7.1",
+      "highspy": "1.15.1",
+      "numpy": "2.5.2",
+      "pyarrow": "22.0.0",
+      "pyomo": "6.10.1",
+      "pyspd": "0.1.0"
+    },
+    "package_path": "/private/var/folders/7t/x58dtxdn5zsb6pgycxnzg84mzbmn1q/T/pyspd-wheel-0a_tgwwt/venv/lib/python3.13/site-packages/pyspd/__init__.py",
+    "report_manifest_sha256": "df2ff0de85b0f76d73242cb63e54977f330ab4792099bc74fb029a6ab22a2d1d",
+    "report_table_count": 12,
+    "state": "complete",
+    "validation_scope": "synthetic reserve SCIP/HiGHS solve and report roundtrip",
+    "version": "0.1.0"
+  },
+  "gdx_install": {
+    "build_lock_sha256": "6f9f7a6c618fecb9a5e09cfe04c0db946d49dd34b4d8e48ab810ece83329b5c2",
+    "gdx_roundtrip": true,
+    "installed_distributions": {
+      "PySCIPOpt": "5.7.1",
+      "PyYAML": "6.0.3",
+      "Pygments": "2.21.0",
+      "annotated-doc": "0.0.5",
+      "annotated-types": "0.8.0",
+      "certifi": "2026.7.22",
+      "charset-normalizer": "3.5.1",
+      "gamsapi": "54.3.1",
+      "gamspy": "1.27.0",
+      "gamspy_base": "54.3.1",
+      "highspy": "1.15.1",
+      "idna": "3.19",
+      "markdown-it-py": "4.2.0",
+      "mdurl": "0.1.2",
+      "numpy": "2.5.2",
+      "pandas": "3.0.5",
+      "pyarrow": "22.0.0",
+      "pydantic": "2.13.5",
+      "pydantic_core": "2.46.5",
+      "pyomo": "6.10.1",
+      "pyspd": "0.1.0",
+      "python-dateutil": "2.9.0.post0",
+      "requests": "2.34.2",
+      "rich": "15.0.0",
+      "shellingham": "1.5.4",
+      "six": "1.17.0",
+      "typer": "0.27.2",
+      "typing-inspection": "0.4.4",
+      "typing_extensions": "4.16.0",
+      "urllib3": "2.7.0"
+    },
+    "package_path": "/private/var/folders/7t/x58dtxdn5zsb6pgycxnzg84mzbmn1q/T/pyspd-wheel-0a_tgwwt/venv/lib/python3.13/site-packages/pyspd/__init__.py",
+    "report_manifest_sha256": "df2ff0de85b0f76d73242cb63e54977f330ab4792099bc74fb029a6ab22a2d1d",
+    "report_table_count": 12,
+    "state": "complete",
+    "validation_scope": "synthetic reserve SCIP/HiGHS solve and report roundtrip",
+    "version": "0.1.0"
+  },
+  "license_expression": "Apache-2.0",
+  "license_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+  "requirements": [
+    "highspy<2,>=1.11",
+    "pyarrow<23,>=18",
+    "pyomo<7,>=6.9",
+    "pyscipopt<6,>=5.5",
+    "pulp<4,>=3.2; extra == 'cbc'",
+    "cylp<1,>=0.94; extra == 'clp'",
+    "gamspy>=1.27.0; extra == 'gdx'",
+    "jsonschema<5,>=4; extra == 'probity'"
+  ],
+  "sdist_file_count": 85,
+  "wheel_file_count": 84
+}

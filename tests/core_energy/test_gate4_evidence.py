@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 def _read(name: str) -> dict[str, object]:
-    return json.loads(Path("docs/gate-4", name).read_text(encoding="utf-8"))
+    return json.loads(Path("private/docs/gate-4", name).read_text(encoding="utf-8"))
 
 
 def test_gate4_gams_matrix_projection_is_exact() -> None:

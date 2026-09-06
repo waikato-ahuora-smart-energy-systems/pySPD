@@ -89,6 +89,20 @@ def _file_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _dependency_lock_sha256() -> str:
+    """Identify the build lock in a wheel or the active lock in a source checkout."""
+    package_directory = Path(__file__).resolve().parent
+    bundled = package_directory / "_build" / "uv.lock"
+    if bundled.is_file():
+        return _file_sha256(bundled)
+    # Editable development installs retain the source checkout's current lock.
+    source_directory = package_directory.parent
+    checkout_lock = source_directory.parent / "uv.lock"
+    if source_directory.name == "src" and checkout_lock.is_file():
+        return _file_sha256(checkout_lock)
+    raise ConfigurationError("PySPD build lock is missing; reinstall the package")
+
+
 @dataclass(frozen=True, slots=True)
 class ApplicationConfiguration:
     formulation_id: str
@@ -706,13 +720,12 @@ class PyspdApplication:
         daily_configuration = self.daily_configuration(configuration)
         if result.configuration_sha256 != daily_configuration.logical_sha256:
             raise ConfigurationError("result configuration hash mismatch")
-        lock_path = Path(__file__).resolve().parents[2] / "uv.lock"
         provenance = ArtifactProvenance(
             configuration.formulation_id,
             configuration.source_sha256,
             result.configuration_sha256,
             __version__,
-            _file_sha256(lock_path),
+            _dependency_lock_sha256(),
             configuration.solver_profile,
             daily_configuration.environment_fingerprint,
         )

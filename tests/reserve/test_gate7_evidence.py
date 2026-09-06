@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 def test_gate7_canonical_gams_reserve_matrix_is_exact() -> None:
-    evidence = json.loads(Path("docs/gate-7/oracle-matrix-parity.json").read_text())
+    evidence = json.loads(Path("private/docs/gate-7/oracle-matrix-parity.json").read_text())
     assert evidence["passed"] is True
     assert evidence["python"] == evidence["gams"]
     assert evidence["differences"]["missing_columns"] == 0
@@ -18,7 +18,7 @@ def test_gate7_canonical_gams_reserve_matrix_is_exact() -> None:
 
 def test_gate7_full_solve_price_and_independent_validation_are_closed() -> None:
     evidence = json.loads(
-        Path("docs/gate-7/solve-price-validation.json").read_text()
+        Path("private/docs/gate-7/solve-price-validation.json").read_text()
     )
     assert evidence["passed"] is True
     assert evidence["state_machine"]["primary_backend"] == "gams-scip"

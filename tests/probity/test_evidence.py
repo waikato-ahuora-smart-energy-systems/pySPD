@@ -61,7 +61,7 @@ def valid_evidence(root: Path) -> dict[str, Any]:
 
 
 def validator(root: Path) -> TddEvidenceValidator:
-    schema = Path(__file__).parents[2] / "docs/gate-0/schemas/tdd-evidence.schema.json"
+    schema = Path(__file__).parents[2] / "private/docs/gate-0/schemas/tdd-evidence.schema.json"
     return TddEvidenceValidator(root, schema)
 
 

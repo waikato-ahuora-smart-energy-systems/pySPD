@@ -19,6 +19,7 @@ from tools.benchmark_solver_paths import (
     _update_parity,
     _write,
 )
+from tools.evidence_paths import repository_evidence_path
 
 
 def main() -> None:
@@ -59,7 +60,7 @@ def main() -> None:
     try:
         with records_path.open("w", encoding="utf-8") as target:
             for run in runs:
-                with Path(run["records_path"]).open(encoding="utf-8") as source:
+                with repository_evidence_path(Path.cwd(), run["records_path"]).open(encoding="utf-8") as source:
                     for line in source:
                         record = json.loads(line)
                         identity = _record_identity(record)

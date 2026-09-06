@@ -126,7 +126,7 @@ class HighsBackend(SolverBackend):
         solver = self._solver_factory("appsi_highs")
         if solver is None or not solver.available(exception_flag=False):
             raise SolverExecutionError(
-                "HiGHS is unavailable; install the uv 'highs' dependency group"
+                "HiGHS is unavailable; reinstall pyspd with its highspy dependency"
             )
         for name, value in configuration.options.items():
             solver.options[name] = value
@@ -217,7 +217,7 @@ class ClpBackend(SolverBackend):
             from cylp.cy import CyClpSimplex, CyCoinPackedMatrix
         except ImportError as error:
             raise SolverExecutionError(
-                "CLP is unavailable; install the uv 'clp' dependency group"
+                "CLP is unavailable; install pyspd[clp] (or the uv 'clp' group)"
             ) from error
 
         variables = tuple(
@@ -443,7 +443,7 @@ class CbcBackend(SolverBackend):
         solver = pyo.SolverFactory("cbc", executable=executable)
         if solver is None or not solver.available(exception_flag=False):
             raise SolverExecutionError(
-                "CBC is unavailable; install the uv 'cbc' dependency group"
+                "CBC is unavailable; install pyspd[cbc] (or the uv 'cbc' group)"
             )
         options = self._cbc_options(configuration)
         solve_options: dict[str, Any] = {
@@ -531,7 +531,7 @@ class CbcBackend(SolverBackend):
             from pulp.apis.coin_api import pulp_cbc_path
         except ImportError as error:
             raise SolverExecutionError(
-                "CBC is unavailable; install the uv 'cbc' dependency group"
+                "CBC is unavailable; install pyspd[cbc] (or the uv 'cbc' group)"
             ) from error
         return str(pulp_cbc_path)
 

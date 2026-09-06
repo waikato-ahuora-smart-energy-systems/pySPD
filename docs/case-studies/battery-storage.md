@@ -4,12 +4,14 @@ PySPD now includes a minimal, explicitly separate multi-period battery research
 profile. It demonstrates genuine time coupling without changing the validated
 single-period vSPD compatibility model.
 
-!!! warning "Research profile"
+:::{admonition} Research profile
+:class: warning
 
-    `pyspd-multiperiod-battery-v1` is an analytic research foundation. It is not
-    registered in the production `pyspd run` application, does not read battery
-    assets from vSPD GDX, and has not passed historical market parity. Its prices
-    are LP energy-balance duals, not qualified vSPD published prices.
+`pyspd-multiperiod-battery-v1` is an analytic research foundation. It is not
+registered in the production `pyspd run` application, does not read battery
+assets from vSPD GDX, and has not passed historical market parity. Its prices
+are LP energy-balance duals, not qualified vSPD published prices.
+:::
 
 ## Minimal example
 
@@ -111,7 +113,7 @@ The analytic tests establish:
 
 ## Before a historical battery study
 
-The next gate must add:
+Historical market integration requires:
 
 1. a hash-bound battery source schema with node, commissioning date, power,
    usable energy, losses, initial/terminal policy, and operating cost;

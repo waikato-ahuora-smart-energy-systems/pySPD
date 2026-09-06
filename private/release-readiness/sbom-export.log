@@ -1,0 +1,1010 @@
+warning: `uv export --format=cyclonedx1.5` is experimental and may change without warning. Pass `--preview-features sbom-export` to disable this warning.
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "serialNumber": "urn:uuid:13ca16f6-f05a-413b-93a9-6a58564eabd0",
+  "metadata": {
+    "timestamp": "2026-09-06T03:27:57.937098000Z",
+    "tools": [
+      {
+        "vendor": "Astral Software Inc.",
+        "name": "uv",
+        "version": "0.11.29"
+      }
+    ],
+    "component": {
+      "type": "library",
+      "bom-ref": "pyspd-1@0.1.0",
+      "name": "pyspd",
+      "version": "0.1.0",
+      "properties": [
+        {
+          "name": "uv:package:is_project_root",
+          "value": "true"
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "alabaster-2@1.0.0",
+      "name": "alabaster",
+      "version": "1.0.0",
+      "purl": "pkg:pypi/alabaster@1.0.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "annotated-doc-3@0.0.5",
+      "name": "annotated-doc",
+      "version": "0.0.5",
+      "purl": "pkg:pypi/annotated-doc@0.0.5"
+    },
+    {
+      "type": "library",
+      "bom-ref": "annotated-types-4@0.8.0",
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "purl": "pkg:pypi/annotated-types@0.8.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "attrs-5@26.1.0",
+      "name": "attrs",
+      "version": "26.1.0",
+      "purl": "pkg:pypi/attrs@26.1.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "babel-6@2.18.0",
+      "name": "babel",
+      "version": "2.18.0",
+      "purl": "pkg:pypi/babel@2.18.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "certifi-7@2026.7.22",
+      "name": "certifi",
+      "version": "2026.7.22",
+      "purl": "pkg:pypi/certifi@2026.7.22"
+    },
+    {
+      "type": "library",
+      "bom-ref": "charset-normalizer-8@3.5.1",
+      "name": "charset-normalizer",
+      "version": "3.5.1",
+      "purl": "pkg:pypi/charset-normalizer@3.5.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "colorama-9@0.4.6",
+      "name": "colorama",
+      "version": "0.4.6",
+      "purl": "pkg:pypi/colorama@0.4.6",
+      "properties": [
+        {
+          "name": "uv:package:marker",
+          "value": "sys_platform == 'win32'"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "coverage-10@7.15.4",
+      "name": "coverage",
+      "version": "7.15.4",
+      "purl": "pkg:pypi/coverage@7.15.4"
+    },
+    {
+      "type": "library",
+      "bom-ref": "cylp-11@0.94.0",
+      "name": "cylp",
+      "version": "0.94.0",
+      "purl": "pkg:pypi/cylp@0.94.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "docutils-12@0.22.4",
+      "name": "docutils",
+      "version": "0.22.4",
+      "purl": "pkg:pypi/docutils@0.22.4"
+    },
+    {
+      "type": "library",
+      "bom-ref": "gamsapi-13@54.3.1",
+      "name": "gamsapi",
+      "version": "54.3.1",
+      "purl": "pkg:pypi/gamsapi@54.3.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "gamspy-14@1.27.0",
+      "name": "gamspy",
+      "version": "1.27.0",
+      "purl": "pkg:pypi/gamspy@1.27.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "gamspy-base-15@54.3.1",
+      "name": "gamspy-base",
+      "version": "54.3.1",
+      "purl": "pkg:pypi/gamspy-base@54.3.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "gamspy-highs-16@54.3.1",
+      "name": "gamspy-highs",
+      "version": "54.3.1",
+      "purl": "pkg:pypi/gamspy-highs@54.3.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "gamspy-ipopt-17@54.3.1",
+      "name": "gamspy-ipopt",
+      "version": "54.3.1",
+      "purl": "pkg:pypi/gamspy-ipopt@54.3.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "gamspy-miles-18@54.3.1",
+      "name": "gamspy-miles",
+      "version": "54.3.1",
+      "purl": "pkg:pypi/gamspy-miles@54.3.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "gamspy-reshop-19@54.3.1",
+      "name": "gamspy-reshop",
+      "version": "54.3.1",
+      "purl": "pkg:pypi/gamspy-reshop@54.3.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "gamspy-scip-20@54.3.1",
+      "name": "gamspy-scip",
+      "version": "54.3.1",
+      "purl": "pkg:pypi/gamspy-scip@54.3.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "gamspy-shot-21@54.3.1",
+      "name": "gamspy-shot",
+      "version": "54.3.1",
+      "purl": "pkg:pypi/gamspy-shot@54.3.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "gurobipy-22@12.0.3",
+      "name": "gurobipy",
+      "version": "12.0.3",
+      "purl": "pkg:pypi/gurobipy@12.0.3"
+    },
+    {
+      "type": "library",
+      "bom-ref": "highspy-23@1.15.1",
+      "name": "highspy",
+      "version": "1.15.1",
+      "purl": "pkg:pypi/highspy@1.15.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "hypothesis-24@6.165.10",
+      "name": "hypothesis",
+      "version": "6.165.10",
+      "purl": "pkg:pypi/hypothesis@6.165.10"
+    },
+    {
+      "type": "library",
+      "bom-ref": "idna-25@3.19",
+      "name": "idna",
+      "version": "3.19",
+      "purl": "pkg:pypi/idna@3.19"
+    },
+    {
+      "type": "library",
+      "bom-ref": "imagesize-26@2.0.1",
+      "name": "imagesize",
+      "version": "2.0.1",
+      "purl": "pkg:pypi/imagesize@2.0.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "iniconfig-27@2.3.0",
+      "name": "iniconfig",
+      "version": "2.3.0",
+      "purl": "pkg:pypi/iniconfig@2.3.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "jinja2-28@3.1.6",
+      "name": "jinja2",
+      "version": "3.1.6",
+      "purl": "pkg:pypi/jinja2@3.1.6"
+    },
+    {
+      "type": "library",
+      "bom-ref": "jsonschema-29@4.26.0",
+      "name": "jsonschema",
+      "version": "4.26.0",
+      "purl": "pkg:pypi/jsonschema@4.26.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "jsonschema-specifications-30@2025.9.1",
+      "name": "jsonschema-specifications",
+      "version": "2025.9.1",
+      "purl": "pkg:pypi/jsonschema-specifications@2025.9.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "librt-31@0.15.0",
+      "name": "librt",
+      "version": "0.15.0",
+      "purl": "pkg:pypi/librt@0.15.0",
+      "properties": [
+        {
+          "name": "uv:package:marker",
+          "value": "platform_python_implementation != 'PyPy'"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "markdown-it-py-32@4.2.0",
+      "name": "markdown-it-py",
+      "version": "4.2.0",
+      "purl": "pkg:pypi/markdown-it-py@4.2.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "markupsafe-33@3.0.3",
+      "name": "markupsafe",
+      "version": "3.0.3",
+      "purl": "pkg:pypi/markupsafe@3.0.3"
+    },
+    {
+      "type": "library",
+      "bom-ref": "mdit-py-plugins-34@0.6.1",
+      "name": "mdit-py-plugins",
+      "version": "0.6.1",
+      "purl": "pkg:pypi/mdit-py-plugins@0.6.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "mdurl-35@0.1.2",
+      "name": "mdurl",
+      "version": "0.1.2",
+      "purl": "pkg:pypi/mdurl@0.1.2"
+    },
+    {
+      "type": "library",
+      "bom-ref": "mypy-36@1.20.2",
+      "name": "mypy",
+      "version": "1.20.2",
+      "purl": "pkg:pypi/mypy@1.20.2"
+    },
+    {
+      "type": "library",
+      "bom-ref": "mypy-extensions-37@1.1.0",
+      "name": "mypy-extensions",
+      "version": "1.1.0",
+      "purl": "pkg:pypi/mypy-extensions@1.1.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "myst-parser-38@5.1.0",
+      "name": "myst-parser",
+      "version": "5.1.0",
+      "purl": "pkg:pypi/myst-parser@5.1.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "numpy-39@2.5.2",
+      "name": "numpy",
+      "version": "2.5.2",
+      "purl": "pkg:pypi/numpy@2.5.2"
+    },
+    {
+      "type": "library",
+      "bom-ref": "packaging-40@26.3",
+      "name": "packaging",
+      "version": "26.3",
+      "purl": "pkg:pypi/packaging@26.3"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pandas-41@3.0.5",
+      "name": "pandas",
+      "version": "3.0.5",
+      "purl": "pkg:pypi/pandas@3.0.5"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pathspec-42@1.1.1",
+      "name": "pathspec",
+      "version": "1.1.1",
+      "purl": "pkg:pypi/pathspec@1.1.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pluggy-43@1.6.0",
+      "name": "pluggy",
+      "version": "1.6.0",
+      "purl": "pkg:pypi/pluggy@1.6.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pulp-44@3.3.2",
+      "name": "pulp",
+      "version": "3.3.2",
+      "purl": "pkg:pypi/pulp@3.3.2"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pyarrow-45@22.0.0",
+      "name": "pyarrow",
+      "version": "22.0.0",
+      "purl": "pkg:pypi/pyarrow@22.0.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pydantic-46@2.13.5",
+      "name": "pydantic",
+      "version": "2.13.5",
+      "purl": "pkg:pypi/pydantic@2.13.5"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pydantic-core-47@2.46.5",
+      "name": "pydantic-core",
+      "version": "2.46.5",
+      "purl": "pkg:pypi/pydantic-core@2.46.5"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pygments-48@2.21.0",
+      "name": "pygments",
+      "version": "2.21.0",
+      "purl": "pkg:pypi/pygments@2.21.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pyomo-49@6.10.1",
+      "name": "pyomo",
+      "version": "6.10.1",
+      "purl": "pkg:pypi/pyomo@6.10.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pyscipopt-50@5.7.1",
+      "name": "pyscipopt",
+      "version": "5.7.1",
+      "purl": "pkg:pypi/pyscipopt@5.7.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pytest-51@9.1.1",
+      "name": "pytest",
+      "version": "9.1.1",
+      "purl": "pkg:pypi/pytest@9.1.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pytest-cov-52@7.1.0",
+      "name": "pytest-cov",
+      "version": "7.1.0",
+      "purl": "pkg:pypi/pytest-cov@7.1.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pytest-timeout-53@2.4.0",
+      "name": "pytest-timeout",
+      "version": "2.4.0",
+      "purl": "pkg:pypi/pytest-timeout@2.4.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "python-dateutil-54@2.9.0.post0",
+      "name": "python-dateutil",
+      "version": "2.9.0.post0",
+      "purl": "pkg:pypi/python-dateutil@2.9.0.post0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pyyaml-55@6.0.3",
+      "name": "pyyaml",
+      "version": "6.0.3",
+      "purl": "pkg:pypi/pyyaml@6.0.3"
+    },
+    {
+      "type": "library",
+      "bom-ref": "referencing-56@0.37.0",
+      "name": "referencing",
+      "version": "0.37.0",
+      "purl": "pkg:pypi/referencing@0.37.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "requests-57@2.34.2",
+      "name": "requests",
+      "version": "2.34.2",
+      "purl": "pkg:pypi/requests@2.34.2"
+    },
+    {
+      "type": "library",
+      "bom-ref": "rich-58@15.0.0",
+      "name": "rich",
+      "version": "15.0.0",
+      "purl": "pkg:pypi/rich@15.0.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "roman-numerals-59@4.1.0",
+      "name": "roman-numerals",
+      "version": "4.1.0",
+      "purl": "pkg:pypi/roman-numerals@4.1.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "rpds-py-60@2026.6.3",
+      "name": "rpds-py",
+      "version": "2026.6.3",
+      "purl": "pkg:pypi/rpds-py@2026.6.3"
+    },
+    {
+      "type": "library",
+      "bom-ref": "ruff-61@0.16.5",
+      "name": "ruff",
+      "version": "0.16.5",
+      "purl": "pkg:pypi/ruff@0.16.5"
+    },
+    {
+      "type": "library",
+      "bom-ref": "scipy-62@1.18.1",
+      "name": "scipy",
+      "version": "1.18.1",
+      "purl": "pkg:pypi/scipy@1.18.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "shellingham-63@1.5.4",
+      "name": "shellingham",
+      "version": "1.5.4",
+      "purl": "pkg:pypi/shellingham@1.5.4"
+    },
+    {
+      "type": "library",
+      "bom-ref": "six-64@1.17.0",
+      "name": "six",
+      "version": "1.17.0",
+      "purl": "pkg:pypi/six@1.17.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "snowballstemmer-65@3.1.1",
+      "name": "snowballstemmer",
+      "version": "3.1.1",
+      "purl": "pkg:pypi/snowballstemmer@3.1.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "sortedcontainers-66@2.4.0",
+      "name": "sortedcontainers",
+      "version": "2.4.0",
+      "purl": "pkg:pypi/sortedcontainers@2.4.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "sphinx-67@9.1.0",
+      "name": "sphinx",
+      "version": "9.1.0",
+      "purl": "pkg:pypi/sphinx@9.1.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "sphinx-rtd-theme-68@3.1.0",
+      "name": "sphinx-rtd-theme",
+      "version": "3.1.0",
+      "purl": "pkg:pypi/sphinx-rtd-theme@3.1.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "sphinxcontrib-applehelp-69@2.0.0",
+      "name": "sphinxcontrib-applehelp",
+      "version": "2.0.0",
+      "purl": "pkg:pypi/sphinxcontrib-applehelp@2.0.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "sphinxcontrib-devhelp-70@2.0.0",
+      "name": "sphinxcontrib-devhelp",
+      "version": "2.0.0",
+      "purl": "pkg:pypi/sphinxcontrib-devhelp@2.0.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "sphinxcontrib-htmlhelp-71@2.1.0",
+      "name": "sphinxcontrib-htmlhelp",
+      "version": "2.1.0",
+      "purl": "pkg:pypi/sphinxcontrib-htmlhelp@2.1.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "sphinxcontrib-jquery-72@4.1",
+      "name": "sphinxcontrib-jquery",
+      "version": "4.1",
+      "purl": "pkg:pypi/sphinxcontrib-jquery@4.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "sphinxcontrib-jsmath-73@1.0.1",
+      "name": "sphinxcontrib-jsmath",
+      "version": "1.0.1",
+      "purl": "pkg:pypi/sphinxcontrib-jsmath@1.0.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "sphinxcontrib-qthelp-74@2.0.0",
+      "name": "sphinxcontrib-qthelp",
+      "version": "2.0.0",
+      "purl": "pkg:pypi/sphinxcontrib-qthelp@2.0.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "sphinxcontrib-serializinghtml-75@2.0.0",
+      "name": "sphinxcontrib-serializinghtml",
+      "version": "2.0.0",
+      "purl": "pkg:pypi/sphinxcontrib-serializinghtml@2.0.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "typer-76@0.27.2",
+      "name": "typer",
+      "version": "0.27.2",
+      "purl": "pkg:pypi/typer@0.27.2"
+    },
+    {
+      "type": "library",
+      "bom-ref": "typing-extensions-77@4.16.0",
+      "name": "typing-extensions",
+      "version": "4.16.0",
+      "purl": "pkg:pypi/typing-extensions@4.16.0"
+    },
+    {
+      "type": "library",
+      "bom-ref": "typing-inspection-78@0.4.4",
+      "name": "typing-inspection",
+      "version": "0.4.4",
+      "purl": "pkg:pypi/typing-inspection@0.4.4"
+    },
+    {
+      "type": "library",
+      "bom-ref": "tzdata-79@2026.3",
+      "name": "tzdata",
+      "version": "2026.3",
+      "purl": "pkg:pypi/tzdata@2026.3",
+      "properties": [
+        {
+          "name": "uv:package:marker",
+          "value": "sys_platform == 'emscripten' or sys_platform == 'win32'"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "urllib3-80@2.7.0",
+      "name": "urllib3",
+      "version": "2.7.0",
+      "purl": "pkg:pypi/urllib3@2.7.0"
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "alabaster-2@1.0.0"
+    },
+    {
+      "ref": "annotated-doc-3@0.0.5"
+    },
+    {
+      "ref": "annotated-types-4@0.8.0"
+    },
+    {
+      "ref": "attrs-5@26.1.0"
+    },
+    {
+      "ref": "babel-6@2.18.0"
+    },
+    {
+      "ref": "certifi-7@2026.7.22"
+    },
+    {
+      "ref": "charset-normalizer-8@3.5.1"
+    },
+    {
+      "ref": "colorama-9@0.4.6"
+    },
+    {
+      "ref": "coverage-10@7.15.4"
+    },
+    {
+      "ref": "cylp-11@0.94.0",
+      "dependsOn": [
+        "numpy-39@2.5.2",
+        "scipy-62@1.18.1"
+      ]
+    },
+    {
+      "ref": "docutils-12@0.22.4"
+    },
+    {
+      "ref": "gamsapi-13@54.3.1"
+    },
+    {
+      "ref": "gamspy-14@1.27.0",
+      "dependsOn": [
+        "gamsapi-13@54.3.1",
+        "gamspy-base-15@54.3.1",
+        "pandas-41@3.0.5",
+        "pydantic-46@2.13.5",
+        "pyyaml-55@6.0.3",
+        "requests-57@2.34.2",
+        "typer-76@0.27.2"
+      ]
+    },
+    {
+      "ref": "gamspy-base-15@54.3.1"
+    },
+    {
+      "ref": "gamspy-highs-16@54.3.1"
+    },
+    {
+      "ref": "gamspy-ipopt-17@54.3.1"
+    },
+    {
+      "ref": "gamspy-miles-18@54.3.1"
+    },
+    {
+      "ref": "gamspy-reshop-19@54.3.1"
+    },
+    {
+      "ref": "gamspy-scip-20@54.3.1"
+    },
+    {
+      "ref": "gamspy-shot-21@54.3.1"
+    },
+    {
+      "ref": "gurobipy-22@12.0.3"
+    },
+    {
+      "ref": "highspy-23@1.15.1",
+      "dependsOn": [
+        "numpy-39@2.5.2"
+      ]
+    },
+    {
+      "ref": "hypothesis-24@6.165.10",
+      "dependsOn": [
+        "sortedcontainers-66@2.4.0"
+      ]
+    },
+    {
+      "ref": "idna-25@3.19"
+    },
+    {
+      "ref": "imagesize-26@2.0.1"
+    },
+    {
+      "ref": "iniconfig-27@2.3.0"
+    },
+    {
+      "ref": "jinja2-28@3.1.6",
+      "dependsOn": [
+        "markupsafe-33@3.0.3"
+      ]
+    },
+    {
+      "ref": "jsonschema-29@4.26.0",
+      "dependsOn": [
+        "attrs-5@26.1.0",
+        "jsonschema-specifications-30@2025.9.1",
+        "referencing-56@0.37.0",
+        "rpds-py-60@2026.6.3"
+      ]
+    },
+    {
+      "ref": "jsonschema-specifications-30@2025.9.1",
+      "dependsOn": [
+        "referencing-56@0.37.0"
+      ]
+    },
+    {
+      "ref": "librt-31@0.15.0"
+    },
+    {
+      "ref": "markdown-it-py-32@4.2.0",
+      "dependsOn": [
+        "mdurl-35@0.1.2"
+      ]
+    },
+    {
+      "ref": "markupsafe-33@3.0.3"
+    },
+    {
+      "ref": "mdit-py-plugins-34@0.6.1",
+      "dependsOn": [
+        "markdown-it-py-32@4.2.0"
+      ]
+    },
+    {
+      "ref": "mdurl-35@0.1.2"
+    },
+    {
+      "ref": "mypy-36@1.20.2",
+      "dependsOn": [
+        "librt-31@0.15.0",
+        "mypy-extensions-37@1.1.0",
+        "pathspec-42@1.1.1",
+        "typing-extensions-77@4.16.0"
+      ]
+    },
+    {
+      "ref": "mypy-extensions-37@1.1.0"
+    },
+    {
+      "ref": "myst-parser-38@5.1.0",
+      "dependsOn": [
+        "docutils-12@0.22.4",
+        "jinja2-28@3.1.6",
+        "markdown-it-py-32@4.2.0",
+        "mdit-py-plugins-34@0.6.1",
+        "pyyaml-55@6.0.3",
+        "sphinx-67@9.1.0"
+      ]
+    },
+    {
+      "ref": "numpy-39@2.5.2"
+    },
+    {
+      "ref": "packaging-40@26.3"
+    },
+    {
+      "ref": "pandas-41@3.0.5",
+      "dependsOn": [
+        "numpy-39@2.5.2",
+        "python-dateutil-54@2.9.0.post0",
+        "tzdata-79@2026.3"
+      ]
+    },
+    {
+      "ref": "pathspec-42@1.1.1"
+    },
+    {
+      "ref": "pluggy-43@1.6.0"
+    },
+    {
+      "ref": "pulp-44@3.3.2"
+    },
+    {
+      "ref": "pyarrow-45@22.0.0"
+    },
+    {
+      "ref": "pydantic-46@2.13.5",
+      "dependsOn": [
+        "annotated-types-4@0.8.0",
+        "pydantic-core-47@2.46.5",
+        "typing-extensions-77@4.16.0",
+        "typing-inspection-78@0.4.4"
+      ]
+    },
+    {
+      "ref": "pydantic-core-47@2.46.5",
+      "dependsOn": [
+        "typing-extensions-77@4.16.0"
+      ]
+    },
+    {
+      "ref": "pygments-48@2.21.0"
+    },
+    {
+      "ref": "pyomo-49@6.10.1"
+    },
+    {
+      "ref": "pyscipopt-50@5.7.1",
+      "dependsOn": [
+        "numpy-39@2.5.2"
+      ]
+    },
+    {
+      "ref": "pyspd-1@0.1.0",
+      "dependsOn": [
+        "cylp-11@0.94.0",
+        "gamspy-14@1.27.0",
+        "gamspy-highs-16@54.3.1",
+        "gamspy-ipopt-17@54.3.1",
+        "gamspy-miles-18@54.3.1",
+        "gamspy-reshop-19@54.3.1",
+        "gamspy-scip-20@54.3.1",
+        "gamspy-shot-21@54.3.1",
+        "gurobipy-22@12.0.3",
+        "highspy-23@1.15.1",
+        "hypothesis-24@6.165.10",
+        "jsonschema-29@4.26.0",
+        "mypy-36@1.20.2",
+        "myst-parser-38@5.1.0",
+        "pandas-41@3.0.5",
+        "pulp-44@3.3.2",
+        "pyarrow-45@22.0.0",
+        "pyomo-49@6.10.1",
+        "pyscipopt-50@5.7.1",
+        "pytest-51@9.1.1",
+        "pytest-cov-52@7.1.0",
+        "pytest-timeout-53@2.4.0",
+        "ruff-61@0.16.5",
+        "sphinx-67@9.1.0",
+        "sphinx-rtd-theme-68@3.1.0"
+      ]
+    },
+    {
+      "ref": "pytest-51@9.1.1",
+      "dependsOn": [
+        "colorama-9@0.4.6",
+        "iniconfig-27@2.3.0",
+        "packaging-40@26.3",
+        "pluggy-43@1.6.0",
+        "pygments-48@2.21.0"
+      ]
+    },
+    {
+      "ref": "pytest-cov-52@7.1.0",
+      "dependsOn": [
+        "coverage-10@7.15.4",
+        "pluggy-43@1.6.0",
+        "pytest-51@9.1.1"
+      ]
+    },
+    {
+      "ref": "pytest-timeout-53@2.4.0",
+      "dependsOn": [
+        "pytest-51@9.1.1"
+      ]
+    },
+    {
+      "ref": "python-dateutil-54@2.9.0.post0",
+      "dependsOn": [
+        "six-64@1.17.0"
+      ]
+    },
+    {
+      "ref": "pyyaml-55@6.0.3"
+    },
+    {
+      "ref": "referencing-56@0.37.0",
+      "dependsOn": [
+        "attrs-5@26.1.0",
+        "rpds-py-60@2026.6.3"
+      ]
+    },
+    {
+      "ref": "requests-57@2.34.2",
+      "dependsOn": [
+        "certifi-7@2026.7.22",
+        "charset-normalizer-8@3.5.1",
+        "idna-25@3.19",
+        "urllib3-80@2.7.0"
+      ]
+    },
+    {
+      "ref": "rich-58@15.0.0",
+      "dependsOn": [
+        "markdown-it-py-32@4.2.0",
+        "pygments-48@2.21.0"
+      ]
+    },
+    {
+      "ref": "roman-numerals-59@4.1.0"
+    },
+    {
+      "ref": "rpds-py-60@2026.6.3"
+    },
+    {
+      "ref": "ruff-61@0.16.5"
+    },
+    {
+      "ref": "scipy-62@1.18.1",
+      "dependsOn": [
+        "numpy-39@2.5.2"
+      ]
+    },
+    {
+      "ref": "shellingham-63@1.5.4"
+    },
+    {
+      "ref": "six-64@1.17.0"
+    },
+    {
+      "ref": "snowballstemmer-65@3.1.1"
+    },
+    {
+      "ref": "sortedcontainers-66@2.4.0"
+    },
+    {
+      "ref": "sphinx-67@9.1.0",
+      "dependsOn": [
+        "alabaster-2@1.0.0",
+        "babel-6@2.18.0",
+        "colorama-9@0.4.6",
+        "docutils-12@0.22.4",
+        "imagesize-26@2.0.1",
+        "jinja2-28@3.1.6",
+        "packaging-40@26.3",
+        "pygments-48@2.21.0",
+        "requests-57@2.34.2",
+        "roman-numerals-59@4.1.0",
+        "snowballstemmer-65@3.1.1",
+        "sphinxcontrib-applehelp-69@2.0.0",
+        "sphinxcontrib-devhelp-70@2.0.0",
+        "sphinxcontrib-htmlhelp-71@2.1.0",
+        "sphinxcontrib-jsmath-73@1.0.1",
+        "sphinxcontrib-qthelp-74@2.0.0",
+        "sphinxcontrib-serializinghtml-75@2.0.0"
+      ]
+    },
+    {
+      "ref": "sphinx-rtd-theme-68@3.1.0",
+      "dependsOn": [
+        "docutils-12@0.22.4",
+        "sphinx-67@9.1.0",
+        "sphinxcontrib-jquery-72@4.1"
+      ]
+    },
+    {
+      "ref": "sphinxcontrib-applehelp-69@2.0.0"
+    },
+    {
+      "ref": "sphinxcontrib-devhelp-70@2.0.0"
+    },
+    {
+      "ref": "sphinxcontrib-htmlhelp-71@2.1.0"
+    },
+    {
+      "ref": "sphinxcontrib-jquery-72@4.1",
+      "dependsOn": [
+        "sphinx-67@9.1.0"
+      ]
+    },
+    {
+      "ref": "sphinxcontrib-jsmath-73@1.0.1"
+    },
+    {
+      "ref": "sphinxcontrib-qthelp-74@2.0.0"
+    },
+    {
+      "ref": "sphinxcontrib-serializinghtml-75@2.0.0"
+    },
+    {
+      "ref": "typer-76@0.27.2",
+      "dependsOn": [
+        "annotated-doc-3@0.0.5",
+        "colorama-9@0.4.6",
+        "rich-58@15.0.0",
+        "shellingham-63@1.5.4"
+      ]
+    },
+    {
+      "ref": "typing-extensions-77@4.16.0"
+    },
+    {
+      "ref": "typing-inspection-78@0.4.4",
+      "dependsOn": [
+        "typing-extensions-77@4.16.0"
+      ]
+    },
+    {
+      "ref": "tzdata-79@2026.3"
+    },
+    {
+      "ref": "urllib3-80@2.7.0"
+    }
+  ]
+}

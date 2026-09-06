@@ -31,34 +31,34 @@ _INPUT = (
 _RESULTS = _ROOT / "tests/fixtures/cplex_reference/2023/20230922/results"
 _BENCHMARK = (
     _ROOT
-    / "docs/gate-12/cplex-reference-paths-20230922-tp24-passive-tree-six-cases.json"
+    / "private/docs/gate-12/cplex-reference-paths-20230922-tp24-passive-tree-six-cases.json"
 )
 _RECORDS = (
     _ROOT
-    / "docs/gate-12/cplex-reference-paths-20230922-tp24-passive-tree-six-cases-scip-mip-fixed-highs-rmip.jsonl"
+    / "private/docs/gate-12/cplex-reference-paths-20230922-tp24-passive-tree-six-cases-scip-mip-fixed-highs-rmip.jsonl"
 )
 _CERTIFICATE = (
-    _ROOT / "docs/gate-12/cplex-tp24-energy-allocation-20230922.json"
+    _ROOT / "private/docs/gate-12/cplex-tp24-energy-allocation-20230922.json"
 )
 _FULL_BENCHMARK = (
     _ROOT
-    / "docs/gate-12/cplex-reference-paths-20230922-highs-root-boundary-interval.json"
+    / "private/docs/gate-12/cplex-reference-paths-20230922-highs-root-boundary-interval.json"
 )
 _FULL_RECORDS = (
     _ROOT
-    / "docs/gate-12/cplex-reference-paths-20230922-highs-root-boundary-interval-scip-mip-fixed-highs-rmip.jsonl"
+    / "private/docs/gate-12/cplex-reference-paths-20230922-highs-root-boundary-interval-scip-mip-fixed-highs-rmip.jsonl"
 )
 _FULL_CERTIFICATE = (
     _ROOT
-    / "docs/gate-12/cplex-tp24-energy-allocation-20230922-full-day.json"
+    / "private/docs/gate-12/cplex-tp24-energy-allocation-20230922-full-day.json"
 )
 _FULL_COMPARISON = (
     _ROOT
-    / "docs/gate-12/cplex-reference-comparison-20230922-highs-root-boundary-interval-tp24-allocation.json"
+    / "private/docs/gate-12/cplex-reference-comparison-20230922-highs-root-boundary-interval-tp24-allocation.json"
 )
 _UNCERTIFIED_FULL_COMPARISON = (
     _ROOT
-    / "docs/gate-12/cplex-reference-comparison-20230922-highs-root-boundary-interval.json"
+    / "private/docs/gate-12/cplex-reference-comparison-20230922-highs-root-boundary-interval.json"
 )
 _CASE_ID = "211012023092330682"
 _DATETIME = "22-SEP-2023 11:30"

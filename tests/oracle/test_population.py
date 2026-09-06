@@ -76,7 +76,7 @@ def test_population_manifest_rejects_count_and_date_errors(tmp_path: Path) -> No
 def test_governed_manifest_has_exact_authority_population() -> None:
     path = (
         Path(__file__).parents[2]
-        / "docs"
+        / "private/docs"
         / "gate-1"
         / "shortfall-transfer-population.json"
     )

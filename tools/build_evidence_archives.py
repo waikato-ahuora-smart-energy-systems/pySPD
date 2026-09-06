@@ -20,6 +20,7 @@ class ArchivePlan:
     filename: str
     description: str
     source_paths: tuple[Path, ...]
+    archive_root: Path = Path(".")
 
 
 class RepositoryEvidencePlan:
@@ -30,9 +31,9 @@ class RepositoryEvidencePlan:
 
     def plans(self) -> tuple[ArchivePlan, ...]:
         gate12_paths = tuple(
-            path.relative_to(self.root)
+            path.relative_to(self.root / "private")
             for path in sorted(
-                (self.root / "docs/gate-12").glob("cplex-reference-paths-*.json")
+                (self.root / "private/docs/gate-12").glob("cplex-reference-paths-*.json")
             )
         )
         return (
@@ -59,6 +60,7 @@ class RepositoryEvidencePlan:
                 "pyspd-gate12-solver-paths-v1.tar.gz",
                 "Detailed Gate 12 SCIP-to-fixed-RMIP solver-path observations",
                 gate12_paths,
+                archive_root=Path("private"),
             ),
         )
 
@@ -68,9 +70,10 @@ def build(
 ) -> EvidenceManifest:
     root = root.resolve()
     output.mkdir(parents=True, exist_ok=True)
-    builder = EvidenceArchiveBuilder(root)
     artifacts: list[EvidenceArtifact] = []
     for plan in RepositoryEvidencePlan(root).plans():
+        # Keep the v1 archive member names and bytes despite the repository move.
+        builder = EvidenceArchiveBuilder(root / plan.archive_root)
         result = builder.build(plan.source_paths, output / plan.filename)
         artifacts.append(
             EvidenceArtifact(

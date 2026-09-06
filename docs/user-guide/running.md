@@ -40,11 +40,13 @@ Complete v5 days can contain hundreds of pricing scenarios, even though they
 have 46, 48, or 50 trading periods. The application assigns one-case jobs to
 the next idle worker and merges output in source order.
 
-!!! note "Memory before cores"
+:::{admonition} Memory before cores
+:class: note
 
-    A representative complex process peaked near 4.2 GB during qualification.
-    Peak use varies by case. Reduce workers if the host begins swapping; solver
-    contention and memory pressure can make a larger process count slower.
+A representative complex process peaked near 4.2 GB during qualification.
+Peak use varies by case. Reduce workers if the host begins swapping; solver
+contention and memory pressure can make a larger process count slower.
+:::
 
 ## Run from Python
 

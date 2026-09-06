@@ -1,11 +1,12 @@
 # Current limitations
 
-## Validation remains staged
+## Historical coverage
 
-Gate 12 is not closed for the complete historical population. The repository
-has strong representative, multi-day and CPLEX-corpus evidence, but users must
-not describe all dates, formulations, report fields, or duals as exactly
-validated. Consult the [current Gate 12 record](../gate-12/README.md).
+Validation covers representative cases, multiple complete days, and retained
+CPLEX comparisons. It does not establish exact agreement for every historical
+date, formulation, report field, or dual value. Use the
+[comparison guidance](../validation/interpreting-parity.md) to assess the
+specific population and output surface in your study.
 
 ## CPLEX basis parity
 
@@ -61,7 +62,7 @@ The retained workflow and CI are macOS-focused; Linux x86_64 CI execution was
 explicitly deferred. Read the Docs builds documentation on Linux but does not
 qualify solver results there.
 
-## Stage 13
+## Residential-PV studies
 
 The residential-PV paper replication is planned, not complete. Demand-scaling
 examples in this guide are generic sensitivity studies and must not be cited as

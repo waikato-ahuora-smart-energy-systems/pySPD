@@ -45,3 +45,12 @@ history into an isolated clone with:
 ```shell
 git clone pyspd-pre-slim-history-v1.bundle pyspd-pre-slim-history
 ```
+
+Detailed solver observations use the historical archive member paths, now
+located outside the documentation site. Restore those with:
+
+```shell
+uv run pyspd evidence fetch gate12-solver-paths-v1 --destination private
+```
+
+See [internal records](../private/README.md) for the path-migration boundary.

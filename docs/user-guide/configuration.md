@@ -62,6 +62,10 @@ CBC and CLP require their optional `uv` groups. A different profile can select
 a different valid discrete support or dual basis, so comparisons must retain
 the solver profile in their evidence.
 
+The repository's default dependency groups already include `highs`, `clp`,
+`cbc`, and `dev`. Only add a solver group explicitly when installing with
+`--no-default-groups` or documenting a particular experiment.
+
 ## Parallelism
 
 Set `worker_count` in JSON or override it for one invocation:

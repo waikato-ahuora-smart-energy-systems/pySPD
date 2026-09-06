@@ -16,9 +16,9 @@ __pycache__/
 /site/
 
 # Regenerable full-day solver records can exceed repository hosting limits.
-docs/gate-12/cplex-reference-paths-*.jsonl
-docs/gate-12/cplex-reference-paths-*-a.json
-docs/gate-12/cplex-reference-paths-*-b.json
+private/docs/gate-12/cplex-reference-paths-*.jsonl
+private/docs/gate-12/cplex-reference-paths-*-a.json
+private/docs/gate-12/cplex-reference-paths-*-b.json
 
 # Hash-bound historical oracle evidence is restored on demand from evidence-v1.
 /tests/fixtures/cplex_reference/2019/
@@ -26,3 +26,9 @@ docs/gate-12/cplex-reference-paths-*-b.json
 /tests/fixtures/cplex_consecutive/2023/
 /tests/fixtures/odd_day_reference/2019/
 /tests/fixtures/odd_day_reference/2022/
+
+# A restored historical archive must never enter the documentation site.
+/docs/gate-*/
+
+# External solver observations, including restored release assets.
+/private/docs/gate-12/cplex-reference-paths-*

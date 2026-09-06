@@ -6,7 +6,7 @@ from pathlib import Path
 
 def test_gate6_exact_gams_hvdc_matrix_evidence_is_closed() -> None:
     evidence = json.loads(
-        Path("docs/gate-6/oracle-matrix-parity.json").read_text()
+        Path("private/docs/gate-6/oracle-matrix-parity.json").read_text()
     )
     assert evidence["passed"] is True
     assert evidence["differences"] == {
@@ -25,7 +25,7 @@ def test_gate6_exact_gams_hvdc_matrix_evidence_is_closed() -> None:
 
 def test_gate6_solve_price_audit_and_independent_validation_are_closed() -> None:
     evidence = json.loads(
-        Path("docs/gate-6/solve-price-validation.json").read_text()
+        Path("private/docs/gate-6/solve-price-validation.json").read_text()
     )
     assert evidence["passed"] is True
     assert evidence["state_machine"]["primary_status"] == "optimal"

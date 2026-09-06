@@ -45,6 +45,10 @@ jobs:
       - name: Audit probity evidence
         run: uv run --no-sync python -m tools.probity_audit
       - name: Build documentation
-        run: uv run --no-sync mkdocs build --strict
+        run: uv run --no-sync sphinx-build -W --keep-going -b html docs site
+      - name: Build release candidates
+        run: uv build --no-sources --out-dir dist/ci-candidate
+      - name: Qualify installed wheel
+        run: uv run --no-sync python -m tools.qualify_distribution --artifacts dist/ci-candidate --output dist/qualification
       - name: Check whitespace errors
         run: git diff --check

@@ -8,7 +8,7 @@ from typing import Any
 def test_incremental_projection_manifest_is_complete_and_unambiguous() -> None:
     path = (
         Path(__file__).parents[2]
-        / "docs"
+        / "private/docs"
         / "gate-1"
         / "incremental-matrix-mappings.json"
     )
@@ -42,7 +42,7 @@ def test_incremental_projection_manifest_is_complete_and_unambiguous() -> None:
 
 def test_gate1_shortfall_qualification_retains_gate8_obligation() -> None:
     root = Path(__file__).parents[2]
-    gate = root / "docs" / "gate-1"
+    gate = root / "private/docs" / "gate-1"
     inventory: dict[str, Any] = json.loads(
         (gate / "shortfall-input-inventory.json").read_text()
     )

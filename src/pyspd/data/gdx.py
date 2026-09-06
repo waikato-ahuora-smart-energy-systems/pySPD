@@ -26,7 +26,7 @@ class GdxAdapter:
             import gams.transfer as gt
         except ImportError as error:  # pragma: no cover - exercised by env contract
             raise RuntimeError(
-                "GDX conversion requires the uv 'gdx' dependency group; "
+                "GDX conversion requires pyspd[gdx] (or the uv 'gdx' group); "
                 "canonical loading does not"
             ) from error
         path = path.resolve()
@@ -56,7 +56,7 @@ class GdxAdapter:
             import gams.transfer as gt
         except ImportError as error:  # pragma: no cover - exercised by env contract
             raise RuntimeError(
-                "GDX conversion requires the uv 'gdx' dependency group"
+                "GDX conversion requires pyspd[gdx] (or the uv 'gdx' group)"
             ) from error
         from pyspd.data.feed import CanonicalFeed
 
