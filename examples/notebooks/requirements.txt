@@ -1,0 +1,8 @@
+# Python 3.13; use a separate environment from a source checkout.
+pyspd==0.1.0
+jupyterlab>=4,<5
+matplotlib>=3.10,<4
+pandas>=3,<4
+# Notebook validation (also usable for headless execution).
+nbclient>=0.10,<1
+nbformat>=5.10,<6

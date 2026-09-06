@@ -3,29 +3,81 @@ name: PR Validation
 on:
   pull_request:
     branches: ["main"]
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, edited, labeled, unlabeled]
 
 permissions:
   contents: read
 
 concurrency:
   group: pr-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 env:
   PYTHON_VERSION: "3.13"
   UV_VERSION: "0.11.29"
 
 jobs:
+  bump-version:
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: macos-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.bump.outputs.sha }}
+    steps:
+      - name: Check out the pull-request branch
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          # This job only edits metadata and never populates uv's package cache.
+          enable-cache: false
+      - name: Advance the release candidate
+        id: bump
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git show origin/main:pyproject.toml > "${RUNNER_TEMP}/base-pyproject.toml"
+          version="$(python -m tools.release_version bump \
+            --base-pyproject "${RUNNER_TEMP}/base-pyproject.toml" \
+            --event "${GITHUB_EVENT_PATH}")"
+          git diff --check
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add pyproject.toml src/pyspd/__init__.py uv.lock README.md docs/getting-started.md
+            git commit -m "Bump pySPD release version to ${version}"
+            git push origin "HEAD:refs/heads/${HEAD_REF}"
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
+
   pr-gate:
     name: pr-gate
-    if: ${{ github.event.pull_request.draft == false }}
+    needs: bump-version
+    if: always() && github.event.pull_request.draft == false
     runs-on: macos-latest
     timeout-minutes: 30
     steps:
+      - name: Require successful version preparation
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          BUMP_RESULT: ${{ needs.bump-version.result }}
+        run: test "${BUMP_RESULT}" = success
       - name: Check out repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
         with:
+          ref: ${{ needs.bump-version.outputs.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Install uv and Python
@@ -34,6 +86,10 @@ jobs:
           version: ${{ env.UV_VERSION }}
           python-version: ${{ env.PYTHON_VERSION }}
           enable-cache: true
+      - name: Require a synchronized forward release version
+        run: |
+          git show origin/main:pyproject.toml > "${RUNNER_TEMP}/base-pyproject.toml"
+          python -m tools.release_version check --base-pyproject "${RUNNER_TEMP}/base-pyproject.toml"
       - name: Synchronize locked dependencies
         run: uv sync --frozen --group clp --group cbc --group docs
       - name: Lint
@@ -52,3 +108,29 @@ jobs:
         run: uv run --no-sync python -m tools.qualify_distribution --artifacts dist/ci-candidate --output dist/qualification
       - name: Check whitespace errors
         run: git diff --check
+
+  record-bumped-validation:
+    # A GITHUB_TOKEN push may not start another PR run automatically. Record
+    # the result on the exact bumped commit tested above, not the original SHA.
+    needs: [bump-version, pr-gate]
+    if: >-
+      always() && needs.bump-version.result == 'success' &&
+      needs.bump-version.outputs.sha != github.event.pull_request.head.sha &&
+      (needs.pr-gate.result == 'success' || needs.pr-gate.result == 'failure')
+    runs-on: macos-latest
+    timeout-minutes: 5
+    permissions:
+      checks: write
+    steps:
+      - name: Record pr-gate on the tested commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TESTED_SHA: ${{ needs.bump-version.outputs.sha }}
+          CONCLUSION: ${{ needs.pr-gate.result }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh api --method POST "repos/${GH_REPO}/check-runs" \
+            -f name=pr-gate -f head_sha="${TESTED_SHA}" \
+            -f status=completed -f conclusion="${CONCLUSION}" \
+            -f details_url="${RUN_URL}"

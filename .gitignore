@@ -3,6 +3,9 @@ node_modules/
 
 # Python environments and tooling caches
 .venv/
+.notebook-venv/
+.ipynb_checkpoints/
+pyspd-notebook-output/
 __pycache__/
 .pytest_cache/
 .hypothesis/

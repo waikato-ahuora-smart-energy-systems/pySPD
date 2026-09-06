@@ -1,0 +1,34 @@
+name: Notebook examples
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "examples/notebooks/**"
+      - "tools/run_notebook_examples.py"
+      - ".github/workflows/notebook-examples.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  notebooks:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out examples
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          persist-credentials: false
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: false
+      - name: Install published package and notebook dependencies
+        run: |
+          uv venv --python 3.13 .notebook-venv
+          uv pip install --python .notebook-venv/bin/python -r examples/notebooks/requirements.txt
+      - name: Execute each notebook in isolation
+        run: .notebook-venv/bin/python tools/run_notebook_examples.py

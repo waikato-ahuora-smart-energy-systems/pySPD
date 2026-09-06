@@ -1,6 +1,6 @@
 # Release notes
 
-## 0.1.0 — unreleased engineering candidate
+## 0.1.0 — 2026-09-06
 
 - Apache License 2.0 for PySPD, included in source and wheel distributions.
 - Class-based vSPD v5 and SPD v16 formulations with explicit input schemas.
@@ -13,5 +13,5 @@
 - User documentation uses the same Sphinx Read the Docs theme as OpenPinch.
 
 Qualification is scoped to Python 3.13 and macOS ARM64. Complete historical
-parity and third-party redistribution decisions remain outstanding. This
-candidate is not a published release.
+parity is not established. External data and solver runtimes retain their own
+licensing terms.
