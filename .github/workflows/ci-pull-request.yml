@@ -39,6 +39,8 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
           python-version: ${{ env.PYTHON_VERSION }}
+          # This job only edits metadata and never populates uv's package cache.
+          enable-cache: false
       - name: Advance the release candidate
         id: bump
         env:
