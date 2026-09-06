@@ -48,22 +48,13 @@ Compare complete identity sets before values. Verify report hashes, row counts,
 units, source/configuration/dependency provenance, repeatability, and any
 checkpoint/resume equivalence.
 
-## Local quality commands
+## Reference data
 
-```shell
-uv sync --frozen --group docs
-uv run ruff check .
-uv run mypy src tools
-uv run pytest -q
-uv run python -m tools.probity_audit
-uv run mkdocs build --strict
-```
-
-Oracle-marked tests require external GAMS/source prerequisites and may be
-skipped in an ordinary development environment. A skip is not passing oracle
-evidence. The large historical corpus is restored through the
-[external-evidence workflow](external-evidence.md), with every archive checked
-against the tracked SHA-256 manifest before extraction.
+Historical comparisons require the matching source inputs and reference
+results. Restore the needed corpus through the
+[external-evidence workflow](external-evidence.md), which verifies each archive
+against its tracked SHA-256 manifest. A missing corpus is not passing comparison
+evidence.
 
 ## Evidence pack for a new case study
 
@@ -81,5 +72,13 @@ Retain:
 - comparison summary plus full discrepancy records; and
 - disposition for every material discrepancy.
 
-The [Gate 12 checklist](../gate-12/gate-checklist.md) is the controlling model
-for end-to-end historical parity.
+Apply the [comparison rules](interpreting-parity.md) consistently across the
+whole selected population, and retain unresolved differences with the results.
+
+```{toctree}
+:maxdepth: 1
+
+external-evidence
+interpreting-parity
+../reference/limitations
+```

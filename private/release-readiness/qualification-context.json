@@ -1,0 +1,25 @@
+{
+  "base_commit": "8a94b848976a6c00f4dd58e9591a3c00799154b8",
+  "evidence_files": {
+    "build.log": "7422f1f220ea22ecf7845056f18bfdb2b5990606d8a6d68b16303353c6052d26",
+    "docs-build.log": "f4129eafba411fde658cc3706f296e703c2b6643b80a830350aa0f9b1f56801a",
+    "full-tests.log": "733eb2ae99cdc4e8a3e185aad827ecb47c0f3e6331d7b5d09759c2fb12537ec7",
+    "green.log": "2f86d6e00fe040f161a2957fe1080a435069dbb1158c2975c3b86c577069cdf2",
+    "installation.log": "155c324feab227dd0495e8272a0cad61f410d736b91badb420499e84de4a9995",
+    "license-tests.log": "8f76eccc39cc7c97cad56c91dbc132603188f3784b683cce2ca8125080e8f8cf",
+    "mypy.log": "1d5254de1f5cd2b65e2840c11867898bbc80efbab98f343299c70e0beddce4cc",
+    "probity-audit.log": "d35e5fa04c1d53e314666d74ac7f16618b93c9affdc6a6ae0774e3b48c2f1106",
+    "project-license.json": "39f68ff978a0cdb2f25e70e52f18c9bb755ff2c804c82a03edb160e226cb6898",
+    "qualification.json": "5972703a4df8dd988d21dce5ce1404ea8ecb59159a5b74ae034357cf530915cd",
+    "red.log": "b400b0c16307b362d826182a32a1ffe516bdf62b6264a94bed4b1eb48866f2a3",
+    "ruff.log": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+    "sbom-export.log": "f8cdd07f0413098e302dd22a1810d6dec5a6a0992adffaf5d856c49df27e59dd",
+    "sbom.cdx.json": "435a44fb192198a34d48427ec44f04104a7079d3589fc516f7457f44d0fc572a"
+  },
+  "machine": "arm64",
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "python": "3.13.14",
+  "qualified_at": "2026-09-06T03:28:46.636939+00:00",
+  "scope": "Uncommitted Apache-2.0 candidate; synthetic reserve solve and reports, optional synthetic GDX adapter roundtrip. Release tests rerun after licence addition; full-suite log is from the preceding technical qualification.",
+  "working_tree_modified": true
+}

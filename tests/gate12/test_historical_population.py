@@ -48,10 +48,10 @@ def test_case_index_selects_only_disclosed_rtd_modes() -> None:
 def test_exact_positive_selector_is_machine_readably_invalidated() -> None:
     root = Path(__file__).resolve().parents[2]
     original = json.loads(
-        (root / "docs/gate-12/historical-exact-positive-qualification.json").read_text()
+        (root / "private/docs/gate-12/historical-exact-positive-qualification.json").read_text()
     )
     evidence = json.loads(
-        (root / "docs/gate-12/historical-exact-positive-invalidation.json").read_text()
+        (root / "private/docs/gate-12/historical-exact-positive-invalidation.json").read_text()
     )
 
     assert original["classification"].startswith("invalidated-")
@@ -69,7 +69,7 @@ def test_material_transfer_population_method_is_hash_bound_and_qualified() -> No
     root = Path(__file__).resolve().parents[2]
     evidence = json.loads(
         (
-            root / "docs/gate-12/historical-material-transfer-qualification.json"
+            root / "private/docs/gate-12/historical-material-transfer-qualification.json"
         ).read_text()
     )
 
@@ -90,7 +90,7 @@ def test_material_transfer_population_method_is_hash_bound_and_qualified() -> No
 def test_targeted_recovery_checkpoint_is_exact_hash_bound_and_nonpopulation() -> None:
     root = Path(__file__).resolve().parents[2]
     evidence = json.loads(
-        (root / "docs/gate-12/historical-targeted-recovery-20221124.json").read_text()
+        (root / "private/docs/gate-12/historical-targeted-recovery-20221124.json").read_text()
     )
 
     assert evidence["classification"] == (
@@ -124,7 +124,7 @@ def test_targeted_recovery_checkpoint_is_exact_hash_bound_and_nonpopulation() ->
 def test_residue_guard_checkpoint_is_exact_hash_bound_and_nonpopulation() -> None:
     root = Path(__file__).resolve().parents[2]
     evidence = json.loads(
-        (root / "docs/gate-12/historical-residue-recovery-20221125.json").read_text()
+        (root / "private/docs/gate-12/historical-residue-recovery-20221125.json").read_text()
     )
 
     assert evidence["classification"] == (
@@ -161,7 +161,7 @@ def test_residue_guard_checkpoint_is_exact_hash_bound_and_nonpopulation() -> Non
 def test_second_residue_guard_checkpoint_preserves_material_transfer() -> None:
     root = Path(__file__).resolve().parents[2]
     evidence = json.loads(
-        (root / "docs/gate-12/historical-residue-recovery-20221204.json").read_text()
+        (root / "private/docs/gate-12/historical-residue-recovery-20221204.json").read_text()
     )
 
     assert evidence["classification"] == (
@@ -201,7 +201,7 @@ def test_second_residue_guard_checkpoint_preserves_material_transfer() -> None:
 def test_third_residue_guard_checkpoint_is_complete_and_exact() -> None:
     root = Path(__file__).resolve().parents[2]
     evidence = json.loads(
-        (root / "docs/gate-12/historical-residue-recovery-20230116.json").read_text()
+        (root / "private/docs/gate-12/historical-residue-recovery-20230116.json").read_text()
     )
     assert evidence["selected_case_count"] == evidence["solved_case_count"] == 283
     assert evidence["all_solves_optimal"] is True
@@ -216,7 +216,7 @@ def test_third_residue_guard_checkpoint_is_complete_and_exact() -> None:
 def test_20230125_residue_guard_checkpoint_preserves_six_material_transfers() -> None:
     root = Path(__file__).resolve().parents[2]
     evidence = json.loads(
-        (root / "docs/gate-12/historical-residue-recovery-20230125.json").read_text()
+        (root / "private/docs/gate-12/historical-residue-recovery-20230125.json").read_text()
     )
 
     assert evidence["selected_case_count"] == evidence["solved_case_count"] == 276

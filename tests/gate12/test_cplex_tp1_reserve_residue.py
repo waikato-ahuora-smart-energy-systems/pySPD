@@ -9,7 +9,7 @@ from pathlib import Path
 from tests.evidence_support import require_external_evidence
 
 _ROOT = Path(__file__).parents[2]
-_EVIDENCE = _ROOT / "docs/gate-12/cplex-tp1-reserve-residue-20230922.json"
+_EVIDENCE = _ROOT / "private/docs/gate-12/cplex-tp1-reserve-residue-20230922.json"
 _INPUT = (
     _ROOT
     / "tests/fixtures/cplex_reference/2023/20230922/input/Pricing_20230922.gdx"

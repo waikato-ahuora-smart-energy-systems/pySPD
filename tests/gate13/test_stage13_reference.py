@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def test_stage13_source_register_fails_closed_before_full_text_acquisition() -> None:
     register = json.loads(
-        (ROOT / "docs/gate-13/paper-source-register.json").read_text()
+        (ROOT / "private/docs/gate-13/paper-source-register.json").read_text()
     )
 
     assert register["article"]["doi"] == "10.1016/j.energy.2026.141862"
@@ -29,7 +29,7 @@ def test_stage13_source_register_fails_closed_before_full_text_acquisition() -> 
 
 
 def test_stage13_plan_requires_modular_overlay_and_honest_claims() -> None:
-    plan = (ROOT / "docs/pyomo-vspd-stage-gate-plan.md").read_text()
+    plan = (ROOT / "private/docs/pyomo-vspd-stage-gate-plan.md").read_text()
 
     for required in (
         "### Stage 13 — Residential-PV counterfactual study replication",

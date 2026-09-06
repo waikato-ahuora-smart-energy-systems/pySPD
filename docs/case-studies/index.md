@@ -14,7 +14,6 @@ Start from the question, then choose the narrowest workflow that answers it.
 | How robust is a finding over time? | Hash-bound multi-day batch | distribution of metrics and discrepancy register |
 | Can an older archive be replayed? | Legacy v3 adapter | normalized v5-compatible reports |
 | Does SPD v16 change results? | Explicit formulation comparison | version-specific objective, reserve and reports |
-| Which research study should be built next? | Potential-build portfolio | scope, extension class, first evidence and build order |
 
 ## Study design checklist
 
@@ -41,7 +40,18 @@ After running:
 The following pages provide concrete recipes. Replace placeholder IDs only
 after checking that the selected input contains them.
 
-For work that goes beyond the current recipes, see [potential case studies to
-build](potential-builds.md). That portfolio distinguishes counterfactuals that
-can use the qualified formulation from research questions that require new
-inter-period, uncertainty, policy, or investment algebra.
+For studies that require time coupling, see the separate
+[battery research profile](battery-storage.md) and its integration limitations.
+
+```{toctree}
+:maxdepth: 1
+
+baseline-and-subsets
+demand-and-offers
+outages-and-constraints
+reserve-and-scarcity
+solver-and-batch
+historical-and-versioned
+historical-stress-event-atlas
+battery-storage
+```

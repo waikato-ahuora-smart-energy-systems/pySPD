@@ -3,12 +3,25 @@ name = "pyspd"
 version = "0.1.0"
 description = "Class-based Pyomo implementation of vSPD under staged validation"
 readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.13,<3.14"
 dependencies = [
+    "highspy>=1.11,<2",
     "pyarrow>=18,<23",
     "pyomo>=6.9,<7",
     "pyscipopt>=5.5,<6",
 ]
+
+[project.optional-dependencies]
+gdx = ["gamspy>=1.27.0"]
+clp = ["cylp>=0.94,<1"]
+cbc = ["pulp>=3.2,<4"]
+probity = ["jsonschema>=4,<5"]
+
+[project.urls]
+Repository = "https://github.com/waikato-ahuora-smart-energy-systems/pySPD"
+Issues = "https://github.com/waikato-ahuora-smart-energy-systems/pySPD/issues"
 
 [project.scripts]
 pyspd = "pyspd.cli:entrypoint"
@@ -16,6 +29,15 @@ pyspd = "pyspd.cli:entrypoint"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pyspd"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"uv.lock" = "pyspd/_build/uv.lock"
+
+[tool.hatch.build.targets.sdist]
+include = ["/src/pyspd", "/pyproject.toml", "/uv.lock", "/README.md", "/CHANGELOG.md", "/LICENSE"]
 
 [tool.uv]
 package = true
@@ -52,8 +74,9 @@ gurobi = [
     "gurobipy>=12,<13",
 ]
 docs = [
-    "mkdocs>=1.6,<2",
-    "mkdocs-material>=9,<10",
+    "sphinx>=9.1,<10",
+    "sphinx-rtd-theme>=3.1,<4",
+    "myst-parser>=5,<6",
 ]
 clp = [
     "cylp>=0.94,<1",

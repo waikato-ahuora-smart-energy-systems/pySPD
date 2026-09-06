@@ -1,71 +1,157 @@
 # PySPD
 
-PySPD is a class-based Pyomo implementation of the Electricity Authority's
-vectorised Scheduling, Pricing, and Dispatch model. The current engineering
-candidate implements the explicitly selected `vspd-v5.0.6-reserve`
-formulation and uses SCIP MIP followed by a fixed-discrete HiGHS RMIP solve.
+**New Zealand electricity dispatch and pricing in Python.**
 
-This repository is under staged validation. Public distribution is held until
-the Gate 0 legal and licensing decisions are complete. Strict end-to-end
-parity, full-day qualification, and CPLEX validation are reserved for Gate 12.
-Stage 13 is a planned, separately named research profile to reproduce the
-residential-PV counterfactual study in O'Leary, Atkins, and Severinsen (2026)
-after its full methods and source data have been acquired and hash-bound.
-Research extensions now also include a hash-bound 21-day historical
-stress-event atlas and the separate `pyspd-multiperiod-battery-v1` analytic
-battery profile; neither changes the vSPD compatibility formulation.
+PySPD is a class-based [Pyomo](https://www.pyomo.org/) implementation of New
+Zealand's Scheduling, Pricing, and Dispatch model. Use it to replay vSPD inputs,
+inspect dispatch and prices, and build reproducible market studies with explicit
+input, solver, and report provenance.
 
-## Set up with uv
+[Get started](docs/getting-started.md) ·
+[Documentation](docs/index.md) ·
+[Case studies](docs/case-studies/index.md) ·
+[Validation status](docs/reference/limitations.md)
 
-```shell
-uv sync --frozen --group oracle
-uv run pyspd formulations --json
-uv run pytest -q
+> [!IMPORTANT]
+> PySPD is an engineering candidate under staged validation. Retained comparisons
+> support specific dates, formulations, and report surfaces; complete historical
+> parity is not established. Public package distribution remains on hold while
+> third-party licensing and redistribution decisions remain open.
+
+## What it does
+
+- Reads v5-style pricing GDX and legacy v3 final-pricing inputs through explicit
+  schema adapters.
+- Assembles energy, AC/HVDC network, reserve, and version-specific algebra from
+  typed model components.
+- Solves dispatch with SCIP, then fixes discrete/SOS state and prices the
+  resulting continuous model with HiGHS.
+- Checks physical residuals, objectives, prices, and reports independently.
+- Writes twelve deterministic CSV tables and a SHA-256-bound `manifest.json`.
+- Runs independent pricing cases in parallel and supports audited
+  counterfactuals through a lower-level Python API.
+
+```text
+GDX → schema validation → preprocessing → Pyomo model
+    → SCIP dispatch → fixed-discrete HiGHS pricing
+    → independent validation → prices and report bundle
 ```
 
-Large historical GDX inputs, CPLEX result trees, and detailed solver-path
-records are stored as hash-bound release assets rather than Git blobs. List or
-restore them with:
+## Installing a package candidate
+
+A supplied wheel can be installed outside the checkout with
+`uv pip install --python /path/to/environment/bin/python "/path/to/pyspd-0.1.0-py3-none-any.whl[gdx]"`.
+SCIP and HiGHS are included; `gdx`, `clp`, `cbc`, and `probity` are optional
+extras. See the [installation guide](docs/getting-started.md#installing-a-candidate-wheel).
+Public distribution remains pending.
+
+## Quick start
+
+The qualified execution environment is **macOS ARM64 with Python 3.13**. Install
+[uv](https://docs.astral.sh/uv/) and a local GAMS runtime, then obtain a
+vSPD-compatible GDX input. GAMS provides GDX access; the normal solve uses SCIP
+and HiGHS and does not require CPLEX.
+
+```shell
+git clone https://github.com/waikato-ahuora-smart-energy-systems/pySPD.git
+cd pySPD
+uv sync --frozen --group gdx
+uv run pyspd formulations --json
+```
+
+Create `run.json`, replacing the paths and SHA-256 with your own values:
+
+```json
+{
+  "formulation_id": "vspd-v5.0.6-reserve",
+  "input_path": "/absolute/path/Pricing_20230927.gdx",
+  "output_directory": "/absolute/path/results/20230927",
+  "source_sha256": "replace-with-the-64-character-input-sha256",
+  "gams_system_directory": "/Library/Frameworks/GAMS.framework/Resources",
+  "case_ids": [],
+  "worker_count": 1
+}
+```
+
+The default schema is `vspd-v5.0.6` and the default solver profile is
+`scip-mip-fixed-highs-rmip`. An empty `case_ids` list selects the complete
+supported day; selecting one known case is a faster first check.
+
+```shell
+uv run pyspd run --config run.json
+# For a full day on a host with sufficient memory:
+uv run pyspd run --config run.json --workers 10
+```
+
+The [first-run guide](docs/getting-started.md) includes input hashing, case
+inventory, a configuration generator, and output verification.
+
+## Choose a workflow
+
+| Goal | Guide |
+|---|---|
+| Install and verify a first run | [Getting started](docs/getting-started.md) |
+| Configure a case, day, or solver profile | [Configuration](docs/user-guide/configuration.md) and [CLI reference](docs/reference/cli.md) |
+| Understand dispatch and published prices | [Results and prices](docs/user-guide/results.md) |
+| Change demand, offers, outages, or reserves | [Case studies](docs/case-studies/index.md) and [audited scenarios](docs/user-guide/audited-scenarios.md) |
+| Assess a historical comparison | [Validation](docs/validation/index.md) and [interpreting parity](docs/validation/interpreting-parity.md) |
+| Extend the model | [Architecture](private/docs/developer-guide/architecture.md) |
+
+The production formulations are `vspd-v5.0.6-reserve` and `spd-v16.0-reserve`.
+The [multi-period battery study](docs/case-studies/battery-storage.md) is a
+separate analytic research profile. See [current limitations](docs/reference/limitations.md)
+for input, platform, scenario, and historical-report boundaries.
+
+## External evidence
+
+Large historical inputs and detailed CPLEX/solver observations are kept as
+immutable, hash-bound release assets:
 
 ```shell
 uv run pyspd evidence list
 uv run pyspd evidence fetch cplex-reference-v1 --destination .
 ```
 
-Add `--github-auth` when the repository requires authentication. Ordinary tests
-do not download external evidence; source-backed oracle tests skip explicitly
-until their declared archive has been restored.
+Ordinary tests do not download archives. Missing external evidence produces an
+explicit skip, which is not a passing oracle result. The
+[external evidence guide](docs/validation/external-evidence.md) explains archive
+selection, authentication, caching, and verification.
 
-Run a case from a hash-bound JSON configuration:
+## Build the documentation
 
-```shell
-uv run pyspd run --config path/to/config.json
-uv run pyspd run --config path/to/config.json --workers 10
-```
-
-The configuration selects a named formulation, input GDX, cases, solver
-profile, output directory, and a positive `worker_count` (default `1`). The
-CLI `--workers` option overrides that value for a run. Multi-worker execution
-uses dynamically assigned isolated case processes and preserves canonical
-source/report order; use fewer workers when memory headroom is limited.
-Generated report manifests bind source, configuration, dependency, solver,
-worker count, and environment provenance.
-
-The controlled delivery scope and evidence boundaries are defined in
-[`docs/pyomo-vspd-stage-gate-plan.md`](docs/pyomo-vspd-stage-gate-plan.md).
-The Stage 13 source-entry pack is in
-[`docs/gate-13/README.md`](docs/gate-13/README.md).
-
-## Documentation
-
-The user guide, case-study recipes, report reference, validation guidance, and
-developer extension guide start at [`docs/index.md`](docs/index.md). Build the
-Read the Docs site locally with:
+The Read the Docs site uses Sphinx with the Read the Docs theme and the `docs` dependency group:
 
 ```shell
 uv sync --frozen --group docs
-uv run mkdocs serve
+uv run --no-sync sphinx-build -W --keep-going -b html docs site
+uv run --no-sync python -m http.server 8765 --bind 127.0.0.1 --directory site
 ```
 
-Use `uv run mkdocs build --strict` for the same fail-on-warning build used by
-CI and Read the Docs.
+See [maintaining the documentation](private/docs/developer-guide/documentation.md) for
+site structure, build configuration, and evidence-file handling.
+
+## Development
+
+```shell
+uv sync --frozen --group docs
+uv run --no-sync ruff check .
+uv run --no-sync mypy src tools
+uv run --no-sync pytest -q
+uv run --no-sync python -m tools.probity_audit
+uv run --no-sync sphinx-build -W --keep-going -b html docs site
+git diff --check
+```
+
+The default dependency groups include development tools, HiGHS, CLP, and CBC.
+Add `--group gdx` when the work needs GDX access. Model-affecting changes follow
+[Probity TDD](private/docs/developer-guide/testing-and-evidence.md): preserve the failing
+test before implementation and retain the red/green evidence with its
+requirement, environment, and commits.
+
+Internal engineering records are maintained in [private/](private/README.md),
+separately from the user documentation published to Read the Docs.
+
+## Licence
+
+PySPD is licensed under the [Apache License 2.0](LICENSE). Third-party
+dependencies, external input data, and solver runtimes retain their own terms.

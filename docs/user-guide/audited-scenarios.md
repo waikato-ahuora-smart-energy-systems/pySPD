@@ -47,7 +47,6 @@ from pyspd.orchestration import (
     OverrideApplier,
     OverrideInstruction,
 )
-from pyspd.reserve import RESERVE_FORMULATION_ID
 from pyspd.v16 import SPD16_FORMULATION_ID
 from pyspd.v16.preprocess import SPD16_SOURCE_PROFILE_ID
 
@@ -56,11 +55,16 @@ def run_scenario(
     configuration: ApplicationConfiguration,
     instructions: Iterable[OverrideInstruction],
 ) -> str:
+    if configuration.worker_count != 1:
+        raise ValueError("this scenario example requires worker_count=1")
     app = PyspdApplication()
+    instructions = tuple(instructions)
     symbols = GdxAdapter.read(
         configuration.input_path,
         system_directory=configuration.gams_system_directory,
     )
+    if symbols.source_sha256 != configuration.source_sha256:
+        raise ValueError("GDX adapter source hash mismatch")
     if configuration.input_schema == LEGACY_V3_INPUT_SCHEMA:
         symbols = LegacyV3InputAdapter().normalize(symbols)
 
@@ -89,7 +93,7 @@ def run_scenario(
         source_case = index.case_data(case, formulation_id=source_profile)
         changed_case, audit = OverrideApplier().apply(
             source_case,
-            tuple(instructions),
+            instructions,
         )
         prepared.append(
             DailyCasePreparer().prepare(
@@ -111,16 +115,19 @@ def run_scenario(
     return manifest.logical_sha256
 ```
 
-`RESERVE_FORMULATION_ID` is shown in the imports to make the supported base
-profile discoverable; the function itself respects the formulation named by
-the configuration.
+The function respects the formulation named by the configuration. Instructions
+are materialized once so a generator applies the same overrides to every case.
+This example runs serially; use a configuration with `worker_count=1` so its
+provenance describes the execution performed.
 
-!!! warning "Scenario provenance"
+:::{admonition} Scenario provenance
+:class: warning
 
-    Save instructions as canonical JSON, hash that file, and include its hash
-    beside the output manifest. `OverrideAudit` binds before/after symbol hashes
-    into run events, but the stable application configuration does not yet bind
-    the human-readable scenario definition.
+Save instructions as canonical JSON, hash that file, and include its hash
+beside the output manifest. `OverrideAudit` binds before/after symbol hashes
+into run events, but the stable application configuration does not yet bind
+the human-readable scenario definition.
+:::
 
 ## Scenario definition convention
 

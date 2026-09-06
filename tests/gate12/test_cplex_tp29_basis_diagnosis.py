@@ -11,7 +11,7 @@ import pytest
 def test_tp29_diagnosis_is_objective_and_state_exact() -> None:
     path = (
         Path(__file__).parents[2]
-        / "docs/gate-12/cplex-tp29-mip-basis-diagnosis-20231124.json"
+        / "private/docs/gate-12/cplex-tp29-mip-basis-diagnosis-20231124.json"
     )
     evidence = json.loads(path.read_text(encoding="utf-8"))
     candidate = evidence["scip_mip_highs_fixed_rmip"]

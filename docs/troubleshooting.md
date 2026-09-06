@@ -6,13 +6,22 @@ The GDX bytes differ from `source_sha256`. Recalculate the hash, then determine
 why it changed. Update the configuration only when the new file is the intended
 input; never bypass the check.
 
-## `GDX conversion requires the uv 'gdx' dependency group`
+## GDX adapter dependencies are missing
 
-Install the optional data dependency:
+For a repository checkout, install the optional data dependency:
 
 ```shell
 uv sync --frozen --group gdx
 ```
+
+For a wheel installation, reinstall the same wheel with its `gdx` extra as
+shown in [getting started](getting-started.md#installing-a-candidate-wheel).
+
+## PySPD build lock is missing
+
+Reinstall the complete wheel. Its bundled build lock is required for report
+provenance. Creating an unrelated `uv.lock` in the study directory does not
+repair a damaged installation.
 
 ## GAMS system directory does not exist
 
@@ -74,8 +83,8 @@ the manifest to bless changed output.
 
 ```shell
 uv sync --frozen --group docs
-uv run mkdocs build --strict
+uv run sphinx-build -W --keep-going -b html docs site
 ```
 
 Fix every warning. Read the Docs uses Python 3.13, installs dependencies with
-`uv`, and builds from `mkdocs.yml`.
+`uv`, and builds from `docs/conf.py`.

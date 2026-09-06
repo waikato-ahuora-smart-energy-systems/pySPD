@@ -33,7 +33,7 @@ def _sha256(path: Path) -> str:
 
 def test_tp4_reserve_kink_evidence_is_hash_bound() -> None:
     require_external_evidence(_INPUT, "cplex-reference-v1")
-    evidence_path = _ROOT / "docs/gate-12/cplex-tp4-reserve-kink-20230922.json"
+    evidence_path = _ROOT / "private/docs/gate-12/cplex-tp4-reserve-kink-20230922.json"
     evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
     logical_sha256 = evidence.pop("logical_sha256")
 
@@ -55,11 +55,11 @@ def test_tp4_reserve_kink_evidence_is_hash_bound() -> None:
             "cplex-reference-comparison-20230922-tp4-reserve-kink.json",
         ),
     ):
-        assert evidence["evidence"][key] == _sha256(_ROOT / "docs/gate-12" / name)
+        assert evidence["evidence"][key] == _sha256(_ROOT / "private/docs/gate-12" / name)
     benchmark = json.loads(
         (
             _ROOT
-            / "docs/gate-12/cplex-reference-paths-20230922-tp4-reserve-kink.json"
+            / "private/docs/gate-12/cplex-reference-paths-20230922-tp4-reserve-kink.json"
         ).read_text(encoding="utf-8")
     )
     assert (
@@ -70,7 +70,7 @@ def test_tp4_reserve_kink_evidence_is_hash_bound() -> None:
 
 def test_tp4_prefix_publishes_the_cplex_si_fir_price() -> None:
     benchmark_path = (
-        _ROOT / "docs/gate-12/cplex-reference-paths-20230922-tp4-reserve-kink.json"
+        _ROOT / "private/docs/gate-12/cplex-reference-paths-20230922-tp4-reserve-kink.json"
     )
     require_external_evidence(benchmark_path, "gate12-solver-paths-v1")
     benchmark = json.loads(

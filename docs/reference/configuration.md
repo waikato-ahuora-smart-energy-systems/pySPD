@@ -3,6 +3,10 @@
 `ApplicationConfiguration.from_json` rejects unknown fields. Paths are expanded
 and resolved during construction.
 
+Relative paths are resolved against the process's current working directory,
+not the directory containing the JSON file. Use absolute paths when running a
+configuration from another directory.
+
 | Field | Type | Required | Default | Meaning |
 |---|---|---:|---|---|
 | `formulation_id` | string | yes | — | Explicit registered model formulation |

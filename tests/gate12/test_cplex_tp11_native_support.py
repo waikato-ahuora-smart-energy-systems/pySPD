@@ -13,7 +13,7 @@ from tests.evidence_support import require_external_evidence
 _ROOT = Path(__file__).parents[2]
 _MANIFEST = (
     _ROOT
-    / "docs/gate-12/cplex-reference-paths-20230922-tp11-native-1e7.json"
+    / "private/docs/gate-12/cplex-reference-paths-20230922-tp11-native-1e7.json"
 )
 _INPUT = (
     _ROOT

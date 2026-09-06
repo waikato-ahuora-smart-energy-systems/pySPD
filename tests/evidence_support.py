@@ -8,7 +8,8 @@ def require_external_evidence(path: Path, artifact_id: str) -> None:
 
     if path.exists():
         return
+    destination = "private" if artifact_id == "gate12-solver-paths-v1" else "."
     pytest.skip(
         "external validation evidence is not installed; run "
-        f"`uv run pyspd evidence fetch {artifact_id} --destination .`"
+        f"`uv run pyspd evidence fetch {artifact_id} --destination {destination}`"
     )

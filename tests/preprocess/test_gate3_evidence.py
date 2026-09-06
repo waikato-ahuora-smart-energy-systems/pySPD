@@ -6,7 +6,7 @@ ROOT = Path(__file__).parents[2]
 
 def test_gams_checkpoint_parity_has_zero_discrepancies() -> None:
     evidence = json.loads(
-        (ROOT / "docs/gate-3/oracle-parity.json").read_text(encoding="utf-8")
+        (ROOT / "private/docs/gate-3/oracle-parity.json").read_text(encoding="utf-8")
     )
 
     assert evidence["passed"] is True
@@ -22,7 +22,7 @@ def test_gams_checkpoint_parity_has_zero_discrepancies() -> None:
 
 def test_governed_corpus_invariants_and_determinism_pass() -> None:
     evidence = json.loads(
-        (ROOT / "docs/gate-3/corpus-invariants.json").read_text(encoding="utf-8")
+        (ROOT / "private/docs/gate-3/corpus-invariants.json").read_text(encoding="utf-8")
     )
 
     assert evidence["passed"] is True

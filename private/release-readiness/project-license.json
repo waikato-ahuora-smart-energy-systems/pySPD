@@ -1,0 +1,7 @@
+{
+  "authorization": "User instruction: Add apache 2.0 license",
+  "license_expression": "Apache-2.0",
+  "license_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+  "license_source": "https://www.apache.org/licenses/LICENSE-2.0.txt",
+  "scope": "Project licence selected; historical third-party redistribution reviews remain separate."
+}

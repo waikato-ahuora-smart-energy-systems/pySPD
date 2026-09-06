@@ -10,7 +10,7 @@ from tests.evidence_support import require_external_evidence
 from tools.gate12.energy_allocation import EnergyAllocationCertificateStore
 
 _ROOT = Path(__file__).parents[2]
-_EVIDENCE = _ROOT / "docs/gate-12"
+_EVIDENCE = _ROOT / "private/docs/gate-12"
 _BENCHMARK = _EVIDENCE / "cplex-reference-paths-20230922-current-v3-full-day.json"
 _RAW = _EVIDENCE / "cplex-reference-comparison-20230922-current-v3-full-day.json"
 _CERTIFIED = (

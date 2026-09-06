@@ -33,5 +33,5 @@ def test_required_check_is_read_only_and_reproducible() -> None:
     assert "uv run --no-sync mypy src tools" in content
     assert "uv run --no-sync pytest -q" in content
     assert "uv run --no-sync python -m tools.probity_audit" in content
-    assert "uv run --no-sync mkdocs build --strict" in content
+    assert "uv run --no-sync sphinx-build -W --keep-going -b html docs site" in content
     assert "git diff --check" in content

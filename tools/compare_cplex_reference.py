@@ -14,6 +14,7 @@ from typing import Any
 
 from pyspd.reporting import _daily_definitions
 from pyspd.reserve import RESERVE_FORMULATION_ID
+from tools.evidence_paths import repository_evidence_path
 from tools.gate12.energy_allocation import (
     EnergyAllocationCertificate,
     EnergyAllocationCertificateStore,
@@ -86,7 +87,7 @@ def main() -> None:
     for run in benchmark["runs"]:
         records = tuple(
             json.loads(line)
-            for line in Path(run["records_path"])
+            for line in repository_evidence_path(Path.cwd(), run["records_path"])
             .read_text(encoding="utf-8")
             .splitlines()
         )

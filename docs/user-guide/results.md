@@ -75,4 +75,26 @@ for row in published.rows:
 `ReportBundle.read` verifies the manifest logical hash, every CSV hash, schema,
 and row count before returning data.
 
+It loads all report tables into memory. Budget for the full bundle even if the
+analysis subsequently uses only `summary` and `published_price`.
+
+The `logical_sha256` field in `manifest.json` is the complete report manifest
+hash printed by the CLI. `bundle.provenance.logical_sha256` identifies only the
+provenance metadata and should not be compared with that report hash.
+
 See the complete field inventory in the [report reference](../reference/reports.md).
+
+## Dependency provenance
+
+`dependency_lock_sha256` identifies the dependency lock used to build the wheel.
+A source checkout uses its current `uv.lock`. Installed wheels carry their build
+lock inside the package, so report generation does not require a checkout or a
+lock file in the study directory.
+
+A build lock records the build's dependency resolution, not proof that every
+installed dependency has that exact version. Retain the actual environment
+inventory with formal study evidence, for example:
+
+```shell
+uv pip freeze --python .venv/bin/python > installed-dependencies.txt
+```

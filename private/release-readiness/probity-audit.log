@@ -1,0 +1,296 @@
+{
+  "evidence_record_count": 36,
+  "gate_count": 11,
+  "implementation_count": 16,
+  "implementations": [
+    {
+      "evidence_ids": [
+        "TDD-RESEARCH-EVIDENCE"
+      ],
+      "implementation_commit": "e2bb53dd1c32450577a8b1cf521e87493c413743",
+      "parent_commit": "0a3c6cc6a71bc55fce35db56cd5e8cd580619cae",
+      "production_paths": [
+        "src/pyspd/cli.py",
+        "src/pyspd/evidence.py",
+        "tools/build_evidence_archives.py",
+        "tools/publish_evidence_release.py"
+      ]
+    },
+    {
+      "evidence_ids": [
+        "TDD-G11-ORACLE-DISCRETE",
+        "TDD-G11-SPD16"
+      ],
+      "implementation_commit": "9c8355dee95af945656a77f86b5d2b6b7ff30728",
+      "parent_commit": "0f28d6cbb81c213b33fc3b743da3171b52f00478",
+      "production_paths": [
+        "src/pyspd/application.py",
+        "src/pyspd/core_energy/components.py",
+        "src/pyspd/data/catalog.py",
+        "src/pyspd/hvdc/components.py",
+        "src/pyspd/network/components.py",
+        "src/pyspd/orchestration/__init__.py",
+        "src/pyspd/orchestration/selection.py",
+        "src/pyspd/orchestration/solver.py",
+        "src/pyspd/reporting.py",
+        "src/pyspd/reserve/components.py",
+        "src/pyspd/reserve/data.py",
+        "src/pyspd/solver.py",
+        "src/pyspd/v16/__init__.py",
+        "src/pyspd/v16/compatibility.py",
+        "src/pyspd/v16/components.py",
+        "src/pyspd/v16/data.py",
+        "src/pyspd/v16/formulation.py",
+        "src/pyspd/v16/preprocess.py",
+        "src/pyspd/v16/preprocessing.py",
+        "src/pyspd/v16/validation.py",
+        "tools/oracle/vspd.py"
+      ]
+    },
+    {
+      "evidence_ids": [
+        "TDD-G2-ASSEMBLY-SIGNATURE",
+        "TDD-G2-CONTRACTS",
+        "TDD-G2-CORPUS",
+        "TDD-G2-FEED",
+        "TDD-G2-LEDGER",
+        "TDD-G2-SOLVER-EDGE",
+        "TDD-G2-VALIDATION"
+      ],
+      "implementation_commit": "961640799a1dab456fd1125169ab5e5b1edac8ae",
+      "parent_commit": "1c798f68aa7cfa653ca22c08f429ec19e486e5ac",
+      "production_paths": [
+        "src/pyspd/architecture.py",
+        "src/pyspd/contracts.py",
+        "src/pyspd/data/__init__.py",
+        "src/pyspd/data/catalog.py",
+        "src/pyspd/data/feed.py",
+        "src/pyspd/data/gdx.py",
+        "src/pyspd/data/validation.py",
+        "src/pyspd/probity.py",
+        "src/pyspd/solver.py",
+        "tools/gate2/__init__.py",
+        "tools/gate2/corpus.py",
+        "tools/probity_audit.py"
+      ]
+    },
+    {
+      "evidence_ids": [
+        "TDD-G6-HVDC"
+      ],
+      "implementation_commit": "098ecd4ca8a01a37495651275fe70304ac84976d",
+      "parent_commit": "5815b643d37e7a7f72823ecac3d9baada2a198f2",
+      "production_paths": [
+        "src/pyspd/hvdc/__init__.py",
+        "src/pyspd/hvdc/components.py",
+        "src/pyspd/hvdc/data.py",
+        "src/pyspd/hvdc/diagnostics.py",
+        "src/pyspd/hvdc/formulation.py",
+        "src/pyspd/hvdc/validation.py",
+        "src/pyspd/network/components.py",
+        "src/pyspd/solver.py",
+        "tools/gate6/__init__.py",
+        "tools/gate6/oracle_matrix.py",
+        "tools/gate6/qualification.py"
+      ]
+    },
+    {
+      "evidence_ids": [
+        "TDD-G3-LEDGER"
+      ],
+      "implementation_commit": "179efa2b35a15749633b7043c0ab160a1b887291",
+      "parent_commit": "7ec923fe02ba51a1cd260cc641aeecbd01602af7",
+      "production_paths": [
+        "tools/probity_audit.py"
+      ]
+    },
+    {
+      "evidence_ids": [
+        "TDD-G5-NETWORK"
+      ],
+      "implementation_commit": "ed150d3a1c9dc65f6eb7e8ed11ef2d939b3b00e9",
+      "parent_commit": "8adc3592f8c77c7b5da07b906b4898deec29bc9c",
+      "production_paths": [
+        "src/pyspd/core_energy/components.py",
+        "src/pyspd/network/__init__.py",
+        "src/pyspd/network/components.py",
+        "src/pyspd/network/data.py",
+        "src/pyspd/network/formulation.py",
+        "src/pyspd/network/validation.py",
+        "tools/gate5/__init__.py",
+        "tools/gate5/oracle_matrix.py",
+        "tools/gate5/qualification.py"
+      ]
+    },
+    {
+      "evidence_ids": [
+        "TDD-G8-ORCHESTRATION"
+      ],
+      "implementation_commit": "3c45b7e22798c56fd687152f98dd9bdf015cc658",
+      "parent_commit": "93d4991276d2140530fe2b9de5d2dab2748ed4e1",
+      "production_paths": [
+        "src/pyspd/orchestration/types.py"
+      ]
+    },
+    {
+      "evidence_ids": [
+        "TDD-G3-COMPATIBILITY",
+        "TDD-G3-CONSTRAINTS",
+        "TDD-G3-EVIDENCE",
+        "TDD-G3-LOSSES-INVARIANTS",
+        "TDD-G3-OFFERS-LOAD",
+        "TDD-G3-PIPELINE",
+        "TDD-G3-TOPOLOGY"
+      ],
+      "implementation_commit": "7ec923fe02ba51a1cd260cc641aeecbd01602af7",
+      "parent_commit": "a9cb72806e24a043673807d4d5619d50aef5aab4",
+      "production_paths": [
+        "src/pyspd/preprocess/__init__.py",
+        "src/pyspd/preprocess/base.py",
+        "src/pyspd/preprocess/compatibility.py",
+        "src/pyspd/preprocess/constraints.py",
+        "src/pyspd/preprocess/input.py",
+        "src/pyspd/preprocess/invariants.py",
+        "src/pyspd/preprocess/losses.py",
+        "src/pyspd/preprocess/offers.py",
+        "src/pyspd/preprocess/shortfall.py",
+        "src/pyspd/preprocess/topology.py",
+        "src/pyspd/preprocess/vspd506.py",
+        "tools/gate3/__init__.py",
+        "tools/gate3/corpus.py",
+        "tools/gate3/oracle_parity.py"
+      ]
+    },
+    {
+      "evidence_ids": [
+        "TDD-G4-ORACLE"
+      ],
+      "implementation_commit": "b798b2893b08f5256c55b5d00eed2854d942bedb",
+      "parent_commit": "b2a023c5f27aff6ce7c0ab6e5330fadc58820af0",
+      "production_paths": [
+        "src/pyspd/core_energy/components.py",
+        "src/pyspd/core_energy/data.py",
+        "src/pyspd/core_energy/formulation.py",
+        "src/pyspd/core_energy/validation.py",
+        "src/pyspd/preprocess/constraints.py",
+        "tools/gate3/oracle_parity.py",
+        "tools/gate4/__init__.py",
+        "tools/gate4/oracle_matrix.py",
+        "tools/gate4/qualification.py"
+      ]
+    },
+    {
+      "evidence_ids": [
+        "TDD-G9-RELEASE"
+      ],
+      "implementation_commit": "e5b381c0ed6f1af3933d03ec806d66a677c22e98",
+      "parent_commit": "be5cedbb1cc86196b23832525d8448c2b3eb198b",
+      "production_paths": [
+        "src/pyspd/application.py",
+        "src/pyspd/architecture.py",
+        "src/pyspd/cli.py",
+        "src/pyspd/reporting.py"
+      ]
+    },
+    {
+      "evidence_ids": [
+        "TDD-G2-ASSEMBLY",
+        "TDD-G2-CANONICAL",
+        "TDD-G2-GDX",
+        "TDD-G2-PACKAGE",
+        "TDD-G2-SCHEMA",
+        "TDD-G2-SOLVER",
+        "TDD-G2-TDD"
+      ],
+      "implementation_commit": "a395fb4482f7d977ab3e8515fe42d2b5551c9a21",
+      "parent_commit": "c10c522aa8dd7dbcf1e78f6955b15423d6d3ffa0",
+      "production_paths": [
+        "src/pyspd/__init__.py",
+        "src/pyspd/architecture.py",
+        "src/pyspd/data/__init__.py",
+        "src/pyspd/data/canonical.py",
+        "src/pyspd/data/catalog.py",
+        "src/pyspd/data/catalogs/vspd-v5.0.6.json",
+        "src/pyspd/data/gdx.py",
+        "src/pyspd/data/raw.py",
+        "src/pyspd/data/values.py",
+        "src/pyspd/probity.py",
+        "src/pyspd/py.typed",
+        "src/pyspd/solver.py"
+      ]
+    },
+    {
+      "evidence_ids": [
+        "TDD-RESEARCH-ATLAS",
+        "TDD-RESEARCH-BATTERY"
+      ],
+      "implementation_commit": "b24bced5270edc5c7cd459778e52a9ce89dcdaa4",
+      "parent_commit": "c88b7b0b4bbea35e771fbcb5534dca95edbd1b29",
+      "production_paths": [
+        "src/pyspd/multiperiod/__init__.py",
+        "src/pyspd/multiperiod/components.py",
+        "src/pyspd/multiperiod/data.py",
+        "src/pyspd/multiperiod/formulation.py",
+        "src/pyspd/studies/__init__.py",
+        "src/pyspd/studies/stress_atlas.py",
+        "tools/build_stress_event_atlas.py"
+      ]
+    },
+    {
+      "evidence_ids": [
+        "TDD-G9-ACTIVE-RISK"
+      ],
+      "implementation_commit": "7f3ff029ead45b41c75aca834723fa065f2014b2",
+      "parent_commit": "cb46242d6870d052a4d8105cfa7cb0b316713bb8",
+      "production_paths": [
+        "src/pyspd/reserve/components.py"
+      ]
+    },
+    {
+      "evidence_ids": [
+        "TDD-G7-RESERVE"
+      ],
+      "implementation_commit": "93d098a0803d66307de311c4df3f0f87d526afef",
+      "parent_commit": "d9d396955f331b9aeb4c184b2c76710fa5809ad4",
+      "production_paths": [
+        "src/pyspd/hvdc/components.py",
+        "src/pyspd/hvdc/formulation.py",
+        "src/pyspd/reserve/__init__.py",
+        "src/pyspd/reserve/components.py",
+        "src/pyspd/reserve/data.py",
+        "src/pyspd/reserve/formulation.py",
+        "src/pyspd/reserve/validation.py",
+        "tools/gate7/__init__.py",
+        "tools/gate7/oracle_matrix.py",
+        "tools/gate7/qualification.py"
+      ]
+    },
+    {
+      "evidence_ids": [
+        "TDD-G10-RELEASE-CONTROLS"
+      ],
+      "implementation_commit": "1e937dc7b5035f5573c4820cd39899f24009cad1",
+      "parent_commit": "e925001dd5dd59d3bc5bc1070b2f84efbe8f68b0",
+      "production_paths": [
+        "src/pyspd/canary.py",
+        "src/pyspd/release.py"
+      ]
+    },
+    {
+      "evidence_ids": [
+        "TDD-G4-CORE"
+      ],
+      "implementation_commit": "b2a023c5f27aff6ce7c0ab6e5330fadc58820af0",
+      "parent_commit": "fc5a31ad5bf4be2e9e4faae64bd20a0abd4f3fb3",
+      "production_paths": [
+        "src/pyspd/core_energy/__init__.py",
+        "src/pyspd/core_energy/components.py",
+        "src/pyspd/core_energy/data.py",
+        "src/pyspd/core_energy/formulation.py",
+        "src/pyspd/core_energy/matrix.py",
+        "src/pyspd/core_energy/validation.py",
+        "src/pyspd/preprocess/offers.py"
+      ]
+    }
+  ]
+}

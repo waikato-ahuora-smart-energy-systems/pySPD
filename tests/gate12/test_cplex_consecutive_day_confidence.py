@@ -11,9 +11,10 @@ from pathlib import Path
 import pytest
 
 from tests.evidence_support import require_external_evidence
+from tools.evidence_paths import repository_evidence_path
 
 _ROOT = Path(__file__).parents[2]
-_EVIDENCE = _ROOT / "docs/gate-12"
+_EVIDENCE = _ROOT / "private/docs/gate-12"
 
 
 def _load(path: Path) -> dict:
@@ -134,7 +135,7 @@ def test_cplex_and_pyspd_share_the_dst_aware_trading_period_axis(
     require_external_evidence(benchmark_path, "gate12-solver-paths-v1")
     benchmark = _load(benchmark_path)
     run = benchmark["runs"][0]
-    records_path = _ROOT / run["records_path"]
+    records_path = repository_evidence_path(_ROOT, run["records_path"])
     records = tuple(
         json.loads(line)
         for line in records_path.read_text(encoding="utf-8").splitlines()
