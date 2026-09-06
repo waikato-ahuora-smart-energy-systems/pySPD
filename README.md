@@ -52,6 +52,15 @@ solver profiles. See the [installation guide](https://github.com/waikato-ahuora-
 
 ## Quick start
 
+For a guided introduction, use the [Jupyter notebook examples](examples/notebooks/README.md).
+Six self-contained notebooks cover dispatch, prices, sensitivity, congestion,
+reserve, and battery storage using `pyspd==0.1.0`. The seventh, **Entire NZ grid
+setup**, consumes your GDX input, solves all cases and periods, and returns the
+full results solution ZIP. The six synthetic examples include worked outputs
+and numerical checks; the grid notebook requires your input.
+An eighth adds scheduled battery and PV effects at chosen nodes: edit the node
+and capacity settings, then download complete baseline and scenario solutions.
+
 The qualified execution environment is **macOS ARM64 with Python 3.13**. Install
 [uv](https://docs.astral.sh/uv/) and a local GAMS runtime, then obtain a
 vSPD-compatible GDX input. GAMS provides GDX access; the normal solve uses SCIP

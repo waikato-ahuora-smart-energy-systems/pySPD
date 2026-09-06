@@ -16,6 +16,10 @@ I want to run a case
 : Start with [getting started](getting-started.md), then use
   [running PySPD](user-guide/running.md) to select cases or run a complete day.
 
+I want to learn with runnable examples
+: Work through the [Jupyter notebooks](notebooks.md), starting with a synthetic
+  dispatch solve that needs no external input.
+
 I need to understand the results
 : Read [results and prices](user-guide/results.md) for dispatch, raw and repaired
   prices, node allocation, publication weighting, and output verification.
@@ -62,6 +66,7 @@ their own terms.
 :caption: Documentation
 
 getting-started
+notebooks
 user-guide/index
 case-studies/index
 validation/index
