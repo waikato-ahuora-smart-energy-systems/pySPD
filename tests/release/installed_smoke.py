@@ -27,6 +27,7 @@ def main() -> None:
     work = Path.cwd()
     package_path = Path(pyspd.__file__).resolve()
     assert package_path.is_relative_to(Path(sys.prefix).resolve()), package_path
+    assert pyspd.__version__ == importlib.metadata.version("pyspd")
     lock = package_path.parent / "_build/uv.lock"
     assert lock.is_file()
     source = work / "synthetic-case.txt"
