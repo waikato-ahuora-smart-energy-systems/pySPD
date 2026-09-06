@@ -4,16 +4,16 @@ This guide takes a repository checkout to a verified dispatch and pricing
 report bundle. You need your own vSPD-compatible GDX input; historical inputs
 are distributed separately from the source repository.
 
-## Installing a candidate wheel
+## Installing from PyPI
 
-Public distribution is pending. If you have a candidate wheel, install it in a
-separate study environment. On the qualified macOS ARM64/Python 3.13 profile:
+Install in a separate study environment. On the qualified
+macOS ARM64/Python 3.13 profile:
 
 ```shell
 mkdir pyspd-study
 cd pyspd-study
 uv venv --python 3.13
-uv pip install --python .venv/bin/python "/path/to/pyspd-0.1.0-py3-none-any.whl[gdx]"
+uv pip install --python .venv/bin/python "pyspd[gdx]"
 .venv/bin/pyspd formulations --json
 ```
 
@@ -28,6 +28,11 @@ Prepare a configuration using the instructions below, then run
 `.venv/bin/pyspd run --config run.json`. In this environment, use
 `.venv/bin/python` for the Python examples. The `uv sync` and `uv run` commands
 elsewhere in the manual describe working from a repository checkout.
+
+## Installing a candidate wheel
+
+To test a supplied wheel before publication, replace `"pyspd[gdx]"` in the
+installation command above with `"/path/to/pyspd-0.1.0-py3-none-any.whl[gdx]"`.
 
 ## 1. Prepare the environment
 

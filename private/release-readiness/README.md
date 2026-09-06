@@ -1,5 +1,8 @@
 # Package release preparation
 
+This is the historical preparation record. The later user-directed publication
+is documented in [PyPI 0.1.0 publication](pypi-publication.md).
+
 The current `0.1.0` candidate passes the technical checks below. Public
 distribution remains **held**: third-party redistribution decisions in the
 licence register are still pending. The project licence is now Apache 2.0, as
